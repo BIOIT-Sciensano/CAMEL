@@ -1,11 +1,11 @@
 import abc
 import inspect
 from pathlib import Path
-from typing import Dict, Optional, List, Union
+from typing import Optional, Union
 
 from camel.app.camel import Camel
 from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.error.invalidparametererror import InvalidParameterError
 from camel.app.error.toolexecutionerror import ToolExecutionError
 from camel.app.io.toolio import ToolIO
@@ -17,20 +17,23 @@ from camel.app.services.basetoolservice import BaseToolService
 from camel.app.services.yamltoolservice import YAMLToolService
 
 
-class Tool(object, metaclass=abc.ABCMeta):
+class Tool(metaclass=abc.ABCMeta):
     """
     Contains the common functionality of tools.
     """
 
-    def __init__(self, name: str, version: str, camel: Camel) -> None:
+    def __init__(self, name: str, version: str, camel: Optional[Camel] = None) -> None:
         """
         Initializes a tool.
+        :param name: Tool name
+        :param version: Tool version
+        :param camel: CAMEL instance (optional)
         """
-        logger.debug("Initializing tool: {} {}".format(name, version))
+        logger.debug(f"Initializing tool: {name} {version}")
         self._name = name
         self._version = version
-        self._tool_inputs: Dict[str, List[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
-        self._tool_outputs: Dict[str, List[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
+        self._tool_inputs: dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
+        self._tool_outputs: dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
         self._informs = {'_name': self.name, '_version': self._version}
         self._input_informs = {}
         self._camel = camel
@@ -66,7 +69,7 @@ class Tool(object, metaclass=abc.ABCMeta):
         return self._tool_service.tool_id
 
     @property
-    def tool_outputs(self) -> Dict[str, List[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]]:
+    def tool_outputs(self) -> dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]]:
         """
         Returns the tool outputs.
         :return: Tool outputs
@@ -82,28 +85,12 @@ class Tool(object, metaclass=abc.ABCMeta):
         return self._informs
 
     @property
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         """
         Returns a list of dependencies for this tool.
         :return: Dependencies
         """
         return self._dependencies
-
-    @DeprecationWarning
-    def get_dependency_version(self, name: str, full: bool = True) -> str:
-        """
-        Returns the version of the given dependency.
-        :param name: Dependency name
-        :param full: If True, the full dependency is returned (along with the name)
-        :return: Dependency version
-        """
-        for full_dependency in self._dependencies:
-            parts = full_dependency.split('/')
-            name_dep = parts[0]
-            if name == name_dep:
-                version = 'default' if len(parts) == 0 else parts[1]
-                return f'{name}/{version}' if full else version
-        raise ValueError(f'Tool {self.name} has no dependency: {name}')
 
     @property
     def stdout(self) -> Optional[str]:
@@ -127,7 +114,7 @@ class Tool(object, metaclass=abc.ABCMeta):
         Returns an overview of the parameters as a string.
         :return: Parameters overview
         """
-        return ', '.join(["{}: '{}'".format(p, self._parameters[p].value) for p in sorted(self._parameters)]) if \
+        return ', '.join([f"{p}: '{self._parameters[p].value}'" for p in sorted(self._parameters)]) if \
             len(self._parameters) > 0 else '/'
 
     @property
@@ -138,7 +125,7 @@ class Tool(object, metaclass=abc.ABCMeta):
         """
         return self._folder
 
-    def add_input_files(self, input_files: Dict[str, List[ToolIO]]) -> None:
+    def add_input_files(self, input_files: dict[str, list[ToolIO]]) -> None:
         """
         Updates the input files for a tool.
         :param input_files: New input files
@@ -158,7 +145,7 @@ class Tool(object, metaclass=abc.ABCMeta):
         """
         self._input_informs.update(informs)
 
-    def update_parameters(self, **kwargs: Union[str, int, None, bool, float, Dict[str, Union[str, int, None, bool, float]]]) -> None:
+    def update_parameters(self, **kwargs: Union[str, int, None, bool, float, dict[str, Union[str, int, None, bool, float]]]) -> None:
         """
         Updates the parameters for this tool.
         :param kwargs: Parameters in key value format
@@ -167,12 +154,12 @@ class Tool(object, metaclass=abc.ABCMeta):
         for parameter_name, new_value in kwargs.items():
             parameter = self._tool_service.get_parameter(parameter_name)
             if not parameter:
-                raise InvalidParameterError("{} has no parameter '{}'".format(self._name, parameter_name))
+                raise InvalidParameterError(f"{self._name} has no parameter '{parameter_name}'")
             if new_value is False:
                 if parameter_name not in self._parameters:
-                    logger.warning("Cannot disable parameter '{}' (not present in parameters)".format(parameter_name))
+                    logger.warning(f"Cannot disable parameter '{parameter_name}' (not present in parameters)")
                     continue
-                logger.info("Disabling parameter: {}".format(parameter_name))
+                logger.info(f"Disabling parameter: {parameter_name}")
                 del(self._parameters[parameter_name])
             else:
                 if new_value is True or new_value is None:
@@ -180,11 +167,10 @@ class Tool(object, metaclass=abc.ABCMeta):
                 else:
                     parameter.value = str(new_value)
                 if parameter_name not in self._parameters:
-                    logger.info("Parameter '{}' added, value: {}".format(parameter_name, parameter.value))
+                    logger.info(f"Parameter '{parameter_name}' added, value: {parameter.value}")
                 else:
                     old_value = self._parameters[parameter_name].value
-                    logger.info("Parameter '{}' value '{}' changed to '{}'".format(
-                        parameter_name, old_value, new_value))
+                    logger.info(f"Parameter '{parameter_name}' value '{old_value}' changed to '{new_value}'")
                 self._parameters[parameter_name] = parameter
 
     def clear_parameters(self) -> None:
@@ -192,7 +178,7 @@ class Tool(object, metaclass=abc.ABCMeta):
         Clears all the parameters of the given tool.
         :return: None
         """
-        logger.info("Removing {} parameters".format(len(self._parameters)))
+        logger.info(f"Removing {len(self._parameters)} parameters")
         self._parameters.clear()
 
     def run(self, folder: Path = Path.cwd()) -> None:
@@ -209,17 +195,6 @@ class Tool(object, metaclass=abc.ABCMeta):
         self._check_input()
         self._execute_tool()
         self._check_output()
-
-    @DeprecationWarning
-    def get_outputs(self, key: str) -> List[ToolIO]:
-        """
-        Returns the outputs with the given key.
-        :param key: output key
-        :return: Output list
-        """
-        if key not in self._tool_outputs:
-            raise ValueError(f"No output file with key '{key}' found")
-        return self._tool_outputs[key]
 
     def get_tool_data_path(self) -> Path:
         """
@@ -252,7 +227,7 @@ class Tool(object, metaclass=abc.ABCMeta):
         """
         return '' if len(self._dependencies) == 0 else 'module load {}; '.format(' '.join(self._dependencies))
 
-    def _build_options(self, excluded_parameters: List[str] = None, delimiter: str = ' ') -> List[str]:
+    def _build_options(self, excluded_parameters: list[str] = None, delimiter: str = ' ') -> list[str]:
         """
         Builds the options string.
         :parameter delimiter: Delimiter between option and value
@@ -288,12 +263,12 @@ class Tool(object, metaclass=abc.ABCMeta):
         :return: None
         """
         if self.stderr != '':
-            raise ToolExecutionError("Command execution failed (stderr: {}).".format(self.stderr))
+            raise ToolExecutionError(f"Command execution failed (stderr: {self.stderr}).")
         elif self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
 
     @abc.abstractmethod
-    def _execute_tool(self):
+    def _execute_tool(self) -> None:
         """
         Executes this tool.
         :return: None
@@ -308,7 +283,7 @@ class Tool(object, metaclass=abc.ABCMeta):
         mandatory_parameters = self._tool_service.get_names_mandatory_parameter()
         for mandatory_parameter in mandatory_parameters:
             if mandatory_parameter not in self._parameters:
-                raise ValueError("Mandatory parameter {} not set".format(mandatory_parameter))
+                raise ValueError(f"Mandatory parameter {mandatory_parameter} not set")
 
     def _check_input(self) -> None:
         """
@@ -318,12 +293,11 @@ class Tool(object, metaclass=abc.ABCMeta):
         for input_key, input_list in self._tool_inputs.items():
             for tool_input in input_list:
                 if not isinstance(tool_input, ToolIO):
-                    raise InvalidInputSpecificationError("Tool input '{}' is not a ToolIO object".format(tool_input))
+                    raise InvalidToolInputError(f"Tool input '{tool_input}' is not a ToolIO object")
                 if tool_input is None:
-                    raise InvalidInputSpecificationError("Tool input with key {} is None".format(input_key))
+                    raise InvalidToolInputError(f"Tool input with key {input_key} is None")
                 if not tool_input.is_valid():
-                    raise InvalidInputSpecificationError("Invalid tool input with key {}: {}".format(
-                        input_key, tool_input))
+                    raise InvalidToolInputError(f"Invalid tool input with key {input_key}: {tool_input}")
 
     def _check_output(self) -> None:
         """
@@ -333,8 +307,8 @@ class Tool(object, metaclass=abc.ABCMeta):
         for output_key, output_list in self._tool_outputs.items():
             for tool_output in output_list:
                 if tool_output is None:
-                    raise ValueError("Tool output with key {} is None".format(output_key))
+                    raise ToolExecutionError(f"Tool output with key {output_key} is None")
                 if not isinstance(tool_output, ToolIO):
-                    raise ValueError("'{} {}' is not a tool output object".format(tool_output, type(tool_output)))
+                    raise ToolExecutionError(f"'{tool_output} {type(tool_output)}' is not a tool output object")
                 if not tool_output.is_valid():
-                    raise ValueError("Invalid tool output with key {}: {}".format(output_key, tool_output))
+                    raise ToolExecutionError(f"Invalid tool output with key {output_key}: {tool_output}")
