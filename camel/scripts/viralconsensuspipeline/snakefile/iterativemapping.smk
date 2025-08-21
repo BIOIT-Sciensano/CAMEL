@@ -464,7 +464,7 @@ rule iterative_mapping_add_empty_unselected_segs:
             segment_ref_info = row.iloc[1]
             if segment_ref_info == '-':
                 segment_name = row.iloc[0].split('ref_selection-')[-1]
-                segments.append(SeqIO.SeqRecord(seq='', id=f"{str(params.name)}-{segment_name}", description=''))
+                segments.append(SeqIO.SeqRecord(seq=Seq(""), id=f"{str(params.name)}-{segment_name}", description=''))
 
         SeqIO.write(segments, fasta_path_out, "fasta")
         SnakemakeUtils.dump_object([ToolIOFile(fasta_path_out)], Path(output.FASTA))
