@@ -58,8 +58,8 @@ def add_input_files_arguments(argument_parser: argparse.ArgumentParser, fasta_in
     argument_parser.add_argument(
         '--adapter', choices=['NexteraPE', 'TruSeq2', 'TruSeq3'],
         help="(Illumina) Adapter that was used for sequencing, used for read-trimming")
-    argument_parser.add_argument('--ont-min-qual', default=7, help='Minimum median quality for ONT input data')
-    argument_parser.add_argument('--ont-min-length', default=500, help='Minimum read length for ONT input data')
+    argument_parser.add_argument('--ont-min-qual', default=10, help='Minimum median quality for ONT input data')
+    argument_parser.add_argument('--ont-min-length', default=1000, help='Minimum read length for ONT input data')
 
     # Export options
     argument_parser.add_argument(
