@@ -3,30 +3,32 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.pipeline.step import Step
+from camel.app.snakemake import snakemakeutils
+
 
 rule multi_allelic_sites_bcftools_pileup:
     """
     Creates a pileup using BCFtools.
     """
     input:
-        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'fasta.io',
-        BAM = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'bam.io'
+        FASTA = 'iterative_mapping/output/fasta.io',
+        BAM = 'iterative_mapping/output/bam.io'
     output:
-        VCF = Path(config['working_dir']) / 'multi_allelic' / 'pileup' / 'vcf.io'
+        VCF = 'multi_allelic/pileup/vcf.io'
     params:
-        dir_ = Path(config['working_dir']) / 'multi_allelic' / 'pileup',
+        dir_ = 'multi_allelic/pileup',
         max_depth = 25000,
         config = 'illumina' if config['input_type'] == 'illumina' else 'ont'
     run:
         from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
-        mpileup = BcftoolsMpileup(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(mpileup, input)
+        mpileup = BcftoolsMpileup()
+        snakemakeutils.add_pickle_inputs(mpileup, input)
         mpileup.update_parameters(
             max_depth=params.max_depth, output_type='v', annotate='FORMAT/AD', config=params.config)
-        mpileup.run(params.dir_)
-        SnakemakeUtils.dump_tool_outputs(mpileup, output)
+        step = Step(rule_name=str(rule), tool=mpileup, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(mpileup, output)
 
 rule multi_allelic_sites_extract_snps:
     """
@@ -35,16 +37,17 @@ rule multi_allelic_sites_extract_snps:
     input:
         VCF = rules.multi_allelic_sites_bcftools_pileup.output.VCF
     output:
-        VCF = Path(config['working_dir']) / 'multi_allelic' / 'snps' / 'vcf.io'
+        VCF = 'multi_allelic/snps/vcf.io'
     params:
-        dir_ = Path(config['working_dir']) / 'multi_allelic' / 'snps'
+        dir_ = 'multi_allelic/snps'
     run:
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
-        bcftools_view = BcftoolsView(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(bcftools_view, input)
+        bcftools_view = BcftoolsView()
+        snakemakeutils.add_pickle_inputs(bcftools_view, input)
         bcftools_view.update_parameters(types='snps')
-        bcftools_view.run(params.dir_)
-        SnakemakeUtils.dump_tool_outputs(bcftools_view, output)
+        step = Step(rule_name=str(rule), tool=bcftools_view, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(bcftools_view, output)
 
 rule multi_allelic_sites_extract_sites:
     """
@@ -53,18 +56,19 @@ rule multi_allelic_sites_extract_sites:
     input:
         VCF = rules.multi_allelic_sites_extract_snps.output.VCF
     output:
-        TSV = Path(config['working_dir']) / 'multi_allelic' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'multi_allelic' / 'informs.io'
+        TSV = 'multi_allelic/extract_sites/tsv.io',
+        INFORMS = 'multi_allelic/extract_sites/informs.io'
     params:
-        dir_ = Path(config['working_dir']) / 'multi_allelic',
+        dir_ = 'multi_allelic/extract_sites',
         min_dp = 20,
         min_freq_minor_allele = 0.4
     run:
         from camel.app.tools.pipelines.viral_consensus.callmultiallelicsites import CallMultiAllelicSites
-        call_multi_allelic = CallMultiAllelicSites(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(call_multi_allelic, input)
-        call_multi_allelic.run(params.dir_)
-        SnakemakeUtils.dump_tool_outputs(call_multi_allelic, output)
+        call_multi_allelic = CallMultiAllelicSites()
+        snakemakeutils.add_pickle_inputs(call_multi_allelic, input)
+        step = Step(rule_name=str(rule), tool=call_multi_allelic, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(call_multi_allelic, output)
 
 rule multi_allelic_sites_apply_to_consensus:
     """
@@ -73,23 +77,23 @@ rule multi_allelic_sites_apply_to_consensus:
     """
     input:
         TSV = rules.multi_allelic_sites_extract_sites.output.TSV,
-        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'fasta.io'
+        FASTA = 'iterative_mapping/output/fasta.io'
     output:
-        FASTA = Path(config['working_dir']) / 'multi_allelic' / 'updated_consensus' / 'fasta.io'
+        FASTA = 'multi_allelic/updated_consensus/fasta.io'
     params:
-        dir_ = Path(config['working_dir']) / 'multi_allelic' / 'updated_consensus'
+        dir_ = 'multi_allelic/updated_consensus'
     run:
         from Bio import SeqIO
         from Bio.Seq import Seq
         from camel.app.io.tooliofile import ToolIOFile
 
         # Parse the input FASTA file
-        path_fasta = SnakemakeUtils.load_object(Path(input.FASTA))[0].path
+        path_fasta = snakemakeutils.load_object(Path(input.FASTA))[0].path
         with path_fasta.open() as handle:
             seq_by_id = {s.id: str(s.seq).upper() for s in SeqIO.parse(handle, 'fasta')}
 
         # Parse the multi-allelic sites
-        path_tsv = SnakemakeUtils.load_object(Path(input.TSV))[0].path
+        path_tsv = snakemakeutils.load_object(Path(input.TSV))[0].path
 
         try:
             data_multi = pd.read_table(path_tsv)
@@ -115,7 +119,7 @@ rule multi_allelic_sites_apply_to_consensus:
         with path_out.open('w') as handle:
             seqs_out = [SeqIO.SeqRecord(Seq(seq), id=id_, description='') for id_, seq in sorted(seq_new_by_id.items())]
             SeqIO.write(seqs_out, handle, 'fasta')
-        SnakemakeUtils.dump_object([ToolIOFile(path_out)], Path(output.FASTA))
+        snakemakeutils.dump_object([ToolIOFile(path_out)], Path(output.FASTA))
 
 rule multi_allelic_sites_report:
     """
@@ -126,17 +130,18 @@ rule multi_allelic_sites_report:
         TSV = rules.multi_allelic_sites_extract_sites.output.TSV,
         INFORMS_calling = rules.multi_allelic_sites_extract_sites.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / 'multi_allelic' / 'report' / 'html.io'
+        VAL_HTML = 'multi_allelic/report/html.iob' # multiallelic.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'multi_allelic' / 'report',
+        dir_ = 'multi_allelic/report',
         name = config['sample_name']
     run:
         from camel.app.tools.pipelines.viral_consensus.reportmultiallelic import ReporterMultiAllelic
-        reporter = ReporterMultiAllelic(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
+        reporter = ReporterMultiAllelic()
+        snakemakeutils.add_pickle_inputs(reporter, input)
         reporter.update_parameters(name=params.name)
-        reporter.run(params.dir_)
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule multi_allelic_create_summary:
     """
@@ -145,9 +150,10 @@ rule multi_allelic_create_summary:
     input:
         INFORMS = rules.multi_allelic_sites_extract_sites.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / 'multi_allelic' / 'report' / 'summary.tsv'
+        TSV = 'multi_allelic/report/summary.{ext}' # multiallelic.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS))
-        with open(output.TSV, 'w') as handle:
-            handle.write(f"multi_allelic_sites_nb\t{informs['nb_sites']}")
-            handle.write('\n')
+        informs = snakemakeutils.load_object(Path(input.INFORMS))
+        data_summary = [('multi_allelic_sites_nb', int(informs['nb_sites']))]
+        snakemakeutils.export_summary(data_summary, Path(output.TSV), str(params.ext), 'multiallelic')

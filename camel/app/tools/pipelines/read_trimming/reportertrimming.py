@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -12,13 +11,12 @@ class ReporterTrimming(Tool):
     Tool to create HTML reports for the read trimming.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('Trimming: reporter', '0.1', camel)
+        super().__init__('Trimming: reporter', '0.1')
         self.__sub_folder = Path('read_trimming')
         self._report_section = None
 
@@ -30,8 +28,8 @@ class ReporterTrimming(Tool):
         self._report_section = HtmlReportSection('Read trimming', subtitle=self._input_informs['trimming']['_name'])
         self.__add_fastqc_reports('Pre-trimming', 'pre_trimming', 'HTML_PRE')
         self.__add_trimming_section_pe()
-        if (self._parameters.get('export_fastq') is not None) and (
-                self._parameters['export_fastq'].as_boolean() is True):
+        # TODO: decide what to do here
+        if (self._parameters.get('export_fastq') is not None) and (self.get_param_value('export_fastq') is True):
             self.__add_trimmed_read_files()
         else:
             self._report_section.add_text("Trimmed FASTQ files not exported, change pipeline options to include them.")
@@ -44,13 +42,13 @@ class ReporterTrimming(Tool):
         :return: None
         """
         if 'HTML_PRE' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No pre-trimming reports found")
+            raise InvalidToolInputError("No pre-trimming reports found")
         if 'FASTQ_PE' not in self._tool_inputs and 'FASTQ_SE' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No reads input found ('FASTQ_PE' or 'FASTQ_SE')")
+            raise InvalidToolInputError("No reads input found ('FASTQ_PE' or 'FASTQ_SE')")
         if 'HTML_POST' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No post-trimming reports found")
+            raise InvalidToolInputError("No post-trimming reports found")
         if 'trimming' not in self._input_informs:
-            raise InvalidInputSpecificationError("No trimming info found")
+            raise InvalidToolInputError("No trimming info found")
         super()._check_input()
 
     def __add_fastqc_reports(self, header: str, dir_name: str, key: str) -> None:

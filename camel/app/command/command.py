@@ -4,15 +4,16 @@ from pathlib import Path
 from camel.app.loggers import logger
 
 
-class Command(object):
+class Command:
     """
-    Class meant to handle the execution of commands
+    Helper class to run commands.
     """
 
     def __init__(self, command: str = None) -> None:
         """
         Initializes the command object.
         :param command: (optional) Command line call
+        :return: None
         """
         self._stdout = None
         self._stderr = None
@@ -45,6 +46,13 @@ class Command(object):
         return self._return_code
 
     @property
+    def exit_code(self) -> int:
+        """
+        Returns the exit code from the command execution.
+        """
+        return self._return_code
+
+    @property
     def command(self) -> str:
         """
         Returns the command line call.
@@ -61,20 +69,22 @@ class Command(object):
         """
         self._command = cmd
 
-    def run(self, folder: Path, stderr_handle=subprocess.PIPE, disable_logging: bool = False) -> None:
+    def run(self, folder: Path, stderr_handle=subprocess.PIPE, disable_logging: bool = False, prefix: str | None = None) -> None:
         """
         Runs the command given at command initialization
         :param folder: Folder where the command is executed
         :param stderr_handle: Handle for the standard error (e.g. PIPE or STDOUT)
         :param disable_logging: If True, logging is disabled
+        :param prefix: If given, this prefix will be added to the commands
         :return: None
         """
+        command_str = self._command if prefix is None else f'{prefix}{self._command}'
         if disable_logging is False:
-            logger.info(f'Executing command: {self.command}')
+            logger.info(f'Executing command: {command_str}')
         if self.command is None:
             raise ValueError("Invalid command 'None'")
         self._procedure = subprocess.run(
-            self._command,
+            command_str,
             stdout=subprocess.PIPE,
             stderr=stderr_handle,
             shell=True,
@@ -96,6 +106,6 @@ class Command(object):
         :return: None
         """
         import warnings
-        warnings.warn('The run_command method is deprecated, please use the run() method instead!',
-                      DeprecationWarning)
+        warnings.warn(
+            'The run_command method is deprecated, please use the run() method instead.', DeprecationWarning)
         self.run(folder, stderr_handle)

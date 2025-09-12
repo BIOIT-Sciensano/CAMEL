@@ -114,6 +114,8 @@ pulp==2.7.0
     # via
     #   -r requirements_in.txt
     #   snakemake
+pydantic==2.11.7
+    # via -r requirements_in.txt
 pydotplus==2.0.2
     # via -r requirements_in.txt
 pyparsing==3.2.3

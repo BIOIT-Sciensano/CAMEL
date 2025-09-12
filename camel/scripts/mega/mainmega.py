@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 import argparse
-from pathlib import Path
-from typing import Tuple, List, Optional, Sequence
-
 import shutil
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Optional
 
-from camel.app.camel import Camel
 from camel.app.components.phylogeny.megautils import MEGAUtils
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.loggers import initialize_logging
 from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 from camel.app.tools.mega.modelselection import ModelSelection
 from camel.app.tools.snpmatrix.snpmatrixconstructor import SnpMatrixConstructor
 
 
-class MainMega(object):
+class MainMega:
     """
     This class contains the main script for the MEGA model selection and tree building.
     """
@@ -26,7 +26,6 @@ class MainMega(object):
         Initializes the main script.
         """
         self._args = MainMega._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -87,7 +86,7 @@ class MainMega(object):
             model, rates = self.__run_model_selection(fasta_path)
             self.__run_tree_construction(fasta_path, model, rates)
 
-    def __build_snp_matrix(self, vcf_files: List[Path], sample_names: List[str], include_ref: bool = False,
+    def __build_snp_matrix(self, vcf_files: list[Path], sample_names: list[str], include_ref: bool = False,
                            include_filtered_pos: bool = False) -> Path:
         """
         Builds a SNP matrix by combining all SNP positions across multiple VCF files.
@@ -96,7 +95,7 @@ class MainMega(object):
         :param include_filtered_pos: If true, filtered positions are retained in the SNP matrix (as Ns)
         :return: SNP matrix path
         """
-        snp_matrix_constructor = SnpMatrixConstructor(self._camel)
+        snp_matrix_constructor = SnpMatrixConstructor()
         snp_matrix_constructor.update_parameters(
             include_ref=include_ref, include_filtered=None if include_filtered_pos else False)
         snp_matrix_constructor.add_input_files({
@@ -105,13 +104,13 @@ class MainMega(object):
         snp_matrix_constructor.run(self._args.working_dir)
         return snp_matrix_constructor.tool_outputs['FASTA'][0].path
 
-    def __run_model_selection(self, fasta_path: Path) -> Tuple[str, str]:
+    def __run_model_selection(self, fasta_path: Path) -> tuple[str, str]:
         """
         Runs the model selection.
         :param fasta_path: FASTA input file
         :return: Model, rates parameter
         """
-        model_selection = ModelSelection(self._camel)
+        model_selection = ModelSelection()
         MEGAUtils.update_model_selection_parameters(
             model_selection, self._args.missing_data, self._args.branch_swap, self._args.site_cov_cutoff,
             self._args.threads)
@@ -131,7 +130,7 @@ class MainMega(object):
         :param rates: Rates among sites
         :return: None
         """
-        tree_building = MLTreeConstruction(self._camel)
+        tree_building = MLTreeConstruction()
         tree_building.add_input_files({'FASTA': [ToolIOFile(fasta_path)]})
         MEGAUtils.update_tree_building_parameters(
             tree_building, model, rates, self._args.bootstraps, self._args.missing_data, self._args.site_cov_cutoff,
@@ -144,6 +143,6 @@ class MainMega(object):
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainMega()
     main.run()

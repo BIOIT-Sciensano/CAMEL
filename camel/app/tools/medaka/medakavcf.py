@@ -1,22 +1,18 @@
-from camel.app.camel import Camel
 from camel.app.tools.medaka.medaka import Medaka
 
 
 class MedakaVcf(Medaka):
-
     """
     Class for Medaka vcf function.
-
     Runs the medaka vcf/variant algorithm and outputs a VCF file.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes Medaka vcf.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('medaka vcf', '2.0.0', camel)
+        super().__init__('medaka vcf', '2.0.0')
 
         self._required_inputs = ['HDF', 'FASTA']
         self._output_type = 'VCF'

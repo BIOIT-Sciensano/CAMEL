@@ -1,6 +1,19 @@
-dependencies: [ AmpliGone/1.3.0 ]
+dependencies:
+  - AmpliGone/1.3.0
 parameters:
-  amplicon_type: { default: false, mandatory: true, option: --amplicon-type, value: 'fragmented' }
-  error_rate: { default: false, mandatory: true, option: --error-rate, value: '0.1' }
-  threads: { default: true, mandatory: false, option: --threads, value: 4 }
+  amplicon_type:
+    default: false
+    mandatory: true
+    option: '--amplicon-type'
+    value: fragmented
+  error_rate:
+    default: false
+    mandatory: true
+    option: '--error-rate'
+    value: '0.1'
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: 4
 tool_command: ampligone

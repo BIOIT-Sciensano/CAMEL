@@ -3,10 +3,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 
 rule all:
@@ -22,12 +21,12 @@ rule bwa_index_ref:
     input:
         FASTA = config['input']['FASTA']
     output:
-        FASTA = 'bwa/index/fasta.io'
+        FASTA = 'bwa/index/fasta.iob'
     params:
         dir_ = 'bwa/index'
     run:
         from camel.app.tools.bwa.bwaindex import BWAIndex
-        bwa_index = BWAIndex(Camel.get_instance())
+        bwa_index = BWAIndex()
 
         # Create the working directory
         dir_ = Path(params.dir_).absolute()
@@ -35,10 +34,10 @@ rule bwa_index_ref:
         path_symlink.symlink_to(Path(input.FASTA))
 
         # Create the index
-        step = Step(str(rule), bwa_index, Camel.get_instance(), dir_)
+        step = Step(rule_name=str(rule), tool=bwa_index, dir_=Path(str(params.dir_)).absolute())
         bwa_index.add_input_files({'FASTA_REF': [ToolIOFile(path_symlink)]})
-        step.run_step()
-        SnakemakeUtils.dump_tool_output(bwa_index, 'INDEX_GENOME_PREFIX', Path(output.FASTA))
+        step.run()
+        snakemakeutils.dump_tool_output(bwa_index, 'INDEX_GENOME_PREFIX', Path(output.FASTA))
 
 rule bwa_map_reads_pe:
     """
@@ -55,12 +54,12 @@ rule bwa_map_reads_pe:
         dir_ = 'bwa/map_pe'
     run:
         from camel.app.tools.bwa.bwamap import BWAMap
-        bwa_map = BWAMap(Camel.get_instance())
-        SnakemakeUtils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.FASTA))
+        bwa_map = BWAMap()
+        snakemakeutils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.FASTA))
         bwa_map.add_input_files(SnakePipelineUtils.extracts_fq_input(Path(
             input.FASTQ), drop_empty=True, read_type='PE'))
         bwa_map.run(Path(str(params.dir_)))
-        SnakemakeUtils.dump_tool_outputs(bwa_map, output)
+        snakemakeutils.dump_tool_outputs(bwa_map, output)
 
 rule bwa_map_reads_se:
     """
@@ -86,17 +85,17 @@ rule bwa_map_reads_se:
         if fq_in is None:
             # If there are no SE reads -> create empty output file
             path_out = Path(str(params.dir_), 'empty.sam')
-            path_fasta = SnakemakeUtils.load_object(Path(input.FASTA))[0].value
+            path_fasta = snakemakeutils.load_object(Path(input.FASTA))[0].value
             SAMBAMutils.create_empty(path_out, path_fasta, compress=False)
-            SnakemakeUtils.dump_object([ToolIOFile(path_out)], Path(output.SAM))
+            snakemakeutils.dump_object([ToolIOFile(path_out)], Path(output.SAM))
             Path(output.INFORMS).touch()
         else:
             # Map SE reads
-            bwa_map = BWAMap(Camel.get_instance())
-            SnakemakeUtils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.FASTA))
+            bwa_map = BWAMap()
+            snakemakeutils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.FASTA))
             bwa_map.add_input_files({'FASTQ_SE': fq_in})
             bwa_map.run(Path(str(params.dir_)))
-            SnakemakeUtils.dump_tool_outputs(bwa_map, output)
+            snakemakeutils.dump_tool_outputs(bwa_map, output)
 
 rule bwa_map_merge_sam:
     """
@@ -117,13 +116,13 @@ rule bwa_map_merge_sam:
     run:
         from camel.app.components.files.sambamutils import SAMBAMutils
         from camel.app.tools.samtools.samtoolsmerge import SamtoolsMerge
-        merge = SamtoolsMerge(Camel.get_instance())
+        merge = SamtoolsMerge()
         merge.update_parameters(output_filename='bwa_merged.sam')
 
         # Collect non-empty SAM files
-        sam_input = SnakemakeUtils.load_object(Path(input.SAM_pe)) \
-                    + SnakemakeUtils.load_object(Path(input.SAM_se_fwd)) \
-                    + SnakemakeUtils.load_object(Path(input.SAM_se_rev))
+        sam_input = snakemakeutils.load_object(Path(input.SAM_pe)) \
+                    + snakemakeutils.load_object(Path(input.SAM_se_fwd)) \
+                    + snakemakeutils.load_object(Path(input.SAM_se_rev))
         sam_input = [io for io in sam_input if not SAMBAMutils.is_empty(io.path)]
         if len(sam_input) == 0:
             raise RuntimeError(f'All SAM files are empty')
@@ -131,7 +130,7 @@ rule bwa_map_merge_sam:
         # Run samtools merge
         merge.add_input_files({'SAM': sam_input})
         merge.run(Path(str(params.dir_)))
-        SnakemakeUtils.dump_tool_output(merge, 'SAM', Path(output.SAM))
+        snakemakeutils.dump_tool_output(merge, 'SAM', Path(output.SAM))
 
         # Collect informs
         informs = []
@@ -139,9 +138,9 @@ rule bwa_map_merge_sam:
             if path_inform.stat().st_size == 0:
                 logger.info(f'Skipping empty informs: {path_inform}')
                 continue
-            informs.append(SnakemakeUtils.load_object(path_inform))
+            informs.append(snakemakeutils.load_object(path_inform))
         informs.append(merge.informs)
-        SnakemakeUtils.dump_object(informs, Path(output.INFORMS))
+        snakemakeutils.dump_object(informs, Path(output.INFORMS))
 
 rule minimap2_map_reads:
     """
@@ -158,7 +157,7 @@ rule minimap2_map_reads:
     threads: 16
     run:
         from camel.app.tools.minimap2.minimap2mapping import Minimap2Mapping
-        minimap2 = Minimap2Mapping(Camel.get_instance())
+        minimap2 = Minimap2Mapping()
 
         # Create the working directory
         dir_ = Path(params.dir_).absolute()
@@ -172,7 +171,7 @@ rule minimap2_map_reads:
         # Run tool and collect output
         minimap2.update_parameters(threads=threads)
         minimap2.run(dir_)
-        SnakemakeUtils.dump_tool_outputs(minimap2, output)
+        snakemakeutils.dump_tool_outputs(minimap2, output)
 
 rule sam_to_bam:
     """
@@ -192,17 +191,17 @@ rule sam_to_bam:
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
 
         # View and sort
-        samtools_view = SamtoolsView(Camel.get_instance())
-        samtools_sort = SamtoolsSort(Camel.get_instance())
-        SnakemakeUtils.add_pickle_input(samtools_view, 'SAM', Path(input.SAM))
+        samtools_view = SamtoolsView()
+        samtools_sort = SamtoolsSort()
+        snakemakeutils.add_pickle_input(samtools_view, 'SAM', Path(input.SAM))
         pipeutils.run_as_pipe([samtools_view, samtools_sort], Path(str(params.dir_)).absolute())
 
         # Create index
-        samtools_index = SamtoolsIndex(Camel.get_instance())
+        samtools_index = SamtoolsIndex()
         samtools_index.update_parameters(output_filename=params.name)
         samtools_index.add_input_files({'BAM': samtools_sort.tool_outputs['BAM']})
         samtools_index.run(Path(str(params.dir_)).absolute())
-        SnakemakeUtils.dump_tool_output(samtools_index, 'BAM', Path(output.BAM))
+        snakemakeutils.dump_tool_output(samtools_index, 'BAM', Path(output.BAM))
 
 rule samtools_depth:
     """
@@ -219,12 +218,12 @@ rule samtools_depth:
         dir_ = 'depth'
     run:
         from camel.app.tools.samtools.samtoolsdepth import SamtoolsDepth
-        depth = SamtoolsDepth(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(depth, input)
+        depth = SamtoolsDepth()
+        snakemakeutils.add_pickle_inputs(depth, input)
         depth.update_parameters(
             maximum_coverage_depth=params.max_depth, output_filename=params.name, output_all_positions_absolutely=True)
         depth.run(Path(params.dir_).absolute())
-        SnakemakeUtils.dump_tool_outputs(depth, output)
+        snakemakeutils.dump_tool_outputs(depth, output)
 
 rule samtools_flagstat:
     """
@@ -238,15 +237,15 @@ rule samtools_flagstat:
         dir_ = 'flagstat'
     run:
         from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat
-        flagstat = SamtoolsFlagstat(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(flagstat, input)
+        flagstat = SamtoolsFlagstat()
+        snakemakeutils.add_pickle_inputs(flagstat, input)
         flagstat.run(Path(params.dir_).absolute())
         # Calculate mapping rate
         try:
             flagstat.informs['mapping_rate'] = flagstat.informs['mapped'][0] / flagstat.informs['total'][0]
         except ZeroDivisionError:
             flagstat.informs['mapping_rate'] = None
-        SnakemakeUtils.dump_tool_outputs(flagstat, output)
+        snakemakeutils.dump_tool_outputs(flagstat, output)
 
 rule collect_low_depth_regions:
     """
@@ -264,13 +263,13 @@ rule collect_low_depth_regions:
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff')
     run:
         from camel.app.tools.pipelines.viral_consensus.collectlowdepthregions import CollectLowDepthRegions
-        collect_low_depth = CollectLowDepthRegions(Camel.get_instance())
-        SnakemakeUtils.add_pickle_input(collect_low_depth, 'BAM', Path(input.BAM))
+        collect_low_depth = CollectLowDepthRegions()
+        snakemakeutils.add_pickle_input(collect_low_depth, 'BAM', Path(input.BAM))
         collect_low_depth.update_parameters(
             gap_depth_cutoff=params.gap_depth_cutoff, gap_len_cutoff=params.gap_len_cutoff)
         collect_low_depth.add_input_files({'FASTA': [ToolIOFile(Path(input.FASTA))]})
         collect_low_depth.run(Path(params.dir_).absolute())
-        SnakemakeUtils.dump_tool_outputs(collect_low_depth, output)
+        snakemakeutils.dump_tool_outputs(collect_low_depth, output)
 
 rule combine_stats:
     """
@@ -286,11 +285,11 @@ rule combine_stats:
         from scipy.stats import iqr
 
         # Parse informs
-        informs_flagstat = SnakemakeUtils.load_object(Path(input.INFORMS_flagstat))
-        informs_low_cov = SnakemakeUtils.load_object(Path(input.INFORMS_low_cov))
+        informs_flagstat = snakemakeutils.load_object(Path(input.INFORMS_flagstat))
+        informs_low_cov = snakemakeutils.load_object(Path(input.INFORMS_low_cov))
 
         # Parse depth stats
-        path_tsv = SnakemakeUtils.load_object(Path(input.TSV))[0].path
+        path_tsv = snakemakeutils.load_object(Path(input.TSV))[0].path
         data_depth = pd.read_table(path_tsv, names=['chr', 'pos', 'depth'])
         stats_out = {
             'total': {
@@ -331,10 +330,10 @@ rule collect_informs:
     run:
         data_out = []
         for path_in in [Path(x) for x in (input.INFORMS_mapping, input.INFORMS_depth, input.INFORMS_flagstat)]:
-            informs = SnakemakeUtils.load_object(path_in)
+            informs = snakemakeutils.load_object(path_in)
             if isinstance(informs, list):
                 data_out.extend(informs)
             else:
-                data_out.append(SnakemakeUtils.load_object(path_in))
+                data_out.append(snakemakeutils.load_object(path_in))
         with open(output.JSON, 'w') as handle:
             json.dump(data_out, handle, indent=2)

@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.error.invalidparametererror import InvalidParameterError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidParameterError
 from camel.app.tools.tool import Tool
 from camel.app.io.tooliofile import ToolIOFile
 
@@ -44,13 +44,12 @@ class Muscle(Tool):
 
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('muscle', '3.8.31', camel)
+        super().__init__('muscle', '3.8.31')
         self._input_string = ''
 
     def _execute_tool(self) -> None:
@@ -98,13 +97,13 @@ class Muscle(Tool):
         build_options = self._build_options()
         self._command.command = " ".join([self._tool_command, self._input_string, *build_options])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _check_parameters(self) -> None:
         """

@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import assembly
 
 rule kleborate_run:
@@ -10,20 +9,20 @@ rule kleborate_run:
     Runs the Kleborate tool.
     """
     input:
-        FASTA = Path(config['working_dir']) / assembly.OUTPUT_ASSEMBLY_FASTA
+        FASTA = assembly.OUTPUT_FASTA
     output:
-        TSV = Path(config['working_dir']) / 'kleborate' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'kleborate' / 'informs.io'
+        TSV = 'kleborate/tool/tsv.io',
+        INFORMS = 'kleborate/tool/informs.io'
     params:
-        dir_ = Path(config['working_dir']) / 'kleborate'
+        dir_ = 'kleborate/tool'
     run:
         from camel.app.tools.pipelines.klebsiella.kleborate import Kleborate
-        kleborate = Kleborate(Camel.get_instance())
+        kleborate = Kleborate()
         kleborate.update_parameters(all=True)
-        SnakemakeUtils.add_pickle_inputs(kleborate, input)
-        step = Step(str(rule), kleborate, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(kleborate, output)
+        snakemakeutils.add_pickle_inputs(kleborate, input)
+        step = Step(rule_name=str(rule), tool=kleborate, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(kleborate, output)
 
 rule kleborate_reporter:
     """
@@ -33,23 +32,23 @@ rule kleborate_reporter:
         TSV = rules.kleborate_run.output.TSV,
         INFORMS_kleborate = rules.kleborate_run.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / 'kleborate' / 'html.io'
+        HTML = 'kleborate/report/html.iob' # kleborate.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'kleborate'
+        dir_ = 'kleborate/report'
     run:
         from camel.app.tools.pipelines.klebsiella.kleboratereporter import KleborateReporter
-        reporter = KleborateReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = KleborateReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule kleborate_report_empty:
     """
     Creates an empty report when this analysis is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'kleborate' / 'html-empty.io'
+        VAL_HTML = 'kleborate/report/html-empty.iob' # kleborate.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('Kleborate', Path(output.VAL_HTML))
@@ -61,16 +60,13 @@ rule kleborate_create_summary:
     input:
         INFORMS = rules.kleborate_run.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / 'kleborate' / 'summary_kleborate.tsv'
+        FILE = 'kleborate/summary/summary_kleborate.{ext}'
     params:
         keys_kept = [
             'ST', 'Yersiniabactin', 'YbST', 'wzi', 'K_locus', 'K_locus_identity', 'virulence_score',
-            'resistance_score', 'O_locus', 'O_locus_identity']
+            'resistance_score', 'O_locus', 'O_locus_identity'],
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs_in = SnakemakeUtils.load_object(Path(input.INFORMS))
-        with open(output.TSV, 'w') as handle:
-            for key in params.keys_kept:
-                handle.write('\t'.join([
-                    f'kleborate_{key}', informs_in[key]
-                ]))
-                handle.write('\n')
+        informs_in = snakemakeutils.load_object(Path(input.INFORMS))
+        data_summary = [(f'kleborate_{key}', informs_in[key]) for key in params.keys_kept]
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'kleborate')

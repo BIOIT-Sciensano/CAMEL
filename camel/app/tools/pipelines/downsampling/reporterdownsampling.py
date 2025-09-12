@@ -1,8 +1,7 @@
 from typing import Any
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -12,12 +11,11 @@ class ReporterDownsampling(Tool):
     Creates output reports for the down sampling workflow.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Reporter: downsampling', '0.1', camel)
+        super().__init__('Reporter: downsampling', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -25,7 +23,7 @@ class ReporterDownsampling(Tool):
         :return: None
         """
         if 'stats' not in self._input_informs:
-            raise InvalidInputSpecificationError("Statistics input is required")
+            raise InvalidToolInputError("Statistics input is required")
         super()._check_input()
 
     def __add_table_params(self, section: HtmlReportSection, stats: dict[str, Any]) -> None:

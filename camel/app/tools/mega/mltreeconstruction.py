@@ -1,10 +1,9 @@
-import os
+from importlib.resources import files
+from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidparametererror import InvalidParameterError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import InvalidParameterError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.mega import TEMPLATE_TREE_CONSTRUCTION
 from camel.app.tools.tool import Tool
 
 
@@ -44,19 +43,18 @@ class MLTreeConstruction(Tool):
         'G+I': 'Gamma Distributed With Invariant Sites (G+I)'
     }
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('MEGA: ML Tree Construction', '10.0.4', camel)
+        super().__init__('MEGA: ML Tree Construction', '10.0.4')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         :return: None
         """
-        super(MLTreeConstruction, self)._check_input()
+        super()._check_input()
 
     def _check_parameters(self) -> None:
         """
@@ -72,9 +70,8 @@ class MLTreeConstruction(Tool):
                 int(self._parameters['bootstrap_replications'].value)
             except ValueError:
                 raise InvalidParameterError("Number of bootstrap replications has to be an integer.")
-        else:
-            if 'bootstrap_replications' in self._parameters:
-                raise InvalidParameterError("Number of bootstraps specified when no bootstraps are performed")
+        elif 'bootstrap_replications' in self._parameters:
+            raise InvalidParameterError("Number of bootstraps specified when no bootstraps are performed")
         if self._parameters['heuristic_method'].value not in MLTreeConstruction.HEURISTIC_METHODS:
             raise InvalidParameterError("Invalid heuristic method '{}' ({} supported)".format(
                 self._parameters['heuristic_method'].value, ', '.join(MLTreeConstruction.HEURISTIC_METHODS.keys())))
@@ -83,7 +80,7 @@ class MLTreeConstruction(Tool):
                 ', '.join(MLTreeConstruction.INITIAL_TREE.keys())))
         if self._parameters['rates_among_sites'].value not in ('G', 'G+I') and 'gamma_categories' in self._parameters:
             raise InvalidParameterError("Gamma categories are only used when 'G' or 'G+I' rate models are used.")
-        super(MLTreeConstruction, self)._check_parameters()
+        super()._check_parameters()
 
     def _execute_tool(self) -> None:
         """
@@ -102,9 +99,9 @@ class MLTreeConstruction(Tool):
         config_file = self.__generate_config_file()
         self._command.command = ' '.join([
             self._tool_command,
-            '-d {}'.format(self._tool_inputs['FASTA'][0].path),
-            '-a {}'.format(config_file),
-            '-o {}'.format(MLTreeConstruction.DEFAULT_OUTPUT_NAME)
+            f'-d {self._tool_inputs["FASTA"][0].path}',
+            f'-a {config_file}',
+            f'-o {MLTreeConstruction.DEFAULT_OUTPUT_NAME}'
         ])
 
     def __get_parameter_value(self, name: str) -> str:
@@ -118,15 +115,16 @@ class MLTreeConstruction(Tool):
             return self._parameters[name].value
         return 'Not Applicable'
 
-    def __generate_config_file(self) -> str:
+    def __generate_config_file(self) -> Path:
         """
         Generates the config file.
         :return: Path to output file
         """
-        with open(TEMPLATE_TREE_CONSTRUCTION) as handle:
+        path_template = Path(str(files('camel').joinpath('resources/tools/mega/infer_ML_nucleotide_template.mao')))
+        with open(path_template) as handle:
             template = handle.read()
 
-        config_file = os.path.join(self._folder, 'config.mao')
+        config_file = self._folder / 'config.mao'
         with open(config_file, 'w') as handle:
             handle.write(template.format(
                 test_of_phylogeny=self.__get_parameter_value('test_of_phylogeny'),
@@ -151,11 +149,11 @@ class MLTreeConstruction(Tool):
         self._tool_outputs['NWK'] = [ToolIOFile(self._folder / f'{MLTreeConstruction.DEFAULT_OUTPUT_NAME}.nwk')]
         self._tool_outputs['TXT'] = [ToolIOFile(self._folder / f'{MLTreeConstruction.DEFAULT_OUTPUT_NAME}_summary.txt')]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output to see if the tool executed correctly.
+        :param command: Commad to check
         :return: None
         """
-        if 'error' in self.stdout.lower():
-            raise ToolExecutionError("Problem generating tree using megacc: {}".format(
-                '\n'.join(self.stdout.splitlines()[-5:])))
+        if 'error' in command.stdout.lower():
+            raise ToolExecutionError(self.name, f"Problem generating tree: {command.stderr}")

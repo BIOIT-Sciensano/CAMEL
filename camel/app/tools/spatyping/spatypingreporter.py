@@ -1,10 +1,9 @@
 import datetime
-from typing import List, Any
+from typing import Any
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.spatyping.spatyping import SpaTypingHit
 from camel.app.tools.tool import Tool
@@ -15,12 +14,11 @@ class SpaTypingReporter(Tool):
     This tool creates a report section for the spa typing tool.
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Spa typing: reporter', '0.1', camel)
+        super().__init__('Spa typing: reporter', '0.1')
         self._section = None
 
     def _check_input(self) -> None:
@@ -29,9 +27,9 @@ class SpaTypingReporter(Tool):
         :return: None
         """
         if 'spa_typing' not in self._input_informs:
-            raise InvalidInputSpecificationError("Spa typing informs are required.")
+            raise InvalidToolInputError("Spa typing informs are required.")
         if 'VAL_hits' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Hits input is required.")
+            raise InvalidToolInputError("Hits input is required.")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -94,7 +92,7 @@ class SpaTypingReporter(Tool):
     HTML_COLUMNS = ['<i>spa</i> type', 'Repeats', 'Length', '% covered', '% identity']
 
     @staticmethod
-    def hit_to_html_row(hit: SpaTypingHit) -> List[Any]:
+    def hit_to_html_row(hit: SpaTypingHit) -> list[Any]:
         """
         Converts a hit to a HTML table row.
         :param hit: Spatyping hit
@@ -104,8 +102,8 @@ class SpaTypingReporter(Tool):
             hit.spa_type,
             '-'.join(str(x) for x in hit.repeats),
             hit.length,
-            '{:.2f}'.format(hit.percent_covered),
-            '{:.2f}'.format(hit.percent_identity),
+            f'{hit.percent_covered:.2f}',
+            f'{hit.percent_identity:.2f}',
         ]
         if hit.is_perfect():
             return [HtmlTableCell(d, color='green') for d in data]

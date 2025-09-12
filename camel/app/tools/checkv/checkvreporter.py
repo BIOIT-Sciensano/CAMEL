@@ -2,10 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlexpandabletable import HtmlExpandableTable
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -22,11 +21,12 @@ class CheckVReporter(Tool):
         {'key': 'quality_summary', 'name': 'Quality summary'}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
+        :return: None
         """
-        super().__init__('CheckV reporter', '0.1', camel)
+        super().__init__('CheckV reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -35,7 +35,7 @@ class CheckVReporter(Tool):
         """
         for output_file in CheckVReporter.OUTPUT_FILES:
             if f"TSV_{output_file['key']}" not in self._tool_inputs:
-                raise InvalidInputSpecificationError(f"TSV_{output_file['key']} input is required")
+                raise InvalidToolInputError(f"TSV_{output_file['key']} input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:

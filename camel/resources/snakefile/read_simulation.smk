@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import assembly
 
 rule read_simulation_fastq_from_fasta:
@@ -11,16 +10,16 @@ rule read_simulation_fastq_from_fasta:
     This rule is executed when the input type is FASTA and no VCF input file has been provided.
     """
     input:
-        FASTA = Path(config['working_dir']) / assembly.get_fasta_raw(config)
+        FASTA = assembly.get_fasta_raw(config)
     output:
-        FASTQ_PE = Path(config['working_dir']) / 'read_simulation' / 'art' / 'fastq.io',
-        INFORMS = Path(config['working_dir']) / 'read_simulation' / 'art' / 'informs.io'
+        FASTQ_PE = 'read_simulation/art/fastq.io', # read_simulation.OUTPUT_FASTQ
+        INFORMS = 'read_simulation/art/informs.io' # read_simulation.OUTPUT_INFORMS
     params:
-        running_dir = Path(config['working_dir']) / 'read_simulation' / 'art'
+        dir_ = 'read_simulation/art'
     run:
         from camel.app.tools.art.art import ART
-        art = ART(Camel.get_instance())
-        step = Step(str(rule), art, Camel.get_instance(), params.running_dir)
-        SnakemakeUtils.add_pickle_inputs(art, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(art, output)
+        art = ART()
+        step = Step(rule_name=str(rule), tool=art, dir_=Path(str(params.dir_)))
+        snakemakeutils.add_pickle_inputs(art, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(art, output)

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import argparse
-from pathlib import Path
-
 import shutil
-
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Optional
 
 from camel.app.camel import Camel
 from camel.app.components.filesystemhelper import FileSystemHelper
@@ -13,10 +12,11 @@ from camel.app.components.genedetection.genedetectionutils import GeneDetectionU
 from camel.app.components.html.htmlreport import HtmlReport
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.tools.cdhit.cdhitest import Cluster
 from camel.resources import CSS_STYLE
 
 
-class MainMakeGeneDetectionDB(object):
+class MainMakeGeneDetectionDB:
     """
     This class is used to create databases for the gene detection tool.
     """
@@ -30,7 +30,7 @@ class MainMakeGeneDetectionDB(object):
         fasta_name = self._args.fasta_name if self._args.fasta_name is not None else self._args.fasta.name
         self._db_name = FileSystemHelper.make_valid(Path(fasta_name).stem)
         self._helper = DBHelper(self._db_name, self._args.working_dir)
-        self._clusters = None
+        self._clusters: list[Cluster] | None = None
         self._new_name_by_header = None
 
     @staticmethod
@@ -58,9 +58,20 @@ class MainMakeGeneDetectionDB(object):
             self._args.output_dir.mkdir(parents=True)
         input_fasta = self._helper.standardize_fasta_headers(self._args.fasta)
         self.__export_blast_db(input_fasta, self._args.output_dir)
-        self.__export_srst2_db(input_fasta, self._args.output_dir)
+        self._clusters = self.__cluster_fasta(input_fasta)
         self._helper.export_metadata(self._db_name, self._args.output_dir)
         self.__export_report()
+
+    def __cluster_fasta(self, input_fasta: Path) -> list[Cluster]:
+        """
+        Clusters the input FASTA file.
+        :param input_fasta: Input FASTA file
+        :return: List of clusters
+        """
+        dir_clustering = self._helper.get_working_subdir('clustering')
+        fasta_seq_headers = dir_clustering / 'seq_headers.fasta'
+        self._new_name_by_header = self._helper.convert_fasta_headers_to_seq(input_fasta, fasta_seq_headers)
+        return self._helper.get_clusters_form_fasta(fasta_seq_headers, self._args.identity_cutoff, self._args.threads)
 
     def __export_blast_db(self, input_fasta: Path, output_dir: Path) -> None:
         """
@@ -81,39 +92,6 @@ class MainMakeGeneDetectionDB(object):
         # Export files
         for f in dir_indexing.iterdir():
             shutil.copyfile(str(f), str(output_dir / f.name))
-
-    def __export_srst2_db(self, input_fasta: Path, output_dir: Path) -> None:
-        """
-        Exports a database for SRST2.
-        :param input_fasta: Input FASTA file
-        :param output_dir: Output directory
-        :return: None
-        """
-        # Cluster FASTA
-        dir_clustering = self._helper.get_working_subdir('clustering')
-        fasta_seq_headers = dir_clustering / 'seq_headers.fasta'
-        self._new_name_by_header = self._helper.convert_fasta_headers_to_seq(input_fasta, fasta_seq_headers)
-        self._clusters = self._helper.get_clusters_form_fasta(
-            fasta_seq_headers, self._args.identity_cutoff, self._args.threads)
-
-        # Create SRST2 FASTA
-        dir_indexing = self._helper.get_working_subdir('index_srst2')
-        fasta_srst2 = dir_indexing / f'{self._db_name}-clustered_{self._args.identity_cutoff}.fasta'
-        self._helper.create_srst2_fasta(fasta_seq_headers, fasta_srst2, self._clusters)
-
-        # Index
-        self._helper.index_samtools_faidx(fasta_srst2, dir_indexing)
-        self._helper.index_bowtie2(fasta_srst2, dir_indexing)
-        self._helper.index_blast(fasta_srst2, dir_indexing)
-        self._helper.index_kma(fasta_srst2, dir_indexing)
-
-        # Export files
-        self._helper.export_mapping(self._new_name_by_header, self._clusters, output_dir)
-        for f in dir_indexing.iterdir():
-            if f.is_file():
-                shutil.copyfile(str(f), str(output_dir / f.name))
-            elif f.is_dir():
-                shutil.copytree(str(f), str(output_dir / f.name))
 
     def __export_report(self) -> None:
         """

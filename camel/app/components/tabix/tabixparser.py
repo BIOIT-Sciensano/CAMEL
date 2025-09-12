@@ -1,4 +1,4 @@
-from typing import Dict
+from pathlib import Path
 
 from camel.app.loggers import logger
 
@@ -10,17 +10,16 @@ TABIX_ANNOTATION_INDICES = {
 }
 
 
-def parse_tabix_annotation(annotation_file: str) -> Dict[int, Dict[str, str]]:
+def parse_tabix_annotation(annotation_file: Path) -> dict[int, dict[str, str]]:
     """
     Parses the file with the tabular annotation.
     :param annotation_file: Annotation file
     :return: Annotations (position: annotation)
     """
-    logger.info("Parsing annotation file: {}".format(annotation_file))
+    logger.info(f"Parsing annotation file: {annotation_file}")
     annotations = {}
     with open(annotation_file) as handle:
         for line in handle.readlines():
-            print(line.strip())
             parts = line.strip().split('\t')
             position = int(parts[TABIX_ANNOTATION_INDICES['position']])
             annotations[position] = {k: parts[index] for k, index in TABIX_ANNOTATION_INDICES.items()}

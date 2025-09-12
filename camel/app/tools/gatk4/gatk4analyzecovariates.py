@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.gatk4.gatk4 import GATK4
 
@@ -32,13 +31,12 @@ class GATK4AnalyzeCovariates(GATK4):
     - plots-report-file       pdf output file name. Default value: 'recal_QC_plots.pdf'
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATKAnalyzeCovariates tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk4 AnalyzeCovariates', '4.1.9.0', camel)
+        super().__init__('gatk4 AnalyzeCovariates', '4.1.9.0')
 
         self._required_inputs = ['TXT_TABLE_BEFORE', 'TXT_TABLE_AFTER']
 

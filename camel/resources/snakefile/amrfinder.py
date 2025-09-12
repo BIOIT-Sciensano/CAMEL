@@ -1,13 +1,14 @@
 from pathlib import Path
 
 DIR_AMRFINDER = Path('amrfinder')
-SNAKEFILE_AMRFINDER = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+SNAKEFILE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
 
 # Input
-INPUT_AMRFINDER_FASTA = DIR_AMRFINDER / 'fasta.io'
+INPUT_FASTA = DIR_AMRFINDER / 'fasta.io'
 
 # Report and summary
-OUTPUT_AMRFINDER_INFORMS = DIR_AMRFINDER / 'informs.io'
-OUTPUT_AMRFINDER_REPORT = DIR_AMRFINDER / 'html.io'
-OUTPUT_AMRFINDER_REPORT_EMPTY = DIR_AMRFINDER / 'html-empty.io'
-OUTPUT_AMRFINDER_SUMMARY = DIR_AMRFINDER / 'summary_amrfinder.tsv'
+OUTPUT_TSV = DIR_AMRFINDER / 'tool' / 'tsv.io'
+OUTPUT_INFORMS = DIR_AMRFINDER / 'tool' / 'informs.io'
+OUTPUT_REPORT = DIR_AMRFINDER / 'report' / 'html.iob'
+OUTPUT_REPORT_EMPTY = DIR_AMRFINDER / 'html-empty.iob'
+OUTPUT_SUMMARY = DIR_AMRFINDER / 'summary_amrfinder.{ext}'

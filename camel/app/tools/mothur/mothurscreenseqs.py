@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -10,13 +10,12 @@ class MothurScreenSeqs(Mothur):
     summary file.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_screen_seqs', '1.39.1', camel)
+        super().__init__('mothur_screen_seqs', '1.39.1')
 
     def _check_input(self):
         """
@@ -27,15 +26,15 @@ class MothurScreenSeqs(Mothur):
         - Only one input file per key is allowed
         :return: None
         """
-        super(MothurScreenSeqs, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('No input file given for Mothur screen.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('No input file given for Mothur screen.seqs: {!r}'.format(self._tool_inputs))
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'TSV_Summary', 'TSV_Groups', 'TSV_AlignReport', 'TSV_ContigReport',
                            'TSV_Names', 'TSV_Counts', 'TSV_Qfile', 'TSV_Taxonomy']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur screen.seqs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input key given for Mothur screen.seqs: {!r}'.format(self._tool_inputs))
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
+                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
                                                      screen.seqs: {!r}'.format(self._tool_inputs))
 
     def _build_input_string(self):
@@ -75,24 +74,24 @@ class MothurScreenSeqs(Mothur):
         # Screen.seqs re-appends the original extension (e.g. .fasta or .align) after first adding .good
         path = self._tool_inputs['FASTA'][0].path
         fasta_extension = path[self._tool_inputs['FASTA'][0].path.rfind('.'):]
-        self._tool_outputs['FASTA'] = [ToolIOFile(super(MothurScreenSeqs, self)._get_basename('FASTA') + '.good' + fasta_extension)]
-        self._tool_outputs['TSV_Bad'] = [ToolIOFile(super(MothurScreenSeqs, self)._get_basename('FASTA') + '.bad.accnos')]
+        self._tool_outputs['FASTA'] = [ToolIOFile(super()._get_basename('FASTA') + '.good' + fasta_extension)]
+        self._tool_outputs['TSV_Bad'] = [ToolIOFile(super()._get_basename('FASTA') + '.bad.accnos')]
         # Depending on the input keys more files will be created
         if 'TSV_Groups' in self._tool_inputs:
-            self._tool_outputs['TSV_Groups'] = [ToolIOFile(super(MothurScreenSeqs, self)._get_basename('TSV_Groups', '.groups') +
+            self._tool_outputs['TSV_Groups'] = [ToolIOFile(super()._get_basename('TSV_Groups', '.groups') +
                                                 '.good.groups')]
         if 'TSV_Summary' in self._tool_inputs:
-            self._tool_outputs['TSV_Summary'] = [ToolIOFile(super(MothurScreenSeqs, self)._get_basename('TSV_Summary', '.summary') +
+            self._tool_outputs['TSV_Summary'] = [ToolIOFile(super()._get_basename('TSV_Summary', '.summary') +
                                                  '.good.summary')]
         if 'TSV_Names' in self._tool_inputs:
-            self._tool_outputs['TSV_Names'] = [ToolIOFile(super(MothurScreenSeqs, self)._get_basename('TSV_Names', '.names') +
+            self._tool_outputs['TSV_Names'] = [ToolIOFile(super()._get_basename('TSV_Names', '.names') +
                                                '.good.names')]
         if 'TSV_AlignReport' in self._tool_inputs:
-            self._tool_outputs['TSV_AlignReport'] = [ToolIOFile(super(MothurScreenSeqs, self)._get_basename('TSV_AlignReport', '.align.report') +
+            self._tool_outputs['TSV_AlignReport'] = [ToolIOFile(super()._get_basename('TSV_AlignReport', '.align.report') +
                                                      '.good.align.report')]
         if 'TSV_ContigsReport' in self._tool_inputs:
-            self._tool_outputs['TSV_ContigsReport'] = [ToolIOFile(super(MothurScreenSeqs, self)._get_basename('TSV_ContigReport', '.contig.report') +
+            self._tool_outputs['TSV_ContigsReport'] = [ToolIOFile(super()._get_basename('TSV_ContigReport', '.contig.report') +
                                                        '.good.contigs.report')]
         if 'TSV_Counts' in self._tool_inputs:
-            self._tool_outputs['TSV_Counts'] = [ToolIOFile(super(MothurScreenSeqs, self)._get_basename('TSV_Counts', '.count_table') +
+            self._tool_outputs['TSV_Counts'] = [ToolIOFile(super()._get_basename('TSV_Counts', '.count_table') +
                                                 '.good.count_table')]

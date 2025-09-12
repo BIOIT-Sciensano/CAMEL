@@ -1,10 +1,9 @@
-import os
 import re
 
+from camel.app.command.command import Command
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 
 
 class Mutect1(Tool):
@@ -36,13 +35,13 @@ class Mutect1(Tool):
     - output_callstats_file
                     default value:  call_stats.txt
     """
-    def __init__(self, camel):
+
+    def __init__(self):
         """
         Initialize Mutect1 tool.
-        :param camel: Camel instance
         :return: None
         """
-        super(Mutect1, self).__init__('Mutect1', '1.1.7', camel)
+        super().__init__('Mutect1', '1.1.7')
         self._required_inputs = ['BAM_TUMOR', 'FASTA_REF']
 
     def _execute_tool(self):
@@ -63,7 +62,7 @@ class Mutect1(Tool):
 
         for input_key in self._required_inputs:
             if input_key not in self._tool_inputs:
-                raise InvalidInputSpecificationError(
+                raise InvalidToolInputError(
                     'Mutect1 required {} input is missing in tool inputs!'.format(input_key))
 
     def _check_parameters(self):
@@ -119,16 +118,15 @@ class Mutect1(Tool):
         - vcf file
         :return: None
         """
-        self._tool_outputs['TXT_CALL_STATS'] = [
-            ToolIOFile(os.path.join(self._folder, self._parameters['output_callstats_file'].value))]
-        self._tool_outputs['VCF'] = [
-            ToolIOFile(os.path.join(self._folder, self._parameters['output_vcf_file'].value))]
+        self._tool_outputs['TXT_CALL_STATS'] = [ToolIOFile(self._folder / self.get_param_value('output_callstats_file'))]
+        self._tool_outputs['VCF'] = [ToolIOFile(self._folder / self.get_param_value('output_vcf_file'))]
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Check the result of Mutect1 tool run
+        Check the result of Mutect1 tool run.
+        :param command: Command
         :return: None
         """
-        if len(self.stdout.split('\n')) > 1:
+        if len(self._command.stdout.split('\n')) > 1:
             if not re.match('Exit status: 0', self.stdout.split('\n')[-2].rstrip()):
-                raise ToolExecutionError("Mutect1 fails to run, message: \n{}".format(self.stdout))
+                raise ToolExecutionError(f"Mutect1 fails to run, message: \n{self.stdout}")

@@ -1,10 +1,40 @@
-dependencies: [blast/2.14.0, SpoTyping/2.1_python3]
+dependencies:
+  - blast/2.14.0
+  - SpoTyping/2.1_python3
 parameters:
-  min_relaxed: {default: false, mandatory: false, option: --rmin, p_index: 0, value: '1'}
-  min_strict: {default: false, mandatory: false, option: --min, p_index: 0, value: '1'}
-  no_query: {default: true, mandatory: false, option: --noQuery, p_index: 0, value: null}
-  output_basename: {default: true, mandatory: true, option: --output, p_index: 0,
-    value: spotyping_out}
-  swift: {default: false, mandatory: false, option: --swift, p_index: 0, value: 'on'}
-  fasta: {default: false, mandatory: false, option: --seq, value: null}
+  min_relaxed:
+    default: false
+    mandatory: false
+    option: '--rmin'
+    p_index: 0
+    value: '1'
+  min_strict:
+    default: false
+    mandatory: false
+    option: '--min'
+    p_index: 0
+    value: '1'
+  no_query:
+    default: true
+    mandatory: false
+    option: '--noQuery'
+    p_index: 0
+    value: null
+  output_basename:
+    default: true
+    mandatory: true
+    option: '--output'
+    p_index: 0
+    value: spotyping_out
+  swift:
+    default: false
+    mandatory: false
+    option: '--swift'
+    p_index: 0
+    value: 'on'
+  fasta:
+    default: false
+    mandatory: false
+    option: '--seq'
+    value: null
 tool_command: SpoTyping

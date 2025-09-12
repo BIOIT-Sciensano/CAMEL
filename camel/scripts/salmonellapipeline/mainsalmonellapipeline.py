@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 import argparse
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import yaml
 
 from camel.app.camel import Camel
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.salmonellapipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.salmonellapipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 class MainSalmonellaPipeline(ReportPipeline):

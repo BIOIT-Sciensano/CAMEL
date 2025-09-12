@@ -1,7 +1,9 @@
 import os
+from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -12,13 +14,12 @@ class KrakenReport(Tool):
     studies. This class will generate a report of Kraken results across an entire sample.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('kraken_report', '0.10.5', camel)
+        super().__init__('kraken_report', '0.10.5')
 
     def _execute_tool(self):
         """
@@ -38,38 +39,39 @@ class KrakenReport(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs or 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('TSV or DB input keys are missing for Kraken-report: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('TSV or DB input keys are missing for Kraken-report: {!r}'.format(self._tool_inputs))
         for value in self._tool_inputs.values():
             if len(value) > 1:
-                raise InvalidInputSpecificationError('More than one file per key given '
+                raise InvalidToolInputError('More than one file per key given '
                                                      'for Kraken-report: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidInputSpecificationError('Too many input keys given for Kraken-report '
+            raise InvalidToolInputError('Too many input keys given for Kraken-report '
                                                  '(only TSV and DB allowed): {!r}'.format(self._tool_inputs))
 
-    def __get_basename(self):
+    def __get_basename(self) -> Path:
         """
         Returns the prefix that will be used in the output.
         :return: String with the prefix used in the output
         """
         infile = os.path.basename(self._tool_inputs['TSV'][0].path)
-        return os.path.join(self._folder, os.path.splitext(infile)[0])
+        return self._folder / os.path.splitext(infile)[0]
 
     def __set_output(self):
         """
         Sets the name of the output files
         :return: None
         """
-        self._tool_outputs['TSV'] = [ToolIOFile(self.__get_basename() + '.report.tsv')]
+        self._tool_outputs['TSV'] = [ToolIOFile(Path(f'{self.__get_basename()}.report.tsv'))]
 
     def __build_input_string(self):
         """
         Creates the string with the input and output files
         :return: String with the input parameters
         """
-        command_parts = ['--db {}'.format(self._tool_inputs['DB'][0]),
-                         '{}'.format(self._tool_inputs['TSV'][0]),
-                         '> {}'.format(self.__get_basename() + '.report.tsv')]
+        command_parts = [
+            f'--db {self._tool_inputs["DB"][0]}',
+            f'{self._tool_inputs["TSV"][0]}',
+            f'> {self.__get_basename()}.report.tsv']
         return ' '.join(command_parts)
 
     def __build_command(self):
@@ -80,12 +82,13 @@ class KrakenReport(Tool):
         options_string = ' '.join(self._build_options())
         self._command.command = '{} {} {}'.format(self._tool_command, self.__build_input_string(), options_string)
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command):
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if 'error' in self.stderr.lower():
-            raise ToolExecutionError("Command execution failed (stderr: {}).".format(self.stderr))
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        if 'error' in command.stderr.lower():
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        if command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {command.exit_code})")

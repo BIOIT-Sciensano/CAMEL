@@ -218,8 +218,6 @@ Sequence typing is performed as described in [Bogaerts *et al.*](https://pubmed.
 updated version of blast (`blast 2.14.0`). 
 Alternative detection using `kma 1.4.12a` or `SRST2 0.2.0` is available by changing the `--detection-method` parameter.
 
-**Note:** srst2 is not available for ONT data input
-
 The following typing schemes are available:
 
 | **name**                 | **origin** |

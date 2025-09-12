@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import yaml
 

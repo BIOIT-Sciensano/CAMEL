@@ -36,7 +36,7 @@ def get_ubuntu_release_codename() -> Union[str, None]:
     :return: Ubuntu release version (if available)
     """
     try:
-        with open('/etc/os-release', 'r') as handle:
+        with open('/etc/os-release') as handle:
             for line in handle.readlines():
                 if line.startswith("VERSION_CODENAME="):
                     return line.strip().split('=')[1].strip('"')

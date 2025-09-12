@@ -1,10 +1,47 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  output: {default: true, mandatory: false, option: -o, p_index: 0, value: marked_duplicates.bam}
-  remove_sequencing_duplicates: {default: false, mandatory: false, option: --remove-sequencing-duplicates, p_index: 0, value: null}
-  threads: {default: true, mandatory: false, option: null, p_index: 0, value: 4}
-  read_name_regex: { default: false, mandatory: false, option: --read-name-regex, p_index: 0, value: '' }
-  duplicate_scoring_strategy: { default: true, mandatory: false, option: --duplicate-scoring-strategy, p_index: 30, value: SUM_OF_BASE_QUALITIES }
-  metrics_output: {default: true, mandatory: false, option: --metrics-file, p_index: 0, value: duplicates_mark.metrics}
-  create_index: { default: true, mandatory: false, option: --create-output-bam-index, p_index: 0, value: null }
+  output:
+    default: true
+    mandatory: false
+    option: '-o'
+    p_index: 0
+    value: marked_duplicates.bam
+  remove_sequencing_duplicates:
+    default: false
+    mandatory: false
+    option: '--remove-sequencing-duplicates'
+    p_index: 0
+    value: null
+  threads:
+    default: true
+    mandatory: false
+    option: null
+    p_index: 0
+    value: 4
+  read_name_regex:
+    default: false
+    mandatory: false
+    option: '--read-name-regex'
+    p_index: 0
+    value: ''
+  duplicate_scoring_strategy:
+    default: true
+    mandatory: false
+    option: '--duplicate-scoring-strategy'
+    p_index: 30
+    value: SUM_OF_BASE_QUALITIES
+  metrics_output:
+    default: true
+    mandatory: false
+    option: '--metrics-file'
+    p_index: 0
+    value: duplicates_mark.metrics
+  create_index:
+    default: true
+    mandatory: false
+    option: '--create-output-bam-index'
+    p_index: 0
+    value: null
 tool_command: MarkDuplicatesSpark

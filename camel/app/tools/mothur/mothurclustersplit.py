@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -9,13 +9,12 @@ class MothurClusterSplit(Mothur):
     It splits large distance matrices into smaller pieces.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_cluster_split', '1.39.1', camel)
+        super().__init__('mothur_cluster_split', '1.39.1')
 
     def _check_input(self):
         """
@@ -26,13 +25,13 @@ class MothurClusterSplit(Mothur):
         - DIST, PHY and FASTA are mutually exclusive but this is not checked
         :return: None
         """
-        super(MothurClusterSplit, self)._check_input()
+        super()._check_input()
         for key, input_files in self._tool_inputs.items():
             if key not in ['PHY', 'DIST', 'TSV_Names', 'TSV_Taxonomy', 'FASTA', 'TSV_File', 'TSV_Counts']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur '
+                raise InvalidToolInputError('Invalid input key given for Mothur '
                                                      'cluster.split: {!r}'.format(self._tool_inputs))
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
+                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
                                                      cluster.split: {!r}'.format(self._tool_inputs))
 
     def _build_input_string(self):
@@ -68,11 +67,11 @@ class MothurClusterSplit(Mothur):
         basename = ''
         # DIST, PHY and FASTA are mutually exclusive
         if 'DIST' in self._tool_inputs:
-            basename = super(MothurClusterSplit, self)._get_basename('DIST')
+            basename = super()._get_basename('DIST')
         elif 'PHY' in self._tool_inputs:
-            basename = super(MothurClusterSplit, self)._get_basename('PHY')
+            basename = super()._get_basename('PHY')
         elif 'FASTA' in self._tool_inputs:
-            basename = super(MothurClusterSplit, self)._get_basename()
+            basename = super()._get_basename()
         self._tool_outputs[self.__get_output_key()] = [ToolIOFile(basename + self.__get_extension())]
 
     def __get_extension(self):

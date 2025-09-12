@@ -1,14 +1,12 @@
 import re
 from typing import Optional
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.picard.picard import Picard
 
 
 class CollectMultipleMetrics(Picard):
-
     """
     Class for Picard CollectMultipleMetrics function to calculate various QC metrics for read mapping
 
@@ -68,13 +66,12 @@ class CollectMultipleMetrics(Picard):
         'CollectQualityYieldMetrics': {'QualityYield': '.quality_yield_metrics'}
     }
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Picard CollectMultipleMetrics', '2.23.3', camel)
+        super().__init__('Picard CollectMultipleMetrics', '2.23.3')
 
         self._required_inputs = ['BAM', 'SAM']
         self._specific_parameters = ['metric_accumulation_level_multi']
@@ -150,7 +147,7 @@ class CollectMultipleMetrics(Picard):
         """
         # Ref: http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics
         align_stats = {}
-        with open(self._tool_outputs['TXT_AlignmentSummary'][0].path, 'r') as inf:
+        with open(self._tool_outputs['TXT_AlignmentSummary'][0].path) as inf:
             col_nbs = None
             for line in inf:
                 if not line.startswith('#') and 'TOTAL_READS' in line and col_nbs is None:  # First line after comments is the header
@@ -182,7 +179,7 @@ class CollectMultipleMetrics(Picard):
         # Ref: http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics
         data_row = False
         self.informs['InsertSize_stats'] = {}
-        with open(self._tool_outputs['TXT_InsertSize'][0].path, 'r') as inf:
+        with open(self._tool_outputs['TXT_InsertSize'][0].path) as inf:
             for line in inf:
                 if re.match('MEDIAN_INSERT_SIZE', line):
                     data_row = True
@@ -209,7 +206,7 @@ class CollectMultipleMetrics(Picard):
         """
         # Only GC Bias summary is analyzed
         self.informs['GCBias_stats'] = {}
-        with open(self._tool_outputs['TXT_GcBiasSummary'][0].path, 'r') as inf:
+        with open(self._tool_outputs['TXT_GcBiasSummary'][0].path) as inf:
             for line in inf:
                 if re.match('All Reads', line):
                     informs = line.split("\t")

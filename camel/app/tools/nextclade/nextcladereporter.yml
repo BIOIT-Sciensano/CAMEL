@@ -1,4 +1,8 @@
 dependencies: []
 parameters:
-  name: { default: true, mandatory: true, option: null, value: sample }
+  name:
+    default: true
+    mandatory: true
+    option: null
+    value: sample
 tool_command: null

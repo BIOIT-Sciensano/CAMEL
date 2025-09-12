@@ -1,22 +1,19 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.picard.picard import Picard
 
 
 class GatherBamFiles(Picard):
-
     """
     Class for Picard GatherBamFiles function.
     Concatenate efficiently BAM files that resulted from a scattered parallel analysis.
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Picard GatherBamFiles', '2.23.3', camel)
+        super().__init__('Picard GatherBamFiles', '2.23.3')
         self._required_inputs = ['BAMs']
 
     def _set_input(self) -> None:
@@ -28,6 +25,6 @@ class GatherBamFiles(Picard):
         input_files = [f.path for f in self._tool_inputs['BAMs']]
 
         if len(input_files) <= 1:
-            raise InvalidInputSpecificationError("Picard GatherBamFiles: more than 1 input BAM file is expected")
+            raise InvalidToolInputError("Picard GatherBamFiles: more than 1 input BAM file is expected")
 
         self._input_string += "".join(f"I={f} " for f in input_files)

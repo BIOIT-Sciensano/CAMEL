@@ -1,5 +1,0 @@
-dependencies: []
-parameters:
-  debug_mode: {default: false, mandatory: false, option: null, value: null}
-  disable_html_output: {default: false, mandatory: false, option: null, value: null}
-tool_command: null

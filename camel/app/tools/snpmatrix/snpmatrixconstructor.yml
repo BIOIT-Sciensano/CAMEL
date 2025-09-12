@@ -1,5 +1,13 @@
 dependencies: []
 parameters:
-  include_ref: {default: false, mandatory: false, option: null, value: null}
-  include_filtered: {default: false, mandatory: false, option: null, value: null}
+  include_ref:
+    default: false
+    mandatory: false
+    option: null
+    value: null
+  include_filtered:
+    default: false
+    mandatory: false
+    option: null
+    value: null
 tool_command: null

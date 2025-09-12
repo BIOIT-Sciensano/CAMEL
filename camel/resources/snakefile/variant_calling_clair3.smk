@@ -3,12 +3,9 @@ This Snakefile performs variant calling using the clair3 pipeline.
 """
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import variant_calling_clair3
-
-camel = Camel.get_instance()
 
 
 rule clair3_variant_calling_prep_reference:
@@ -16,32 +13,32 @@ rule clair3_variant_calling_prep_reference:
     Converts the reference to a Snakemake / CAMEL compatible format. Creates the reference metadata.
     """
     output:
-        FASTA = Path(config['working_dir']) / variant_calling_clair3.OUTPUT_VARIANT_CALLING_FASTA,
-        INFORMS = Path(config['working_dir']) / 'variant_calling' / 'reference' / 'informs.io'
+        FASTA = variant_calling_clair3.OUTPUT_FASTA,
+        INFORMS = 'variant_calling/reference/informs.io'
     params:
         reference = config['variant_calling'].get('reference')
     run:
         from camel.app.io.tooliofile import ToolIOFile
-        SnakemakeUtils.dump_object([ToolIOFile(Path(params.reference['path']))], Path(output.FASTA))
-        SnakemakeUtils.dump_object(params.reference, Path(output.INFORMS))
+        snakemakeutils.dump_object([ToolIOFile(Path(params.reference['path']))], Path(output.FASTA))
+        snakemakeutils.dump_object(params.reference, Path(output.INFORMS))
 
 rule clair3_variant_calling_alignment_sorting:
     """
     Sorts the alignment.
     """
     input:
-        BAM = Path(config['working_dir']) / variant_calling_clair3.INPUT_VARIANT_CALLING_BAM
+        BAM = variant_calling_clair3.INPUT_BAM
     output:
-        BAM = Path(config['working_dir']) / variant_calling_clair3.OUTPUT_VARIANT_CALLING_BAM
+        BAM = variant_calling_clair3.OUTPUT_BAM
     params:
-        running_dir = Path(config['working_dir']) / 'variant_calling' / 'alignment_sorting'
+        running_dir = 'variant_calling/alignment_sorting'
     run:
         from camel.app.tools.samtools.samtoolssort import SamtoolsSort
-        samtools_sort = SamtoolsSort(camel)
-        step = Step(str(rule), samtools_sort, camel, params.running_dir, config)
-        SnakemakeUtils.add_pickle_inputs(samtools_sort, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(samtools_sort, output)
+        samtools_sort = SamtoolsSort()
+        step = Step(rule_name=str(rule), tool=samtools_sort, dir_=Path(str(params.running_dir)))
+        snakemakeutils.add_pickle_inputs(samtools_sort, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(samtools_sort, output)
 
 rule clair3_variant_calling_index_bam:
     """
@@ -50,16 +47,16 @@ rule clair3_variant_calling_index_bam:
     input:
         BAM = rules.clair3_variant_calling_alignment_sorting.output.BAM
     output:
-        BAM = Path(config['working_dir']) / variant_calling_clair3.OUTPUT_VARIANT_CALLING_BAM_INDEX
+        BAM = variant_calling_clair3.OUTPUT_BAM_INDEX
     params:
-        running_dir = Path(config['working_dir']) / 'variant_calling' / 'alignment_sorting'
+        running_dir = 'variant_calling/alignment_sorting'
     run:
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
-        samtools_index = SamtoolsIndex(camel)
-        step = Step(str(rule), samtools_index, camel, params.running_dir, config)
-        SnakemakeUtils.add_pickle_inputs(samtools_index, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(samtools_index, output)
+        samtools_index = SamtoolsIndex()
+        step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(str(params.running_dir)))
+        snakemakeutils.add_pickle_inputs(samtools_index, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(samtools_index, output)
 
 rule clair3_variant_calling_index_fasta:
     """
@@ -68,16 +65,16 @@ rule clair3_variant_calling_index_fasta:
     input:
         FASTA = rules.clair3_variant_calling_prep_reference.output.FASTA
     output:
-        FASTA = Path(config['working_dir']) / variant_calling_clair3.OUTPUT_VARIANT_CALLING_FASTA_INDEX
+        FASTA = variant_calling_clair3.OUTPUT_FASTA_INDEX
     params:
-        running_dir = Path(config['working_dir']) / 'variant_calling' / 'reference'
+        running_dir = 'variant_calling/reference'
     run:
         from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
-        samtools_fastaindex = SamtoolsFastaIndex(camel)
-        step = Step(str(rule), samtools_fastaindex, camel, params.running_dir, config)
-        SnakemakeUtils.add_pickle_inputs(samtools_fastaindex, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(samtools_fastaindex, output)
+        samtools_fastaindex = SamtoolsFastaIndex()
+        step = Step(rule_name=str(rule), tool=samtools_fastaindex, dir_=Path(str(params.running_dir)))
+        snakemakeutils.add_pickle_inputs(samtools_fastaindex, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(samtools_fastaindex, output)
 
 rule clair3_variant_calling:
     """
@@ -88,10 +85,10 @@ rule clair3_variant_calling:
         BAM = rules.clair3_variant_calling_alignment_sorting.output.BAM,
         BAM_INDEX = rules.clair3_variant_calling_index_bam.output.BAM
     output:
-        VCF = Path(config['working_dir']) / 'variant_calling' / 'calling' / 'vcf_gz.io',
-        INFORMS = Path(config['working_dir']) / 'variant_calling' / 'calling' / 'informs.io'
+        VCF = 'variant_calling/calling/vcf_gz.io',
+        INFORMS = 'variant_calling/calling/informs.io'
     params:
-        running_dir = Path(config['working_dir']) / 'variant_calling' / 'calling',
+        running_dir = 'variant_calling/calling',
         long_indel = config['variant_calling']['long_indel'],
         haploid_precise = config['variant_calling']['haploid_precise'],
         include_ctgs = config['variant_calling']['include_ctgs'],
@@ -101,9 +98,9 @@ rule clair3_variant_calling:
     threads: 8
     run:
         from camel.app.tools.clair3.clair3 import Clair3
-        clair3 = Clair3(camel)
-        SnakemakeUtils.add_pickle_inputs(clair3,input)
-        step = Step(str(rule), clair3, camel, params.running_dir, config)
+        clair3 = Clair3()
+        snakemakeutils.add_pickle_inputs(clair3,input)
+        step = Step(rule_name=str(rule), tool=clair3, dir_=Path(str(params.running_dir)))
         clair3.update_parameters(model_path=params.model_path, platform=params.platform,
             output_path=str(params.running_dir), threads=threads)
         if params.long_indel:
@@ -114,8 +111,8 @@ rule clair3_variant_calling:
             clair3.update_parameters(include_ctgs='')
         if params.no_phasing:
             clair3.update_parameters(no_phasing='')
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(clair3, output)
+        step.run()
+        snakemakeutils.dump_tool_outputs(clair3, output)
 
 rule clair3_variant_calling_normalize_indels:
     """
@@ -125,17 +122,17 @@ rule clair3_variant_calling_normalize_indels:
         VCF_GZ = rules.clair3_variant_calling.output.VCF,
         FASTA = rules.clair3_variant_calling_prep_reference.output.FASTA
     output:
-        VCF_GZ = Path(config['working_dir']) / 'variant_calling' / 'norm' / 'vcf_gz.io'
+        VCF_GZ = 'variant_calling/norm/vcf_gz.io'
     params:
-        running_dir = Path(config['working_dir']) / 'variant_calling' / 'norm'
+        running_dir = 'variant_calling/norm'
     run:
         from camel.app.tools.bcftools.bcftoolsnorm import BcftoolsNorm
-        bcftools_norm = BcftoolsNorm(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(bcftools_norm, input)
-        step = Step(str(rule), bcftools_norm, camel, params.running_dir, config)
+        bcftools_norm = BcftoolsNorm()
+        snakemakeutils.add_pickle_inputs(bcftools_norm, input)
+        step = Step(rule_name=str(rule), tool=bcftools_norm, dir_=Path(str(params.running_dir)))
         bcftools_norm.update_parameters(output_type='z')
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(bcftools_norm, output)
+        step.run()
+        snakemakeutils.dump_tool_outputs(bcftools_norm, output)
 
 rule clair3_variant_calling_index_vcf_gz:
     """
@@ -144,16 +141,16 @@ rule clair3_variant_calling_index_vcf_gz:
     input:
         VCF_GZ = rules.clair3_variant_calling_normalize_indels.output.VCF_GZ
     output:
-        VCF_GZ = Path(config['working_dir']) / variant_calling_clair3.OUTPUT_VARIANT_CALLING_UNFILTERED_VCF_GZ
+        VCF_GZ = variant_calling_clair3.OUTPUT_UNFILTERED_VCF_GZ
     params:
-        running_dir = Path(config['working_dir']) / 'variant_calling' / 'norm'
+        running_dir = 'variant_calling/norm'
     run:
         from camel.app.tools.bcftools.bcftoolsindex import BcftoolsIndex
-        indexer = BcftoolsIndex(camel)
-        SnakemakeUtils.add_pickle_inputs(indexer, input)
-        step = Step(str(rule), indexer, camel, params.running_dir, config)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(indexer, output)
+        indexer = BcftoolsIndex()
+        snakemakeutils.add_pickle_inputs(indexer, input)
+        step = Step(rule_name=str(rule), tool=indexer, dir_=Path(str(params.running_dir)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(indexer, output)
 
 rule clair3_variant_calling_unzip_vcf:
     """
@@ -162,17 +159,17 @@ rule clair3_variant_calling_unzip_vcf:
     input:
         VCF_GZ = rules.clair3_variant_calling_index_vcf_gz.output.VCF_GZ
     output:
-        VCF = Path(config['working_dir']) / variant_calling_clair3.OUTPUT_VARIANT_CALLING_UNFILTERED_VCF
+        VCF = variant_calling_clair3.OUTPUT_UNFILTERED_VCF
     params:
-        running_dir = Path(config['working_dir']) / 'variant_calling' / 'unzip_vcf',
+        running_dir = 'variant_calling/unzip_vcf',
         sample_name = config['sample_name']
     run:
         from camel.app.components.filesystemhelper import FileSystemHelper
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
-        bcftools_view = BcftoolsView(camel)
-        SnakemakeUtils.add_pickle_inputs(bcftools_view, input)
-        step = Step(str(rule), bcftools_view, camel, params.running_dir, config)
+        bcftools_view = BcftoolsView()
+        snakemakeutils.add_pickle_inputs(bcftools_view, input)
+        step = Step(rule_name=str(rule), tool=bcftools_view, dir_=Path(str(params.running_dir)))
         output_filename = f'variants-{FileSystemHelper.make_valid(params.sample_name)}.vcf'
         bcftools_view.update_parameters(output_type='v', output_filename=output_filename)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(bcftools_view, output)
+        step.run()
+        snakemakeutils.dump_tool_outputs(bcftools_view, output)

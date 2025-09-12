@@ -24,6 +24,9 @@ reference: {{}}
 #########################
 # Tool specific options #
 #########################
+antivirals:
+  db: /db/pipelines/viral_consensus/version_1.1/antivirals
+
 downsampling:
   disabled: true
   coverage_max_by_segment: {cov_max_segment}

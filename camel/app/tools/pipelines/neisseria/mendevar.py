@@ -2,8 +2,7 @@ import pandas as pd
 
 from pathlib import Path
 from fractions import Fraction
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,12 +14,11 @@ class MenDeVAR(Tool):
     coverage for the Bexsero and Trumenba vaccines.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the Mendevar tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('MenDeVAR', '0.1', camel)
+        super().__init__('MenDeVAR', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -28,9 +26,9 @@ class MenDeVAR(Tool):
         :return: None
         """
         if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("MenDeVAR database is required")
+            raise InvalidToolInputError("MenDeVAR database is required")
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input is required")
+            raise InvalidToolInputError("TSV input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:

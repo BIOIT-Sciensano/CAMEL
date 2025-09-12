@@ -1,10 +1,9 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -16,13 +15,12 @@ class SPIFinderReporter(Tool):
 
     TITLE = 'SPIFinder'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('SPIFinder Reporter', '0.1', camel)
+        super().__init__('SPIFinder Reporter', '0.1')
         self._section = None
         self._fastq_results_present = True
 
@@ -35,12 +33,12 @@ class SPIFinderReporter(Tool):
         if 'spifinder_fastq' not in self._input_informs:
             self._fastq_results_present = False
         if self._fastq_results_present and 'JSON_FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTQ analysis results were found in the input informs; "
+            raise InvalidToolInputError("FASTQ analysis results were found in the input informs; "
                                                  "JSON_FASTQ is required as input for this tool.")
         if 'JSON_FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("JSON_FASTA is missing but always required as input for this tool.")
+            raise InvalidToolInputError("JSON_FASTA is missing but always required as input for this tool.")
         if 'TSV_documentation' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV_documentation is missing but always required as input for "
+            raise InvalidToolInputError("TSV_documentation is missing but always required as input for "
                                                  "this tool.")
 
     def _execute_tool(self) -> None:

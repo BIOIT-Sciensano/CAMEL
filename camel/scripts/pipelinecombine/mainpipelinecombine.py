@@ -2,8 +2,9 @@
 import argparse
 import ast
 import re
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence, Optional, List, Dict, Any, Tuple, Union
+from typing import Any, Optional, Union
 
 import humanize
 import pandas as pd
@@ -12,7 +13,7 @@ from camel.app.camel import Camel
 from camel.app.loggers import logger
 
 
-class MainPipelineCombine(object):
+class MainPipelineCombine:
     """
     Main script for the pipeline combine tool.
     """
@@ -62,7 +63,7 @@ class MainPipelineCombine(object):
         logger.info(
             f'Output file created: {self._args.output} ({humanize.naturalsize(self._args.output.stat().st_size)})')
 
-    def _parse_pipe_out(self, path_in: Path) -> Dict[str, Any]:
+    def _parse_pipe_out(self, path_in: Path) -> dict[str, Any]:
         """
         Parses a pipeline summary output file.
         :param path_in: Input path
@@ -158,7 +159,7 @@ class MainPipelineCombine(object):
         return False
 
     @staticmethod
-    def _get_sorting_key(col_name: str, gene_detection_cols: List[str]) -> str:
+    def _get_sorting_key(col_name: str, gene_detection_cols: list[str]) -> str:
         """
         Returns the sorting key for the given column.
         :param col_name: Column name
@@ -173,7 +174,7 @@ class MainPipelineCombine(object):
             return ''
 
     @staticmethod
-    def _format_gene_detection_hits(db_key: str, value: str, format_str: str, grouping: str) -> List[Tuple[str, str]]:
+    def _format_gene_detection_hits(db_key: str, value: str, format_str: str, grouping: str) -> list[tuple[str, str]]:
         """
         Formats a gene entry.
         :param db_key: Database key

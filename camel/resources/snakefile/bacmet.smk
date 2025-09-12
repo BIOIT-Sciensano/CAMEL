@@ -2,9 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import assembly
 
 rule bacmet_pickle_db:
@@ -14,29 +13,29 @@ rule bacmet_pickle_db:
     input:
         DB = config['bacmet']['db']
     output:
-        DB = Path(config['working_dir']) / 'bacmet' / 'db.io'
+        DB = 'bacmet/db.io'
     run:
         from camel.app.io.tooliodirectory import ToolIODirectory
-        SnakemakeUtils.dump_object([ToolIODirectory(Path(input.DB))], Path(output.DB))
+        snakemakeutils.dump_object([ToolIODirectory(Path(input.DB))], Path(output.DB))
 
 rule bacmet_prodigal:
     """
     Runs Prodigal to predict CDS.
     """
     input:
-        FASTA = Path(config['working_dir']) / assembly.OUTPUT_ASSEMBLY_FASTA
+        FASTA = assembly.OUTPUT_FASTA
     output:
-        FASTA = Path(config['working_dir']) / 'bacmet' / 'prodigal' / 'fasta.io',
-        INFORMS = Path(config['working_dir']) / 'bacmet' / 'prodigal' / 'informs.io'
+        FASTA = 'bacmet/prodigal/tool/fasta.io',
+        INFORMS = 'bacmet/prodigal/tool/informs.io' # bacmet.OUTPUT_PRODIGAL_INFORMS
     params:
-        dir_ = Path(config['working_dir']) / 'bacmet' / 'prodigal'
+        dir_ = 'bacmet/prodigal/tool'
     run:
         from camel.app.tools.prodigal.prodigal import Prodigal
-        prodigal = Prodigal(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(prodigal, input)
-        step = Step(str(rule), prodigal, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(prodigal, output)
+        prodigal = Prodigal()
+        snakemakeutils.add_pickle_inputs(prodigal, input)
+        step = Step(rule_name=str(rule), tool=prodigal, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(prodigal, output)
 
 rule bacmet_prodigal_report:
     """
@@ -46,25 +45,25 @@ rule bacmet_prodigal_report:
         FASTA = rules.bacmet_prodigal.output.FASTA,
         INFORMS_prodigal = rules.bacmet_prodigal.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / 'bacmet' / 'prodigal' / 'report' / 'html.io'
+        HTML = 'bacmet/prodigal/report/html.iob' # bacmet.OUTPUT_PRODIGAL_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'bacmet' / 'prodigal' / 'report'
+        dir_ = 'bacmet/prodigal/report'
     run:
         from camel.app.tools.prodigal.prodigalreporter import ProdigalReporter
-        reporter = ProdigalReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = ProdigalReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule bacmet_prodigal_report_empty:
     """
     Creates an empty output report for Prodigal.
     """
     output:
-        HTML = Path(config['working_dir']) / 'bacmet' / 'prodigal' / 'report' / 'html-empty.io'
+        HTML = 'bacmet/prodigal/report/html-empty.iob' # bacmet.OUTPUT_PRODIGAL_REPORT_EMPTY
     params:
-        dir_ = Path(config['working_dir']) / 'bacmet' / 'prodigal' / 'report'
+        dir_ = 'bacmet/prodigal/report'
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('Prodigal', Path(output.HTML))
@@ -77,10 +76,10 @@ rule bacmet_blastp:
         FASTA = rules.bacmet_prodigal.output.FASTA,
         DB = rules.bacmet_pickle_db.output.DB
     output:
-        TSV = Path(config['working_dir']) / 'bacmet' / 'blastp' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'bacmet' / 'blastp' / 'informs.io'
+        TSV = 'bacmet/blastp/tsv.io',
+        INFORMS = 'bacmet/blastp/informs.io' # bacmet.OUTPUT_INFORMS
     params:
-        dir_ = Path(config['working_dir']) / 'bacmet' / 'blastp',
+        dir_ = 'bacmet/blastp',
         fmt = '6 pident sseqid sseq slen qseqid qstart qend'
     threads: 4
     run:
@@ -88,16 +87,16 @@ rule bacmet_blastp:
         from camel.app.tools.blast.blastp import Blastp
 
         # Create & run tool
-        blastp = Blastp(Camel.get_instance())
+        blastp = Blastp()
         blastp.update_parameters(output_format=f'"{params.fmt}"', threads=threads)
-        SnakemakeUtils.add_pickle_input(blastp, 'FASTA', Path(input.FASTA))
-        path_db = next(SnakemakeUtils.load_object(Path(input.DB))[0].path.glob('*.fasta'))
+        snakemakeutils.add_pickle_input(blastp, 'FASTA', Path(input.FASTA))
+        path_db = next(snakemakeutils.load_object(Path(input.DB))[0].path.glob('*.fasta'))
         blastp.add_input_files({'DB_BLAST': [ToolIOFile(path_db)]})
-        step = Step(str(rule), blastp, Camel.get_instance(), params.dir_)
-        step.run_step()
+        step = Step(rule_name=str(rule), tool=blastp, dir_=Path(str(params.dir_)))
+        step.run()
 
         # Dump output
-        SnakemakeUtils.dump_tool_outputs(blastp, output)
+        snakemakeutils.dump_tool_outputs(blastp, output)
 
 rule bacmet_filter_blastp:
     """
@@ -107,16 +106,16 @@ rule bacmet_filter_blastp:
         TSV = rules.bacmet_blastp.output.TSV,
         DB = rules.bacmet_pickle_db.output.DB
     output:
-        TSV = Path(config['working_dir']) / 'bacmet' / 'hit_filtering' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'bacmet' / 'hit_filtering' / 'informs.io'
+        TSV = 'bacmet/hit_filtering/tsv.io',
+        INFORMS = 'bacmet/hit_filtering/informs.io'
     params:
-        dir_ = Path(config['working_dir']) / 'bacmet' / 'hit_filtering',
+        dir_ = 'bacmet/hit_filtering',
         min_cov = 90,
         min_id = 75,
         cols = 'pident sseqid sseq slen qseqid qstart qend'
     run:
         from camel.app.io.tooliofile import ToolIOFile
-        tsv_in = SnakemakeUtils.load_object(Path(input.TSV))[0].path
+        tsv_in = snakemakeutils.load_object(Path(input.TSV))[0].path
         data_in = pd.read_table(tsv_in, names=params.cols.split(' '))
         data_in['perc_covered'] = data_in.apply(lambda x: 100.0 * float(len(x['sseq'])) / x['slen'], axis=1)
         data_in_filt = data_in[data_in['pident'] > params.min_id].copy()
@@ -124,14 +123,14 @@ rule bacmet_filter_blastp:
         data_in_filt['BacMet_ID'] = data_in_filt['sseqid'].apply(lambda x: x.split('|')[0])
 
         # Parse metadata
-        dir_db = SnakemakeUtils.load_object(Path(input.DB))[0].path
+        dir_db = snakemakeutils.load_object(Path(input.DB))[0].path
         tsv_meta = next(dir_db.glob('*.tsv'))
         data_meta = pd.read_table(tsv_meta)
         data_out = pd.merge(data_in_filt, data_meta, on='BacMet_ID')
         path_out = Path(params.dir_, 'bacmet.tsv')
         data_out.to_csv(path_out, sep='\t', index=False)
-        SnakemakeUtils.dump_object([ToolIOFile(path_out)], Path(output.TSV))
-        SnakemakeUtils.dump_object(
+        snakemakeutils.dump_object([ToolIOFile(path_out)], Path(output.TSV))
+        snakemakeutils.dump_object(
             {'params': {'min_cov': params.min_cov, 'min_id': params.min_id}}, Path(output.INFORMS))
 
 rule bacmet_report:
@@ -144,23 +143,23 @@ rule bacmet_report:
         INFORMS_filtering = rules.bacmet_filter_blastp.output.INFORMS,
         DB = rules.bacmet_pickle_db.output.DB
     output:
-        HTML = Path(config['working_dir']) / 'bacmet' / 'report' / 'html.io'
+        HTML = 'bacmet/report/html.iob' # bacmet.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'bacmet' / 'report'
+        dir_ = 'bacmet/report'
     run:
         from camel.app.tools.pipelines.klebsiella.bacmetreporter import BacMetReporter
-        reporter = BacMetReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = BacMetReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule bacmet_report_empty:
     """
     Creates an empty report when this analysis is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'bacmet' / 'report' / 'html-empty.io'
+        VAL_HTML = 'bacmet/report/html-empty.iob' # bacmet.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('BacMet', Path(output.VAL_HTML))
@@ -172,9 +171,9 @@ rule bacmet_create_summary:
     input:
         TSV = rules.bacmet_filter_blastp.output.TSV
     output:
-        TSV = Path(config['working_dir']) / 'bacmet' / 'summary_bacmet.tsv'
+        TSV = 'bacmet/summary_bacmet.tsv' # bacmet.OUTPUT_SUMMARY
     run:
-        path_tsv = SnakemakeUtils.load_object(Path(input.TSV))[0].path
+        path_tsv = snakemakeutils.load_object(Path(input.TSV))[0].path
         data_in = pd.read_table(path_tsv)
         with open(output.TSV, 'w') as handle:
             handle.write('\t'.join(['bacmet_genes', ', '.join(sorted(list(data_in['Gene_name'])))]))

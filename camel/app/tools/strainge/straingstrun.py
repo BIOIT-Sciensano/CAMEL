@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -13,13 +13,12 @@ class StrainGSTRun(Tool):
     StrainGST run is used to query a FASTQ file against a database. Both should already be formatted in HDF5 format.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes straingst run.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('StrainGST run', '1.3.9', camel)
+        super().__init__('StrainGST run', '1.3.9')
 
     def _check_input(self) -> None:
         """
@@ -27,9 +26,9 @@ class StrainGSTRun(Tool):
         :return: None
         """
         if 'DB_HDF5' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('HDF5 database is required')
+            raise InvalidToolInputError('HDF5 database is required')
         if 'HDF5' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('input HDF5 file is required')
+            raise InvalidToolInputError('input HDF5 file is required')
         super()._check_input()
 
     def _build_command(self, hdf5_input: Path, db_input: Path) -> None:
@@ -46,13 +45,13 @@ class StrainGSTRun(Tool):
             f'{hdf5_input}',
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """

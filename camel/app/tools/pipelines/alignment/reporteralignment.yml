@@ -1,6 +1,0 @@
-dependencies: []
-parameters:
-  genome_segments: {default: false, mandatory: false, option: null, value: null}
-  read_depth_cutoff: {default: true, mandatory: false, option: null, value: 100}
-  base_coverage_cutoff: {default: true, mandatory: false, option: null, value: 95.0}
-tool_command: null

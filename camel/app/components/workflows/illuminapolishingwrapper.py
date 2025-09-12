@@ -1,20 +1,23 @@
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import polish_assembly_short
 
 
-class ShortReadPolishingWrapper(object):
+class ShortReadPolishingWrapper:
     """
     This class is used as a wrapper class around the Illumina short read polishing Snakemake workflow.
     """
 
     @dataclass
     class PolishingOutput:
+        """
+        Class to store the polishing output.
+        """
         fasta_contigs: Path
         log_file: Optional[Path] = None
 
@@ -42,25 +45,25 @@ class ShortReadPolishingWrapper(object):
         config_file = SnakePipelineUtils.generate_config_file(config_data, Path(self._working_dir, 'polishing'))
 
         # Dump the input files in an IO file
-        io_pickle_in = Path(self._working_dir / short_read_polishing.INPUT_READS_FASTQ)
+        io_pickle_in = Path(self._working_dir / polish_assembly_short.INPUT_READS_FASTQ)
         io_pickle_in.parent.mkdir(exist_ok=True, parents=True)
         shutil.copyfile(pe_reads, io_pickle_in)
 
         # Dump the reference file in an IO file
-        io_pickle_fasta_in = Path(self._working_dir / short_read_polishing.INPUT_ASSEMBLY_FASTA)
+        io_pickle_fasta_in = Path(self._working_dir / polish_assembly_short.INPUT_ASSEMBLY_FASTA)
         io_pickle_fasta_in.parent.mkdir(exist_ok=True, parents=True)
         shutil.copyfile(reference, io_pickle_fasta_in)
 
         # Output files
         output_files = {
-            'FASTA': self._working_dir / short_read_polishing.OUTPUT_POLISHING_FASTA
+            'FASTA': self._working_dir / polish_assembly_short.OUTPUT_POLISHING_FASTA
         }
         SnakePipelineUtils.run_snakemake(
-            short_read_polishing.SNAKEFILE_POLISHING, config_file, list(output_files.values()), self._working_dir,
+            polish_assembly_short.SNAKEFILE_POLISHING, config_file, list(output_files.values()), self._working_dir,
             threads)
         self.__set_output(output_files)
 
-    def __set_output(self, output_files: Dict[str, Path]) -> None:
+    def __set_output(self, output_files: dict[str, Path]) -> None:
         """
         Sets the output of this tool.
         :param output_files: Output files by key.
@@ -68,7 +71,7 @@ class ShortReadPolishingWrapper(object):
         """
         log_path = self._working_dir / 'camel.log'
         self._output = ShortReadPolishingWrapper.PolishingOutput(
-            fasta_contigs=SnakemakeUtils.load_object(output_files['FASTA']).path,
+            fasta_contigs=snakemakeutils.load_object(output_files['FASTA']).path,
             log_file=log_path if log_path.exists() else None
         )
 

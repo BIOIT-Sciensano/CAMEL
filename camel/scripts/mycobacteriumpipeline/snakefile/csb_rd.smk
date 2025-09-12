@@ -1,53 +1,49 @@
-"""
-This Snakefile checks for the presence / absence of the region of difference 1 (RD1) and the csb gene
-in Mycobacterium samples.
-"""
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.scripts.mycobacteriumpipeline.snakefile import csb_rd
+from camel.app.snakemake import snakemakeutils
+from camel.resources.snakefile import gene_detection
+
 
 rule rd_csb_report:
     """
     This rule generates the output HTML report for the RD - csb species identification.
     """
     input:
-        FASTA = Path(config['working_dir']) / 'gene_detection' / 'csb_rd' / 'db_manager' / 'fasta.io',
-        HITS = Path(config['working_dir']) / 'gene_detection' / 'csb_rd' / 'hit_selection' / 'selected-hits.io',
-        INFORMS_columns = Path(config['working_dir']) / 'gene_detection' / 'csb_rd' / 'report' / 'informs-columns.io'
+        FASTA = str(gene_detection.GENE_DETECTION_FASTA).format(db='csb_rd'),
+        HITS = str(gene_detection.OUTPUT_ALL_HITS).format(db='csb_rd'),
+        INFORMS_columns = str(gene_detection.OUTPUT_COLUMNS).format(db='csb_rd')
     output:
-        VAL_HTML = Path(config['working_dir']) / csb_rd.OUTPUT_CSB_RD_REPORT,
-        INFORMS = Path(config['working_dir']) / 'csb_rd' / 'informs.io'
+        VAL_HTML = 'csb_rd/report/html.iob', # csb_rd.OUTPUT_CSB_RD_REPORT
+        INFORMS = 'csb_rd/report/informs.io'
     params:
-        dir_ = Path(config['working_dir']) / 'csb_rd',
+        dir_ = 'csb_rd/report',
         detection_method = config['detection_method'],
         input_type = config['input_type']
     run:
         from camel.app.tools.pipelines.mycobacterium.rdcsbreporter import RdCsbReporter
-        reporter = RdCsbReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, Camel.get_instance(), Path(params.dir_))
+        reporter = RdCsbReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         reporter.update_parameters(hit_type=params.detection_method)
         if params.input_type in ('fasta', 'fasta_with_vcf'):
             reporter.update_parameters(pseudo_reads=True)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule rd_csb_report_empty:
     """
     This generates an empty RD1 / csb report. 
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / csb_rd.OUTPUT_CSB_RD_REPORT_EMPTY
+        VAL_HTML = 'csb_rd/report/html-empty.iob' # csb_rd.OUTPUT_CSB_RD_REPORT_EMPTY
     params:
-        dir_ = Path(config['working_dir']) / 'contamination_check' / 'report'
+        dir_ = 'csb_rd/report'
     run:
         from camel.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.rdcsbreporter import RdCsbReporter
         section = RdCsbReporter.generate_empty_section()
-        SnakemakeUtils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))
+        snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))
 
 rule rd_csb_dump_summary_info:
     """
@@ -56,18 +52,15 @@ rule rd_csb_dump_summary_info:
     input:
         INFORMS_report = rules.rd_csb_report.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / csb_rd.OUTPUT_CSB_RD_SUMMARY
+        FILE = 'csb_rd/summary.{ext}' # csb_rd.OUTPUT_CSB_RD_SUMMARY
     params:
-        dir_ = Path(config['working_dir']) / 'csb_rd'
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS_report))
-        summary_data = [
+        informs = snakemakeutils.load_object(Path(input.INFORMS_report))
+        data_summary = [
             ('csb_detected', 'csb' in informs['loci_detected']),
             ('RD1_detected', 'RD1' in informs['loci_detected']),
             ('RD9_detected', 'RD9' in informs['loci_detected']),
             ('rd_csb_species', informs['species'])
         ]
-        with open(output.TSV, 'w') as handle:
-            for key, value in summary_data:
-                handle.write(f'{key}\t{value}')
-                handle.write('\n')
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'csb_rd')

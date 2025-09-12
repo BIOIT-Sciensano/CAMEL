@@ -1,7 +1,8 @@
 import abc
 import os
 
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -12,15 +13,14 @@ class Qiime(Tool):
     A super class that contains all functions that are shared between Qiime scripts.
     """
 
-    def __init__(self, name, version, camel):
+    def __init__(self, name, version):
         """
         Initialize tool
         :param name: Name of the tool
         :param version: Version of the tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(name, version, camel)
+        super().__init__(name, version)
         self._parameter_file = 'parameters.txt'
 
     def _execute_tool(self):
@@ -81,7 +81,7 @@ class Qiime(Tool):
         :param parameter: Paramater dictionary to write to the file
         :return: None
         """
-        param_file = os.path.join(self._folder, self._parameter_file)
+        param_file = self._folder / self._parameter_file
         with open(param_file, 'a') as outfile:
             outfile.write(parameter.option + ' ' + parameter.value + '\n')
 
@@ -102,17 +102,18 @@ class Qiime(Tool):
         Searches for the log file that was created during the run and adds this to the output
         :return: None
         """
-        log_files = [ToolIOFile(os.path.join(self._folder, f)) for f in os.listdir(self._folder) if f.startswith('log_')]
+        log_files = [ToolIOFile(self._folder / f) for f in os.listdir(self._folder) if f.startswith('log_')]
         if len(log_files) > 0:
             self._tool_outputs['LOG'] = log_files
             logger.debug('Added log file to outputs: {}'.format(self._tool_outputs))
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command):
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self.stderr != '' and 'error' in self.stderr.lower():
-            raise ToolExecutionError("Command execution failed (stderr: {}).".format(self.stderr))
-        elif self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        if command.stderr != '' and 'error' in command.stderr.lower():
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        elif command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {self._command.exit_code})")

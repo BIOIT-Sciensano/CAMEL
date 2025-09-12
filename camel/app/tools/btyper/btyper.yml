@@ -1,21 +1,96 @@
-dependencies: [btyper/3.4.0, blast/2.14.0, fastani/1.33]
+dependencies:
+  - btyper/3.4.0
+  - blast/2.14.0
+  - fastani/1.33
 parameters:
-  ani_geneflow: {default: false, mandatory: false, option: --ani_geneflow, value: false}
-  ani_species: { default: true, mandatory: false, option: --ani_species, value: true }
-  ani_subspecies: { default: true, mandatory: false, option: --ani_subspecies, value: true }
-  ani_typestrains: {default: false, mandatory: false, option: --ani_species, value: false}
-  bt: {default: true, mandatory: false, option: --bt, value: true}
-  bt_coverage: {default: true, mandatory: false, option: --bt_coverage, value: '70'} # only w/ bt = true
-  bt_identity: {default: true, mandatory: false, option: --bt_identity, value: '50'} # only w/ bt = true
-  bt_overlap: {default: true, mandatory: false, option: --bt_overlap, value: '0.7'} # only w/ bt = true
-  download_mlst_latest: {default: false, mandatory: false, option: --download_mlst_latest, value: false} # only when mlst = true
-  evalue: {default: true, mandatory: false, option: --evalue, value: '1e-5'} # only w/ virulence/bt = true
-  fastani_path: {default: false, mandatory: false, option: --fastani_path, value: ''} # only in combination w/ ani_species/subspecies/geneflow true
-  mlst: {default: true, mandatory: false, option: --mlst, value: true}
-  output_dir: {default: true, mandatory: true, option: --output, value: 'btyper_output'}
-  panc: {default: true, mandatory: false, option: --panC, value: true}
-  virulence: {default: true, mandatory: false, option: --virulence, value: true}
-  virulence_coverage: {default: true, mandatory: false, option: --virulence_coverage, value: '80'} # only w/ virulence == true
-  virulence_db: { default: true, mandatory: false, option: --virulence_db, value: 'aa' }
-  virulence_identity: { default: true, mandatory: false, option: --virulence_identity, value: '70' } # only w/ virulence == true
+  ani_geneflow:
+    default: false
+    mandatory: false
+    option: --ani_geneflow
+    value: 'False'
+  ani_species:
+    default: true
+    mandatory: false
+    option: --ani_species
+    value: 'True'
+  ani_subspecies:
+    default: true
+    mandatory: false
+    option: --ani_subspecies
+    value: 'True'
+  ani_typestrains:
+    default: true
+    mandatory: false
+    option: --ani_species
+    value: 'True'
+  bt:
+    default: true
+    mandatory: false
+    option: --bt
+    value: 'True'
+  bt_coverage:  # only w/ bt = true
+    default: true
+    mandatory: false
+    option: --bt_coverage
+    value: '70'
+  bt_identity:   # only w/ bt = true
+    default: true
+    mandatory: false
+    option: --bt_identity
+    value: '50'
+  bt_overlap:  # only w/ bt = true
+    default: true
+    mandatory: false
+    option: --bt_overlap
+    value: '0.7'
+  download_mlst_latest:  # only when mlst = true
+    default: false
+    mandatory: false
+    option: --download_mlst_latest
+    value: 'False'
+  evalue:  # only w/ virulence/bt = true
+    default: true
+    mandatory: false
+    option: --evalue
+    value: '1e-5'
+  fastani_path:  # only in combination w/ ani_species/subspecies/geneflow true
+    default: false
+    mandatory: false
+    option: --fastani_path
+    value: ''
+  mlst:
+    default: true
+    mandatory: false
+    option: --mlst
+    value: 'True'
+  output_dir:
+    default: true
+    mandatory: true
+    option: --output
+    value: 'btyper_output'
+  panc:
+    default: true
+    mandatory: false
+    option: --panC
+    value: 'True'
+  virulence:
+    default: true
+    mandatory: false
+    option: --virulence
+    value: 'True'
+  virulence_coverage:  # only w/ virulence == true
+    default: true
+    mandatory: false
+    option: --virulence_coverage
+    value: '80'
+  virulence_db:
+    default: true
+    mandatory: false
+    option: --virulence_db
+    value: 'aa'
+  virulence_identity:  # only w/ virulence == true
+    default: true
+    mandatory: false
+    option: --virulence_identity
+    value: '70'
 tool_command: btyper3

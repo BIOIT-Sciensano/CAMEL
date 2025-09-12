@@ -1,12 +1,49 @@
-dependencies: [clair3/1.0.4]
+dependencies:
+  - clair3/1.0.4
 parameters:
-  chunk_size: { default: false, mandatory: false, option: --chunk_size, value: 100000 }
-  model_path: {default: true, mandatory: true, option: --model_path, value: '/usr/local/bin/lmod/clair3/1.0.4/bin/models/ilmn'}
-  platform: {default: true, mandatory: true, option: --platform, value: 'ilmn'}
-  threads: {default: true, mandatory: true, option: --threads, value: '8'}
-  output_path: {default: true, mandatory: true, option: --output, value: 'clair3_output'}
-  haploid_precise: {default: false, mandatory: false, option: --haploid_precise, value: ''}
-  no_phasing: {default: false, mandatory: false, option: --no_phasing_for_fa, value: ''}
-  include_ctgs: {default: false, mandatory: false, option: --include_all_ctgs, value: ''}
-  long_indel: {default: false, mandatory: false, option: --enable_long_indel, value: ''}
+  chunk_size:
+    default: false
+    mandatory: false
+    option: '--chunk_size'
+    value: 100000
+  model_path:
+    default: true
+    mandatory: true
+    option: '--model_path'
+    value: /usr/local/bin/lmod/clair3/1.0.4/bin/models/ilmn
+  platform:
+    default: true
+    mandatory: true
+    option: '--platform'
+    value: ilmn
+  threads:
+    default: true
+    mandatory: true
+    option: '--threads'
+    value: '8'
+  output_path:
+    default: true
+    mandatory: true
+    option: '--output'
+    value: clair3_output
+  haploid_precise:
+    default: false
+    mandatory: false
+    option: '--haploid_precise'
+    flag: true
+  no_phasing:
+    default: false
+    mandatory: false
+    option: '--no_phasing_for_fa'
+    flag: true
+  include_ctgs:
+    default: false
+    mandatory: false
+    option: '--include_all_ctgs'
+    flag: true
+  long_indel:
+    default: false
+    mandatory: false
+    option: '--enable_long_indel'
+    flag: true
 tool_command: run_clair3.sh

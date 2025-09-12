@@ -17,7 +17,6 @@ citations:
     - Danecek_2021-samtools
     - Camacho_2009-blast
     - Clausen_2018-kma
-    - Inouye_2014-srst2
     - Bortolaia_2020-resfinder_4.0
     - Feldgarden_2019-ndaro
     - Jolley_2010-bigsdb
@@ -46,9 +45,6 @@ contamination_check:
 
 quality_checks:
   typing_scheme: {qc_typing_scheme}
-
-srst2:
-  max_unaligned_overlap: 141
 
 assembly:
   spades:

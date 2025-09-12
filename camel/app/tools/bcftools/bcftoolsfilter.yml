@@ -1,9 +1,34 @@
-dependencies: [ bcftools/1.17 ]
+dependencies:
+  - bcftools/1.17
 parameters:
-  exclude: { default: false, mandatory: false, option: --exclude, value: null }
-  invert_targets: { default: false, mandatory: false, option: null, value: null }
-  output_filename: { default: true, mandatory: true, option: --output, value: variants_filtered.vcf }
-  output_type: { default: true, mandatory: true, option: --output-type, value: v }
-  soft_filter: { default: false, mandatory: false, option: --soft-filter, value: 'name' }
-  targets_overlap: { default: false, mandatory: false, option: '--targets-overlap', value: '0' }
+  exclude:
+    default: false
+    mandatory: false
+    option: '--exclude'
+    value: null
+  invert_targets:
+    default: false
+    mandatory: false
+    option: null
+    value: null
+  output_filename:
+    default: true
+    mandatory: true
+    option: '--output'
+    value: variants_filtered.vcf
+  output_type:
+    default: true
+    mandatory: true
+    option: '--output-type'
+    value: v
+  soft_filter:
+    default: false
+    mandatory: false
+    option: '--soft-filter'
+    value: name
+  targets_overlap:
+    default: false
+    mandatory: false
+    option: '--targets-overlap'
+    value: '0'
 tool_command: bcftools filter

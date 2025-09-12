@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import pandas as pd
 
@@ -15,7 +16,7 @@ from camel.app.tools.btyper.btyper import BTyper
 from camel.app.tools.btyper.btyperreporter import BTyperReporter
 
 
-class MainBTyper(object):
+class MainBTyper:
     """
     This class is used to run the main ResFinder local script.
     """
@@ -88,7 +89,7 @@ class MainBTyper(object):
         Runs BTyper.
         :return: BTyper tool instance.
         """
-        btyper = BTyper(Camel.get_instance())
+        btyper = BTyper()
         btyper.add_input_files({'FASTA': [ToolIOFile(self._args.fasta)]})
 
         # Update parameters
@@ -112,11 +113,11 @@ class MainBTyper(object):
         :param btyper: BTyper tool instance.
         :return: None.
         """
-        reporter = BTyperReporter(Camel.get_instance())
+        reporter = BTyperReporter()
         reporter.add_input_files({'TSV': btyper.tool_outputs['TSV']})
         reporter.add_input_informs({'btyper': btyper.informs})
         reporter.run()
-        return reporter.tool_outputs['VAL_HTML'][0].value
+        return reporter.tool_outputs['HTML'][0].value
 
     def __add_fasta_name_to_tsv(self, input_file: Path) -> None:
         """

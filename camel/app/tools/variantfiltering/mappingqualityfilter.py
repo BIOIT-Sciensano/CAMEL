@@ -1,4 +1,3 @@
-from camel.app.camel import Camel
 from camel.app.tools.variantfiltering.basefilter import BaseFilter
 
 
@@ -7,12 +6,11 @@ class MappingQualityFilter(BaseFilter):
     Filters variants based on mapping quality.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Variant Filter: Mapping Quality', '0.1', camel)
+        super().__init__('Variant Filter: Mapping Quality', '0.1')
 
     def _apply_filter(self) -> None:
         """
@@ -49,5 +47,5 @@ class MappingQualityFilter(BaseFilter):
             "--exclude 'MQ<{}'".format(self._parameters['min_mapping_quality'].value),
             str(self._tool_inputs['VCF_GZ'][0].path),
             '--output-type z',
-            '--output {}'.format(self.output_path)
+            f'--output {self.output_path}'
         ] + self._get_soft_filter_options())

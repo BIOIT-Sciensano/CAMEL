@@ -1,6 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidparametererror import InvalidParameterError
-
+from camel.app.error import InvalidParameterError
 from camel.app.tools.variantfiltering.basefilter import BaseFilter
 
 
@@ -9,12 +7,11 @@ class DepthFilter(BaseFilter):
     Filters variants based on absolute depth, forward depth and reverse depth.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Variant Filter: Depth', '0.1', camel)
+        super().__init__('Variant Filter: Depth', '0.1')
 
     @property
     def full_name(self) -> str:
@@ -75,8 +72,8 @@ class DepthFilter(BaseFilter):
         """
         self._command.command = ' '.join([
             self._tool_command,
-            "--exclude '{}'".format(self.__create_exclude_string()),
+            f"--exclude '{self.__create_exclude_string()}'",
             str(self._tool_inputs['VCF_GZ'][0].path),
             '--output-type z',
-            '--output {}'.format(self.output_path)
+            f'--output {self.output_path}'
         ] + self._get_soft_filter_options())

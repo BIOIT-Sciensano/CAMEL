@@ -3,10 +3,9 @@ from typing import Optional
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -18,12 +17,11 @@ class AbriTAMRReporter(Tool):
 
     TITLE = 'abriTAMR'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: camel instance
         """
-        super().__init__('AbriTAMR Reporter', '0.1', camel)
+        super().__init__('AbriTAMR Reporter', '0.1')
         self._section = None
         self._species = None
 
@@ -32,18 +30,17 @@ class AbriTAMRReporter(Tool):
         Checks if the provided input is valid.
         :return: None
         """
-        super(AbriTAMRReporter, self)._check_input()
-        if not all(key in self._tool_inputs for key in ('TXT_MATCHES', 'TXT_PARTIALS')):
-            raise InvalidInputSpecificationError("AbriTAMR run output files must be provided")
+        if not all(key in self._tool_inputs for key in ('TXT_matches', 'TXT_partials')):
+            raise InvalidToolInputError("AbriTAMR run output files must be provided")
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
         Executes the reporter.
         :rtype: None
         """
-        self._section = HtmlReportSection(AbriTAMRReporter.TITLE,
-                                          subtitle=self._input_informs['ABRITAMR_RUN']['_name'])
-        self._species = self._input_informs['ABRITAMR_RUN']['species']
+        self._section = HtmlReportSection(AbriTAMRReporter.TITLE, subtitle=self._input_informs['abritamr_run']['_name'])
+        self._species = self._input_informs['abritamr_run']['species']
         self.__add_summaries_tables()
         if self._species == 'Salmonella':
             self.__add_antibiogram()
@@ -61,20 +58,20 @@ class AbriTAMRReporter(Tool):
         """
         self._section.add_header('Matches', 3)
         self._section.add_paragraph('>90% coverage & >90% identity')
-        self.___add_summary_file_table(self._tool_inputs['TXT_MATCHES'][0].path, 'matches')
+        self.___add_summary_file_table(self._tool_inputs['TXT_matches'][0].path, 'matches')
         self._section.add_paragraph('Genes annotated with * indicate >90% coverage and identity between 90% and 100%. '
                                     'No further annotation indicates that the gene recovered exhibits '
                                     '100% coverage and 100% identity to a gene in the gene catalog.')
         self._section.add_header('Partial matches', 3)
         self._section.add_paragraph('50-90% coverage & >90% identity')
-        self.___add_summary_file_table(self._tool_inputs['TXT_PARTIALS'][0].path, 'partials')
+        self.___add_summary_file_table(self._tool_inputs['TXT_partials'][0].path, 'partials')
         self._section.add_horizontal_line()
 
     def ___add_summary_file_table(self, summary_file_path: Path, matching_type: str) -> None:
         """
-        Parses an AbriTAMR output summary file (TXT_PARTIALS or TXT_MATCHES) and
+        Parses an AbriTAMR output summary file (TXT_partials or TXT_matches) and
         adds the table to the section.
-        :param summary_file_path: path of TXT_PARTIALS or TXT_MATCHES
+        :param summary_file_path: path of TXT_partials or TXT_matches
         :param matching_type: str, matches or partials
         :return: None
         """
@@ -101,9 +98,9 @@ class AbriTAMRReporter(Tool):
         Add the antibiogram to the report for Salmonella.
         :return: None
         """
-        # Create useable dictionary from REPORT_ABRITAMR for html_table
+        # Create useable dictionary from REPORT_abritamr for html_table
         antibiogram_dict = {}
-        df_abritamr = pd.read_excel(self._tool_inputs['REPORT_ABRITAMR'][0].path, engine='openpyxl')
+        df_abritamr = pd.read_excel(self._tool_inputs['REPORT_abritamr'][0].path, engine='openpyxl')
         df_abritamr.fillna('-', inplace=True)  # replace all missing values by dashes
         for column in df_abritamr.columns[2:]:
             key_parts = column.replace(" - ", "_").split('_')
@@ -152,7 +149,7 @@ class AbriTAMRReporter(Tool):
         """
         if self._species == 'Salmonella':
             relative_path = Path('abritamr', 'summary_out.xlsx')
-            self._section.add_file(self._tool_inputs['REPORT_ABRITAMR'][0].path, relative_path)
+            self._section.add_file(self._tool_inputs['REPORT_abritamr'][0].path, relative_path)
             self._section.add_link_to_file("Download (xlsx)", relative_path)
 
     def __add_database_information(self) -> None:
@@ -162,5 +159,5 @@ class AbriTAMRReporter(Tool):
         """
         self._section.add_horizontal_line()
         self._section.add_header('Database info', level=4)
-        self._section.add_paragraph('Last updated: {}'.format(self._input_informs['ABRITAMR_RUN'].get(
+        self._section.add_paragraph('Last updated: {}'.format(self._input_informs['abritamr_run'].get(
             'last_update_date', 'n/a')))

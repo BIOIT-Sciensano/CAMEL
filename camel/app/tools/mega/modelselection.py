@@ -1,11 +1,11 @@
 import os
+from importlib.resources import files
+from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.invalidparametererror import InvalidParameterError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import ToolExecutionError, InvalidParameterError
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.mega import TEMPLATE_MODEL_SELECT
 from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 from camel.app.tools.tool import Tool
 
@@ -17,21 +17,19 @@ class ModelSelection(Tool):
 
     DEFAULT_OUTPUT_NAME = 'model_selection'
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('MEGA: Model Selection', '10.0.4', camel)
+        super().__init__('MEGA: Model Selection', '10.0.4')
 
     def _check_input(self) -> None:
         """
         Checks if the input is valid.
         :return: None
         """
-        if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No SNP Matrix FASTA input file found")
-        super(ModelSelection, self)._check_input()
+        toolutils.check_input(self, keys_required=['FASTA'])
+        super()._check_input()
 
     def _check_parameters(self) -> None:
         """
@@ -54,9 +52,7 @@ class ModelSelection(Tool):
         else:
             if 'site_coverage_cutoff' in self._parameters:
                 raise InvalidParameterError("Site coverage cutoff is only applicable for 'Partial deletion'")
-        if not os.path.isfile(TEMPLATE_MODEL_SELECT):
-            raise InvalidInputSpecificationError("Cannot read config file.")
-        super(ModelSelection, self)._check_parameters()
+        super()._check_parameters()
 
     def _execute_tool(self) -> None:
         """
@@ -76,9 +72,9 @@ class ModelSelection(Tool):
         config_file = self.__generate_config_file()
         self._command.command = ' '.join([
             self._tool_command,
-            '-d {}'.format(self._tool_inputs['FASTA'][0].path),
-            '-a {}'.format(config_file),
-            '-o {}'.format(ModelSelection.DEFAULT_OUTPUT_NAME)
+            f'-d {self._tool_inputs["FASTA"][0].path}',
+            f'-a {config_file}',
+            f'-o {ModelSelection.DEFAULT_OUTPUT_NAME}'
         ])
 
     def __generate_config_file(self) -> str:
@@ -86,7 +82,8 @@ class ModelSelection(Tool):
         Generates the config file.
         :return: Path to config file
         """
-        with open(TEMPLATE_MODEL_SELECT) as handle:
+        path_template = Path(str(files('camel').joinpath('resources/tools/mega/model_sel_ml_nucleotide_template.mao')))
+        with open(path_template) as handle:
             template = handle.read()
 
         config_file = os.path.join(self._folder, 'config.mao')
@@ -126,10 +123,11 @@ class ModelSelection(Tool):
             self._informs['rates_among_sites_full'] = MLTreeConstruction.RATES_AMONG_SITES[self._informs[
                 'rates_among_sites']]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output to see if the program executed correctly.
+        :param command: Command to check
         :return: None
         """
-        if 'MEGA-CC has logged the following error:' in self.stdout:
-            raise ToolExecutionError("MEGA-CC failed to execute: {}".format(self.stdout.strip()))
+        if 'MEGA-CC has logged the following error:' in command.stdout:
+            raise ToolExecutionError(self.name, f"MEGA-CC failed to execute: {command.stdout.strip()}")

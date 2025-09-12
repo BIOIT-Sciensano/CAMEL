@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from camel.app.components.blast.blasthitstatistics import BlastHitStatistics
 from camel.app.components.genedetection.genedetectionhitbase import GeneDetectionHitBase
@@ -38,7 +38,7 @@ class GeneDetectionBlastHit(GeneDetectionHitBase):
         return self._blast_stats.is_full_length()
 
     @property
-    def table_column_names(self) -> List[str]:
+    def table_column_names(self) -> list[str]:
         """
         Returns the names of the columns of the tabular output.
         :return: List of column names
@@ -48,7 +48,7 @@ class GeneDetectionBlastHit(GeneDetectionHitBase):
             columns.insert(-1, metadata['name'])
         return columns
 
-    def to_table_row(self) -> List[str]:
+    def to_table_row(self) -> list[str]:
         """
         Returns the hit as a table row.
         :return: List of table cell values
@@ -56,7 +56,7 @@ class GeneDetectionBlastHit(GeneDetectionHitBase):
         data = [
             self._blast_stats.subject_id.split('__')[1],
             self.locus,
-            '{:.2f}'.format(self.blast_stats.percent_identity),
+            f'{self.blast_stats.percent_identity:.2f}',
             f'{self.blast_stats.length_statistic}',
             self.blast_stats.query_id,
             f'{self.blast_stats.query_start}..{self.blast_stats.query_end}',
@@ -67,14 +67,14 @@ class GeneDetectionBlastHit(GeneDetectionHitBase):
         return data
 
     @property
-    def html_column_names(self) -> List[str]:
+    def html_column_names(self) -> list[str]:
         """
         Returns the names of the columns of the HTML output.
         :return: List of column names
         """
         return self.table_column_names[1:] + ['Alignment']
 
-    def to_html_row(self, report_section: HtmlReportSection, sub_directory: Path, colored: bool = True) -> List[
+    def to_html_row(self, report_section: HtmlReportSection, sub_directory: Path, colored: bool = True) -> list[
             Union[str, HtmlTableCell]]:
         """
         Returns the hit as a HTML table row.

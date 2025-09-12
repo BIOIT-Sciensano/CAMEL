@@ -1,6 +1,4 @@
-import os.path
-
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
@@ -10,13 +8,12 @@ class QiimeJoinPairedEnds(Qiime):
     This script takes forward and reverse Illumina reads and joins them using the method chosen.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('qiime_join_paired_ends', '1.9.1', camel)
+        super().__init__('qiime_join_paired_ends', '1.9.1')
 
     def _check_input(self):
         """
@@ -27,11 +24,11 @@ class QiimeJoinPairedEnds(Qiime):
         :return: None
         """
         if 'FASTQ_PE' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input files (keys) given for join_paired_ends: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid input files (keys) given for join_paired_ends: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Too many input keys given for join_paired_ends: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Too many input keys given for join_paired_ends: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs['FASTQ_PE']) != 2:
-            raise InvalidInputSpecificationError('Invalid number (!= 2) of files in each key given for \
+            raise InvalidToolInputError('Invalid number (!= 2) of files in each key given for \
                                                   join_paired_ends: {!r}'.format(self._tool_inputs))
 
     def _set_output(self):
@@ -39,15 +36,19 @@ class QiimeJoinPairedEnds(Qiime):
         Sets the name of the output files
         :return: None
         """
-        self._tool_outputs['FASTQ'] = [ToolIOFile(os.path.join(self._folder, 'fastqjoin.join.fastq'))]
-        self._tool_outputs['FASTQ_Unjoined'] = [ToolIOFile(os.path.join(self._folder, 'fastqjoin.un1.fastq')),
-                                                ToolIOFile(os.path.join(self._folder, 'fastqjoin.un2.fastq'))]
+        self._tool_outputs['FASTQ'] = [ToolIOFile(self._folder / 'fastqjoin.join.fastq')]
+        self._tool_outputs['FASTQ_Unjoined'] = [
+            ToolIOFile(self._folder / 'fastqjoin.un1.fastq'),
+            ToolIOFile(self._folder / 'fastqjoin.un2.fastq')
+        ]
 
     def _build_input_string(self):
         """
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        return ' '.join(['-f {}'.format(self._tool_inputs['FASTQ_PE'][0]),
-                         '-r {}'.format(self._tool_inputs['FASTQ_PE'][1]),
-                         '-o {}'.format(self._folder)])
+        return ' '.join([
+            f'-f {self._tool_inputs["FASTQ_PE"][0]}',
+            f'-r {self._tool_inputs["FASTQ_PE"][1]}',
+            f'-o {self._folder}'
+        ])

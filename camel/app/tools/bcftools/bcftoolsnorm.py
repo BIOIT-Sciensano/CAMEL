@@ -1,9 +1,7 @@
 import re
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
 
@@ -13,12 +11,12 @@ class BcftoolsNorm(BcftoolsBase):
     Indexes bgzip compressed VCF files and BCF files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('bcftools norm', '1.17', camel)
+        super().__init__('bcftools norm', '1.17', None)
         self._input_key = None
 
     def _check_input(self) -> None:
@@ -27,10 +25,10 @@ class BcftoolsNorm(BcftoolsBase):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('VCF', 'VCF_GZ')):
-            raise InvalidInputSpecificationError("No input file found (VCF / VCF_GZ supported)")
+            raise InvalidToolInputError("No input file found (VCF / VCF_GZ supported)")
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Reference genome input is required (FASTA).")
-        super(BcftoolsNorm, self)._check_input()
+            raise InvalidToolInputError("Reference genome input is required (FASTA).")
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
@@ -54,7 +52,7 @@ class BcftoolsNorm(BcftoolsBase):
             *self._build_options(),
             f"-f {self._tool_inputs['FASTA'][0].path}",
             str(self._tool_inputs[input_key][0].path),
-            f' > {output_path}'
+            f'> {output_path}'
         ])
 
     def __set_output(self, output_path: Path) -> None:
@@ -71,7 +69,7 @@ class BcftoolsNorm(BcftoolsBase):
         Sets the informs for this tool.
         :return: None
         """
-        for line in self.stderr.splitlines():
+        for line in self._command.stderr.splitlines():
             m = re.search(r'total/split/realigned/skipped:\t(\d+)/(\d+)/(\d+)/(\d+)', line)
             if m is None:
                 continue
@@ -80,4 +78,4 @@ class BcftoolsNorm(BcftoolsBase):
             self._informs['realigned'] = int(m.group(3))
             self._informs['skipped'] = int(m.group(4))
             return
-        raise ToolExecutionError("Cannot extract informs")
+        raise ToolExecutionError(self.name, "Cannot extract informs")

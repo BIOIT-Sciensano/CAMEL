@@ -1,12 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.bwa.bwa import BWA
 
 
 class BWAMap(BWA):
-
     """
     Read mapping using 'bwa mem' from BWA.
 
@@ -25,13 +23,12 @@ class BWAMap(BWA):
     OUTPUT_NAME = 'bwa_readmap.sam'
     DEFAULT_SAMPLE_NAME = 'sampleA'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize BWAMap
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('bwa_mem', '0.7.17', camel)
+        super().__init__('bwa_mem', '0.7.17')
         self._fastq_inputs_str = None
         self._readgroup_str = ''
 
@@ -68,8 +65,6 @@ class BWAMap(BWA):
         Check input for BWA mem.
         :return: None
         """
-        super(BWAMap, self)._check_input()
-
         if 'FASTQ_PE' in self._tool_inputs:
             if len(self._tool_inputs['FASTQ_PE']) != 2:
                 raise ValueError("Paired end fastq inputs require exactly 2 files.")
@@ -84,6 +79,7 @@ class BWAMap(BWA):
 
         if 'INDEX_GENOME_PREFIX' not in self._tool_inputs:
             raise ValueError('No genome index input (INDEX_GENOME_PREFIX) found.')
+        super()._check_input()
 
     def __set_output(self) -> None:
         """

@@ -2,13 +2,12 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Union, Optional
+from typing import Union, Optional, Any
 
 from snakemake.io import Wildcards
 
 from camel.app import loggers
-from camel.app.camel import Camel
-from camel.app.io.toolio import ToolIO
+from camel.app.components import toolutils
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
@@ -36,38 +35,26 @@ class StepOutput:
         return json.dumps({k: v for k, v in self.wildcards.items()})
 
 
-class Step(object):
+class Step:
     """
     This class represents a step in a Snakemake pipeline. It executes a single tool.
     """
 
-    def __init__(self, rule_name: str, tool: Tool, camel: Camel, folder: Path, wildcards: Wildcards = None,
-                 pipeline_output: bool = False, keys_log: Optional[List[str]] = None,
-                 keys_no_log: Optional[List[str]] = None) -> None:
+    def __init__(self, rule_name: str, tool: Tool, wildcards: Wildcards | Any = None, dir_: Optional[Path]= None) -> None:
         """
         Initializes a step.
-        :param rule_name: Name of the snakerule
-        :param tool: Tool object of the tool that needs to be executed
-        :param camel: Camel object
-        :param folder: Folder in which the step is being run
-        :param wildcards: Wildcards object from snakemake
-        :param pipeline_output: Boolean to indicate whether outputs are pipeline outputs
-        :param keys_log: The output keys that should be logged (has preference over 'keys_no_log', by default all keys
-            are logged
-        :param keys_no_log: The output keys that should not be logged (by default all keys are logged)
+        :param rule_name: Name of the rule in Snakemake.
+        :param tool: Tool object to execute.
+        :param dir_: Working directory.
+        :param wildcards: Wildcards object from snakemake.
+        :return: None
         """
         self._name = rule_name
         self._tool = tool
-        self._step_inputs = {}
-        self._input_informs = {}
-        self._camel = camel
-        self._pipeline_options = {}
-        self._job_options = {}
-        self._folder = folder
-        self._pipeline_output = pipeline_output
+        # self._step_inputs = {}
+        # self._input_informs = {}
+        self._dir = Path(dir_).absolute()
         self._wildcards = wildcards
-        self._keys_log = keys_log
-        self._keys_no_log = keys_no_log
 
     @property
     def name(self) -> str:
@@ -78,14 +65,6 @@ class Step(object):
         return self._name
 
     @property
-    def outputs(self) -> Dict[str, List[ToolIO]]:
-        """
-        Returns the outputs of this step.
-        :return: Outputs
-        """
-        return self._tool.tool_outputs
-
-    @property
     def informs(self) -> dict:
         """
         Returns the informs of this step.
@@ -93,49 +72,52 @@ class Step(object):
         """
         return self._tool.informs
 
-    def add_inputs(self, dict_: dict) -> None:
-        """
-        Adds the inputs to the step
-        :param dict_: Dictionary with input objects
-        :return: None
-        """
-        self._step_inputs = dict_
+    # def add_inputs(self, dict_: dict) -> None:
+    #     """
+    #     Adds the inputs to the step
+    #     :param dict_: Dictionary with input objects
+    #     :return: None
+    #     """
+    #     self._step_inputs = dict_
 
-    def add_informs(self, dict_: dict) -> None:
-        """
-        Adds informs to the step.
-        :param dict_: Dictionary with the informs
-        :return: None
-        """
-        self._input_informs = dict_
-        logger.info("Inform added: {}".format(dict_))
+    # def add_informs(self, dict_: dict) -> None:
+    #     """
+    #     Adds informs to the step.
+    #     :param dict_: Dictionary with the informs
+    #     :return: None
+    #     """
+    #     self._input_informs = dict_
+    #     logger.info(f"Inform added: {dict_}")
 
-    def _add_job_parameters(self) -> None:
+    def run(self) -> None:
         """
-        Adds the job parameters.
+        Runs this step.
         :return: None
         """
-        if len(self._job_options) > 0:
-            logger.info("Adding job parameters")
-            self._tool.update_parameters(**self._job_options)
+        loggers.attach_step_handler(self._dir / 'logs', logging.DEBUG)
+        with Path(self._dir / 'logs' / 'rulename.txt').open('a') as handle:
+            handle.write(self.name)
+            handle.write('\n')
+        logger.info(f'Running step: {self.name}')
+        # self._tool.add_input_files(self._step_inputs)
+        # self._tool.add_input_informs(self._input_informs)
+        logger.debug(f"Tool inputs: {self._tool.tool_inputs}")
+        logger.info(f"Default parameters loaded: {toolutils.show_parameters(self._tool)}")
+        dir_tool = self._dir / 'work'
+        dir_tool.mkdir(exist_ok=True)
+        self._tool.run(dir_tool)
+        logger.info(f'Step output: {list(self._tool.tool_outputs.items())}')
+        logger.info(f'Step informs: {list(self._tool.informs.items())}')
+        self._log_outputs()
+        loggers.detach_step_handlers()
 
     def run_step(self) -> None:
         """
         Runs the current step.
         :return: None
         """
-        loggers.attach_step_handler(self._folder, logging.INFO)
-        loggers.attach_step_handler(self._folder, logging.DEBUG)
-        logger.info(f'Running step: {self.name}')
-        self._tool.add_input_files(self._step_inputs)
-        self._tool.add_input_informs(self._input_informs)
-        logger.info("Default parameters loaded: {}".format(self._tool.parameter_overview))
-        self._add_job_parameters()
-        self._tool.run(self._folder)
-        logger.info(f'Step output: {list(self.outputs.items())}')
-        logger.info(f'Step informs: {list(self.informs.items())}')
-        self._log_outputs()
-        loggers.detach_step_handlers()
+        logger.warning('.run_step() is deprecated, please use .run() instead.')
+        self.run()
 
     def _log_outputs(self) -> None:
         """
@@ -143,25 +125,9 @@ class Step(object):
         :return: None
         """
         logger.info(f"Logging output for step '{self.name}'")
-        for key, io_list in self.outputs.items():
-            if not self._key_is_logged(key):
-                logger.debug(f"Not logging output key: {key}")
-                continue
+        for key, io_list in self._tool.tool_outputs.items():
             for index, io_out in enumerate(io_list):
                 if not io_out.is_logged:
                     continue
                 step_output = StepOutput(self._name, io_out.type_name, key, index, io_out.hash, self._wildcards)
-                logger.info('Output log: {}'.format(step_output))
-
-    def _key_is_logged(self, key: str) -> bool:
-        """
-        Checks whether the files with the given output key need to be logged.
-        :param key: Output key to check
-        :return: True/False
-        """
-        if (self._keys_log is None) and (self._keys_no_log is None):
-            return True
-        elif self._keys_log is not None:
-            return key in self._keys_log
-        else:
-            return key not in self._keys_no_log
+                logger.debug(f'Output log: {step_output}')

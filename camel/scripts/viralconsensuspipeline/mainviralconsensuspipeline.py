@@ -215,7 +215,7 @@ class MainViralConsensusPipeline(ReportPipeline):
         # Copy the FASTA file of the consensus sequence (if specified)
         if self._args.output_fasta is not None:
             output_io_list = SnakemakeUtils.load_object(Path(
-                self._args.working_dir, iterativemapping.OUTPUT_ITERATIVE_MAPPING_FASTA_CONSENSUS_FINAL_TRIMMED))
+                self._args.working_dir, iterativemapping.OUTPUT_FASTA_CONSENSUS_FINAL_TRIMMED))
             shutil.copyfile(output_io_list[0].path, self._args.output_fasta)
 
     def __config_add_yaml_data(self, config_data: dict) -> None:
@@ -311,7 +311,7 @@ class MainViralConsensusPipeline(ReportPipeline):
         species_antivirals = MainViralConsensusPipeline.SUPPORTED_SPECIES.get(self._args.species, {}).get('antivirals_species')
         if species_antivirals is not None:
             config_data['analyses'].append('antivirals')
-            config_data['antivirals'] = {'species': species_antivirals}
+            config_data['antivirals']['species'] = species_antivirals
 
         # Amplicon primer clipping
         if self._args.fasta_primers is not None:

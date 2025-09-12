@@ -1,6 +1,19 @@
-dependencies: [strainge/1.3.9]
+dependencies:
+  - strainge/1.3.9
 parameters:
-  separate_output: { default: true, mandatory: false, option: --separate-output, value: '' }
-  output_prefix : { default: true, mandatory: true, option: --output, value: 'straingst_output'}
-  iterations : { default: false, mandatory: false, option: --iterations, value: '5'}
+  separate_output:
+    default: true
+    mandatory: false
+    option: '--separate-output'
+    value: ''
+  output_prefix:
+    default: true
+    mandatory: true
+    option: '--output'
+    value: straingst_output
+  iterations:
+    default: false
+    mandatory: false
+    option: '--iterations'
+    value: '5'
 tool_command: straingst run

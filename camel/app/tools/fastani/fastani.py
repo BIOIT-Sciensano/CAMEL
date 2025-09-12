@@ -1,8 +1,9 @@
 from pathlib import Path
-from camel.app.camel import Camel
+
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.tools.tool import Tool
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 
 
@@ -11,12 +12,11 @@ class FastANI(Tool):
     FastANI is developed for fast alignment-free computation of whole-genome Average Nucleotide Identity (ANI).
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('FastANI', '1.33', camel)
+        super().__init__('FastANI', '1.33')
 
     def _check_input(self) -> None:
         """
@@ -27,12 +27,12 @@ class FastANI(Tool):
                            'TSV_FASTA_Q', 'TSV_FASTA_R', 'TSV_FASTQ_R', 'TSV_FASTQ_Q']
 
         if len([key for key in self._tool_inputs if '_Q' in key]) > 1:
-            raise InvalidInputSpecificationError('Please input at most one query (file or sequence)')
+            raise InvalidToolInputError('Please input at most one query (file or sequence)')
         if len([key for key in self._tool_inputs if '_R' in key]) > 1:
-            raise InvalidInputSpecificationError('Please input at most one reference (file or sequence)')
+            raise InvalidToolInputError('Please input at most one reference (file or sequence)')
 
         if len([key for key in self._tool_inputs if key in authorized_keys]) != 2:
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 'Please check your input files - maximum one query and one reference is allowed')
 
         super()._check_input()
@@ -47,7 +47,7 @@ class FastANI(Tool):
         fetching_reference = next(key for key in self._tool_inputs if '_R' in key)
         reference_condition = 'TSV' in fetching_reference
         if not (fetching_query and fetching_reference):
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 f'Incorrect input found: Query={fetching_query}, Ref={fetching_reference}')
 
         input_str_query = '--{} {}'.format(
@@ -58,13 +58,13 @@ class FastANI(Tool):
         self._command.command = ' '.join([
             self._tool_command, input_str_reference, input_str_query, *self._build_options()])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """

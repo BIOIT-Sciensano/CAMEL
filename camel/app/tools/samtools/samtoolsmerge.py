@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
@@ -22,13 +22,12 @@ class SamtoolsMerge(SamtoolsBase):
     extension is found.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('samtools merge', '1.17', camel)
+        super().__init__('samtools merge', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -36,9 +35,9 @@ class SamtoolsMerge(SamtoolsBase):
         :return: None
         """
         if 'BAM' not in self._tool_inputs and 'SAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No BAM or SAM file given as input.")
+            raise InvalidToolInputError("No BAM or SAM file given as input.")
         elif 'BAM' in self._tool_inputs and 'SAM' in self._tool_inputs:
-            raise InvalidInputSpecificationError("BAM and SAM files given as input; tool can only accept one type.")
+            raise InvalidToolInputError("BAM and SAM files given as input; tool can only accept one type.")
         elif 'BAM' in self._tool_inputs:
             self.__input_file_type = 'BAM'
         elif 'SAM' in self._tool_inputs:
@@ -90,12 +89,10 @@ class SamtoolsMerge(SamtoolsBase):
             logger.info("Output file format not BAM or SAM. Assuming BAM and continuing.")
         return filetype
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output.
         Supersedes function in Tool class because warnings printed to stderr can cause false abort.
         """
         self._check_stderr()
-
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)

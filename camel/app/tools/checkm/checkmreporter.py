@@ -2,9 +2,8 @@ from pathlib import Path
 
 import string
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -14,11 +13,12 @@ class CheckMReporter(Tool):
     Creates HTML reports for the CheckM tool.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
+        :return: None
         """
-        super().__init__('CheckM reporter', '0.1', camel)
+        super().__init__('CheckM reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -26,9 +26,9 @@ class CheckMReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('TSV input is required')
+            raise InvalidToolInputError('TSV input is required')
         if 'checkm' not in self._input_informs:
-            raise InvalidInputSpecificationError('CheckM informs are required')
+            raise InvalidToolInputError('CheckM informs are required')
         super()._check_input()
 
     def _execute_tool(self) -> None:

@@ -1,12 +1,11 @@
 from pathlib import Path
 from typing import Any
 
-from camel.app.camel import Camel
 from camel.app.components.blast.blasthitstatistics import BlastHitStatistics
 from camel.app.components.blasttyping.blasthitfilteringhelper import BlastHitFilteringHelper
 from camel.app.components.sequencetyping.sequencetypingblasthit import SequenceTypingBlastHit
 from camel.app.components.sequencetyping.sequencetypingutils import SequenceTypingUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -23,12 +22,11 @@ class BestHitSelector(Tool):
         VAL_Hit: The best hit.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Typing: Best Hit Selector', '0.1', camel)
+        super().__init__('Typing: Best Hit Selector', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -36,9 +34,9 @@ class BestHitSelector(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input is required")
+            raise InvalidToolInputError("TSV input is required")
         if len(self._tool_inputs['TSV']) != 1:
-            raise InvalidInputSpecificationError("Only 1 TSV input can be processed")
+            raise InvalidToolInputError("Only 1 TSV input can be processed")
         super()._check_input()
 
     def _execute_tool(self) -> None:

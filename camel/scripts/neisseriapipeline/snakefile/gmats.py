@@ -1,9 +1,8 @@
 from pathlib import Path
 
 
-SNAKEFILE_GMATS = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
-_dir_gmats = Path('gmats')
-OUTPUT_GMATS_REPORT = _dir_gmats / 'report' / 'html.io'
-OUTPUT_GMATS_REPORT_EMPTY = _dir_gmats / 'report' / 'html-empty.io'
-OUTPUT_GMATS_SUMMARY = _dir_gmats / 'summary' / 'summary_gmats.tsv'
+OUTPUT_REPORT = 'gmats/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'gmats/report/html-empty.iob'
+OUTPUT_SUMMARY = 'gmats/summary/summary_gmats.{ext}'

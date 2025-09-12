@@ -2,18 +2,16 @@ from camel.app.tools.gatk.gatk import GATK
 
 
 class GATKGenotypeGVCFs(GATK):
-
     """
     Class for GATK GenotypeGVCFs function
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk GenotypeGVCFs', '3.7', camel)
+        super().__init__('gatk GenotypeGVCFs', '3.7')
 
         self._required_inputs = ['gVCF', 'FASTA_REF']
         self._output_type = 'VCF_MultipleSample'

@@ -1,6 +1,6 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -10,13 +10,12 @@ class SnippyFasta2BAM(Tool):
     Creation of pseudo-reads from a FASTA file and alignment of these reads to a given reference genome.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('snippy Fasta2BAM', '4.6.0', camel)
+        super().__init__('snippy Fasta2BAM', '4.6.0')
 
     def _check_input(self) -> None:
         """
@@ -25,9 +24,9 @@ class SnippyFasta2BAM(Tool):
         """
         super()._check_input()
         if 'FASTA_REF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Reference genome input is required.')
+            raise InvalidToolInputError('Reference genome input is required.')
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Fasta input is required')
+            raise InvalidToolInputError('Fasta input is required')
 
     def __build_command(self) -> None:
         """
@@ -57,10 +56,10 @@ class SnippyFasta2BAM(Tool):
         """
         self._tool_outputs['BAM'] = [ToolIOFile(self.folder / self._parameters['output_directory'].value / 'snps.bam')]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

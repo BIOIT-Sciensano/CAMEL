@@ -1,8 +1,6 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidparametererror import InvalidParameterError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import ToolExecutionError, InvalidParameterError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
@@ -13,12 +11,11 @@ class SamtoolsFastaIndex(SamtoolsBase):
     Indexes FASTA files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('samtools faidx', '1.17', camel)
+        super().__init__('samtools faidx', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -29,7 +26,7 @@ class SamtoolsFastaIndex(SamtoolsBase):
             raise ValueError("No FASTA input file found")
         if len(self._tool_inputs['FASTA']) != 1:
             raise ValueError("Only one FASTA input file is supported.")
-        super(SamtoolsBase, self)._check_input()
+        super()._check_input()
 
     def _check_parameters(self) -> None:
         """
@@ -38,7 +35,7 @@ class SamtoolsFastaIndex(SamtoolsBase):
         """
         if 'regions' in self._parameters and 'output_filename' not in self._parameters:
             raise InvalidParameterError("Cannot extract regions without output filename")
-        super(SamtoolsFastaIndex, self)._check_parameters()
+        super()._check_parameters()
 
     def __symlink_input(self) -> Path:
         """
@@ -85,5 +82,5 @@ class SamtoolsFastaIndex(SamtoolsBase):
         Checks the command stderr output.
         :return: None
         """
-        if 'build FASTA index' in self.stderr:
-            raise ToolExecutionError("Cannot extract regions from an unindexed FASTA file.")
+        if 'build FASTA index' in self._command.stderr:
+            raise ToolExecutionError(self.name, "Cannot extract regions from an unindexed FASTA file.")

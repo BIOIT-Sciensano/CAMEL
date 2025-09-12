@@ -3,9 +3,9 @@ from pathlib import Path
 
 import re
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -19,13 +19,12 @@ class Kraken2(Tool):
     exact alignments of k-mers and a novel classification algorithm.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('kraken2', '2.1.1', camel)
+        super().__init__('kraken2', '2.1.1')
         self._input_key = None
 
     def _execute_tool(self) -> None:
@@ -48,13 +47,13 @@ class Kraken2(Tool):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('FASTA', 'FASTQ', 'FASTQ_PE')) or 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError(f'FASTA/Q input or DB input missing for Kraken: {self._tool_inputs!r}')
+            raise InvalidToolInputError(f'FASTA/Q input or DB input missing for Kraken: {self._tool_inputs!r}')
         for key, value in self._tool_inputs.items():
             if (key != 'FASTQ_PE' and len(value) > 1) or (key == 'FASTQ_PE' and len(value) != 2):
-                raise InvalidInputSpecificationError(
+                raise InvalidToolInputError(
                     f'There is more than 1 FASTA/Q file or more/less than two FASTQ_PE files given for Kraken: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 f'Too many input keys given for Kraken ((FASTA or FASTQ or FASTQ_PE) and DB): {self._tool_inputs!r}')
 
     def __get_basename(self) -> str:
@@ -123,12 +122,12 @@ class Kraken2(Tool):
         options_string = ' '.join(self._build_options())
         self._command.command = f'{self._tool_command} {self.__build_input_string()} {options_string}'
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if 'error' in self.stderr.lower():
-            raise ToolExecutionError(f"Command execution failed (stderr: {self.stderr}).")
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        if 'error' in command.stderr.lower():
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        toolutils.check_tool_execution(self, command, exit_code=0)

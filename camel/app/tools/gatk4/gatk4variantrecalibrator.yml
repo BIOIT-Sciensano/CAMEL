@@ -1,9 +1,43 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0, R/4.3.1, R_packages/4.3/ggplot2/3.4.3]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
+  - R/4.3.1
+  - R_packages/4.3/ggplot2/3.4.3
 parameters:
-  output: {default: true, mandatory: true, option: --output, p_index: 0, value: recalibrationData.tabl}
-  tranches: {default: true, mandatory: true, option: --tranches-file, p_index: 0, value: output.tranches}
-  use_annotation: {default: true, mandatory: false, option: -an, p_index: 0, value: QD}
-  resources: {default: true, mandatory: true, option: --resource, p_index: 0, value: hapmap,known=false,training=true,truth=true,prior=15.0,hapmap_3.3.b37.vcf}
-  mode: {default: false, mandatory: true, option: --mode, p_index: 0, value: SNP}
-  rscript_file: {default: false, mandatory: false, option: --rscript-file, p_index: 0, value: recal.plots.R}
+  output:
+    default: true
+    mandatory: true
+    option: '--output'
+    p_index: 0
+    value: recalibrationData.tabl
+  tranches:
+    default: true
+    mandatory: true
+    option: '--tranches-file'
+    p_index: 0
+    value: output.tranches
+  use_annotation:
+    default: true
+    mandatory: false
+    option: '-an'
+    p_index: 0
+    value: QD
+  resources:
+    default: true
+    mandatory: true
+    option: '--resource'
+    p_index: 0
+    value: 'hapmap,known=false: null,training=true: null,truth=true: null,prior=15.0: null,hapmap_3.3.b37.vcf'
+  mode:
+    default: false
+    mandatory: true
+    option: '--mode'
+    p_index: 0
+    value: SNP
+  rscript_file:
+    default: false
+    mandatory: false
+    option: '--rscript-file'
+    p_index: 0
+    value: recal.plots.R
 tool_command: VariantRecalibrator

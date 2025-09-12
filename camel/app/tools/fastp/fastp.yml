@@ -1,20 +1,89 @@
-dependencies: [fastp/0.23.4]
+dependencies:
+  - fastp/0.23.4
 parameters:
-  compression: {default: true, mandatory: false, option: --compression, value: 4}
-  cut_front: {default: false, mandatory: false, option: --cut_front, value: null}
-  cut_front_mean_quality: {default: false, mandatory: false, option: --cut_front_mean_quality, value: 20}
-  cut_front_window_size: {default: false, mandatory: false, option: --cut_front_window_size, value: 4}
-  cut_mean_quality: {default: false, mandatory: false, option: --cut_mean_quality, value: 20}
-  cut_right: {default: false, mandatory: false, option: --cut_right, value: null}
-  cut_right_mean_quality: { default: false, mandatory: false, option: --cut_right_mean_quality, value: 20 }
-  cut_right_window_size: { default: false, mandatory: false, option: --cut_right_window_size, value: 4 }
-  cut_tail: {default: false, mandatory: false, option: --cut_tail, value: null}
-  cut_tail_mean_quality: { default: false, mandatory: false, option: --cut_tail_mean_quality, value: 20 }
-  cut_tail_window_size: { default: false, mandatory: false, option: --cut_tail_window_size, value: 4 }
-  cut_window_size: {default: false, mandatory: false, option: --cut_window_size, value: 4}
-  detect_adapter_for_pe: {default: false, mandatory: false, option: --detect_adapter_for_pe, value: true}
-  disable_adapter_trimming: {default: false, mandatory: false, option: --disable_adapter_trimming, value: null}
-  length_required: {default: false, mandatory: false, option: --length_required, value: 15}
-  output_name: {default: true, mandatory: true, option: null, value: 'trimmed'}
-  threads: {default: false, mandatory: false, option: --thread, value: '4'}
+  compression:
+    default: true
+    mandatory: false
+    option: '--compression'
+    value: 4
+  cut_front:
+    default: false
+    mandatory: false
+    option: '--cut_front'
+    flag: true
+  cut_front_mean_quality:
+    default: false
+    mandatory: false
+    option: '--cut_front_mean_quality'
+    value: 20
+  cut_front_window_size:
+    default: false
+    mandatory: false
+    option: '--cut_front_window_size'
+    value: 4
+  cut_mean_quality:
+    default: false
+    mandatory: false
+    option: '--cut_mean_quality'
+    value: 20
+  cut_right:
+    default: false
+    mandatory: false
+    option: '--cut_right'
+    flag: true
+  cut_right_mean_quality:
+    default: false
+    mandatory: false
+    option: '--cut_right_mean_quality'
+    value: 20
+  cut_right_window_size:
+    default: false
+    mandatory: false
+    option: '--cut_right_window_size'
+    value: 4
+  cut_tail:
+    default: false
+    mandatory: false
+    option: '--cut_tail'
+    flag: true
+  cut_tail_mean_quality:
+    default: false
+    mandatory: false
+    option: '--cut_tail_mean_quality'
+    value: 20
+  cut_tail_window_size:
+    default: false
+    mandatory: false
+    option: '--cut_tail_window_size'
+    value: 4
+  cut_window_size:
+    default: false
+    mandatory: false
+    option: '--cut_window_size'
+    value: 4
+  detect_adapter_for_pe:
+    default: false
+    mandatory: false
+    option: '--detect_adapter_for_pe'
+    flag: true
+  disable_adapter_trimming:
+    default: false
+    mandatory: false
+    option: '--disable_adapter_trimming'
+    flag: true
+  length_required:
+    default: false
+    mandatory: false
+    option: '--length_required'
+    value: 15
+  output_name:
+    default: true
+    mandatory: true
+    option: null
+    value: trimmed
+  threads:
+    default: false
+    mandatory: false
+    option: '--thread'
+    value: 4
 tool_command: fastp

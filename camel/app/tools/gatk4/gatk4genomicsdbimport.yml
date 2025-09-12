@@ -1,5 +1,17 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  workspace_path: {default: true, mandatory: false, option: --genomicsdb-workspace-path, p_index: 0, value: my_database}
-  output: {default: true, mandatory: false, option: None, p_index: 0, value: success.txt}
+  workspace_path:
+    default: true
+    mandatory: false
+    option: '--genomicsdb-workspace-path'
+    p_index: 0
+    value: my_database
+  output:
+    default: true
+    mandatory: false
+    option: None
+    p_index: 0
+    value: success.txt
 tool_command: GenomicsDBImport

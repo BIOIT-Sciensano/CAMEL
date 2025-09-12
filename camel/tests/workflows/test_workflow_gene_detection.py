@@ -35,22 +35,6 @@ class TestWorkflowGeneDetection(CamelTestSuite):
         wrapper.run_workflow_blast(TestWorkflowGeneDetection.fasta, 'test sample', db_data)
         self.assertGreater(len(wrapper.output.report_section.to_html()), 0)
 
-    def test_gene_detection_illumina_srst2(self) -> None:
-        """
-        Tests the gene detection workflow with SRST2 detection and Illumina data.
-        :return: None
-        """
-        wrapper = GeneDetectionWrapper(self.running_dir)
-        fastq_input = FastqInput('illumina', pe=[
-            ToolIOFile(x) for x in TestWorkflowGeneDetection.input_fastq_by_key['illumina']])
-        db_data = {
-            'path': str(TestWorkflowGeneDetection.gene_db),
-            'min_percent_identity': 80,
-            'min_coverage': 80
-        }
-        wrapper.run_workflow_srst2(fastq_input, 'test sample', db_data)
-        self.assertGreater(len(wrapper.output.report_section.to_html()), 0)
-
     def test_gene_detection_illumina_kma(self) -> None:
         """
         Tests the gene detection workflow with KMA detection and Illumina data.

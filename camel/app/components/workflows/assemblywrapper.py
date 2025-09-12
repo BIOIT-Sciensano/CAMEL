@@ -4,7 +4,7 @@ from typing import Optional, Any, Union
 
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.workflows.utils.fastqinput import FastqInput
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import assembly
 
@@ -71,7 +71,7 @@ class AssemblyWrapper:
                 fq_dict['SE_REV'] = fastq_in.se_rev
         else:
             fq_dict = {'SE': fastq_in.se}
-        SnakemakeUtils.dump_object(fq_dict, self._working_dir / 'fq_dict.io')
+        snakemakeutils.dump_object(fq_dict, self._working_dir / 'fq_dict.io')
         self.__run_workflow(name, min_ctg_len, assembler_opts, calc_qc_stats, threads)
 
     def __run_workflow(
@@ -92,7 +92,7 @@ class AssemblyWrapper:
         # Collect output files
         output_files = self.__get_output_files_dict(config_data, min_ctg_len, calc_qc_stats)
         SnakePipelineUtils.run_snakemake(
-            assembly.SNAKEFILE_ASSEMBLY, config_file, list(output_files.values()), Path(self._working_dir), threads)
+            assembly.SNAKEFILE, config_file, list(output_files.values()), Path(self._working_dir), threads)
         self.__set_output(output_files)
 
     def __get_output_files_dict(
@@ -105,18 +105,17 @@ class AssemblyWrapper:
         :return: Dictionary with output files.
         """
         output_files = {
-            'HTML': self._working_dir / assembly.OUTPUT_ASSEMBLY_REPORT,
-            'TSV': self._working_dir / assembly.OUTPUT_ASSEMBLY_SUMMARY,
-            'FASTA': self._working_dir / assembly.OUTPUT_ASSEMBLY_FASTA,
-            **{f'INFORMS_assembler_{idx}': self._working_dir / p for idx, p in enumerate(
-                assembly.get_command_informs(config_data))}
+            'HTML': assembly.OUTPUT_REPORT,
+            'TSV': assembly.OUTPUT_SUMMARY,
+            'FASTA': assembly.OUTPUT_FASTA,
+            **{f'INFORMS_assembler_{idx}': p for idx, p in enumerate(assembly.get_command_informs(config_data))}
         }
         if min_ctg_len is not None:
-            output_files['INFORMS_seqtk'] = self._working_dir / assembly.OUTPUT_ASSEMBLY_FILTERING_INFORMS
+            output_files['INFORMS_seqtk'] = assembly.OUTPUT_INFORMS_FILTERING
         if calc_qc_stats is True:
             key_fq = 'fastq_pe' if self._input_type == 'illumina' else 'fastq_se'
-            output_files['INFORMS_mapper'] = self._working_dir / assembly.get_mapping_inform(key_fq)
-            output_files['INFORMS_depth'] = self._working_dir / assembly.get_depth_inform(key_fq)
+            output_files['INFORMS_mapper'] = assembly.get_mapping_inform(key_fq)
+            output_files['INFORMS_depth'] = assembly.get_depth_inform(key_fq)
         return output_files
 
     def __get_config_data(self, name: str, min_ctg_len: Union[int, None], assembler_opts: Optional[dict] = None) -> \
@@ -151,21 +150,22 @@ class AssemblyWrapper:
         """
         log_file_path = self._working_dir / 'camel.log'
         informs = [
-            SnakemakeUtils.load_object(p) for key, p in output_files.items() if key.startswith('INFORMS_assembler_')
+            snakemakeutils.load_object(self._working_dir / p)
+            for key, p in output_files.items() if key.startswith('INFORMS_assembler_')
         ]
         if 'INFORMS_seqtk' in output_files:
-            informs.append(SnakemakeUtils.load_object(output_files['INFORMS_seqtk']))
+            informs.append(snakemakeutils.load_object(self._working_dir / output_files['INFORMS_seqtk']))
         if all(key in output_files for key in ('INFORMS_mapper', 'INFORMS_depth')):
             qc_stats = {
-                'depth': SnakemakeUtils.load_object(output_files['INFORMS_depth']),
-                'mapping': SnakemakeUtils.load_object(output_files['INFORMS_mapper']),
+                'depth': snakemakeutils.load_object(self._working_dir / output_files['INFORMS_depth']),
+                'mapping': snakemakeutils.load_object(self._working_dir / output_files['INFORMS_mapper']),
             }
         else:
             qc_stats = None
         self._output = AssemblyOutput(
-            report_section=SnakemakeUtils.load_object(output_files['HTML'])[0].value,
-            tsv_summary=output_files['TSV'],
-            fasta_contigs=SnakemakeUtils.load_object(output_files['FASTA'])[0].path,
+            report_section=snakemakeutils.load_object(self._working_dir/ output_files['HTML'])[0].value,
+            tsv_summary=self._working_dir / output_files['TSV'],
+            fasta_contigs=snakemakeutils.load_object(self._working_dir / output_files['FASTA'])[0].path,
             informs=informs,
             log_file=log_file_path if log_file_path.exists() else None,
             qc_stats=qc_stats

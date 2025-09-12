@@ -1,26 +1,27 @@
 import os
+from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
 
 class Carma(Tool):
     """
+    # TODO: deprecate
     CARMA is a software pipeline for the characterisation of species composition and the genetic potential of microbial
     samples using short reads. In contrast to the traditional 16S-rRNA approach for taxonomical classification, CARMA
     uses reads that encode for known proteins. By assigning the taxonomic origins to each read, a profile is
     constructed which characterises the taxonomic composition of the corresponding community.
     """
 
-    def __init__(self, camel):
+    def __init__(self) -> None:
         """
-        Initialize tool
-        :param camel: Camel instance
+        Initializes this tool.
         :return: None
         """
-        super().__init__('carma', '20150505', camel)
+        super().__init__('carma', '20150505')
         self._input_key = None
         self._carma_dir = 'carma3/20150505'
         self._hmmer_dir = 'hmmer/3.1b2'
@@ -54,25 +55,26 @@ class Carma(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(Carma, self)._check_input()
+        super()._check_input()
         if [x in self._tool_inputs for x in ('FASTA', 'BLASTX', 'EGT')].count(True) != 1:
-            raise InvalidInputSpecificationError('Invalid input keys given for CARMA: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input keys given for CARMA: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Too many input keys given for CARMA: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for CARMA: {self._tool_inputs!r}')
         for value in self._tool_inputs.values():
             if len(value) > 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files per key given '
-                                                     'for CARMA: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(
+                    f'Invalid number (max = 1) of files per key given for CARMA: {self._tool_inputs!r}')
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command):
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if 'ERROR' in self.stderr:
-            raise ToolExecutionError("Command execution failed (stderr: {}).".format(self.stderr))
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        if 'ERROR' in self._command.stderr:
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        if self._command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {command.exit_code})")
 
     def __set_input_key(self):
         """
@@ -86,15 +88,15 @@ class Carma(Tool):
         Creates the config file that is used by CARMA from the values available in the database.
         :return: Location of the config file
         """
-        option_list = super(Carma, self)._build_options(self._cmd_param + self._config_loc_param, ' = ')
+        option_list = super()._build_options(self._cmd_param + self._config_loc_param, ' = ')
         option_list += self.__build_fixed_options()
         option_list += self.__build_ncbi_options()
         option_list += self.__build_blast_options()
         option_list += self.__build_pfam_options()
         option_list += self.__build_unused_options()
-        with open(os.path.join(self._folder, 'carma.cfg'), 'wb') as outfile:
+        with open(os.path.join(self._folder, 'carma.cfg')) as handle:
             for option in option_list:
-                outfile.write(option + '\n')
+                handle.write(f'{option}\n')
         return os.path.join(self._folder, 'carma.cfg')
 
     def __build_ncbi_options(self):
@@ -104,9 +106,9 @@ class Carma(Tool):
         """
         ncbi = self._parameters['ncbi']
         return [
-            'nodes_dmp = /data/taxonomy/ncbi/{}/nodes.dmp'.format(ncbi.value),
-            'merged_dmp = /data/taxonomy/ncbi/{}/merged.dmp'.format(ncbi.value),
-            'names_dmp = /data/taxonomy/ncbi/{}/names.dmp'.format(ncbi.value)
+            f'nodes_dmp = /data/taxonomy/ncbi/{ncbi.value}/nodes.dmp',
+            f'merged_dmp = /data/taxonomy/ncbi/{ncbi.value}/merged.dmp',
+            f'names_dmp = /data/taxonomy/ncbi/{ncbi.value}/names.dmp'
         ]
 
     def __build_blast_options(self):
@@ -118,11 +120,11 @@ class Carma(Tool):
         blast_nt = self._parameters['blast_nt']
         blast_nr = self._parameters['blast_nr']
         return [
-            'blastall_script = /usr/local/bin/blast/{}/blastall'.format(blast.value),
-            'fastacmd_script = /usr/local/bin/blast/{}/fastacmd'.format(blast.value),
-            'formatdb_script = /usr/local/bin/blast/{}/formatdb'.format(blast.value),
-            'blast_nt_database = /data/blastdb/nucleotide/nt/{}/nt'.format(blast_nt.value),
-            'blast_nr_database = /data/blastdb/protein/nr/{}/nr'.format(blast_nr.value)
+            f'blastall_script = /usr/local/bin/blast/{blast.value}/blastall',
+            f'fastacmd_script = /usr/local/bin/blast/{blast.value}/fastacmd',
+            f'formatdb_script = /usr/local/bin/blast/{blast.value}/formatdb',
+            f'blast_nt_database = /data/blastdb/nucleotide/nt/{blast_nt.value}/nt',
+            f'blast_nr_database = /data/blastdb/protein/nr/{blast_nr.value}/nr'
         ]
 
     def __build_pfam_options(self):
@@ -132,11 +134,11 @@ class Carma(Tool):
         """
         pfam = self._parameters['pfam']
         return [
-            'pfamId2TaxId_file = /data/carma/pfam{}/pfamid2taxid.txt.gz'.format(pfam.value),
-            'pfamA_txt_file = /data/pfam/{}/pfamA_parsed.txt'.format(pfam.value),
-            'gene_ontology_txt_file = /data/pfam/{}/parsed_gene_ontology.txt'.format(pfam.value),
-            'pfam_A_hmm_file = /data/pfam/{}/Pfam-A.hmm'.format(pfam.value),
-            'pfam_fasta_dir = /data/pfam/{}/fasta_dir/'.format(pfam.value)
+            f'pfamId2TaxId_file = /data/carma/pfam{pfam.value}/pfamid2taxid.txt.gz',
+            f'pfamA_txt_file = /data/pfam/{pfam.value}/pfamA_parsed.txt',
+            f'gene_ontology_txt_file = /data/pfam/{pfam.value}/parsed_gene_ontology.txt',
+            f'pfam_A_hmm_file = /data/pfam/{pfam.value}/Pfam-A.hmm',
+            f'pfam_fasta_dir = /data/pfam/{pfam.value}/fasta_dir/'
         ]
 
     def __build_fixed_options(self):
@@ -144,11 +146,11 @@ class Carma(Tool):
         Builds the fixed options that specify the location of several binaries and directories
         :return: List of options
         """
-        return ['carma_binary = /usr/local/bin/{}/carma'.format(self._carma_dir),
-                'carma_sge_script = /usr/local/bin/{}/carma3.sh'.format(self._carma_dir),
-                'hmmfetch_bin = /usr/local/bin/{}/bin/hmmfetch'.format(self._hmmer_dir),
-                'hmmalign_bin = /usr/local/bin/{}/bin/hmmalign'.format(self._hmmer_dir),
-                'hmmscan_bin = /usr/local/bin/{}/bin/hmmscan'.format(self._hmmer_dir),
+        return [f'carma_binary = /usr/local/bin/{self._carma_dir}/carma',
+                f'carma_sge_script = /usr/local/bin/{self._carma_dir}/carma3.sh',
+                f'hmmfetch_bin = /usr/local/bin/{self._hmmer_dir}/bin/hmmfetch',
+                f'hmmalign_bin = /usr/local/bin/{self._hmmer_dir}/bin/hmmalign',
+                f'hmmscan_bin = /usr/local/bin/{self._hmmer_dir}/bin/hmmscan',
                 'cluster_tmp_dir = /data/temp/',
                 'gzip_bin = /bin/gzip',
                 'zcat_bin = /bin/zcat']
@@ -207,15 +209,15 @@ class Carma(Tool):
         will be created.
         :return: None
         """
-        self._tool_outputs[self.__get_output_key()] = [ToolIOFile(self.__get_output_filename())]
+        self._tool_outputs[self.__get_output_key()] = [ToolIOFile(Path(self.__get_output_filename()))]
 
     def __build_input_string(self):
         """
         Creates the string with the input and output files
         :return: String with the input parameters
         """
-        items = ['--input {}'.format(self._tool_inputs[self._input_key][0].path),
-                 '--output {}'.format(self.__get_output_filename())]
+        items = [f'--input {self._tool_inputs[self._input_key][0].path}',
+                 f'--output {self.__get_output_filename()}']
         return ' '.join(items)
 
     def __build_command(self):
@@ -225,5 +227,5 @@ class Carma(Tool):
         """
         input_string = self.__build_input_string()
         options_string = ' '.join(self._build_options(self._config_param + self._config_loc_param, ' '))
-        options_string += ' --config {}'.format(self.__create_config_file())
-        self._command.command = '{} {} {}'.format(self._tool_command, input_string, options_string)
+        options_string += f' --config {self.__create_config_file()}'
+        self._command.command = f'{self._tool_command} {input_string} {options_string}'

@@ -1,7 +1,6 @@
 import ast
 import json
 import re
-from typing import Tuple, Dict, List
 
 import bs4
 from Bio import SeqIO
@@ -9,13 +8,13 @@ from Bio import SeqIO
 from camel.app.loggers import logger
 
 
-class GeneDetectionUtils(object):
+class GeneDetectionUtils:
     """
     This class contains utility functions for the gene detection workflow.
     """
 
     @staticmethod
-    def parse_header(header: str) -> Tuple[str, Dict]:
+    def parse_header(header: str) -> tuple[str, dict]:
         """
         Parses a gene detection header. The format is:
         >{sequence id} {metadata in JSON format}
@@ -24,7 +23,7 @@ class GeneDetectionUtils(object):
         """
         m = re.match('^(.*) ({.*})$', header)
         if not m:
-            raise ValueError("Invalid header: {}".format(header))
+            raise ValueError(f"Invalid header: {header}")
         metadata = json.loads(m.group(2))
         return m.group(1), metadata
 
@@ -58,7 +57,7 @@ class GeneDetectionUtils(object):
         return "".join(parts)
 
     @staticmethod
-    def get_detection_method_key(config: Dict, db_key: str) -> str:
+    def get_detection_method_key(config: dict, db_key: str) -> str:
         """
         Returns the database path for the given database based on the configuration.
         :param config: Snakemake configuration
@@ -72,7 +71,7 @@ class GeneDetectionUtils(object):
         return db_config.get('force_detection_method', config['detection_method'])
 
     @staticmethod
-    def parse_extra_column_param(value: str) -> Tuple[str, str]:
+    def parse_extra_column_param(value: str) -> tuple[str, str]:
         """
         Parses the value of the extra column parameter.
         :return: Column name, column id
@@ -84,7 +83,7 @@ class GeneDetectionUtils(object):
             raise ValueError(f"Badly formatted parameter value: {value}")
 
     @staticmethod
-    def parse_clusters(clustered_fasta: str) -> Dict[str, str]:
+    def parse_clusters(clustered_fasta: str) -> dict[str, str]:
         """
         Parses the clusters from a clustered gene detection FASTA file.
         :param clustered_fasta: Clustered FASTA file
@@ -101,7 +100,7 @@ class GeneDetectionUtils(object):
         return cluster_by_seq
 
     @staticmethod
-    def export_hits_tabular(hits: List, output_path: str) -> None:
+    def export_hits_tabular(hits: list, output_path: str) -> None:
         """
         Creates the tabular output file.
         :param hits: Detected hits

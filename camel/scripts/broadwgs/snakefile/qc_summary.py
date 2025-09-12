@@ -17,7 +17,7 @@ def parse_metric_file(metric_file, header_str, metric):
     OUTPUT:
     Returns the metric
     """
-    with open(metric_file, 'r') as handle:
+    with open(metric_file) as handle:
         lines = handle.readlines()
         metrics_class_index = lines.index(header_str)
 
@@ -59,7 +59,7 @@ def get_fold_80(coverage_file, mean_coverage, percentile_20):
       100000  881     0
 
     """
-    with open(coverage_file, 'r') as handle:
+    with open(coverage_file) as handle:
         lines = handle.readlines()
         histogram_start_index = lines.index("## HISTOGRAM\tjava.lang.Integer\n")
 

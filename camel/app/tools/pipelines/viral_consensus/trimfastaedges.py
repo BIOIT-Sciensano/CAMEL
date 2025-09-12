@@ -5,8 +5,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -16,22 +15,21 @@ class TrimFastaEdges(Tool):
     Trims the edges of the input FASTA sequences when they are not covered.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('Trim FASTA edges', '0.1', camel)
+        super().__init__('Trim FASTA edges', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA input is required')
+            raise InvalidToolInputError('FASTA input is required')
         if 'BED' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BED input is required')
+            raise InvalidToolInputError('BED input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:

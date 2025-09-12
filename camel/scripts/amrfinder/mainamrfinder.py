@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
@@ -66,7 +67,7 @@ class MainAMRFinder:
         report.save()
 
         # Run AMRFinder
-        amrfinder = AMRFinder(Camel.get_instance())
+        amrfinder = AMRFinder()
         amrfinder.add_input_files({
             'FASTA': [ToolIOFile(self._args.fasta)],
             'DIR': [ToolIODirectory(self._args.db)]
@@ -83,7 +84,7 @@ class MainAMRFinder:
         amrfinder.run(self._args.working_dir)
 
         # Create output section
-        amrfinder_reporter = AMRFinderReporter(Camel.get_instance())
+        amrfinder_reporter = AMRFinderReporter()
         amrfinder_reporter.add_input_files({'TSV': amrfinder.tool_outputs['TSV']})
         amrfinder_reporter.add_input_informs({'amrfinder': amrfinder.informs})
         amrfinder_reporter.run(self._args.working_dir)

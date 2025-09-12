@@ -2,7 +2,7 @@ import abc
 import argparse
 import shutil
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Optional, Any
 
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.html.htmlreport import HtmlReport
@@ -13,7 +13,7 @@ from camel.app.loggers import logger
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 
 
-class InputTypeHelperBase(object, metaclass=abc.ABCMeta):
+class InputTypeHelperBase(metaclass=abc.ABCMeta):
     """
     Base class for input type-specific helper classes.
     """
@@ -30,7 +30,7 @@ class InputTypeHelperBase(object, metaclass=abc.ABCMeta):
         self._informs = []
 
     @property
-    def logs(self) -> Dict[str, str]:
+    def logs(self) -> dict[str, str]:
         """
         Returns the log files (key: name, value: log file path).
         :return: Logs
@@ -38,7 +38,7 @@ class InputTypeHelperBase(object, metaclass=abc.ABCMeta):
         return self._log_files
 
     @property
-    def informs(self) -> List[Dict[str, str]]:
+    def informs(self) -> list[dict[str, str]]:
         """
         Returns the informs.
         :return: List of informs
@@ -53,7 +53,7 @@ class InputTypeHelperBase(object, metaclass=abc.ABCMeta):
         """
         return self._working_dir
 
-    def symlink_input_files(self, files: List[Path], names: Optional[List[str]] = None) -> List[Path]:
+    def symlink_input_files(self, files: list[Path], names: Optional[list[str]] = None) -> list[Path]:
         """
         Creates symbolic links for list of files to the working directory.
         :param files: List of input files
@@ -158,6 +158,9 @@ class InputTypeHelperBase(object, metaclass=abc.ABCMeta):
         dir_logs = output_dir / 'logs'
         dir_logs.mkdir(parents=True, exist_ok=True)
         for key, path in self.logs.items():
+            if path is None:
+                logger.warning(f'No log file found for: {key}')
+                continue
             shutil.copyfile(path, str(dir_logs / f'log_{key}.txt'))
 
     def export_output_and_commands_section(self, report: HtmlReport, section: HtmlReportSection) -> None:

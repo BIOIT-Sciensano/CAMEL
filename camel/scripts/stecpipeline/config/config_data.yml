@@ -18,7 +18,6 @@ citations:
     - Li_2011-bcftools
     - Camacho_2009-blast
     - Clausen_2018-kma
-    - Inouye_2014-srst2
     - Bortolaia_2020-resfinder_4.0
     - Feldgarden_2019-ndaro
     - Joensen_2014-virulencefinder
@@ -84,9 +83,6 @@ gene_detection:
       blastn:
         min_percent_identity: 95
         min_coverage: 60
-      srst2:
-        max_divergence: 5
-        min_coverage: 60
     message:
       content: The presence of a replicon does not mean that the corresponding plasmid is present.
       category: warning
@@ -98,9 +94,6 @@ gene_detection:
       blastn:
         min_percent_identity: 85
         min_coverage: 60
-      srst2:
-        max_divergence: 15
-        min_coverage: 60
     metadata:
       name: Predicted serotype
       key: predicted_serotype
@@ -109,9 +102,6 @@ gene_detection:
     params:
       blastn:
         min_percent_identity: 85
-        min_coverage: 60
-      srst2:
-        max_divergence: 15
         min_coverage: 60
     metadata:
       name: Predicted serotype

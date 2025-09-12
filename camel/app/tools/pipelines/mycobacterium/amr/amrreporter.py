@@ -2,15 +2,14 @@ import itertools
 import json
 import re
 from pathlib import Path
-from typing import List, Any, Optional, Dict
+from typing import Any, Optional
 
-from camel.app.camel import Camel
 from camel.app.components.files.tsvexporter import TsvExporter
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
 from camel.app.components.mycobacterium import amrutils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.pipelines.mycobacterium.amr import amrtypedetermination
@@ -24,11 +23,11 @@ class AMRReporter(Tool):
 
     TITLE = 'AMR detection'
 
-    def __init__(self, camel: Camel.get_instance()) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
         """
-        super().__init__('Mycobacterium: AMR reporter', '0.1', camel)
+        super().__init__('Mycobacterium: AMR reporter', '0.1')
         self._sub_folder = 'amr'
         self._section = HtmlReportSection(AMRReporter.TITLE)
         self._actg_counts_by_pos = None
@@ -41,17 +40,17 @@ class AMRReporter(Tool):
         :return: None
         """
         if 'JSON' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("AMR association info is required ('JSON')")
+            raise InvalidToolInputError("AMR association info is required ('JSON')")
         if 'JSON_counts' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Nucleotide counts are required ('JSON_counts')")
+            raise InvalidToolInputError("Nucleotide counts are required ('JSON_counts')")
         if 'JSON_pheno' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Predicted phenotypes are required ('JSON_pheno')")
+            raise InvalidToolInputError("Predicted phenotypes are required ('JSON_pheno')")
         if 'JSON_amr_type' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("AMR type information is required ('JSON_amr_type')")
+            raise InvalidToolInputError("AMR type information is required ('JSON_amr_type')")
         if 'PNG' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Circos visualization is required ('PNG')")
+            raise InvalidToolInputError("Circos visualization is required ('PNG')")
         if 'screen' not in self._input_informs:
-            raise InvalidInputSpecificationError("Mutation screening informs are required")
+            raise InvalidToolInputError("Mutation screening informs are required")
 
     def __parse_input_files(self) -> None:
         """
@@ -166,7 +165,7 @@ class AMRReporter(Tool):
             "pass the variant filtering are indicated with a '*'. ")
         self._section.add_html_object(div)
 
-    def __add_mutation_notes(self, div: HtmlElement, mutations: List[Dict]) -> None:
+    def __add_mutation_notes(self, div: HtmlElement, mutations: list[dict]) -> None:
         """
         Adds an overview with the notes for the mutations (if there are any).
         :param div: Section with mutation table
@@ -193,7 +192,7 @@ class AMRReporter(Tool):
             table_data.append([mutations[idx]['name_full'], ab, comment])
         div.add_table(table_data, ['Mutation', 'Antibiotic', 'Note'], [('class', 'data')])
 
-    def __add_mutations_table(self, suffix: str, mutations: List[Dict[str, Any]], header: str) -> None:
+    def __add_mutations_table(self, suffix: str, mutations: list[dict[str, Any]], header: str) -> None:
         """
         Adds a mutation table.
         :param mutations: Mutation data
@@ -295,7 +294,7 @@ class AMRReporter(Tool):
             self._sub_folder, 'regions_resistance.bed'))
         self._section.add_link_to_file('Resistance regions (BED)', relative_path)
 
-    def __save_table(self, table_data: List[List[Any]], header: Optional[List[str]], filename: str) -> Path:
+    def __save_table(self, table_data: list[list[Any]], header: Optional[list[str]], filename: str) -> Path:
         """
         Saves the table to the report output.
         :param table_data: Table data

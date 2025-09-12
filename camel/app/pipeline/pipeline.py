@@ -1,23 +1,20 @@
 from camel.app.loggers import logger
 from itertools import chain
 
-from camel.app.camel import Camel
 
-
-class Pipeline(object):
+class Pipeline:
     """
     Class meant to handle the workflow of steps.
+    TODO: Deprecate?
     """
 
-    def __init__(self, name: str, camel: Camel, keep_config: bool = False, keep_error_log: bool = False) -> None:
+    def __init__(self, name: str, keep_config: bool = False, keep_error_log: bool = False) -> None:
         """
         Initializes a pipeline.
         :param name: Pipeline name
-        :param camel: CAMEL instance
         :param keep_config: If True, pipeline config is saved on disk
         :param keep_error_log: If True, log is saved in case of error
         """
-        self._camel = camel
         self._name = name
         self._initial_input = None
         self._job_id = None

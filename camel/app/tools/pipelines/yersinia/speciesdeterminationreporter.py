@@ -1,11 +1,10 @@
 import pandas as pd
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 
 
 class SpeciesDeterminationReporter(Tool):
@@ -13,12 +12,11 @@ class SpeciesDeterminationReporter(Tool):
     This class is used to generate an output report for the species determination.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Yersinia: species determination reporter', '1.0', camel)
+        super().__init__('Yersinia: species determination reporter', '1.0')
         self._section = HtmlReportSection('Species determination')
 
     def _execute_tool(self) -> None:
@@ -50,7 +48,7 @@ class SpeciesDeterminationReporter(Tool):
         :return: None
         """
         if 'TSV_analysis' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV file with analysis results is required.")
+            raise InvalidToolInputError("TSV file with analysis results is required.")
         super()._check_input()
 
     def __add_table_detected_species(self, table_df) -> None:

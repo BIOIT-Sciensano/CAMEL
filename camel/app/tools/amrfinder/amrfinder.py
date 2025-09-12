@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.config import config
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -12,13 +13,21 @@ class AMRFinder(Tool):
     NCBI Antimicrobial Resistance Gene Finder (AMRFinderPlus).
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('AMRFinder', '4.0.19', camel)
+        super().__init__('AMRFinder', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command} --version')
+        self._execute_command(command, is_version_cmd = True)
+        return command.stdout.strip()
 
     def _check_input(self) -> None:
         """
@@ -26,9 +35,9 @@ class AMRFinder(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required")
+            raise InvalidToolInputError("FASTA input is required")
         if 'DIR' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database input is required (DIR)")
+            raise InvalidToolInputError("Database input is required (DIR)")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -37,8 +46,9 @@ class AMRFinder(Tool):
         :return: None
         """
         output_path = Path(self.folder) / Path(self._parameters['output_path'].value)
+        dir_temp = config.dir_temp
         self._command.command = ' '.join([
-            f'export TMPDIR={self._camel.config["temp_dir"]} &&',
+            f'export TMPDIR={dir_temp} &&',
             self._tool_command,
             '--nucleotide', str(self._tool_inputs['FASTA'][0].path),
             '--database', str(self._tool_inputs['DIR'][0].path),
@@ -48,10 +58,10 @@ class AMRFinder(Tool):
         self._tool_outputs['TSV'] = [ToolIOFile(output_path)]
         self._informs['db_version'] = self._tool_inputs['DIR'][0].path.resolve().name
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)

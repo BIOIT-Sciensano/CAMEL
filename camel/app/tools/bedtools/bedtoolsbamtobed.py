@@ -1,6 +1,4 @@
-import os
-
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.bedtools.bedtools import Bedtools
 from camel.app.io.tooliofile import ToolIOFile
 
@@ -30,14 +28,12 @@ class BedtoolsBamToBed(Bedtools):
     - output_filename   Default value: 'output.bed'
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize a bedtools tool.
-
-        :param camel: a camel instance.
         :return: None
         """
-        super().__init__('bedtools bamtobed', '2.31.0', camel)
+        super().__init__('bedtools bamtobed', '2.31.0')
         self._required_inputs = ['BAM']
 
     def _execute_tool(self):
@@ -69,15 +65,13 @@ class BedtoolsBamToBed(Bedtools):
         :return: None
         """
         self._check_required_inputs()
-
         if len(self._tool_inputs['BAM']) != 1:
-            raise InvalidInputSpecificationError("Exactly one BAM input file expected.")
-
-        super(BedtoolsBamToBed, self)._check_input()
+            raise InvalidToolInputError("Exactly one BAM input file expected.")
+        super()._check_input()
 
     def __set_output(self):
         """
         Sets the output of this tool.
         :return: None
         """
-        self._tool_outputs['BED'] = [ToolIOFile(os.path.join(self._folder, self._parameters['output_filename'].value))]
+        self._tool_outputs['BED'] = [ToolIOFile(self._folder / self._parameters['output_filename'].value)]

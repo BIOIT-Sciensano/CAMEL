@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.blast.alignmentextraction import AlignmentExtraction
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.genedetection.genedetectionblasthit import GeneDetectionBlastHit
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -20,12 +19,11 @@ class AlignmentExtractor(Tool):
     - List of alignment files in the same order as the input ('TXT' key in the tool outputs)
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Gene Detection: Alignment Extractor', '0.1', camel)
+        super().__init__('Gene Detection: Alignment Extractor', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -50,10 +48,10 @@ class AlignmentExtractor(Tool):
         :return: None
         """
         if 'TXT' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No TXT input found.")
+            raise InvalidToolInputError("No TXT input found.")
         if 'VAL_Hits' not in self._tool_inputs:
             logger.warning("No blast hits input found")
-        super(AlignmentExtractor, self)._check_input()
+        super()._check_input()
 
     def __save_alignment(self, hit: GeneDetectionBlastHit, alignment: str) -> Path:
         """

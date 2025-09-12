@@ -1,5 +1,14 @@
-dependencies: [bcftools/1.17]
+dependencies:
+  - bcftools/1.17
 parameters:
-  local_csq: {default: false, mandatory: false, option: --local-csq, value: null}
-  output_filename: {default: true, mandatory: true, option: --output, value: variants_csq.vcf}
+  local_csq:
+    default: false
+    mandatory: false
+    option: --local-csq
+    flag: true
+  output_filename:
+    default: true
+    mandatory: true
+    option: --output
+    value: variants_csq.vcf
 tool_command: bcftools csq

@@ -1,11 +1,10 @@
 import concurrent.futures
 import json
-from typing import Dict, Any, Union
+from typing import Any, Union
 
-from camel.app.camel import Camel
 from camel.app.components.sequencetyping import typingasyncutils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
@@ -16,27 +15,26 @@ class TypeAsync(Tool):
     This tool can be used to reduce the overhead in Snakemake by reducing the number of rules that need to be executed.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance.
         """
-        super().__init__('Typing async', '0.1', camel)
+        super().__init__('Typing async', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if (self._parameters['detection_method'].value == 'blast') and ('FASTA' not in self._tool_inputs):
-            raise InvalidInputSpecificationError('FASTA input is required')
-        elif (self._parameters['detection_method'].value in ('kma', 'srst2')) and (not any(
+            raise InvalidToolInputError('FASTA input is required')
+        elif (self._parameters['detection_method'].value in ('kma',)) and (not any(
                 k in self._tool_inputs for k in ('FASTQ_SE', 'FASTQ_PE'))):
-            raise InvalidInputSpecificationError('FASTQ input is required')
+            raise InvalidToolInputError('FASTQ input is required')
         if 'DIR' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Typing directory input is required ('DIR')")
+            raise InvalidToolInputError("Typing directory input is required ('DIR')")
         super()._check_input()
 
-    def __get_typing_parameters(self, locus_info: Dict[str, Union[str, None]]) -> Dict[str, Any]:
+    def __get_typing_parameters(self, locus_info: dict[str, Union[str, None]]) -> dict[str, Any]:
         """
         Returns the parameters to pass to the typing jobs.
         """
@@ -51,8 +49,6 @@ class TypeAsync(Tool):
         if self._parameters['detection_method'].value == 'blast':
             dict_params['fasta_in'] = self._tool_inputs['FASTA'][0].path
             dict_params['blastn_task'] = self._parameters['blastn_task'].value
-        elif self._parameters['detection_method'].value == 'srst2':
-            dict_params['fastq_in'] = {k: v for k, v in self._tool_inputs.items() if k.startswith('FASTQ')}
         elif self._parameters['detection_method'].value == 'kma':
             dict_params['fastq_in'] = {k: v for k, v in self._tool_inputs.items() if k.startswith('FASTQ')}
         return dict_params
@@ -73,7 +69,7 @@ class TypeAsync(Tool):
         # Execute jobs in a thread pool
         output_by_locus = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=int(self._parameters['threads'].value)) as executor:
-            detection_func = typingasyncutils.detection_by_method[self._parameters['detection_method'].value]
+            detection_func = typingasyncutils.detection_by_method[self.get_param_value('detection_method')]
             future_to_locus = {
                 executor.submit(detection_func, **self.__get_typing_parameters(locus_info)):
                     locus_info['name_sanitized'] for locus_info in metadata['loci'] if
@@ -85,7 +81,7 @@ class TypeAsync(Tool):
                     data = future.result()
                 except Exception as err:
                     logger.error(f"Locus '{locus}' generated exception: {err}")
-                    raise ToolExecutionError(err)
+                    raise ToolExecutionError(self.name, err)
                 else:
                     output_by_locus[locus] = data
 

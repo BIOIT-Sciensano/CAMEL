@@ -1,10 +1,9 @@
 from pathlib import Path
-from typing import List
 
 import abc
 
 from camel.app.components.vcf.vcfutils import VCFUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -19,6 +18,7 @@ class BaseFilter(Tool, metaclass=abc.ABCMeta):
         """
         Initializes this filter.
         :param args: Initialization arguments
+        :return: None
         """
         super().__init__(*args)
         self._output_file = None
@@ -47,7 +47,7 @@ class BaseFilter(Tool, metaclass=abc.ABCMeta):
         :return: None
         """
         if 'VCF_GZ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No compressed VCF input found")
+            raise InvalidToolInputError("No compressed VCF input found")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -58,7 +58,7 @@ class BaseFilter(Tool, metaclass=abc.ABCMeta):
         nb_of_variants_pre = VCFUtils.count_variants(self._tool_inputs['VCF_GZ'][0].path)
         self._apply_filter()
         nb_of_variants_post = VCFUtils.count_variants(self.output_path)
-        logger.info('{}/{} variants passed {} filtering'.format(nb_of_variants_post, nb_of_variants_pre, self._name))
+        logger.info(f'{nb_of_variants_post}/{nb_of_variants_pre} variants passed {self._name} filtering')
         self._informs['variants_in'] = nb_of_variants_pre
         self._informs['variants_out'] = nb_of_variants_post
         self._informs['full_name'] = self.full_name
@@ -81,7 +81,7 @@ class BaseFilter(Tool, metaclass=abc.ABCMeta):
         """
         return Path(self._folder) / self._parameters['output_filename'].value
 
-    def _get_soft_filter_options(self) -> List[str]:
+    def _get_soft_filter_options(self) -> list[str]:
         """
         Returns the parts of the command related to the soft filtering.
         If soft filtering is not enabled an empty list is returned.

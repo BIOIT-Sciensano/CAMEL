@@ -1,12 +1,10 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
 
 class AbriTAMRReport(Tool):
-
     """
     AbritAMR: abriTAMR is an AMR gene detection pipeline that runs AMRFinderPlus on a single (or list ) of given
     isolates and collates the results into a table, separating genes identified into functionally relevant groups.
@@ -14,13 +12,12 @@ class AbriTAMRReport(Tool):
     of the pipeline (run)
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('AbriTAMR report', '1.1.0', camel)
+        super().__init__('AbriTAMR report', '1.0.19')
         self._species = None
 
     def _execute_tool(self) -> None:
@@ -28,7 +25,7 @@ class AbriTAMRReport(Tool):
         Executes the tool
         :return: None
         """
-        self._species = self._input_informs['ABRITAMR_RUN']['species']
+        self._species = self._input_informs['abritamr_run']['species']
         self.__build_command()
         self._execute_command()
         self.__set_output()
@@ -39,19 +36,19 @@ class AbriTAMRReport(Tool):
         Checks if the provided input is valid.
         :return: None
         """
-        super(AbriTAMRReport, self)._check_input()
-        if 'TXT_MDU_QC' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("MDU QC file is required")
-        elif not any(key in self._tool_inputs for key in ('TXT_MATCHES', 'TXT_PARTIALS')):
-            raise InvalidInputSpecificationError("AbriTAMR run outputs files must be provided")
+        if 'TXT_mdu_qc' not in self._tool_inputs:
+            raise InvalidToolInputError("MDU QC file is required")
+        elif not any(key in self._tool_inputs for key in ('TXT_matches', 'TXT_partials')):
+            raise InvalidToolInputError("AbriTAMR run outputs files must be provided")
+        super()._check_input()
 
     def __set_output(self) -> None:
         """
         Sets the name of the output files.
         :return: None
         """
-        self._tool_outputs['REPORT_ABRITAMR'] = [ToolIOFile(self.folder /
-                                                            f"{self._parameters['output_filename'].value}_.xlsx")]
+        self._tool_outputs['REPORT_abritamr'] = [
+            ToolIOFile(self.folder / f"{self.get_param_value('output_filename')}_.xlsx")]
 
     def __build_command(self) -> None:
         """
@@ -61,18 +58,19 @@ class AbriTAMRReport(Tool):
         sop = 'plus' if self._species == 'Salmonella' else 'general'
         self._command.command = ' '.join([
             self._tool_command,
-            '--matches', str(self._tool_inputs['TXT_MATCHES'][0]),
-            '--partials', str(self._tool_inputs['TXT_PARTIALS'][0]),
-            '--qc', str(self._tool_inputs['TXT_MDU_QC'][0]),
+            '--matches', str(self._tool_inputs['TXT_matches'][0]),
+            '--partials', str(self._tool_inputs['TXT_partials'][0]),
+            '--qc', str(self._tool_inputs['TXT_mdu_qc'][0]),
             f'--sop {sop}',
             *self._build_options()])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
+        :param command: Command object
         :return: None
         """
-        if 'error' in self.stderr.lower():
-            raise ToolExecutionError(f"Command execution failed (stderr: {self.stderr}).")
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        if 'error' in command.stderr.lower():
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        if command.returncode != 0:
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {command.exit_code})")

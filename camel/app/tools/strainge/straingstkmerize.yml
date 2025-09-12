@@ -1,6 +1,19 @@
-dependencies: [strainge/1.3.9]
+dependencies:
+  - strainge/1.3.9
 parameters:
-  kmer_size: { default: true, mandatory: true, option: -k, value: '23' }
-  output : { default: true, mandatory: true, option: --output, value: 'straingst_output.hdf5'}
-  iterations : { default: false, mandatory: false, option: --iterations, value: '5'}
+  kmer_size:
+    default: true
+    mandatory: true
+    option: '-k'
+    value: '23'
+  output:
+    default: true
+    mandatory: true
+    option: '--output'
+    value: straingst_output.hdf5
+  iterations:
+    default: false
+    mandatory: false
+    option: '--iterations'
+    value: '5'
 tool_command: straingst kmerize

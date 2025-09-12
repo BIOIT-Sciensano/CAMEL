@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any, Optional
 
 import yaml
 
 from camel.app.camel import Camel
-from camel.app.components.workflows.variantfilteringwrapper import VariantFilteringWrapper
+from camel.app.components.workflows.variantfilteringwrapper import (
+    VariantFilteringWrapper,
+)
 
 
 class MainFiltering:

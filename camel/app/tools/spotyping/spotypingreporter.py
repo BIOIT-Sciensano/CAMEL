@@ -1,7 +1,7 @@
 from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -13,12 +13,11 @@ class SpoTypingReporter(Tool):
 
     TITLE = 'Spoligotyping'
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL
         """
-        super().__init__('SpoTyping Reporter', '0.1', camel)
+        super().__init__('SpoTyping Reporter', '0.1')
         self._section = None
         self._section_spacers = HtmlReportSection('Spacer counts')
 
@@ -28,11 +27,11 @@ class SpoTypingReporter(Tool):
         :return: None
         """
         if 'VAL_type_binary' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Binary spoligotype input (VAL_type_binary) is required")
+            raise InvalidToolInputError("Binary spoligotype input (VAL_type_binary) is required")
         if 'VAL_type_octal' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Octal spoligotype input (VAL_type_octal) is required")
+            raise InvalidToolInputError("Octal spoligotype input (VAL_type_octal) is required")
         if 'spotyping' not in self._input_informs:
-            raise InvalidInputSpecificationError("Spoligotype metadata is required")
+            raise InvalidToolInputError("Spoligotype metadata is required")
         super()._check_input()
 
     def _execute_tool(self):

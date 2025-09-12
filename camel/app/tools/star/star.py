@@ -1,6 +1,6 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.toolpipeable import ToolPipeable
 
 
@@ -9,15 +9,14 @@ class Star(ToolPipeable):
     Super class for STAR indexing of reference genomes and alignment of spliced transcripts.
     """
 
-    def __init__(self, tool_name: str, version: str, camel: Camel) -> None:
+    def __init__(self, tool_name: str, version: str) -> None:
         """
         Initializes a STAR tool.
         :param tool_name: Tool name
         :param version: Tool version
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(tool_name, version, camel)
+        super().__init__(tool_name, version)
         self._required_inputs = []
         self._input_string = ""
         self._output_string = ""
@@ -29,7 +28,7 @@ class Star(ToolPipeable):
         """
         for key in self._required_inputs:
             if key not in self._tool_inputs:
-                raise InvalidInputSpecificationError(f"Input '{key}' is required")
+                raise InvalidToolInputError(f"Input '{key}' is required")
         super()._check_input()
 
     def _set_input(self) -> None:
@@ -45,7 +44,7 @@ class Star(ToolPipeable):
         :return: None
         """
         self._command.command = ' '.join([
-          self._tool_command, 
+          self._tool_command,
           self._input_string,
           *self._build_options(excluded_parameters=['filename_output', 'symlink_input']),
           self._output_string
@@ -68,10 +67,10 @@ class Star(ToolPipeable):
         """
         raise NotImplementedError("Method should be implemented by subclass.")
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Parses stderr message of STAR to check whether it runs successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if any(err in self.stderr.lower() for err in ('error', 'fail')):
-            raise ToolExecutionError(f'Command failed: {self._command.command}\n stderr: {self.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)

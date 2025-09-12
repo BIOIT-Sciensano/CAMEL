@@ -8,6 +8,7 @@ matplotlib==3.10.1
 openpyxl
 pandas
 plotnine
+pydantic
 pydotplus
 pysam
 scipy

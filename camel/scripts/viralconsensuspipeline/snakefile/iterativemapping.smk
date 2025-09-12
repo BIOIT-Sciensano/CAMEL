@@ -6,13 +6,12 @@ from typing import Union
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
 
 
-def _get_reference_genome(wildcards) -> Path:
+def _get_reference_genome(wildcards) -> str:
     """
     Returns the reference genome used for the current iteration of the iterative mapping.
     :param wildcards: Snakemake wildcards
@@ -21,12 +20,12 @@ def _get_reference_genome(wildcards) -> Path:
     iteration_nb = int(wildcards.nb_iter)
     if iteration_nb == 1:
         # The first iteration uses the provided reference genome
-        return Path(config['working_dir']) / iterativemapping.INPUT_FASTA_REF
+        return iterativemapping.INPUT_FASTA_REF
     else:
         # The following iterations map to the consensus sequence generated in the previous iteration
         iteration_nb_prev = f'{iteration_nb-1:02d}'
         logging.info(f'Using FASTA file from previous iteration as reference genome ({iteration_nb_prev})')
-        return Path(config['working_dir']) / 'iterative_mapping' / f'iter_{iteration_nb_prev}' / 'phase_2-variants' / 'fasta.io'
+        return f'iterative_mapping/iter_{iteration_nb_prev}/phase_2-variants/fasta.io'
 
 rule iterative_mapping_phase_1_map_reads:
     """
@@ -34,13 +33,13 @@ rule iterative_mapping_phase_1_map_reads:
     """
     input:
         FASTA = lambda wildcards: _get_reference_genome(wildcards),
-        IO_FASTQ = Path(config['working_dir']) / 'preprocess' / 'downsample' / 'fq_dict.io'
+        IO_FASTQ = 'preprocess/downsample/fq_dict.io'
     output:
-        BAM = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_1-mapping' / 'bam.io',
-        JSON = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_1-mapping' / 'stats.json',
-        INFORMS = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_1-mapping' / 'informs.json'
+        BAM = 'iterative_mapping/iter_{nb_iter}/phase_1-mapping/bam.io',
+        JSON = 'iterative_mapping/iter_{nb_iter}/phase_1-mapping/stats.json',
+        INFORMS = 'iterative_mapping/iter_{nb_iter}/phase_1-mapping/informs.json'
     params:
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}' / 'phase_1-mapping',
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_1-mapping',
         input_type = config['input_type'],
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff'),
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff')
@@ -51,16 +50,16 @@ rule iterative_mapping_phase_1_map_reads:
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
         # Run the workflow
-        workflow = ReadMappingWorkflow(Path(str(params.dir_)))
+        workflow = ReadMappingWorkflow(Path(str(params.dir_)).absolute())
         out = workflow.run(
             fastq_in=FastqInput.from_fq_dict(Path(input.IO_FASTQ), params.input_type),
-            fasta_ref=SnakemakeUtils.load_object(Path(str(input.FASTA)))[0].path,
+            fasta_ref=snakemakeutils.load_object(Path(str(input.FASTA)))[0].path,
             gap_len_cutoff=params.gap_len_cutoff,
             gap_depth_cutoff=params.gap_depth_cutoff,
             threads=threads)
 
         # Save output
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_bam)], Path(output.BAM))
+        snakemakeutils.dump_object([ToolIOFile(out.path_bam)], Path(output.BAM))
         with open(output.JSON, 'w') as handle:
             json.dump(out.stats, handle, indent=2)
         with open(output.INFORMS, 'w') as handle:
@@ -74,25 +73,25 @@ rule iterative_mapping_phase_1_call_variants_bcftools:
         FASTA = lambda wildcards: _get_reference_genome(wildcards),
         BAM = lambda wildcards: rules.iterative_mapping_phase_1_map_reads.output.BAM
     output:
-        VCF = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_1-variants' / 'vcf.io',
-        INFORMS = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_1-variants' / 'informs-call.json'
+        VCF = 'iterative_mapping/iter_{nb_iter}/phase_1-variants/vcf.io',
+        INFORMS = 'iterative_mapping/iter_{nb_iter}/phase_1-variants/informs-call.json'
     params:
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}' / 'phase_1-variants',
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_1-variants',
         input_type = config['input_type']
     threads: 1
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.callvariants import CallVariants
-        workflow = CallVariants(Path(str(params.dir_)))
+        workflow = CallVariants(Path(str(params.dir_)).absolute())
         out = workflow.run(
-            bam_in=SnakemakeUtils.load_object(Path(str(input.BAM)))[0].path,
-            fasta_ref=SnakemakeUtils.load_object(Path(str(input.FASTA)))[0].path,
+            bam_in=snakemakeutils.load_object(Path(str(input.BAM)))[0].path,
+            fasta_ref=snakemakeutils.load_object(Path(str(input.FASTA)))[0].path,
             input_type=params.input_type,
             caller='bcftools',
             params={},
             threads=threads
         )
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_vcf)], Path(output.VCF))
+        snakemakeutils.dump_object([ToolIOFile(out.path_vcf)], Path(output.VCF))
         with open(output.INFORMS, 'w') as handle:
             json.dump(out.informs, handle, indent=2)
 
@@ -103,10 +102,10 @@ rule iterative_mapping_phase_1_filter_variants_bcftools:
     input:
         VCF = rules.iterative_mapping_phase_1_call_variants_bcftools.output.VCF
     output:
-        VCF = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_1-variants' / 'vcf-filt.io',
-        INFORMS = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_1-variants' / 'informs-filt.json'
+        VCF = 'iterative_mapping/iter_{nb_iter}/phase_1-variants/vcf-filt.io',
+        INFORMS = 'iterative_mapping/iter_{nb_iter}/phase_1-variants/informs-filt.json'
     params:
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}' / 'phase_1-variants',
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_1-variants',
         min_af = config['iterative_mapping'].get('variant_filters', {}).get('min_af', 0.5),
         min_dp = config['iterative_mapping'].get('variant_filters', {}).get('min_dp', 5),
         min_qual = config['iterative_mapping'].get('variant_filters', {}).get('min_qual', 25),
@@ -114,16 +113,16 @@ rule iterative_mapping_phase_1_filter_variants_bcftools:
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.filtervariants import FilterVariants
-        workflow = FilterVariants(Path(str(params.dir_)))
+        workflow = FilterVariants(Path(str(params.dir_)).absolute())
         out = workflow.run(
-            vcf_in=SnakemakeUtils.load_object(Path(str(input.VCF)))[0].path,
+            vcf_in=snakemakeutils.load_object(Path(str(input.VCF)))[0].path,
             calling_method='bcftools',
             filters={
                 'min_af': params.min_af,
                 'min_dp': params.min_dp,
                 'min_qual': params.min_qual,
                 'min_mq': params.min_mq})
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_vcf)], Path(output.VCF))
+        snakemakeutils.dump_object([ToolIOFile(out.path_vcf)], Path(output.VCF))
         with open(output.INFORMS, 'w') as handle:
             json.dump(out.informs, handle, indent=2)
 
@@ -135,23 +134,23 @@ rule iterative_mapping_phase_1_apply_variants:
         FASTA = lambda wildcards: _get_reference_genome(wildcards),
         VCF = rules.iterative_mapping_phase_1_filter_variants_bcftools.output.VCF
     output:
-        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_1-variants' / 'fasta.io'
+        FASTA = 'iterative_mapping/iter_{nb_iter}/phase_1-variants/fasta.io'
     params:
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}' / 'phase_1-variants',
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_1-variants',
         name = lambda wildcards: config['sample_name'],
         iter_nb = lambda wildcards: wildcards.nb_iter
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.applyvariants import ApplyVariants
 
-        apply_variants = ApplyVariants(Path(str(params.dir_)))
+        apply_variants = ApplyVariants(Path(str(params.dir_)).absolute())
         out = apply_variants.run(
-            fasta_in=SnakemakeUtils.load_object(Path(str(input.FASTA)))[0].path,
-            vcf_in=SnakemakeUtils.load_object(Path(str(input.VCF)))[0].path,
+            fasta_in=snakemakeutils.load_object(Path(str(input.FASTA)))[0].path,
+            vcf_in=snakemakeutils.load_object(Path(str(input.VCF)))[0].path,
             name=str(params.name),
             description=f'iter_{params.iter_nb}-phase_1'
         )
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_fasta)], Path(output.FASTA))
+        snakemakeutils.dump_object([ToolIOFile(out.path_fasta)], Path(output.FASTA))
 
 rule iterative_mapping_phase_2_map_reads:
     """
@@ -159,13 +158,13 @@ rule iterative_mapping_phase_2_map_reads:
     """
     input:
         FASTA = rules.iterative_mapping_phase_1_apply_variants.output.FASTA,
-        IO_FASTQ = Path(config['working_dir']) / 'preprocess' / 'downsample' / 'fq_dict.io'
+        IO_FASTQ = 'preprocess/downsample/fq_dict.io'
     output:
-        BAM = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-mapping' / 'bam.io',
-        BED = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-mapping' / 'bed.io',
-        JSON = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-mapping' / 'informs.json'
+        BAM = 'iterative_mapping/iter_{nb_iter}/phase_2-mapping/bam.io',
+        BED = 'iterative_mapping/iter_{nb_iter}/phase_2-mapping/bed.io',
+        JSON = 'iterative_mapping/iter_{nb_iter}/phase_2-mapping/informs.json'
     params:
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}' / 'phase_2-mapping',
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_2-mapping',
         input_type = config['input_type'],
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff'),
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff')
@@ -176,17 +175,17 @@ rule iterative_mapping_phase_2_map_reads:
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
         # Run the workflow
-        workflow = ReadMappingWorkflow(Path(str(params.dir_)))
+        workflow = ReadMappingWorkflow(Path(str(params.dir_)).absolute())
         out = workflow.run(
             fastq_in=FastqInput.from_fq_dict(Path(input.IO_FASTQ), params.input_type),
-            fasta_ref=SnakemakeUtils.load_object(Path(str(input.FASTA)))[0].path,
+            fasta_ref=snakemakeutils.load_object(Path(str(input.FASTA)))[0].path,
             gap_len_cutoff=params.gap_len_cutoff,
             gap_depth_cutoff=params.gap_depth_cutoff,
             threads=threads)
 
         # Save output
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_bam)], Path(output.BAM))
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_bed_low_cov)], Path(output.BED))
+        snakemakeutils.dump_object([ToolIOFile(out.path_bam)], Path(output.BAM))
+        snakemakeutils.dump_object([ToolIOFile(out.path_bed_low_cov)], Path(output.BED))
         with open(output.JSON, 'w') as handle:
             json.dump(out.stats, handle, indent=2)
 
@@ -198,10 +197,10 @@ rule iterative_mapping_phase_2_call_variants_clair3:
         FASTA = rules.iterative_mapping_phase_1_apply_variants.output.FASTA,
         BAM = lambda wildcards: rules.iterative_mapping_phase_2_map_reads.output.BAM
     output:
-        VCF = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-variants' / 'vcf.io',
-        INFORMS= Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-variants' / 'informs-call.json'
+        VCF = 'iterative_mapping/iter_{nb_iter}/phase_2-variants/vcf.io',
+        INFORMS= 'iterative_mapping/iter_{nb_iter}/phase_2-variants/informs-call.json'
     params:
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}' / 'phase_2-variants',
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_2-variants',
         input_type = config['input_type'],
         model_path = config['iterative_mapping'].get('clair3', {}).get('model')
     threads: 4
@@ -210,16 +209,16 @@ rule iterative_mapping_phase_2_call_variants_clair3:
         from camel.scripts.viralconsensuspipeline.workflows.callvariants import CallVariants
 
         # Run workflow
-        workflow = CallVariants(Path(str(params.dir_)))
+        workflow = CallVariants(Path(str(params.dir_)).absolute())
         out = workflow.run(
-            bam_in=SnakemakeUtils.load_object(Path(str(input.BAM)))[0].path,
-            fasta_ref=SnakemakeUtils.load_object(Path(str(input.FASTA)))[0].path,
+            bam_in=snakemakeutils.load_object(Path(str(input.BAM)))[0].path,
+            fasta_ref=snakemakeutils.load_object(Path(str(input.FASTA)))[0].path,
             input_type=params.input_type,
             caller='clair3',
             params={'model': Path(params.model_path)},
             threads=threads
         )
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_vcf)],Path(output.VCF))
+        snakemakeutils.dump_object([ToolIOFile(out.path_vcf)],Path(output.VCF))
         with open(output.INFORMS, 'w') as handle:
             json.dump(out.informs, handle, indent=2)
 
@@ -230,22 +229,22 @@ rule iterative_mapping_phase_2_filter_variants_clair3:
     input:
         VCF = rules.iterative_mapping_phase_2_call_variants_clair3.output.VCF
     output:
-        VCF = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-variants' / 'vcf-filt.io',
-        INFORMS = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-variants' / 'informs-filt.json'
+        VCF = 'iterative_mapping/iter_{nb_iter}/phase_2-variants/vcf-filt.io',
+        INFORMS = 'iterative_mapping/iter_{nb_iter}/phase_2-variants/informs-filt.json'
     params:
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}' / 'phase_2-variants',
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_2-variants',
         min_af = config['iterative_mapping'].get('variant_filters', {}).get('min_af', 0.5),
         min_dp = config['iterative_mapping'].get('variant_filters', {}).get('min_dp', 5),
         min_qual = config['iterative_mapping'].get('variant_filters', {}).get('min_qual', 25)
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.filtervariants import FilterVariants
-        workflow = FilterVariants(Path(str(params.dir_)))
+        workflow = FilterVariants(Path(str(params.dir_)).absolute())
         out = workflow.run(
-            vcf_in=SnakemakeUtils.load_object(Path(str(input.VCF)))[0].path,
+            vcf_in=snakemakeutils.load_object(Path(str(input.VCF)))[0].path,
             calling_method='clair3',
             filters={'min_af': params.min_af, 'min_dp': params.min_dp, 'min_qual': params.min_qual})
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_vcf)], Path(output.VCF))
+        snakemakeutils.dump_object([ToolIOFile(out.path_vcf)], Path(output.VCF))
         with open(output.INFORMS, 'w') as handle:
             json.dump(out.informs, handle, indent=2)
 
@@ -257,23 +256,23 @@ rule iterative_mapping_phase_2_apply_variants:
         FASTA = rules.iterative_mapping_phase_1_apply_variants.output.FASTA,
         VCF = rules.iterative_mapping_phase_2_filter_variants_clair3.output.VCF
     output:
-        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-variants' / 'fasta.io',
-        INFORMS = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'phase_2-variants' / 'informs-apply.json'
+        FASTA = 'iterative_mapping/iter_{nb_iter}/phase_2-variants/fasta.io',
+        INFORMS = 'iterative_mapping/iter_{nb_iter}/phase_2-variants/informs-apply.json'
     params:
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}' / 'phase_2-variants',
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_2-variants',
         name = lambda wildcards: config['sample_name'],
         iter_nb = lambda wildcards: wildcards.nb_iter
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.applyvariants import ApplyVariants
-        apply_variants = ApplyVariants(Path(str(params.dir_)))
+        apply_variants = ApplyVariants(Path(str(params.dir_)).absolute())
         out = apply_variants.run(
-            fasta_in=SnakemakeUtils.load_object(Path(str(input.FASTA)))[0].path,
-            vcf_in=SnakemakeUtils.load_object(Path(str(input.VCF)))[0].path,
+            fasta_in=snakemakeutils.load_object(Path(str(input.FASTA)))[0].path,
+            vcf_in=snakemakeutils.load_object(Path(str(input.VCF)))[0].path,
             name=str(params.name),
             description=f'iter_{params.iter_nb}-phase_2'
         )
-        SnakemakeUtils.dump_object([ToolIOFile(out.path_fasta)], Path(output.FASTA))
+        snakemakeutils.dump_object([ToolIOFile(out.path_fasta)], Path(output.FASTA))
         with open(output.INFORMS, 'w') as handle:
             json.dump(out.informs, handle, indent=2)
 
@@ -287,22 +286,24 @@ checkpoint iterative_mapping_collect_stats:
         FASTA = rules.iterative_mapping_phase_2_apply_variants.output.FASTA,
         JSON = rules.iterative_mapping_phase_2_map_reads.output.JSON
     output:
-        JSON = Path(config['working_dir']) / 'iterative_mapping' / 'iter_{nb_iter}' / 'stats-iter_{nb_iter}.json'
+        JSON = 'iterative_mapping/iter_{nb_iter}/stats-iter_{nb_iter}.json'
     params:
         nb_iter = lambda wildcards: wildcards.nb_iter,
-        dir_ = lambda wildcards: Path(config['working_dir']) / 'iterative_mapping' / f'iter_{wildcards.nb_iter}'
+        dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}'
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.viral_consensus.combineiterativemappingstats import CollectIterativeMappingStats
-        combiner = CollectIterativeMappingStats(Camel.get_instance())
+        combiner = CollectIterativeMappingStats()
         combiner.add_input_files({
-            'FASTA': SnakemakeUtils.load_object(Path(input.FASTA)),
+            'FASTA': snakemakeutils.load_object(Path(input.FASTA)),
             'JSON_depth': [ToolIOFile(Path(input.JSON))],
-            'VCF_p1': SnakemakeUtils.load_object(Path(input.VCF_filt_p1)),
-            'VCF_p2': SnakemakeUtils.load_object(Path(input.VCF_filt_p2))
+            'VCF_p1': snakemakeutils.load_object(Path(input.VCF_filt_p1)),
+            'VCF_p2': snakemakeutils.load_object(Path(input.VCF_filt_p2))
         })
-        combiner.update_parameters(nb_iter=str(params.nb_iter), output_filename=str(output.JSON))
-        combiner.run(Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=combiner, dir_=Path(str(params.dir_)))
+        combiner.update_parameters(nb_iter=str(params.nb_iter), output_filename=str(Path(output.JSON).name))
+        step.run()
+        shutil.copyfile(combiner.tool_outputs['JSON'][0].path, output.JSON)
 
 def _check_if_converged(wildcards) -> Union[Path, list[Path]]:
     """
@@ -310,15 +311,15 @@ def _check_if_converged(wildcards) -> Union[Path, list[Path]]:
     :return: Path / list of paths to generate
     """
     # Get the directory of the latest iteration
-    dirs_iter = sorted(list((Path(config['working_dir']) / 'iterative_mapping').glob('iter_*')))
+    dirs_iter = sorted(list(Path('iterative_mapping').glob('iter_*')))
 
     # Return the directory for the first iteration if there are no directories yet
     if len(dirs_iter) == 0:
-        return Path(config['working_dir']) / 'iterative_mapping' / 'iter_01' / 'stats-iter_01.json'
+        return Path('iterative_mapping/iter_01/stats-iter_01.json')
 
     # Return the directory for the second iteration after the first iteration
     if len(dirs_iter) == 1:
-        return Path(config['working_dir']) / 'iterative_mapping' / 'iter_02' / 'stats-iter_02.json'
+        return Path('iterative_mapping/iter_02/stats-iter_02.json')
 
     # Get the sequence hash for each iteration
     hash_by_iter = {}
@@ -336,7 +337,7 @@ def _check_if_converged(wildcards) -> Union[Path, list[Path]]:
 
     # Otherwise, return the next iteration
     iter_nb = int(dirs_iter[-1].name.split('_')[-1])
-    return Path(config['working_dir']) / 'iterative_mapping' / f'iter_{iter_nb+1:02d}' / f'stats-iter_{iter_nb+1:02d}.json'
+    return Path('iterative_mapping', f'iter_{iter_nb+1:02d}', f'stats-iter_{iter_nb+1:02d}.json')
 
 rule iterative_mapping_combine_stats_all_iterations:
     """
@@ -345,8 +346,8 @@ rule iterative_mapping_combine_stats_all_iterations:
     input:
         JSON = _check_if_converged
     output:
-        TSV = Path(config['working_dir']) / 'iterative_mapping' / 'stats' / 'stats_all_iterations.tsv',
-        TSV_seg = Path(config['working_dir']) / 'iterative_mapping' / 'stats' / 'stats_all_iterations-by_segment.tsv'
+        TSV = 'iterative_mapping/stats/stats_all_iterations.tsv',
+        TSV_seg = 'iterative_mapping/stats/stats_all_iterations-by_segment.tsv'
     run:
         # Combined across all segments
         records_out = []
@@ -378,12 +379,12 @@ rule iterative_mapping_select_output:
     input:
         TSV = rules.iterative_mapping_combine_stats_all_iterations.output.TSV
     output:
-        BAM = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'bam.io',
-        BED = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'bed.io',
-        VCF_p1 = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'vcf_p1.io',
-        VCF_p2 = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'vcf_p2.io',
-        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'fasta.io',
-        FASTA_ref = Path(config['working_dir']) / 'iterative_mapping' / 'output' / 'fasta-ref.io'
+        BAM = 'iterative_mapping/output/bam.io',
+        BED = 'iterative_mapping/output/bed.io',
+        VCF_p1 = 'iterative_mapping/output/vcf_p1.io',
+        VCF_p2 = 'iterative_mapping/output/vcf_p2.io',
+        FASTA = 'iterative_mapping/output/fasta.io',
+        FASTA_ref = 'iterative_mapping/output/fasta-ref.io'
     run:
         data_mapping = pd.read_table(input.TSV, dtype=str)
 
@@ -425,17 +426,17 @@ rule iterative_mapping_trim_fasta_edges:
         FASTA = rules.iterative_mapping_select_output.output.FASTA,
         BED = rules.iterative_mapping_select_output.output.BED
     output:
-        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'trim_edges' / 'fasta-trim.io',
-        INFORMS = Path(config['working_dir']) / 'iterative_mapping' / 'trim_edges' / 'informs.io'
+        FASTA = 'iterative_mapping/trim_edges/fasta-trim.io',
+        INFORMS = 'iterative_mapping/trim_edges/informs.io'
     params:
-        dir_ = Path(config['working_dir']) / 'iterative_mapping' / 'output'
+        dir_ = 'iterative_mapping/output'
     run:
         from camel.app.tools.pipelines.viral_consensus.trimfastaedges import TrimFastaEdges
-        trim_edges = TrimFastaEdges(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(trim_edges, input)
-        step = Step(str(rule), trim_edges, Camel.get_instance(), Path(str(params.dir_)))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(trim_edges, output)
+        trim_edges = TrimFastaEdges()
+        snakemakeutils.add_pickle_inputs(trim_edges, input)
+        step = Step(rule_name=str(rule), tool=trim_edges, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(trim_edges, output)
 
 rule iterative_mapping_report:
     """
@@ -451,61 +452,61 @@ rule iterative_mapping_report:
         VCF_p2 = rules.iterative_mapping_select_output.output.VCF_p2,
         INFORMS_trim_fasta = rules.iterative_mapping_trim_fasta_edges.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / iterativemapping.OUTPUT_ITERATIVE_MAPPING_REPORT
+        VAL_HTML = 'iterative_mapping/report/html.iob' # iterativemapping.OUTPUT_REPORT
     params:
         name = config['sample_name'],
-        dir_ = Path(config['working_dir']) / 'iterative_mapping' / 'report',
+        dir_ = 'iterative_mapping/report',
         max_iter = config['iterative_mapping'].get('max_iter', 6),
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff', 50),
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff', 10)
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.viral_consensus.reporteriterativemapping import ReporterIterativeMapping
-        reporter = ReporterIterativeMapping(Camel.get_instance())
+        reporter = ReporterIterativeMapping()
         reporter.add_input_files({
             'TSV': [ToolIOFile(Path(input.TSV))],
             'TSV_seg': [ToolIOFile(Path(input.TSV_seg))]
         })
-        SnakemakeUtils.add_pickle_inputs(reporter, input,
+        snakemakeutils.add_pickle_inputs(reporter, input,
             ['FASTA', 'FASTA_ref', 'BAM', 'VCF_p1', 'VCF_p2', 'INFORMS_trim_fasta'])
         reporter.update_parameters(
             name=str(params.name), max_iter=params.max_iter, gap_depth_cutoff=params.gap_depth_cutoff,
             gap_len_cutoff=params.gap_len_cutoff)
-        step = Step(str(rule), reporter, Camel.get_instance(), Path(str(params.dir_)))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule iterative_mapping_summary:
     """
     Creates the summary output for the iterative mapping workflow.
     """
     input:
-        TSV = Path(config['working_dir']) / 'iterative_mapping' / 'stats' / 'stats_all_iterations.tsv',
+        TSV = 'iterative_mapping/stats/stats_all_iterations.tsv',
         INFORMS_low_depth = rules.iterative_mapping_trim_fasta_edges.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / iterativemapping.OUTPUT_ITERATIVE_MAPPING_SUMMARY
+        FILE = 'iterative_mapping/summary/iterative_mapping.{ext}' # iterativemapping.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
         data_in = pd.read_table(input.TSV)
 
         # Low depth
-        informs_depth = SnakemakeUtils.load_object(Path(input.INFORMS_low_depth))
+        informs_depth = snakemakeutils.load_object(Path(input.INFORMS_low_depth))
 
         # Iterative mapping
+        print(data_in)
         rows_out = [
-            ['iterative_mapping_nb_iterations', len(data_in)],
-            ['iterative_mapping_sequence_length', data_in.iloc[-1]['length']],
-            ['iterative_mapping_median_depth', data_in.iloc[-1]['depth_median']],
-            ['iterative_mapping_median_depth_iqr', data_in.iloc[-1]['depth_iqr']],
-            ['iterative_mapping_covered_rate', data_in.iloc[-1]['covered_rate']],
-            ['low_depth_nb_clipped', informs_depth['nb_clipped']],
-            ['low_depth_nb_masked', informs_depth['nb_masked']]
+            ('iterative_mapping_nb_iterations', len(data_in)),
+            ('iterative_mapping_sequence_length', int(data_in.iloc[-1]['length'])),
+            ('iterative_mapping_median_depth', data_in.iloc[-1]['depth_median']),
+            ('iterative_mapping_median_depth_iqr', data_in.iloc[-1]['depth_iqr']),
+            ('iterative_mapping_covered_rate', data_in.iloc[-1]['covered_rate']),
+            ('low_depth_nb_clipped', int(informs_depth['nb_clipped'])),
+            ('low_depth_nb_masked', int(informs_depth['nb_masked']))
         ]
 
-        # Save in tabular format
-        with open(output.TSV, 'w') as handle:
-            for key, value in rows_out:
-                handle.write(f"{key}\t{value}")
-                handle.write('\n')
+        # Save to summary
+        snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), 'preprocess')
 
 rule iterative_mapping_combine_informs:
     """
@@ -519,7 +520,7 @@ rule iterative_mapping_combine_informs:
         INFORMS_filtering_p2 = str(rules.iterative_mapping_phase_2_filter_variants_clair3.output.INFORMS).format(nb_iter='01'),
         INFORMS_apply = str(rules.iterative_mapping_phase_2_apply_variants.output.INFORMS).format(nb_iter='01')
     output:
-        INFORMS = Path(config['working_dir']) / iterativemapping.OUTPUT_ITERATIVE_MAPPING_INFORMS
+        INFORMS = 'iterative_mapping/report/informs.io' # iterativemapping.OUTPUT_INFORMS
     run:
         data_out = []
         # noinspection PyUnresolvedReferences
@@ -539,4 +540,4 @@ rule iterative_mapping_combine_informs:
                 for inform in informs_all:
                     inform['_tag'] = 'Iterative mapping' + (suffix if suffix is not None else '')
                     data_out.append(inform)
-        SnakemakeUtils.dump_object(data_out, Path(output.INFORMS))
+        snakemakeutils.dump_object(data_out, Path(output.INFORMS))

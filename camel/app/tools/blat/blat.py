@@ -1,7 +1,6 @@
-import os
-
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -13,13 +12,12 @@ class Blat(Tool):
     protein alignments at sensitivity settings typically used when comparing vertebrate sequences.
     """
 
-    def __init__(self, camel):
+    def __init__(self) -> None:
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('blat', '36x2', camel)
+        super().__init__('blat', '36x2')
 
     def _execute_tool(self):
         """
@@ -39,18 +37,18 @@ class Blat(Tool):
         - Only one input file allowed per input key
         :return: None
         """
-        super(Blat, self)._check_input()
+        super()._check_input()
         if not 2 <= len(self._tool_inputs.keys()) <= 3:
-            raise InvalidInputSpecificationError('Invalid number (min 2, max 3) of input keys given for BLAT: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (min 2, max 3) of input keys given for BLAT: {self._tool_inputs!r}')
         if not any(key in self._tool_inputs for key in ['DB_DNA', 'DB_Prot', 'DB_DNAX']):
-            raise InvalidInputSpecificationError('No database given for BLAT: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'No database given for BLAT: {self._tool_inputs!r}')
         if not any(key in self._tool_inputs for key in ['FASTA_DNA', 'FASTA_Prot', 'FASTA_RNA', 'FASTA_DNAX', 'FASTA_RNAX']):
-            raise InvalidInputSpecificationError('No query file given for BLAT: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'No query file given for BLAT: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) == 3 and 'OOC' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input key given for BLAT: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input key given for BLAT: {self._tool_inputs!r}')
         for value in self._tool_inputs.values():
             if len(value) > 1:
-                raise InvalidInputSpecificationError('Too many input files per key (max = 1) given for BLAT: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Too many input files per key (max = 1) given for BLAT: {self._tool_inputs!r}')
 
     def __get_input_key(self):
         """
@@ -71,7 +69,8 @@ class Blat(Tool):
         Sets the name of the output files
         :return: None
         """
-        self._tool_outputs[self.__get_output_key()] = [ToolIOFile(os.path.join(self._folder, 'output{}'.format(self.__get_output_extension())))]
+        self._tool_outputs[self.__get_output_key()] = [
+            ToolIOFile(self._folder / f'output{self.__get_output_extension()}')]
 
     def __get_output_key(self):
         """
@@ -95,7 +94,7 @@ class Blat(Tool):
         Creates the string with the input files
         :return: String with the input parameters
         """
-        return '{} {}'.format(self._tool_inputs[self.__get_db_key()][0], self._tool_inputs[self.__get_input_key()][0])
+        return f'{self._tool_inputs[self.__get_db_key()][0]} {self._tool_inputs[self.__get_input_key()][0]}'
 
     def __build_command(self):
         """
@@ -104,13 +103,13 @@ class Blat(Tool):
         """
         input_string = self.__build_input_string()
         options_string = ' '.join(self._build_options(delimiter=''))
-        out_string = 'output{}'.format(self.__get_output_extension())
+        out_string = f'output{self.__get_output_extension()}'
         self._command.command = ' '.join([self._tool_command, input_string, options_string, out_string])
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command):
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

@@ -1,18 +1,14 @@
 from pathlib import Path
 
-
-from camel.app.camel import Camel
 from camel.app.components.genedetection.genedetectionutils import GeneDetectionUtils
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import gene_detection
 
-camel = Camel.get_instance()
-
 # Include workflows for the different detection methods
-include: gene_detection.SNAKEFILE_GENE_DETECTION_BLAST
-include: gene_detection.SNAKEFILE_GENE_DETECTION_KMA
-include: gene_detection.SNAKEFILE_GENE_DETECTION_SRST2
+include: gene_detection.SNAKEFILE_BLAST
+include: gene_detection.SNAKEFILE_KMA
+
 
 # Common rules
 rule gene_detection_db_manager:
@@ -20,20 +16,24 @@ rule gene_detection_db_manager:
     Retrieves the FASTA file and the metadata from a database folder.
     """
     output:
-        FASTA = Path(config['working_dir']) / 'gene_detection' / '{db}' / 'db_manager' / 'fasta.io',
-        FASTA_clustered = Path(config['working_dir']) / 'gene_detection' / '{db}' / 'db_manager' / 'fasta-clust.io',
-        INFORMS = Path(config['working_dir']) / 'gene_detection' / '{db}' / 'db_manager' / 'informs.io'
+        FASTA = 'gene_detection/{db}/db_manager/fasta.io',
+        FASTA_clustered = 'gene_detection/{db}/db_manager/fasta-clust.io',
+        INFORMS = 'gene_detection/{db}/db_manager/informs.iob' # gene_detection.OUTPUT_DB_INFORMS
     params:
         db_path = lambda wildcards: config['gene_detection'][wildcards.db]['path'],
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'gene_detection' / wildcards.db
+        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}'
     run:
         from camel.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.genedetection.dbmanager import DBManager
-        db_manager = DBManager(camel)
+        db_manager = DBManager()
         db_manager.add_input_files({'DIR': [ToolIODirectory(Path(str(params.db_path)))]})
-        step = Step(str(rule), db_manager, camel, Path(str(params.running_dir)), wildcards)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(db_manager, output)
+        step = Step(
+            rule_name=str(rule),
+            tool=db_manager,
+            dir_=Path(str(params.dir_)),
+            wildcards=wildcards)
+        step.run()
+        snakemakeutils.dump_tool_outputs(db_manager, output)
 
 rule gene_detection_get_hits:
     """
@@ -41,18 +41,18 @@ rule gene_detection_get_hits:
     """
     input:
         INFORMS_DB = rules.gene_detection_db_manager.output.INFORMS,
-        VAL_hits = lambda wildcards: str(Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_HITS_METHOD).format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db))),
-        INFORMS_hits = lambda wildcards: str(Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS_METHOD).format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db)))
+        VAL_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db)),
+        INFORMS_hits = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db))
     output:
-        VAL_hits = Path(config['working_dir']) / 'gene_detection' / '{db}' / 'hit_selection' / 'hits-standardized.io',
-        INFORMS = Path(config['working_dir']) / gene_detection.OUTPUT_GENE_DETECTION_INFORMS
+        VAL_hits = 'gene_detection/{db}/hit_selection/hits-standardized.iob',
+        INFORMS = 'gene_detection/{db}/hit_selection/informs.io' # gene_detection.OUTPUT_INFORMS
     run:
         import shutil
         shutil.copyfile(str(input.VAL_hits), output.VAL_hits)
         # Add a tag for the database to distinguish commands in the output
-        informs = SnakemakeUtils.load_object(Path(str(input.INFORMS_hits)))
-        informs['_tag'] = SnakemakeUtils.load_object(Path(str(input.INFORMS_DB)))['title']
-        SnakemakeUtils.dump_object(informs, Path(output.INFORMS))
+        informs = snakemakeutils.load_object(Path(str(input.INFORMS_hits)))
+        informs['_tag'] = snakemakeutils.load_object(Path(str(input.INFORMS_DB)))['title']
+        snakemakeutils.dump_object(informs, Path(output.INFORMS))
 
 rule gene_detection_map_names:
     """
@@ -63,18 +63,18 @@ rule gene_detection_map_names:
         INFORMS_db = rules.gene_detection_db_manager.output.INFORMS,
         HITS = rules.gene_detection_get_hits.output.VAL_hits
     output:
-        HITS = Path(config['working_dir']) / gene_detection.OUTPUT_GENE_DETECTION_ALL_HITS,
-        TSV = Path(config['working_dir']) / 'gene_detection' / '{db}' / 'metadata' / 'tsv.io'
+        HITS = 'gene_detection/{db}/hit_selection/selected-hits.iob', # gene_detection.OUTPUT_GENE_DETECTION_ALL_HITS,
+        TSV = 'gene_detection/{db}/metadata/tsv.io'
     params:
-        dir_working = lambda wildcards: Path(config['working_dir']) / 'gene_detection' / wildcards.db / 'metadata',
+        dir_working = lambda wildcards: f'gene_detection/{wildcards.db}/metadata',
         sample_name = config['sample_name'],
         db_config = lambda wildcards: config['gene_detection'][wildcards.db]
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.app.io.tooliovalue import ToolIOValue
         from camel.app.components.filesystemhelper import FileSystemHelper
-        informs_db = SnakemakeUtils.load_object(Path(input.INFORMS_db))
-        hits = SnakemakeUtils.load_object(Path(input.HITS))
+        informs_db = snakemakeutils.load_object(Path(input.INFORMS_db))
+        hits = snakemakeutils.load_object(Path(input.HITS))
 
         # Map standardized names to original ones
         hits_updated = []
@@ -86,7 +86,7 @@ rule gene_detection_map_names:
                 key = params.db_config['metadata']['key']
                 hit.add_metadata(params.db_config['metadata']['name'], informs_db['mapping'].get_metadata(seq_id, key))
             hits_updated.append(hit)
-        SnakemakeUtils.dump_object([ToolIOValue(hit) for hit in hits_updated], Path(output.HITS))
+        snakemakeutils.dump_object([ToolIOValue(hit) for hit in hits_updated], Path(output.HITS))
 
         # Save tabular output
         if len(hits_updated) >= 1:
@@ -98,9 +98,9 @@ rule gene_detection_map_names:
                 for hit in hits_updated:
                     handle.write('\t'.join(hit.to_table_row()))
                     handle.write('\n')
-            SnakemakeUtils.dump_object([ToolIOFile(output_path)], Path(output.TSV))
+            snakemakeutils.dump_object([ToolIOFile(output_path)], Path(output.TSV))
         else:
-            SnakemakeUtils.dump_object([], Path(output.TSV))
+            snakemakeutils.dump_object([], Path(output.TSV))
 
 rule gene_detection_get_column_names:
     """
@@ -108,21 +108,18 @@ rule gene_detection_get_column_names:
     This method is necessary in case output needs to be generated when no hits are detected.
     """
     output:
-        INFORMS_columns = Path(config['working_dir']) / gene_detection.OUTPUT_GENE_DETECTION_COLUMNS
+        INFORMS_columns = 'gene_detection/{db}/report/informs-columns.io' # gene_detection.OUTPUT_COLUMNS
     params:
         detection_method = lambda wildcards: GeneDetectionUtils.get_detection_method_key(config, wildcards.db),
         db_config = lambda wildcards: config['gene_detection'][wildcards.db]
     run:
         from camel.app.components.blast.blasthitstatistics import BlastHitStatistics
         from camel.app.components.genedetection.genedetectionblasthit import GeneDetectionBlastHit
-        from camel.app.components.genedetection.genedetectionsrst2hit import GeneDetectionSRST2Hit
         from camel.app.components.genedetection.genedetectionkmahit import GeneDetectionKMAHit
 
         # Create empty hit
         if params.detection_method == 'blast':
             empty_hit = GeneDetectionBlastHit('Locus', None, BlastHitStatistics('subject', 0, '', 'query', 0, 0, '', 0.0, '+'))
-        elif params.detection_method == 'srst2':
-            empty_hit = GeneDetectionSRST2Hit('DB_cluster', 'Locus', None, 0, '', '', 0.0, 0.0, 0.0)
         elif params.detection_method == 'kma':
             empty_hit = GeneDetectionKMAHit('DB_cluster', 'Locus', None, '', 0, 0, 0.0, 0.0, 0.0)
         else:
@@ -134,7 +131,7 @@ rule gene_detection_get_column_names:
 
         # Save column names
         columns = empty_hit.html_column_names
-        SnakemakeUtils.dump_object(columns, Path(output.INFORMS_columns))
+        snakemakeutils.dump_object(columns, Path(output.INFORMS_columns))
 
 
 rule gene_detection_report:
@@ -147,25 +144,25 @@ rule gene_detection_report:
         INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS,
         INFORMS_detection = rules.gene_detection_get_hits.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / gene_detection.OUTPUT_GENE_DETECTION_REPORT
+        VAL_HTML = 'gene_detection/{db}/report/html.iob' # gene_detection.OUTPUT_REPORT
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'gene_detection' / wildcards.db / 'report',
+        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/report',
         config_data = lambda wildcards: config['gene_detection'][wildcards.db],
         input_type = config['input_type'],
-        detection_method = lambda wildcards: GeneDetectionUtils.get_detection_method_key(config, wildcards.db),
+        detection_method = lambda wildcards: GeneDetectionUtils.get_detection_method_key(config, wildcards.db)
     run:
         from camel.app.tools.pipelines.genedetection.htmlreportergenedetection import HtmlReporterGeneDetection
 
         # Create step
-        reporter = HtmlReporterGeneDetection(camel)
-        step = Step(str(rule), reporter, camel, Path(str(params.running_dir)), wildcards)
+        reporter = HtmlReporterGeneDetection()
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)), wildcards=wildcards)
 
         # Parameters
         if 'force_detection_method' in params.config_data:
             reporter.update_parameters(forced_detection_method = params.config_data['force_detection_method'])
         if params.config_data.get('hidden', False) is True:
             reporter.update_parameters(hidden=True)
-        if params.input_type == 'fasta' and params.detection_method in ('kma', 'srst2'):
+        if params.input_type == 'fasta' and params.detection_method in ('kma',):
             reporter.update_parameters(pseudo_reads=True)
 
         # Optional message
@@ -175,9 +172,9 @@ rule gene_detection_report:
             reporter.update_parameters(message_category=params.config_data['message']['category'])
 
         # Run tool
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule gene_detection_create_empty_report:
     """
@@ -186,32 +183,50 @@ rule gene_detection_create_empty_report:
     input:
         INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / gene_detection.OUTPUT_GENE_DETECTION_REPORT_EMPTY
+        VAL_HTML = 'gene_detection/{db}/report/html-empty.iob' # gene_detection.OUTPUT_REPORT_EMPTY
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'gene_detection' / wildcards.db / 'report'
+        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/report'
     run:
         from camel.app.components.html.htmlreportsection import HtmlReportSection
         from camel.app.io.tooliovalue import ToolIOValue
-        db_info = SnakemakeUtils.load_object(Path(input.INFORMS_db_info))
+        db_info = snakemakeutils.load_object(Path(input.INFORMS_db_info))
         section = HtmlReportSection(db_info['title'], 3)
         section.add_paragraph('Analysis disabled')
-        SnakemakeUtils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))
+        snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))
 
 rule gene_detection_dump_summary_info:
     """
     Dumps the summary information from the gene detection in tabular format.
     """
     input:
-        INFORMS_hits = Path(config['working_dir']) / 'gene_detection' / '{db}' / 'hit_selection' / 'selected-hits.io'
+        INFORMS_hits = 'gene_detection/{db}/hit_selection/selected-hits.iob',
+        INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / gene_detection.OUTPUT_GENE_DETECTION_SUMMARY
+        FILE = 'gene_detection/{db}/report/summary_out.{ext}' # gene_detection.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext,
+        db_key = lambda wildcards: wildcards.db
     run:
         import json
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS_hits))
-        hit_info = []
-        blast_stats = []
-        for hit in informs:
-            hit_info.append(hit.value.to_table_row())
-        with open(output.TSV, 'w') as handle:
-            handle.write('hits_{}\t{}'.format(wildcards.db, json.dumps(hit_info)))
-            handle.write('\n')
+
+        # Parse input informs
+        informs_hits = snakemakeutils.load_object(Path(input.INFORMS_hits))
+        informs_db_info = snakemakeutils.load_object(Path(input.INFORMS_db_info))
+
+        # Collect detected hits
+        if params.ext == 'tsv':
+            # Tabular output -> List with metric values as a JSON string
+            data_hits = json.dumps([hit.value.to_table_row() for hit in informs_hits])
+        elif params.ext == 'json':
+            # JSON output -> List of dictionaries with hit statistics
+            data_hits = [hit.value.to_dict() for hit in informs_hits]
+        else:
+            raise ValueError(f'Invalid extension: {params.ext}')
+
+        # Dump the output
+        prepend_key = f'{params.db_key}_' if params.ext == 'tsv' else ''
+        rows_out = [
+            (f'{prepend_key}loci', data_hits),
+            (f'{prepend_key}db_version', informs_db_info.get('last_change', informs_db_info.get('last_updated', 'n/a')))
+        ]
+        snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), str(params.db_key))

@@ -1,5 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
@@ -30,14 +29,12 @@ class GATK4BaseRecalibrator(GATK4):
     - recal_table_output       recalibration table name. Default value: 'recalibrationData.tabl'
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATKBaseRecalibrator tool.
-        :param camel: Camel instance
         :return: None
         """
-        super(GATK4BaseRecalibrator, self).__init__('gatk4 BaseRecalibrator', '4.1.9.0', camel)
-
+        super().__init__('gatk4 BaseRecalibrator', '4.1.9.0')
         self._required_inputs = ['BAM', 'FASTA_REF']
         self._output_type = 'TXT_RecalibrationTable'
 
@@ -47,7 +44,6 @@ class GATK4BaseRecalibrator(GATK4):
         Overrides method in parent class.
         :return: None
         """
-
         # set input BAM
         self._input_string += f"--input {self._tool_inputs['BAM'][0].path} "
 
@@ -72,7 +68,6 @@ class GATK4BaseRecalibrator(GATK4):
         :return: None
         """
         if not ('VCF_KNOWN_SNPS' in self._tool_inputs or 'VCF_KNOWN_INDELS' in self._tool_inputs):
-            raise InvalidInputSpecificationError(f'GATK {self._name} required VCF_KNOWN_SNPS or VCF_KNOWN_INDELS input '
+            raise InvalidToolInputError(f'GATK {self._name} required VCF_KNOWN_SNPS or VCF_KNOWN_INDELS input '
                                                  f'is missing in _tool_inputs! (at least one should be specified)')
-
-        super(GATK4BaseRecalibrator, self)._check_input()
+        super()._check_input()

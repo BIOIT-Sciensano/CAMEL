@@ -1,8 +1,6 @@
-from typing import List
-
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -20,13 +18,12 @@ class PolypolishInsertFilter(Tool):
     """
     OUTPUT_PREFIX = 'alignment'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes PolypolishInsertFilter.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('PolypolishInsertFilter', '0.6.0', camel)
+        super().__init__('PolypolishInsertFilter', '0.6.0')
 
     def _execute_tool(self) -> None:
         """
@@ -44,12 +41,12 @@ class PolypolishInsertFilter(Tool):
         :return: None
         """
         if 'SAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('SAM alignment file is required')
+            raise InvalidToolInputError('SAM alignment file is required')
         if len(self._tool_inputs['SAM']) != 2:
-            raise InvalidInputSpecificationError('Only two SAM alignment files are allowed')
+            raise InvalidToolInputError('Only two SAM alignment files are allowed')
         super()._check_input()
 
-    def _build_command(self, sam_input: List, prefix: str) -> None:
+    def _build_command(self, sam_input: list, prefix: str) -> None:
         """
         Builds the command to run polypolish insert filter.
         :param sam_input: list of SAM files
@@ -66,13 +63,13 @@ class PolypolishInsertFilter(Tool):
             f'--out1 {output_sam_1}',
             f'--out2 {output_sam_2}'])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self, prefix: str) -> None:
         """

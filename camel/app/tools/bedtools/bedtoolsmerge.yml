@@ -1,10 +1,40 @@
-dependencies: [bedtools/2.31.0]
+dependencies:
+  - bedtools/2.31.0
 parameters:
-  force_merge_one_strand: {default: false, mandatory: false, option: -S, p_index: 0,
-    value: null}
-  force_strandedness: {default: false, mandatory: false, option: -s, p_index: 0, value: null}
-  max_dist: {default: false, mandatory: false, option: -d, p_index: 0, value: null}
-  output_filename: {default: true, mandatory: false, option: null, p_index: 0, value: regions.bed}
-  print_header: {default: false, mandatory: false, option: -header, p_index: 0, value: null}
-  use_bed_output: {default: false, mandatory: false, option: -bed, p_index: 0, value: null}
+  force_merge_one_strand:
+    default: false
+    mandatory: false
+    option: '-S'
+    p_index: 0
+    value: null
+  force_strandedness:
+    default: false
+    mandatory: false
+    option: '-s'
+    p_index: 0
+    value: null
+  max_dist:
+    default: false
+    mandatory: false
+    option: '-d'
+    p_index: 0
+    value: null
+  output_filename:
+    default: true
+    mandatory: false
+    option: null
+    p_index: 0
+    value: regions.bed
+  print_header:
+    default: false
+    mandatory: false
+    option: '-header'
+    p_index: 0
+    value: null
+  use_bed_output:
+    default: false
+    mandatory: false
+    option: '-bed'
+    p_index: 0
+    value: null
 tool_command: bedtools merge

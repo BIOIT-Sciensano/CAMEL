@@ -2,7 +2,7 @@ import abc
 from abc import ABCMeta
 
 
-class ToolIO(object, metaclass=ABCMeta):
+class ToolIO(metaclass=ABCMeta):
     """
     Class that represents the input or output of a tool.
     """

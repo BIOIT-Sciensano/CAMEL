@@ -1,6 +1,23 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  concatenate_sequence_segments: {default: false, mandatory: false, option: null, p_index: 0, value: 'true'}
-  output: {default: true, mandatory: false, option: --output, p_index: 0, value: consensus_sequences.fa}
-  use-iupac-sample: {default: false, mandatory: false, option: --use-iupac-sample, p_index: 10, value: null}
+  concatenate_sequence_segments:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: 'true'
+  output:
+    default: true
+    mandatory: false
+    option: '--output'
+    p_index: 0
+    value: consensus_sequences.fa
+  use-iupac-sample:
+    default: false
+    mandatory: false
+    option: '--use-iupac-sample'
+    p_index: 10
+    value: null
 tool_command: FastaAlternateReferenceMaker

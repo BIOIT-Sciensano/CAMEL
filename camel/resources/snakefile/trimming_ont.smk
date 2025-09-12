@@ -1,12 +1,9 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.pipelineexecutionerror import PipelineExecutionError
+from camel.app.error import PipelineExecutionError
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import trimming_ont
-
-camel = Camel.get_instance()
 
 
 rule trimming_ont_nanoplot_pre:
@@ -14,53 +11,53 @@ rule trimming_ont_nanoplot_pre:
     Creates NanoPlot reports for the raw reads. 
     """
     input:
-        FASTQ = Path(config['working_dir']) / trimming_ont.INPUT_ONT_FASTQ
+        FASTQ = trimming_ont.INPUT_ONT_FASTQ
     output:
-        HTML = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_NANOPLOT_HTML_PRE,
-        TSV = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_NANOPLOT_TXT_PRE,
-        INFORMS = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_NANOPLOT_INFORMS_PRE
+        HTML = 'trimming_ont/nanoplot-pre/html.io', # trimming_ont.OUTPUT_NANOPLOT_HTML_PRE,
+        TSV = 'trimming_ont/nanoplot-pre/txt.io', # trimming_ont.OUTPUT_NANOPLOT_TXT_PRE,
+        INFORMS = 'trimming_ont/nanoplot-pre/informs.io' # trimming_ont.OUTPUT_NANOPLOT_INFORMS_PRE
     params:
-        running_dir = Path(config['working_dir']) / 'trimming_ont' / 'nanoplot-pre'
+        dir_ = 'trimming_ont/nanoplot-pre'
     threads: 4
     run:
         from camel.app.tools.nanoplot.nanoplot import NanoPlot
-        nanoplot = NanoPlot(camel)
-        SnakemakeUtils.add_pickle_inputs(nanoplot, input)
-        step = Step(str(rule), nanoplot, camel, params.running_dir)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(nanoplot, output)
+        nanoplot = NanoPlot()
+        snakemakeutils.add_pickle_inputs(nanoplot, input)
+        step = Step(rule_name=str(rule), tool=nanoplot, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(nanoplot, output)
 
 rule trimming_ont_seqkit:
     """
     Read trimming using seqkit.
     """
     input:
-        FASTQ = Path(config['working_dir']) / trimming_ont.INPUT_ONT_FASTQ
+        FASTQ = trimming_ont.INPUT_ONT_FASTQ
     output:
-        FASTQ = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_READS,
-        INFORMS = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_INFORMS
+        FASTQ = 'trimming_ont/seqkit/fastq.io', # trimming_ont.OUTPUT_READS,
+        INFORMS = 'trimming_ont/seqkit/informs.io' # trimming_ont.OUTPUT_INFORMS
     threads: 4
     priority: 1
     params:
-        running_dir = Path(config['working_dir']) / 'trimming_ont' / 'seqkit',
+        dir_ = 'trimming_ont/seqkit',
         sample_name = config.get('sample_name', 'reads'),
         min_length = config.get('read_trimming', {}).get('ont', {}).get('min_length', 500),
         min_qual = config.get('read_trimming', {}).get('ont', {}).get('min_qual', 7)
     run:
         from camel.app.tools.seqkit.seqkitseq import SeqkitSeq
-        seqkit = SeqkitSeq(Camel.get_instance())
+        seqkit = SeqkitSeq()
         seqkit.update_parameters(
             min_length=params.min_length,
             min_qual=params.min_qual,
             output_filename=f'{params.sample_name}-filtered.fastq',
             threads=threads
         )
-        SnakemakeUtils.add_pickle_inputs(seqkit, input)
-        step = Step(str(rule), seqkit, Camel.get_instance(), params.running_dir)
-        step.run_step()
+        snakemakeutils.add_pickle_inputs(seqkit, input)
+        step = Step(rule_name=str(rule), tool=seqkit, dir_=Path(params.dir_))
+        step.run()
         if seqkit.informs['nb_seqs_out'] == 0:
             raise PipelineExecutionError('No reads left after filtering.')
-        SnakemakeUtils.dump_tool_outputs(seqkit, output)
+        snakemakeutils.dump_tool_outputs(seqkit, output)
 
 rule trimming_ont_nanoplot_post:
     """
@@ -69,19 +66,19 @@ rule trimming_ont_nanoplot_post:
     input:
         FASTQ = rules.trimming_ont_seqkit.output.FASTQ
     output:
-        HTML = Path(config['working_dir']) /  trimming_ont.OUTPUT_TRIMMING_ONT_NANOPLOT_HTML_POST,
-        TSV = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_NANOPLOT_TXT_POST,
-        INFORMS = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_NANOPLOT_INFORMS_POST
+        HTML = 'trimming_ont/nanoplot-post/html.io', # trimming_ont.OUTPUT_NANOPLOT_HTML_POST,
+        TSV = 'trimming_ont/nanoplot-post/txt.io', # trimming_ont.OUTPUT_NANOPLOT_TXT_POST,
+        INFORMS = 'trimming_ont/nanoplot-post/informs.io' # trimming_ont.OUTPUT_NANOPLOT_INFORMS_POST
     params:
-        running_dir = Path(config['working_dir']) / 'trimming_ont' / 'nanoplot-post'
+        dir_ = 'trimming_ont/nanoplot-post'
     threads: 4
     run:
         from camel.app.tools.nanoplot.nanoplot import NanoPlot
-        nanoplot = NanoPlot(camel)
-        SnakemakeUtils.add_pickle_inputs(nanoplot, input)
-        step = Step(str(rule), nanoplot, camel, params.running_dir)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(nanoplot, output)
+        nanoplot = NanoPlot()
+        snakemakeutils.add_pickle_inputs(nanoplot, input)
+        step = Step(rule_name=str(rule), tool=nanoplot, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(nanoplot, output)
 
 rule trimming_ont_report:
     """
@@ -95,42 +92,48 @@ rule trimming_ont_report:
         INFORMS_nanoplot_pre = rules.trimming_ont_nanoplot_pre.output.INFORMS,
         INFORMS_nanoplot_post= rules.trimming_ont_nanoplot_post.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_REPORT
+        VAL_HTML = 'trimming_ont/report/html.iob' # trimming_ont.OUTPUT_REPORT
     params:
-        running_dir = Path(config['working_dir']) / 'trimming_ont' / 'report',
+        dir_ = 'trimming_ont/report',
         export_fastq = config['read_trimming'].get('export_fastq', 'false')
     run:
         from camel.app.tools.pipelines.read_trimming.reportertrimmingont import ReporterTrimmingONT
-        reporter = ReporterTrimmingONT(camel)
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, camel, params.running_dir)
+        reporter = ReporterTrimmingONT()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         reporter.update_parameters(export_fastq=str(params.export_fastq))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule trimming_ont_dump_summary_info:
     """
     Dumps the summary information from the read trimming pipeline.
     """
     input:
-        INFORMS_trimming = rules.trimming_ont_seqkit.output.INFORMS
+        INFORMS_trimming = rules.trimming_ont_seqkit.output.INFORMS,
+        INFORMS_nanoplot = rules.trimming_ont_nanoplot_pre.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_SUMMARY
+        FILE = 'trimming_ont/summary/summary_out.{ext}' # trimming_ont.OUTPUT_SUMMARY
     params:
-        running_dir = Path(config['working_dir']) / 'trimming_ont' / 'summary'
+        dir_ = 'trimming_ont/summary',
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs_filtering = SnakemakeUtils.load_object(Path(input.INFORMS_trimming))
+        informs_filtering = snakemakeutils.load_object(Path(input.INFORMS_trimming))
+        informs_nanoplot = snakemakeutils.load_object(Path(input.INFORMS_nanoplot))
         summary_data = [
             ('trim_ont_reads_in', informs_filtering['nb_seqs_in']),
             ('trim_ont_reads_out', informs_filtering['nb_seqs_out']),
             ('trim_ont_min_length', informs_filtering['min_length']),
             ('trim_ont_min_qual', informs_filtering['min_qual']),
+            ('trim_ont_median_read_length', informs_nanoplot['median_read_length']),
+            ('trim_ont_mean_qual', informs_nanoplot['mean_qual']),
+            ('trim_ont_median_qual', informs_nanoplot['median_qual']),
             ('trim_ont_tool_version', informs_filtering['_name'])
         ]
-        with open(output.TSV, 'w') as handle:
-            for key, value in summary_data:
-                handle.write(f'{key}\t{value}')
-                handle.write('\n')
+        if params.ext == 'json':
+            # informs_duplicates = snakemakeutils.load_object(Path(input.INFORMS_duplicates))
+            summary_data.append(('duplication_rate', 'TODO!'))
+        snakemakeutils.export_summary(summary_data, Path(output.FILE), str(params.ext), 'trimming_ont')
 
 rule trimming_ont_to_dict:
     """
@@ -139,9 +142,9 @@ rule trimming_ont_to_dict:
     input:
         FASTQ = rules.trimming_ont_seqkit.output.FASTQ
     output:
-        IO = Path(config['working_dir']) / trimming_ont.OUTPUT_TRIMMING_ONT_DICT
+        IO = 'trimming_ont/fastq_all.io' # trimming_ont.OUTPUT_DICT
     run:
         output_dict = {
-            'SE': SnakemakeUtils.load_object(Path(input.FASTQ))
+            'SE': snakemakeutils.load_object(Path(input.FASTQ))
         }
-        SnakemakeUtils.dump_object(output_dict,Path(output.IO))
+        snakemakeutils.dump_object(output_dict,Path(output.IO))

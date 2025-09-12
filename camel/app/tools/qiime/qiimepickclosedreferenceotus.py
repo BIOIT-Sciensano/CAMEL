@@ -1,6 +1,6 @@
 import os.path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
@@ -10,13 +10,12 @@ class QiimePickClosedReferenceOtus(Qiime):
     Perform open-reference OTU picking
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('qiime_pick_closed_reference_otus', '1.9.1', camel)
+        super().__init__('qiime_pick_closed_reference_otus', '1.9.1')
 
     def _check_input(self):
         """
@@ -27,14 +26,14 @@ class QiimePickClosedReferenceOtus(Qiime):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input files (keys) given for '
+            raise InvalidToolInputError('Invalid input files (keys) given for '
                                                  'pick_closed_reference_otus: {!r}'.format(self._tool_inputs))
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'FASTA_Ref', 'TSV_Taxonomy']:
-                raise InvalidInputSpecificationError('Invalid input key given for '
+                raise InvalidToolInputError('Invalid input key given for '
                                                      'pick_closed_reference_otus: {!r}'.format(self._tool_inputs))
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files in each key given for \
+                raise InvalidToolInputError('Invalid number (max = 1) of files in each key given for \
                                                      pick_closed_reference_otus: {!r}'.format(self._tool_inputs))
 
     def _set_output(self):
@@ -42,7 +41,7 @@ class QiimePickClosedReferenceOtus(Qiime):
         Sets the name of the output files
         :return: None
         """
-        self._tool_outputs['BIOM'] = [ToolIOFile(os.path.join(self._folder, 'otu_table.biom'))]
+        self._tool_outputs['BIOM'] = [ToolIOFile(self._folder / 'otu_table.biom')]
 
     def _build_input_string(self):
         """

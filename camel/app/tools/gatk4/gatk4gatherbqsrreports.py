@@ -1,4 +1,3 @@
-from camel.app.camel import Camel
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 class GATK4GatherBQSRReports(GATK4):
@@ -17,14 +16,12 @@ class GATK4GatherBQSRReports(GATK4):
     'TXT_RecalibrationTable':   ToolIOFile object. Text file containing the gathered recalibration data.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATK4GatherBQSRReports tool.
-        :param camel: Camel instance
         :return: None
         """
-        super(GATK4GatherBQSRReports, self).__init__('gatk4 GatherBQSRReports', '4.1.9.0', camel)
-
+        super().__init__('gatk4 GatherBQSRReports', '4.1.9.0')
         self._required_inputs = ['TXT_intervals']
         self._output_type = 'TXT_RecalibrationTable'
 

@@ -1,22 +1,19 @@
-from camel.app.camel import Camel
 from camel.app.tools.medaka.medaka import Medaka
 
 
 class MedakaSequence(Medaka):
-
     """
     Class for Medaka sequence function.
 
     Medaka sequence reads the output of Medaka inference and outputs a consensus fasta sequence.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes Medaka sequence.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('medaka sequence', '2.0.0', camel)
+        super().__init__('medaka sequence', '2.0.0')
 
         self._required_inputs = ['HDF', 'FASTA']
         self._output_type = 'FASTA'

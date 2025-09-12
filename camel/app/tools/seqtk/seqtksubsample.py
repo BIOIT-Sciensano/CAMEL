@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.files.fastqutils import FastqUtils
 from camel.app.components.files.fileutils import FileUtils
 from camel.app.io.tooliofile import ToolIOFile
@@ -9,18 +8,16 @@ from camel.app.tools.seqtk.seqtk import Seqtk
 
 
 class SeqtkSubsample(Seqtk):
-
     """
-    Class that subsamples fastq/fasta file(s) using seqkt
+    Class that subsamples fastq/fasta file(s) using seqtk.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize seqtk subsample
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Seqtk Subsample', '1.4', camel)
+        super().__init__('Seqtk Subsample', '1.4')
         self._supported_inputs = ['FASTA', 'FASTQ', 'FASTA_PE', 'FASTQ_PE']
         self._function_name = 'Subsample'
         self._specific_parameters = ['combine_output', 'output_prefix', 'fraction']

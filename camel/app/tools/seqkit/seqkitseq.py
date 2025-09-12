@@ -1,28 +1,27 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.components.files.fastautils import FastaUtils
 from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.tools.seqkit.seqkitbase import SeqkitBase
 
 
-class SeqkitSeq(Tool):
+class SeqkitSeq(SeqkitBase):
     """
     Seqkit seq performs common transformations of FASTA / FASTQ files.
     """
 
     INPUT_KEYS = ('FASTQ', 'FASTA')
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize seqkit seq.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Seqkit seq', '2.3.1', camel)
+        super().__init__(name='Seqkit seq', version=None)
 
     def __get_input_key(self) -> str:
         """
@@ -37,7 +36,7 @@ class SeqkitSeq(Tool):
         :return: None
         """
         if not any(x in self._tool_inputs for x in SeqkitSeq.INPUT_KEYS):
-            raise InvalidInputSpecificationError('{} input is required.'.format(' or '.join(SeqkitSeq.INPUT_KEYS)))
+            raise InvalidToolInputError('{} input is required.'.format(' or '.join(SeqkitSeq.INPUT_KEYS)))
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -61,7 +60,7 @@ class SeqkitSeq(Tool):
         input_key = self.__get_input_key()
         self._command.command = ' '.join([
             self._tool_command,
-            ' '.join([str(f.path) for f in self._tool_inputs[input_key]]),
+            *[str(f.path) for f in self._tool_inputs[input_key]],
             *self._build_options()
         ])
 
@@ -74,13 +73,13 @@ class SeqkitSeq(Tool):
         output_key = 'FASTA' if output_path.name.lower().endswith('.fasta') else 'FASTQ'
         self._tool_outputs[output_key] = [ToolIOFile(output_path)]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __collect_stats(self, path_out: Path) -> None:
         """

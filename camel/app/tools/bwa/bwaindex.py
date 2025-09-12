@@ -1,24 +1,23 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.files.fileutils import FileUtils
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.bwa.bwa import BWA
 
 
 class BWAIndex(BWA):
-
-    """BWAIndex genome using 'bwa index' from BWA for read mapping"""
+    """
+    Creates a BWA index for a FASTA file.
+    """
 
     MULTI_FASTA_GENOME_FILE = 'complete_genome.fasta'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize BWA index
-        :param camel: Camel instance
-        :return: None
+            :return: None
         """
-        super().__init__('bwa_index', '0.7.17', camel)
+        super().__init__('bwa_index', '0.7.17')
         self._refgenome_fasta = None
 
     def _execute_tool(self) -> None:
@@ -42,7 +41,7 @@ class BWAIndex(BWA):
         Check FASTA_REF input and concatenate them if multiple fasta input files
         :return: None
         """
-        super(BWAIndex, self)._check_input()
+        super()._check_input()
 
         nb_of_inputs = len(self._tool_inputs['FASTA_REF'])
         if nb_of_inputs == 0:

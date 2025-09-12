@@ -1,6 +1,4 @@
-import os
-
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -15,12 +13,11 @@ class Tabix(Tool):
     "chr:beginPos-endPos". (Coordinates specified in this region format are 1-based and inclusive.)
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('tabix', '1.9', camel)
+        super().__init__('tabix', '1.9')
 
     def _execute_tool(self):
         """
@@ -29,7 +26,7 @@ class Tabix(Tool):
         """
         self.__build_command()
         self._execute_command()
-        output_filename = os.path.join(self._folder, self._parameters['output_filename'].value)
+        output_filename = self._folder / self.get_param_value('output_filename')
         self._tool_outputs['TSV'] = [ToolIOFile(output_filename)]
 
     def _check_input(self):
@@ -38,9 +35,9 @@ class Tabix(Tool):
         :return: None
         """
         if 'TAB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TAB index is required")
+            raise InvalidToolInputError("TAB index is required")
         if not any(key in self._tool_inputs for key in ['BED', 'VAL_regions']):
-            raise InvalidInputSpecificationError("Either BED or regions input is required")
+            raise InvalidToolInputError("Either BED or regions input is required")
         super()._check_input()
 
     def __build_command(self):

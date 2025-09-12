@@ -1,6 +1,6 @@
 import unittest
 
-from camel.app.camel import Camel
+
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.scripts.hybridassemblypipeline.mainhybridassemblypipeline import MainHybridAssemblyPipeline
 from camel.tests import longRunningTest
@@ -20,7 +20,6 @@ class TestHybridAssemblyPipeline(CamelTestSuite):
         Tests if the hybrid assembly pipeline extracts the sample name correctly.
         :return: None
         """
-        Camel.get_instance()
         path_report_out = self.running_dir / 'out' / 'output.html'
         args = [
             '--output-html', str(path_report_out),

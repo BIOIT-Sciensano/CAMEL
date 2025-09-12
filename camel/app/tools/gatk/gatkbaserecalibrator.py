@@ -1,5 +1,3 @@
-import os
-
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.gatk.gatk import GATK
 
@@ -33,13 +31,12 @@ class GATKBaseRecalibrator(GATK):
     - recal_table_output       recalibration table name. Default value: 'recalibrationData.tabl'
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize GATKBaseRecalibrator tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk BaseRecalibrator', '3.7', camel)
+        super().__init__('gatk BaseRecalibrator', '3.7')
 
         self._required_inputs = ['BAM', 'FASTA_REF']
         self._output_type = 'TXT_RecalibrationTable'
@@ -52,7 +49,6 @@ class GATKBaseRecalibrator(GATK):
         Overrides method in parent class.
         :return: None
         """
-
         # set input BAM
         self._input_string += "-I {} ".format(self._tool_inputs['BAM'][0].path)
 
@@ -75,4 +71,4 @@ class GATKBaseRecalibrator(GATK):
         :return: None
         """
         self._tool_outputs['TXT_RecalibrationTable'] = [
-            ToolIOFile(os.path.join(self._folder, self._parameters['recal_table_output'].value))]
+            ToolIOFile(self._folder / self.get_param_value('recal_table_output'))]

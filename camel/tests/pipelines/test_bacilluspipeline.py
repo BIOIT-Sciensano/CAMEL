@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from camel.app.camel import Camel
+
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.tools.pipelines.sequence_typing.locussetmanager import LocusSetManager
@@ -41,7 +41,7 @@ class TestBacillusPipeline(CamelTestSuite):
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
             # Check if metadata can be loaded
-            manager = LocusSetManager(Camel.get_instance())
+            manager = LocusSetManager()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.informs), 0)

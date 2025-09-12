@@ -38,7 +38,7 @@ class ToolPipeable(Tool, metaclass=abc.ABCMeta):
         """
         self._folder = dir_
         # Check the input at the start of the python
-        if pipe_in is False:
+        if not pipe_in:
             self._check_input()
 
         # Return the command

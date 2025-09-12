@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from camel.app.components.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.app.components.html.htmlreportsection import HtmlReportSection
@@ -48,7 +48,7 @@ class GeneDetectionKMAHit(GeneDetectionHitBase):
         return self.subject_coverage == 100.0
 
     @property
-    def table_column_names(self) -> List[str]:
+    def table_column_names(self) -> list[str]:
         """
         Returns the names of the columns of the tabular output.
         :return: List of column names
@@ -58,7 +58,7 @@ class GeneDetectionKMAHit(GeneDetectionHitBase):
             columns.insert(-1, metadata['name'])
         return columns
 
-    def to_table_row(self) -> List[str]:
+    def to_table_row(self) -> list[str]:
         """
         Returns the hit as a table row.
         :return: List of table cell values
@@ -67,9 +67,9 @@ class GeneDetectionKMAHit(GeneDetectionHitBase):
             self._cluster,
             self.locus,
             str(self._length),
-            '{:.2f}'.format(self.percent_identity),
-            '{:.2f}'.format(self.subject_coverage),
-            '{:.2f}'.format(self._depth),
+            f'{self.percent_identity:.2f}',
+            f'{self.subject_coverage:.2f}',
+            f'{self._depth:.2f}',
             self._accession if self._accession is not None else '-'
         ]
         for metadata in self._metadata:
@@ -77,14 +77,14 @@ class GeneDetectionKMAHit(GeneDetectionHitBase):
         return data
 
     @property
-    def html_column_names(self) -> List[str]:
+    def html_column_names(self) -> list[str]:
         """
         Returns the names of the columns of the HTML output.
         :return: List of column names
         """
         return self.table_column_names[1:]
 
-    def to_html_row(self, report_section: HtmlReportSection, sub_directory: str, colored: bool = True) -> List[
+    def to_html_row(self, report_section: HtmlReportSection, sub_directory: str, colored: bool = True) -> list[
             Union[str, HtmlTableCell]]:
         """
         Returns the hit as a HTML table row.

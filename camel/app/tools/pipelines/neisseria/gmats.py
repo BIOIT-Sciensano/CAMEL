@@ -2,8 +2,7 @@ import pandas as pd
 
 from pathlib import Path
 from fractions import Fraction
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,12 +14,11 @@ class GMats(Tool):
     used to predict the Bexsero vaccine effectiveness.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the GMats tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('GMats', '0.1', camel)
+        super().__init__('GMats', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -28,9 +26,9 @@ class GMats(Tool):
         :return: None
         """
         if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("gMATS database is required")
+            raise InvalidToolInputError("gMATS database is required")
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("List of input files (TSV) is required")
+            raise InvalidToolInputError("List of input files (TSV) is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -80,7 +78,6 @@ class GMats(Tool):
         :param coverage: Allele coverage length
         :return: Allele or allele marked with an asterisk(*) in case of imperfect match
         """
-
         # Skip undetermined alleles
         if allele in ['-', '?']:
             return allele

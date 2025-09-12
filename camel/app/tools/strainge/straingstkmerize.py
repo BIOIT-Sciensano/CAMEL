@@ -1,6 +1,6 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -13,12 +13,11 @@ class StrainGSTKmerize(Tool):
 
     INPUT_KEYS = ('FASTQ', 'FASTA')
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes strainGST kmerize.
-        :param camel: CAMEL instance
         """
-        super().__init__('StrainGST kmerize', '1.3.9', camel)
+        super().__init__('StrainGST kmerize', '1.3.9')
 
     def _check_input(self) -> None:
         """
@@ -26,7 +25,7 @@ class StrainGSTKmerize(Tool):
         :return: None
         """
         if not any(x in self._tool_inputs for x in StrainGSTKmerize.INPUT_KEYS):
-            raise InvalidInputSpecificationError('{} input is required.'.format(' or '.join(StrainGSTKmerize.INPUT_KEYS)))
+            raise InvalidToolInputError('{} input is required.'.format(' or '.join(StrainGSTKmerize.INPUT_KEYS)))
         super()._check_input()
 
     def _build_command(self) -> None:
@@ -41,13 +40,13 @@ class StrainGSTKmerize(Tool):
             ' '.join([str(f.path) for f in self._tool_inputs[input_key]])
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """

@@ -1,15 +1,59 @@
-dependencies: [MEGA/10.0.4]
+dependencies:
+  - MEGA/10.0.4
 parameters:
-  bootstrap_replications: {default: false, mandatory: true, option: null, value: '100'}
-  branch_swap_filter: {default: true, mandatory: true, option: null, value: None}
-  gamma_categories: {default: false, mandatory: false, option: null, value: '5'}
-  heuristic_method: {default: true, mandatory: true, option: null, value: SPR5}
-  initial_tree: {default: true, mandatory: true, option: null, value: NJ}
-  missing_data_treatment: {default: true, mandatory: true, option: null, value: Complete
-      deletion}
-  model: {default: true, mandatory: true, option: null, value: JC}
-  rates_among_sites: {default: true, mandatory: true, option: null, value: G+I}
-  site_coverage_cutoff: {default: false, mandatory: false, option: null, value: '50'}
-  test_of_phylogeny: {default: true, mandatory: true, option: null, value: None}
-  threads: {default: true, mandatory: true, option: null, value: '8'}
+  bootstrap_replications:
+    default: false
+    mandatory: true
+    option: null
+    value: '100'
+  branch_swap_filter:
+    default: true
+    mandatory: true
+    option: null
+    value: None
+  gamma_categories:
+    default: false
+    mandatory: false
+    option: null
+    value: '5'
+  heuristic_method:
+    default: true
+    mandatory: true
+    option: null
+    value: SPR5
+  initial_tree:
+    default: true
+    mandatory: true
+    option: null
+    value: NJ
+  missing_data_treatment:
+    default: true
+    mandatory: true
+    option: null
+    value: Complete deletion
+  model:
+    default: true
+    mandatory: true
+    option: null
+    value: JC
+  rates_among_sites:
+    default: true
+    mandatory: true
+    option: null
+    value: G+I
+  site_coverage_cutoff:
+    default: false
+    mandatory: false
+    option: null
+    value: '50'
+  test_of_phylogeny:
+    default: true
+    mandatory: true
+    option: null
+    value: None
+  threads:
+    default: true
+    mandatory: true
+    option: null
+    value: '8'
 tool_command: megacc

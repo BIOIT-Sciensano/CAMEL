@@ -2,14 +2,14 @@ import datetime
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Union, Any
+from typing import Union, Any
 
 import pandas as pd
 import vcf
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
@@ -46,12 +46,11 @@ class SNPLineageDetector(Tool):
     This tool is used to assign a SNP lineage to Mycobacterium tuberculosis complex strains.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: SNP lineage detector', '0.1', camel)
+        super().__init__('Mycobacterium: SNP lineage detector', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -59,11 +58,11 @@ class SNPLineageDetector(Tool):
         :return: None
         """
         if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('VCF input is required')
+            raise InvalidToolInputError('VCF input is required')
         if 'VCF_filt' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Filtered VCF input is required ('VCF_filt')")
+            raise InvalidToolInputError("Filtered VCF input is required ('VCF_filt')")
         if 'BED' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BED input is required')
+            raise InvalidToolInputError('BED input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -91,7 +90,7 @@ class SNPLineageDetector(Tool):
         # Get the database version
         self._informs['db_version'] = self.__get_db_version()
 
-    def __parse_lineage_snps(self) -> List[LineageSNP]:
+    def __parse_lineage_snps(self) -> list[LineageSNP]:
         """
         Parses the file with the lineages.
         :return: Map of the positions to the corresponding lineage SNPs, Map of the lineages by name
@@ -114,7 +113,7 @@ class SNPLineageDetector(Tool):
         return lineage_snps
 
     @staticmethod
-    def __parse_vcf(file_path: Path) -> List[VcfRecord]:
+    def __parse_vcf(file_path: Path) -> list[VcfRecord]:
         """
         Parses the keys of the variants.
         :param file_path: VCF file path
@@ -124,8 +123,8 @@ class SNPLineageDetector(Tool):
             vcf_reader = vcf.Reader(handle)
             return list(vcf_reader)
 
-    def __get_detected_snps(self, snps: List[LineageSNP], variants: List[VcfRecord], variants_filt: List[VcfRecord]) \
-            -> List[LineageSNP]:
+    def __get_detected_snps(self, snps: list[LineageSNP], variants: list[VcfRecord], variants_filt: list[VcfRecord]) \
+            -> list[LineageSNP]:
         """
         Returns the SNP positions detected in the sample.
         :param snps: Lineage SNP positions
@@ -148,7 +147,7 @@ class SNPLineageDetector(Tool):
                     snp.passes_filtering = snp.start in variants_filt_by_pos
         return detected_snps
 
-    def __count_lineage_snps(self) -> Dict[Lineage, int]:
+    def __count_lineage_snps(self) -> dict[Lineage, int]:
         """
         Counts the number of SNPs for each lineage.
         :return: Dictionary of number of SNPs for each lineage
@@ -160,8 +159,8 @@ class SNPLineageDetector(Tool):
             counts_by_lineage[snp.lineage] += 1
         return counts_by_lineage
 
-    def __select_best_lineage_for_level(self, count_by_lineages: Dict[Lineage, int], level: int) \
-            -> Union[Dict[Any, int], None]:
+    def __select_best_lineage_for_level(self, count_by_lineages: dict[Lineage, int], level: int) \
+            -> Union[dict[Any, int], None]:
         """
         Selects the best lineage for the given level.
         :param count_by_lineages: Count by lineage

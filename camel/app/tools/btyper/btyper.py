@@ -1,10 +1,11 @@
 from pathlib import Path
-from camel.app.camel import Camel
+
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
+from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
 
 
 class BTyper(Tool):
@@ -12,12 +13,12 @@ class BTyper(Tool):
     In silico taxonomic classification of Bacillus cereus group isolates using assembled genomes.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('BTyper', '3.4.0', camel)
+        super().__init__('BTyper', '3.4.0')
 
     def _check_input(self) -> None:
         """
@@ -25,30 +26,33 @@ class BTyper(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('No FASTA input found')
+            raise InvalidToolInputError('No FASTA input found')
         super()._check_input()
 
     def _build_command(self, fasta_input: Path) -> None:
         """
         Build the command to run this tool.
+        :param fasta_input: Path to the FASTA input file.
         :return: None
         """
         self._command.command = ' '.join([self._tool_command, f'--input {fasta_input}', *self._build_options()])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks command output.
+        :param command: Command to check.
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """
         Collects the tool output.
+        :return: None
         """
         output_filename = f'btyper3_final_results/{self._tool_inputs["FASTA"][0].path.stem}_final_results.txt'
-        self._tool_outputs['TSV'] = [ToolIOFile(Path(self._parameters['output_dir'].value) / Path(output_filename))]
+        self._tool_outputs['TSV'] = [
+            ToolIOFile(self.folder / Path(self._parameters['output_dir'].value) / Path(output_filename))]
 
     def _execute_tool(self) -> None:
         """

@@ -1,6 +1,20 @@
-dependencies: [masurca/4.1.0, bwa/0.7.17]
+dependencies:
+  - masurca/4.1.0
+  - bwa/0.7.17
 parameters:
-  threads: {default: true, mandatory: false, option: -t, value: '4'}
-  only_create_vcf: {default: false, mandatory: false, option: -n, value: None}
-  memory_per_thread: {default: false, mandatory: false, option: -m, value: None}
+  threads:
+    default: true
+    mandatory: false
+    option: '-t'
+    value: '4'
+  only_create_vcf:
+    default: false
+    mandatory: false
+    option: '-n'
+    flag: true
+  memory_per_thread:
+    default: false
+    mandatory: false
+    option: '-m'
+    value: null
 tool_command: polca.sh

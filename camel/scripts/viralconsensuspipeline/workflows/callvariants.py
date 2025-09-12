@@ -1,11 +1,10 @@
 import dataclasses
 import logging
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 import vcf
 
-from camel.app.camel import Camel
 from camel.app.command.command import Command
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.clair3.clair3 import Clair3
@@ -17,11 +16,11 @@ class CallVariantsOutput:
     Holder for the output of the variant calling output.
     """
     path_vcf: Path
-    stats: Dict[str, Any]
-    informs: List[Dict]
+    stats: dict[str, Any]
+    informs: list[dict]
 
 
-class CallVariants(object):
+class CallVariants:
     """
     Wrapper around the variant callers for the viral consensus pipeline.
     """
@@ -38,7 +37,7 @@ class CallVariants(object):
             self._dir.mkdir(parents=True)
         self._informs = []
 
-    def run(self, bam_in: Path, fasta_ref: Path, input_type: str, caller: str, params: Dict[str, Any],
+    def run(self, bam_in: Path, fasta_ref: Path, input_type: str, caller: str, params: dict[str, Any],
             threads: int = 4) -> CallVariantsOutput:
         """
         Runs the variant caller.
@@ -100,7 +99,7 @@ class CallVariants(object):
         :param path_model: Path to the Clair3 model
         :param threads: Number of threads
         """
-        clair3 = Clair3(Camel.get_instance())
+        clair3 = Clair3()
         clair3.add_input_files({'FASTA': [ToolIOFile(path_fasta)], 'BAM': [ToolIOFile(bam_in)]})
 
         # Check if the model exists
@@ -117,7 +116,7 @@ class CallVariants(object):
         clair3.run(self._dir)
         return clair3.tool_outputs['VCF'][0].path
 
-    def _extract_stats(self, path_vcf: Path) -> Dict[str, Any]:
+    def _extract_stats(self, path_vcf: Path) -> dict[str, Any]:
         """
         Extracts variant calling stats by parsing the output VCF file.
         :param path_vcf: Input VCF file

@@ -1,4 +1,11 @@
-dependencies: [abritamr/1.1.0, blast/2.16.0, amrfinder/4.0.19]
+dependencies:
+  - abritamr/1.0.19
+  - blast/2.14.0
+  - amrfinder/3.12.8
 parameters:
-  output_filename: {default: true, mandatory: true, option: -r, value: report_abritamr}
+  output_filename:
+    default: true
+    mandatory: true
+    option: '-r'
+    value: report_abritamr
 tool_command: abritamr report

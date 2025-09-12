@@ -1,4 +1,4 @@
-from typing import List, Any, Optional
+from typing import Any, Optional
 
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
@@ -34,14 +34,14 @@ class SequenceTypingSRST2Hit(SequenceTypingHitBase):
         return SequenceTypingSRST2Hit(locus, '-', '-', '-', 0.0)
 
     @staticmethod
-    def table_column_names() -> List[str]:
+    def table_column_names() -> list[str]:
         """
         Returns the column names for the tabular output.
         :return: Table column names
         """
         return ['Locus', 'Allele', 'Mismatches', 'Uncertainty', 'Depth']
 
-    def to_table_row(self, hash_allele_ids: bool = False) -> List[str]:
+    def to_table_row(self, hash_allele_ids: bool = False) -> list[str]:
         """
         Returns the hit as a row in a table.
         :param hash_allele_ids: If True, hashes for new allele ids are included
@@ -52,18 +52,18 @@ class SequenceTypingSRST2Hit(SequenceTypingHitBase):
             self.allele_id,
             self._mismatches,
             self._uncertainty,
-            '{:.2f}'.format(float(self._depth)) if self._depth is not None else '-'
+            f'{float(self._depth):.2f}' if self._depth is not None else '-'
         ]
 
     @staticmethod
-    def html_column_names() -> List[str]:
+    def html_column_names() -> list[str]:
         """
         Returns the HTML column names.
         :return: HTML column names
         """
         return SequenceTypingSRST2Hit.table_column_names()
 
-    def to_html_row(self, report_section: HtmlReportSection, sub_dir: str = None) -> List[Any]:
+    def to_html_row(self, report_section: HtmlReportSection, sub_dir: str = None) -> list[Any]:
         """
         Returns the hit as a HTML row.
         :param report_section: Section is passed to save the alignments

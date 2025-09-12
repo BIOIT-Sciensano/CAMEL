@@ -1,23 +1,35 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Dict, Any, Sequence
+from typing import Any, Optional
 
 from camel.app.camel import Camel
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.phylogeny.snpphylogenyutils import SnpPhylogenyUtils, Sample, MappingInput
+from camel.app.components.phylogeny.snpphylogenyutils import (
+    MappingInput,
+    Sample,
+    SnpPhylogenyUtils,
+)
 from camel.app.components.workflows.variantcallingwrapper import VariantCallingOutput
-from camel.app.components.workflows.variantfilteringwrapper import VariantFilteringOutput
+from camel.app.components.workflows.variantfilteringwrapper import (
+    VariantFilteringOutput,
+)
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
-from camel.scripts.snpphylogeny import SNAKEFILE_SAMTOOLS_CALLING_ALL, SNAKEFILE_SAMTOOLS_FILTERING_ALL
+from camel.scripts.snpphylogeny import (
+    SNAKEFILE_SAMTOOLS_CALLING_ALL,
+    SNAKEFILE_SAMTOOLS_FILTERING_ALL,
+)
 from camel.scripts.snpphylogeny.basephylo import BasePhylo
 from camel.scripts.snpphylogeny.snakefile.samtools_calling_all import OUTPUT_CALLING_ALL
-from camel.scripts.snpphylogeny.snakefile.samtools_filtering_all import OUTPUT_FILTERING_ALL
+from camel.scripts.snpphylogeny.snakefile.samtools_filtering_all import (
+    OUTPUT_FILTERING_ALL,
+)
 
 
 class MainSamtoolsPhylo(BasePhylo):
@@ -26,8 +38,8 @@ class MainSamtoolsPhylo(BasePhylo):
     """
 
     # Type aliases
-    FilteringOutBySample = Dict[Sample, VariantFilteringOutput]
-    CallingOutBySample = Dict[Sample, VariantCallingOutput]
+    FilteringOutBySample = dict[Sample, VariantFilteringOutput]
+    CallingOutBySample = dict[Sample, VariantCallingOutput]
 
     PARAMETER_MAPPING = {
         'depth': {
@@ -129,12 +141,12 @@ class MainSamtoolsPhylo(BasePhylo):
         if link_path.is_symlink():
             link_path.unlink()
         link_path.symlink_to(self._args.reference)
-        bt2_index = Bowtie2Index(Camel.get_instance())
+        bt2_index = Bowtie2Index()
         bt2_index.add_input_files({'FASTA_REF': [ToolIOFile(link_path)]})
         bt2_index.run(dir_ref)
         return bt2_index.tool_outputs['INDEX_GENOME_PREFIX'][0].value
 
-    def __run_variant_calling_workflow(self, reference: Path, mapping_input: Dict[Sample, MappingInput]) -> \
+    def __run_variant_calling_workflow(self, reference: Path, mapping_input: dict[Sample, MappingInput]) -> \
             CallingOutBySample:
         """
         Runs the variant filtering workflow in parallel on all samples.
@@ -154,10 +166,9 @@ class MainSamtoolsPhylo(BasePhylo):
             }
         }
         config_file = SnakePipelineUtils.generate_config_file(config_data, working_dir)
-        output_path = working_dir / OUTPUT_CALLING_ALL
         SnakePipelineUtils.run_snakemake(
-            SNAKEFILE_SAMTOOLS_CALLING_ALL, config_file, [output_path], working_dir, self._args.threads)
-        return {self.samples_by_name[name]: output for name, output in SnakemakeUtils.load_object(output_path).items()}
+            SNAKEFILE_SAMTOOLS_CALLING_ALL, config_file, [Path(OUTPUT_CALLING_ALL)], working_dir, self._args.threads)
+        return {self.samples_by_name[name]: output for name, output in snakemakeutils.load_object(working_dir / OUTPUT_CALLING_ALL).items()}
 
     def __run_variant_filtering_workflow(self, calling_output_by_sample: CallingOutBySample) -> FilteringOutBySample:
         """
@@ -171,12 +182,12 @@ class MainSamtoolsPhylo(BasePhylo):
         }
         config_data = {'working_dir': str(working_dir), 'samples': samples, 'options': self.__get_filtering_options()}
         config_file = SnakePipelineUtils.generate_config_file(config_data, working_dir)
-        output_path = working_dir / OUTPUT_FILTERING_ALL
+        output_path = OUTPUT_FILTERING_ALL
         SnakePipelineUtils.run_snakemake(
             SNAKEFILE_SAMTOOLS_FILTERING_ALL, config_file, [output_path], working_dir, self._args.threads)
-        return {self.samples_by_name[name]: output for name, output in SnakemakeUtils.load_object(output_path).items()}
+        return {self.samples_by_name[name]: output for name, output in snakemakeutils.load_object(working_dir / output_path).items()}
 
-    def __get_filtering_options(self) -> Dict[str, Any]:
+    def __get_filtering_options(self) -> dict[str, Any]:
         """
         Returns the dictionary with filtering options.
         :return: Filtering options as a dictionary

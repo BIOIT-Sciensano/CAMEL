@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
-
 # noinspection PyProtectedMember
 from vcf.model import _Record as Record
 
@@ -23,6 +21,9 @@ GENETIC_GROUPS = [
 
 @dataclass
 class SNPPosition:
+    """
+    Holder class for SNP positions.
+    """
     pos: int
     name: str
     ref: str
@@ -63,12 +64,15 @@ class SNPPosition:
 
 @dataclass
 class SCGProfile:
+    """
+    Holder class for SCG profiles.
+    """
     st: str
     scg: str
     snps: str
 
 
-def parse_snp_positions(positions_path: Path) -> List[SNPPosition]:
+def parse_snp_positions(positions_path: Path) -> list[SNPPosition]:
     """
     Parses the SNP positions from the tabular input file.
     :param positions_path: Path to the SNP positions BED file
@@ -82,7 +86,7 @@ def parse_snp_positions(positions_path: Path) -> List[SNPPosition]:
     return sorted(positions, key=lambda p: p.name)
 
 
-def parse_scg_profiles(profiles_path: Path) -> List[SCGProfile]:
+def parse_scg_profiles(profiles_path: Path) -> list[SCGProfile]:
     """
     Parses the SNP cluster group (SCG) profiles.
     :param profiles_path: Profiles file path

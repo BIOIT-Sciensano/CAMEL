@@ -1,14 +1,70 @@
-dependencies: [muscle/3.8.31]
+dependencies:
+  - muscle/3.8.31
 parameters:
-  out: {default: true, mandatory: false, option: -out, p_index: 0, value: 'muscle_alignment.fasta'}
-  diags: {default: false, mandatory: false, option: -diags, p_index: 0, value: None}
-  maxiters: {default: false, mandatory: false, option: -maxiters, p_index: 0, value: 16}
-  maxhours: {default: false, mandatory: false, option: -maxhours, p_index: 0, value: 9999}
-  html: {default: false, mandatory: false, option: -html, p_index: 0, value: None}
-  msf: {default: false, mandatory: false, option: -msf, p_index: 0, value: None}
-  clw: {default: false, mandatory: false, option: -clw, p_index: 0, value: None}
-  clwstrict: {default: false, mandatory: false, option: -clwstrict, p_index: 0, value: None}
-  log: {default: false, mandatory: false, option: -log, p_index: 0, value: 'muscle.log'}
-  loga: {default: false, mandatory: false, option: -loga, p_index: 0, value: 'muscle.log'}
-  quiet: {default: false, mandatory: false, option: -quiet, p_index: 0, value: None}
+  out:
+    default: true
+    mandatory: false
+    option: '-out'
+    p_index: 0
+    value: muscle_alignment.fasta
+  diags:
+    default: false
+    mandatory: false
+    option: '-diags'
+    p_index: 0
+    value: None
+  maxiters:
+    default: false
+    mandatory: false
+    option: '-maxiters'
+    p_index: 0
+    value: 16
+  maxhours:
+    default: false
+    mandatory: false
+    option: '-maxhours'
+    p_index: 0
+    value: 9999
+  html:
+    default: false
+    mandatory: false
+    option: '-html'
+    p_index: 0
+    value: None
+  msf:
+    default: false
+    mandatory: false
+    option: '-msf'
+    p_index: 0
+    value: None
+  clw:
+    default: false
+    mandatory: false
+    option: '-clw'
+    p_index: 0
+    value: None
+  clwstrict:
+    default: false
+    mandatory: false
+    option: '-clwstrict'
+    p_index: 0
+    value: None
+  log:
+    default: false
+    mandatory: false
+    option: '-log'
+    p_index: 0
+    value: muscle.log
+  loga:
+    default: false
+    mandatory: false
+    option: '-loga'
+    p_index: 0
+    value: muscle.log
+  quiet:
+    default: false
+    mandatory: false
+    option: '-quiet'
+    p_index: 0
+    value: None
 tool_command: muscle

@@ -1,8 +1,10 @@
 import os
 import os.path
+from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -13,13 +15,12 @@ class RefCov(Tool):
     data across a reference.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('refcov', '0.3', camel)
+        super().__init__('refcov', '0.3')
 
     def _execute_tool(self):
         """
@@ -40,13 +41,13 @@ class RefCov(Tool):
         """
         super(RefCov, self)._check_input()
         if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BAM input key is required for RefCov: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('BAM input key is required for RefCov: {!r}'.format(self._tool_inputs))
         for key, value in self._tool_inputs.items():
             if key not in ['BAM', 'BED'] or len(value) > 1:
-                raise InvalidInputSpecificationError('Invalid input given for RefCov '
+                raise InvalidToolInputError('Invalid input given for RefCov '
                                                      '(BAM/BED and 1 file per key): {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidInputSpecificationError('Too many input keys given for RefCov (only BAM/BED allowed): {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Too many input keys given for RefCov (only BAM/BED allowed): {!r}'.format(self._tool_inputs))
 
     def __build_basename(self, infiles):
         """
@@ -74,7 +75,7 @@ class RefCov(Tool):
         :return: None
         """
         basename = self.__get_basename()
-        self._tool_outputs['TSV'] = [ToolIOFile(basename + '_STATS.tsv')]
+        self._tool_outputs['TSV'] = [ToolIOFile(Path(basename + '_STATS.tsv'))]
 
     def __build_input_string(self):
         """
@@ -99,10 +100,10 @@ class RefCov(Tool):
         options_string = ' '.join(self._build_options())
         self._command.command = ' '.join([self._tool_command, input_string, options_string])
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

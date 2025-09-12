@@ -3,25 +3,24 @@ from typing import Any
 
 from camel.resources.snakefile import read_simulation
 
-SNAKEFILE_VARIANT_CALLING = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_variant_calling = Path('variant_calling')
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
-OUTPUT_VARIANT_CALLING_REPORT = _dir_variant_calling / 'report' / 'html.io'
-OUTPUT_VARIANT_CALLING_REPORT_EMPTY = _dir_variant_calling / 'report' / 'html-empty.io'
-OUTPUT_VARIANT_CALLING_SUMMARY = _dir_variant_calling / 'summary' / 'summary_out.tsv'
-OUTPUT_VARIANT_CALLING_DEPTH_INFORMS = _dir_variant_calling / 'depth' / 'informs.io'
-OUTPUT_VARIANT_CALLING_DEPTH_TSV = _dir_variant_calling / 'depth' / 'tsv.io'
-OUTPUT_VARIANT_CALLING_UNFILTERED_VCF = _dir_variant_calling / 'unzip_vcf' / 'vcf.io'
-OUTPUT_VARIANT_CALLING_UNFILTERED_VCF_GZ = _dir_variant_calling / 'norm' / 'vcf_gz-indexed.io'
-OUTPUT_VARIANT_CALLING_CONSENSUS = _dir_variant_calling / 'consensus' / 'fasta.io'
-OUTPUT_VARIANT_CALLING_FILTERED_VCF = _dir_variant_calling / 'unzip_vcf_filtered' / 'vcf.io'
-OUTPUT_VARIANT_CALLING_FILTERED_VCF_GZ = _dir_variant_calling / 'filter_zscore' / 'vcf_gz-indexed.io'
-OUTPUT_VARIANT_CALLING_MAPPING_RATE_INFORMS = _dir_variant_calling / 'rate' / 'informs.io'
-OUTPUT_VARIANT_CALLING_MAPPING_INFORMS = _dir_variant_calling / 'read_mapping' / 'informs.io'
-OUTPUT_VARIANT_CALLING_INFORMS_ALL = _dir_variant_calling / 'informs_all.io'
+OUTPUT_REPORT = 'variant_calling/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'variant_calling/report/html-empty.iob'
+OUTPUT_SUMMARY = 'variant_calling/summary/summary_out.{ext}'
+OUTPUT_DEPTH_INFORMS = 'variant_calling/depth/informs.io'
+OUTPUT_DEPTH_TSV = 'variant_calling/depth/tsv.io'
+OUTPUT_UNFILTERED_VCF = 'variant_calling/unzip_vcf/vcf.io'
+OUTPUT_UNFILTERED_VCF_GZ = 'variant_calling/norm/vcf_gz-indexed.io'
+OUTPUT_CONSENSUS = 'variant_calling/consensus/fasta.io'
+OUTPUT_FILTERED_VCF = 'variant_calling/unzip_vcf_filtered/vcf.io'
+OUTPUT_FILTERED_VCF_GZ = 'variant_calling/filter_zscore/vcf_gz-indexed.io'
+OUTPUT_MAPPING_RATE_INFORMS = 'variant_calling/rate/informs.io'
+OUTPUT_MAPPING_INFORMS = 'variant_calling/read_mapping/informs.io'
+OUTPUT_INFORMS_ALL = 'variant_calling/informs_all.io'
 
 
-def get_mapping_fq_input(config: dict[str, Any]) -> Path:
+def get_mapping_fq_input(config: dict[str, Any]) -> str:
     """
     Returns the fq input file path needed for mapping.
     :param config: Snakemake configuration
@@ -29,13 +28,13 @@ def get_mapping_fq_input(config: dict[str, Any]) -> Path:
     """
     # ONT and hybrid were added because otherwise some tests of the MockPipeline fail
     if config['input_type'] in ('illumina', 'ont', 'hybrid'):
-        return Path(config['working_dir']) / 'fq_dict.io'
+        return 'fq_dict.io'
     if config['input_type'] in ('fasta', 'fasta_with_vcf'):
-        return Path(config['working_dir']) / read_simulation.OUTPUT_SIMULATION_FASTQ
+        return read_simulation.OUTPUT_FASTQ
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
 
-def get_bam(config: dict[str, Any]) -> Path:
+def get_bam(config: dict[str, Any]) -> str:
     """
     Returns the BAM output IO object path.
     :param config: Snakemake configuration
@@ -43,41 +42,41 @@ def get_bam(config: dict[str, Any]) -> Path:
     """
     # ONT and hybrid were added because otherwise some tests of the MockPipeline fail
     if config['input_type'] in ('illumina', 'fasta', 'hybrid'):
-        return Path(config['working_dir']) / 'variant_calling' / 'read_mapping' / 'illumina' / 'bam.io'  # OUTPUT_VARIANT_CALLING_BAM_ILLUMINA
+        return 'variant_calling/read_mapping/illumina/bam.io'  # OUTPUT_BAM_ILLUMINA
     if config['input_type'] == 'ont':
-        return Path(config['working_dir']) / 'variant_calling' / 'read_mapping' / 'ont' / 'bam.io'  # OUTPUT_VARIANT_CALLING_BAM_ONT
+        return 'variant_calling/read_mapping/ont/bam.io'  # OUTPUT_BAM_ONT
     if config['input_type'] == 'fasta_with_vcf':
-        return Path(config['working_dir']) / 'variant_calling' / 'dummy_bam' / 'bam.io'
+        return 'variant_calling/dummy_bam/bam.io'
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
 
-def get_vcf(config: dict[str, Any]) -> Path:
+def get_vcf(config: dict[str, Any]) -> str:
     """
     Returns the VCF output IO object path (before filtering).
     :param config: Snakemake configuration
     :return: Path to the unfiltered VCF file
     """
     if config['input_type'] in ('fasta', 'illumina', 'ont', 'hybrid'):
-        return OUTPUT_VARIANT_CALLING_UNFILTERED_VCF
+        return OUTPUT_UNFILTERED_VCF
     if config['input_type'] == 'fasta_with_vcf':
-        return Path(config['working_dir']) / 'input' / 'vcf.io'
+        return 'input/vcf.io'
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
 
-def get_vcf_gz(config: dict[str, Any]) -> Path:
+def get_vcf_gz(config: dict[str, Any]) -> str:
     """
     Returns the VCF GZ output IO object path (before filtering).
     :param config: Snakemake configuration
     :return: Path to the unfiltered gzipped VCF file
     """
     if config['input_type'] in ('fasta', 'illumina', 'ont', 'hybrid'):
-        return OUTPUT_VARIANT_CALLING_UNFILTERED_VCF_GZ
+        return OUTPUT_UNFILTERED_VCF_GZ
     if config['input_type'] == 'fasta_with_vcf':
-        return Path(config['working_dir']) / 'variant_calling' / 'gzip' / 'vcf_gz.io'
+        return 'variant_calling/gzip/vcf_gz.io'
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
 
-def get_reports(config: dict[str, Any]) -> Path:
+def get_reports(config: dict[str, Any]) -> str:
     """
     Returns the path to the variant calling report.
     :param config: Snakemake configuration
@@ -85,13 +84,13 @@ def get_reports(config: dict[str, Any]) -> Path:
     """
     input_type = config['input_type']
     if input_type in ('illumina', 'fasta', 'ont'):
-        return Path(config['working_dir']) / OUTPUT_VARIANT_CALLING_REPORT
+        return OUTPUT_REPORT
     if input_type == 'fasta_with_vcf':
-        return Path(config['working_dir']) / OUTPUT_VARIANT_CALLING_REPORT_EMPTY
+        return OUTPUT_REPORT_EMPTY
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
 
-def get_mapping_informs(config: dict[str, Any]) -> Path:
+def get_mapping_informs(config: dict[str, Any]) -> str:
     """
     Returns the paths to the variant calling mapping informs.
     :param config: config
@@ -101,9 +100,9 @@ def get_mapping_informs(config: dict[str, Any]) -> Path:
 
     if input_type in ('illumina', 'fasta', 'fasta_with_vcf', 'hybrid'):
         # For hybrid, Illumina reads are used for now
-        return Path(config['working_dir']) / 'variant_calling' / 'read_mapping' / 'illumina' / 'informs.io'
+        return 'variant_calling/read_mapping/illumina/informs.io'
     elif input_type == 'ont':
-        return Path(config['working_dir']) / 'variant_calling' / 'read_mapping' / 'ont' / 'informs.io'
+        return 'variant_calling/read_mapping/ont/informs.io'
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
 def get_summaries(config: dict[str, Any]) -> list[Path]:
@@ -115,8 +114,8 @@ def get_summaries(config: dict[str, Any]) -> list[Path]:
     input_type = config['input_type']
     paths = []
     if input_type in ('illumina', 'fasta', 'ont'):
-        paths.append(OUTPUT_VARIANT_CALLING_SUMMARY)
-    return [Path(config['working_dir']) / p for p in paths]
+        paths.append(OUTPUT_SUMMARY)
+    return [p for p in paths]
 
 
 def get_command_informs(config: dict[str, Any]) -> list[Path]:
@@ -128,5 +127,5 @@ def get_command_informs(config: dict[str, Any]) -> list[Path]:
     input_type = config['input_type']
     paths = []
     if input_type in ('illumina', 'fasta', 'ont'):
-        paths.append(OUTPUT_VARIANT_CALLING_INFORMS_ALL)
-    return [Path(config['working_dir']) / p for p in paths]
+        paths.append(OUTPUT_INFORMS_ALL)
+    return [p for p in paths]

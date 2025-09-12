@@ -1,4 +1,3 @@
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -21,15 +20,6 @@ class VCFtools(Tool):
     -------
     'VCF_GZ':               ToolIOFile object. Processed file in bg-zipped VCF format
     """
-
-    def __init__(self, camel: Camel) -> None:
-        """
-        Initialize tool
-        :param camel: Camel instance
-        :return: None
-        """
-        super().__init__('vcftools', '0.1.16', camel)
-        self._specific_parameters = []
 
     def _execute_tool(self) -> None:
         """

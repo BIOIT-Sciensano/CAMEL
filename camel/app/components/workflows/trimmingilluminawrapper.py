@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import trimming_illumina
 
@@ -63,41 +63,44 @@ class TrimmingIlluminaWrapper:
         config_file = SnakePipelineUtils.generate_config_file(config_data, self._working_dir)
 
         # Dump the input files in an IO file
-        io_pickle_in = Path(self._working_dir / trimming_illumina.INPUT_TRIMMING_FASTQ)
+        io_pickle_in = Path(self._working_dir / trimming_illumina.INPUT_FASTQ)
         io_pickle_in.parent.mkdir(exist_ok=True, parents=True)
-        SnakemakeUtils.dump_object([ToolIOFile(x) for x in pe_reads], io_pickle_in)
+        snakemakeutils.dump_object([ToolIOFile(x) for x in pe_reads], io_pickle_in)
 
         # Output files
         output_files = {
-            'FASTQ': self._working_dir / trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_DICT,
-            'HTML': self._working_dir / trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_REPORT,
-            'INFORMS': self._working_dir / trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_INFORMS,
-            'TSV': self._working_dir / trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_SUMMARY
+            'FASTQ': trimming_illumina.OUTPUT_DICT,
+            'HTML': trimming_illumina.OUTPUT_REPORT,
+            'INFORMS': trimming_illumina.OUTPUT_INFORMS,
+            'TSV': str(trimming_illumina.OUTPUT_SUMMARY).format(ext='tsv'),
+            'FASTQC_PRE': trimming_illumina.OUTPUT_FASTQC_HTML_PRE,
+            'FASTQC_POST': trimming_illumina.OUTPUT_FASTQC_HTML_POST,
         }
         SnakePipelineUtils.run_snakemake(
-            trimming_illumina.SNAKEFILE_TRIMMING_ILLUMINA, config_file, list(output_files.values()), self._working_dir,
-            threads)
+            snakefile=trimming_illumina.SNAKEFILE,
+            config_path=config_file,
+            targets=[Path(p) for p in output_files.values()],
+            working_dir=self._working_dir,
+            threads=threads)
         self.__set_output(output_files)
 
-    def __set_output(self, output_files: dict[str, Path]) -> None:
+    def __set_output(self, output_files: dict[str, str]) -> None:
         """
         Sets the output of this tool.
         :param output_files: Output files by key.
         :return: None
         """
         log_path = self._working_dir / 'camel.log'
-        fq_dict = SnakemakeUtils.load_object(output_files['FASTQ'])
+        fq_dict = snakemakeutils.load_object(self._working_dir / output_files['FASTQ'])
         self._output = TrimmingIlluminaWrapper.ReadTrimmingOutput(
-            report_section=SnakemakeUtils.load_object(output_files['HTML'])[0].value,
-            tsv_summary=output_files['TSV'],
+            report_section=snakemakeutils.load_object(self._working_dir / output_files['HTML'])[0].value,
+            tsv_summary=self._working_dir / output_files['TSV'],
             trimmed_reads_pe=fq_dict['PE'],
             trimmed_reads_se_fwd=fq_dict['SE_FWD'] if 'SE_FWD' in fq_dict else [],
             trimmed_reads_se_rev=fq_dict['SE_REV'] if 'SE_REV' in fq_dict else [],
-            informs_trimming=SnakemakeUtils.load_object(output_files['INFORMS']),
-            fastq_reports_pre=SnakemakeUtils.load_object(
-                self._working_dir / trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_FASTQC_HTML_PRE),
-            fastq_reports_post=SnakemakeUtils.load_object(
-                self._working_dir / trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_FASTQC_HTML_POST),
+            informs_trimming=snakemakeutils.load_object(self._working_dir / output_files['INFORMS']),
+            fastq_reports_pre=snakemakeutils.load_object(self._working_dir / output_files['FASTQC_PRE']),
+            fastq_reports_post=snakemakeutils.load_object(self._working_dir / output_files['FASTQC_POST']),
             log_file=log_path if log_path.exists() else None
         )
 

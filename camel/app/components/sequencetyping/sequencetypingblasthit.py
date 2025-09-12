@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, List, Any
+from typing import Optional, Any
 
 from camel.app.components.blast.blasthitstatistics import BlastHitStatistics
 from camel.app.components.html.htmlreportsection import HtmlReportSection
@@ -30,14 +30,14 @@ class SequenceTypingBlastHit(SequenceTypingHitBase):
         self._alignment_path = None
 
     @staticmethod
-    def table_column_names() -> List[str]:
+    def table_column_names() -> list[str]:
         """
         Returns the column names for the tabular output.
         :return: Table column names
         """
         return ['Locus', 'Allele', '% Identity', 'HSP/Locus length', 'Type']
 
-    def to_table_row(self, hash_allele_ids: bool = False) -> List[str]:
+    def to_table_row(self, hash_allele_ids: bool = False) -> list[str]:
         """
         Returns the hit as a row in a table.
         :param hash_allele_ids: If True, hashes for new allele ids are included
@@ -61,20 +61,35 @@ class SequenceTypingBlastHit(SequenceTypingHitBase):
         return [
             self.locus,
             allele_id,
-            '{:.2f}'.format(perc_identity) if perc_identity is not None else '-',
+            f'{perc_identity:.2f}' if perc_identity is not None else '-',
             self.blast_stats.length_statistic if self.blast_stats else '-',
             self._type
         ]
 
+    def to_dict(self, include_hashing: bool = False) -> dict[str, Any]:
+        """
+        Returns the hit as a dictionary.
+        :param include_hashing: Whether to include the hashing info if a new allele is found
+        :return: Hit dictionary
+        """
+        result = super().to_dict()
+        if include_hashing and self.is_new_allele():
+            result.update({
+                'New allele': True,
+                'Allele (hash)': self.new_allele_hash(full_length=True),
+                'Allele sequence': str(self.new_allele_sequence)
+            })
+        return result
+
     @staticmethod
-    def html_column_names() -> List[str]:
+    def html_column_names() -> list[str]:
         """
         Returns the HTML column names.
         :return: HTML column names
         """
         return SequenceTypingBlastHit.table_column_names() + ['Alignment']
 
-    def to_html_row(self, report_section: HtmlReportSection, sub_dir: Path = None) -> List[Any]:
+    def to_html_row(self, report_section: HtmlReportSection, sub_dir: Path = None) -> list[Any]:
         """
         Returns the hit as a row in a table.
         :param report_section: Section is passed to save the alignments
@@ -91,7 +106,7 @@ class SequenceTypingBlastHit(SequenceTypingHitBase):
             self.locus,
             HtmlTableCell(
                 self.allele_id + ('*' if self.is_new_allele() else ''), self.color, link=self.allele_page_url),
-            '{:.2f}'.format(self.blast_stats.percent_identity) if self.blast_stats else '-',
+            f'{self.blast_stats.percent_identity:.2f}' if self.blast_stats else '-',
             self.blast_stats.length_statistic if self.blast_stats else '-',
             self._type,
             alignment_cell

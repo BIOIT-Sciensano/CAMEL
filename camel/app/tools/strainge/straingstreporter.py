@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -19,12 +18,11 @@ class StrainGSTReporter(Tool):
     TITLE = 'StrainGST'
     URL_PUBMED = 'https://www.ncbi.nlm.nih.gov/pubmed/{id}'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('StrainGST Reporter', '0.1', camel)
+        super().__init__('StrainGST Reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -32,9 +30,9 @@ class StrainGSTReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('StrainGST strains input (TSV) is required.')
+            raise InvalidToolInputError('StrainGST strains input (TSV) is required.')
         if 'straingst' not in self._input_informs:
-            raise InvalidInputSpecificationError('StrainGST informs are required.')
+            raise InvalidToolInputError('StrainGST informs are required.')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -47,8 +45,9 @@ class StrainGSTReporter(Tool):
 
         # Add output tables
         output_table = self.__parse_input_file()
-        self.__add_output_table(section, output_table.columns, output_table.values.tolist(),
-                                f'StrainGST strain identification - {suffix_read_type}')
+        self.__add_output_table(
+            section, list(output_table.columns), output_table.values.tolist(),
+            f'StrainGST strain identification - {suffix_read_type}')
 
         # Add link to TSV file
         relative_path = Path('straingst') / self._tool_inputs['TSV'][0].path.name
@@ -63,15 +62,16 @@ class StrainGSTReporter(Tool):
         Parses the input file.
         :return: Dataframe with relevant columns
         """
-        to_return = pd.read_table(self._tool_inputs['TSV'][0].path, header=0,
-                                  usecols=[1, 5, 9, 11, 14],
-                                  names=['Strain', 'Coverage', 'Evenness', 'Relative abundance', 'Score'])
-        to_return['Coverage'] = pd.Series(["{0:.2f}%".format(float(val) * 100) for val in to_return['Coverage']],
-                                          index=to_return.index)
-        to_return['Evenness'] = pd.Series(["{0:.2f}%".format(float(val) * 100) for val in to_return['Evenness']],
-                                          index=to_return.index)
+        to_return = pd.read_table(
+            self._tool_inputs['TSV'][0].path, header=0,
+            usecols=[1, 5, 9, 11, 14],
+            names=['Strain', 'Coverage', 'Evenness', 'Relative abundance', 'Score'])
+        to_return['Coverage'] = pd.Series([
+            f"{float(val) * 100:.2f}%" for val in to_return['Coverage']], index=to_return.index)
+        to_return['Evenness'] = pd.Series(
+            [f"{float(val) * 100:.2f}%" for val in to_return['Evenness']], index=to_return.index)
         to_return['Relative abundance'] = pd.Series(
-            ["{0:.2f}%".format(float(val)) for val in to_return['Relative abundance']], index=to_return.index)
+            [f"{float(val):.2f}%" for val in to_return['Relative abundance']], index=to_return.index)
         return to_return
 
     def __generate_output_filename(self, prefix: str) -> str:
@@ -85,8 +85,8 @@ class StrainGSTReporter(Tool):
             return f'straingst_{prefix}.tsv'
 
     def __add_output_table(
-            self, section: HtmlReportSection, header: List[str],
-            data: List[List[Union[str, HtmlTableCell]]], prefix: str) -> None:
+            self, section: HtmlReportSection, header: list[str],
+            data: list[list[Union[str, HtmlTableCell]]], prefix: str) -> None:
         """
         Adds an output table to the HTML report.
         :param section: Report section

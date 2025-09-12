@@ -1,9 +1,8 @@
 import pandas as pd
 import yaml
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -20,12 +19,11 @@ class NextcladeSubTypeReporter(Tool):
         {'key': 'q_id', 'title': 'Query', 'fmt': lambda x: x.replace('.fasta', '')},
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Nextclade subtype reporter', '0.1', camel)
+        super().__init__('Nextclade subtype reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -33,9 +31,9 @@ class NextcladeSubTypeReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Nextclade TSV input is required')
+            raise InvalidToolInputError('Nextclade TSV input is required')
         if 'mash' not in self._input_informs:
-            raise InvalidInputSpecificationError('mash informs are required')
+            raise InvalidToolInputError('mash informs are required')
         super()._check_input()
 
     def _execute_tool(self) -> None:

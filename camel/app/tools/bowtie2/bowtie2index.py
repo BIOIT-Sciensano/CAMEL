@@ -1,29 +1,27 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.components.files.fileutils import FileUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
 
 class Bowtie2Index(Tool):
-
     """
     Index genome using 'bowtie2-build' cmd of Bowtie2
     """
 
     MULTI_FASTA_GENOME_FILE = 'concatenated.fasta'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize bowtie2 index
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('bowtie2 index', '2.5.1', camel)
+        super().__init__('bowtie2 index', '2.5.1')
 
     def _execute_tool(self) -> None:
         """
@@ -37,7 +35,7 @@ class Bowtie2Index(Tool):
             str(path_fasta),
             str(path_fasta)])
         self._execute_command()
-        self._tool_outputs['INDEX_GENOME_PREFIX'] = [ToolIOValue(path_fasta)]
+        self._tool_outputs['INDEX_GENOME_PREFIX'] = [ToolIOValue(str(path_fasta))]
 
     def __get_multi_fasta_genome_filename(self) -> Path:
         """
@@ -52,7 +50,7 @@ class Bowtie2Index(Tool):
         :return: None
         """
         if 'FASTA_REF' not in self._tool_inputs or len(self._tool_inputs['FASTA_REF']) == 0:
-            raise InvalidInputSpecificationError("FASTA_REF input is required")
+            raise InvalidToolInputError("FASTA_REF input is required")
         super()._check_input()
 
     def __collect_fasta_input(self) -> Path:
@@ -73,9 +71,10 @@ class Bowtie2Index(Tool):
                 path_fasta.symlink_to(self._tool_inputs['FASTA_REF'][0].path)
             return path_fasta
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command executed successfully.
+        :param command: Command to execute
+        :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(f'Error executing {self.name}: {self._command.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)

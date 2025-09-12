@@ -1,5 +1,16 @@
-dependencies: [minimap2/2.26]
+dependencies:
+  - minimap2/2.26
 parameters:
-  output_filename: {default: true, mandatory: true, option: null, p_index: 0, value: mapped_reads.sam}
-  threads: {default: true, mandatory: true, option: -t, p_index: 0, value: '8'}
+  output_filename:
+    default: true
+    mandatory: true
+    option: null
+    p_index: 0
+    value: mapped_reads.sam
+  threads:
+    default: true
+    mandatory: true
+    option: '-t'
+    p_index: 0
+    value: '8'
 tool_command: minimap2

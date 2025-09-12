@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -14,13 +15,12 @@ class SeqSero2(Tool):
     Salmonella serotype prediction from genome sequencing data.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('SeqSero2', '1.2.1', camel)
+        super().__init__('SeqSero2', '1.2.1')
 
     def _execute_tool(self) -> None:
         """
@@ -42,17 +42,17 @@ class SeqSero2(Tool):
         super(SeqSero2, self)._check_input()
         if not self._parameters.get('mode') \
                 or self._parameters['mode'].value not in ('kmer', 'allele', 'kmerread'):
-            raise InvalidInputSpecificationError("A Seqsero2 processing mode must be passed to the tool, "
+            raise InvalidToolInputError("A Seqsero2 processing mode must be passed to the tool, "
                                                  "choose from kmer, allele, or kmerread")
         if self._parameters['mode'].value == 'kmer':
             if 'FASTA' not in self._tool_inputs:
-                raise InvalidInputSpecificationError("FASTA input is required in kmer mode")
+                raise InvalidToolInputError("FASTA input is required in kmer mode")
         else:
             if sum(x in self._tool_inputs for x in ('FASTQ', 'FASTQ_PE', 'FASTQ_ONT')) != 1:  # not exactly one
-                raise InvalidInputSpecificationError(f"Exactly one FASTQ input is required in "
+                raise InvalidToolInputError(f"Exactly one FASTQ input is required in "
                                                      f"{self._parameters['mode'].value} mode")
             if self._parameters['mode'].value == 'allele' and 'FASTQ_ONT' in self._tool_inputs:
-                raise InvalidInputSpecificationError("allele mode is not available for nanopore FQ input.")
+                raise InvalidToolInputError("allele mode is not available for nanopore FQ input.")
 
     def __set_output(self) -> None:
         """
@@ -93,15 +93,14 @@ class SeqSero2(Tool):
 
         self._command.command = ' '.join(command_parts)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
         :return: None
         """
-        if 'error' in self.stderr.lower():
-            raise ToolExecutionError(f"Command execution failed (stderr: {self.stderr}).")
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        if 'error' in command.stderr.lower():
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __add_informs(self, input_folder: Path) -> None:
         """
@@ -115,4 +114,4 @@ class SeqSero2(Tool):
         with path_metadata.open() as handle:
             metadata = json.load(handle)
         self._informs.update(metadata)
-        self._informs['db_path'] = input_folder
+        self._informs['db_path'] = str(input_folder)

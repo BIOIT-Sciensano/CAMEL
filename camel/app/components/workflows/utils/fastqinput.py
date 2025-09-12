@@ -1,18 +1,21 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import Optional
 
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 
 
 @dataclass(frozen=True)
 class FastqInput:
+    """
+    Dataclass used to store FASTQ input/output in a standardized format.
+    """
     read_type: str
-    pe: Optional[List[ToolIOFile]] = None
-    se: Optional[List[ToolIOFile]] = None
-    se_fwd: Optional[List[ToolIOFile]] = None
-    se_rev: Optional[List[ToolIOFile]] = None
+    pe: Optional[list[ToolIOFile]] = None
+    se: Optional[list[ToolIOFile]] = None
+    se_fwd: Optional[list[ToolIOFile]] = None
+    se_rev: Optional[list[ToolIOFile]] = None
     is_trimmed: bool = False
     is_pe: bool = True
 
@@ -24,7 +27,7 @@ class FastqInput:
         """
         return self.pe is not None
 
-    def to_fq_dict(self) -> Dict[str, List[ToolIOFile]]:
+    def to_fq_dict(self) -> dict[str, list[ToolIOFile]]:
         """
         Converts the FASTQ input to an input dictionary for the workflow.
         :return: FASTQ dictionary
@@ -54,7 +57,7 @@ class FastqInput:
         :param read_type: Read type
         :return: FastqInput
         """
-        fq_dict = SnakemakeUtils.load_object(io)
+        fq_dict = snakemakeutils.load_object(io)
         return FastqInput(
             read_type,
             pe=fq_dict.get('PE'),

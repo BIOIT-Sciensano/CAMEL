@@ -2,12 +2,13 @@ import pandas as pd
 
 from pathlib import Path
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 
 
 class ShigaTyper(Tool):
@@ -15,12 +16,11 @@ class ShigaTyper(Tool):
     ShigaTyper does Shigella/EIEC identification and serotyping based on WGS data.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the ShigaTyper tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('ShigaTyper', '2.0.5', camel)
+        super().__init__('ShigaTyper', '2.0.5')
 
     def _check_input(self) -> None:
         """
@@ -30,7 +30,7 @@ class ShigaTyper(Tool):
         :return: None
         """
         if not any(x in self._tool_inputs for x in ('FASTQ_PE', 'FASTQ_SE')):
-            raise InvalidInputSpecificationError('FASTQ_PE or FASTQ_SE input is required.')
+            raise InvalidToolInputError('FASTQ_PE or FASTQ_SE input is required.')
         super()._check_input()
 
     def __build_command(self, sample_name: str) -> None:
@@ -53,13 +53,13 @@ class ShigaTyper(Tool):
             *self._build_options()
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(f'Error executing {self.name}: {self.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _execute_tool(self) -> None:
         """
@@ -72,7 +72,7 @@ class ShigaTyper(Tool):
 
         # Create dummy output for isolates not covered by the tool
         create_dummy_output = False
-        if 'Checkpoint 1 failed' in self.stderr:
+        if 'Checkpoint 1 failed' in self._command.stderr:
             create_dummy_output = True
 
         # Collect the output
@@ -83,7 +83,7 @@ class ShigaTyper(Tool):
                     logger.info(f'Creating dummy output file: {path_out}')
                     path_out.touch()
                 else:
-                    raise ToolExecutionError(f'{path_out} not generated ({key})')
+                    raise ToolExecutionError(self.name, f'{path_out} not generated ({key})')
             self._tool_outputs[key] = [ToolIOFile(path_out)]
 
         # Parse TSV output file

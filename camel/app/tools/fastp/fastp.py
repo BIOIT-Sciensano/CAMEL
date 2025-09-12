@@ -2,10 +2,10 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.tools.tool import Tool
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 
 
@@ -14,20 +14,21 @@ class Fastp(Tool):
     Fastp is an ultra-fast all-in-one FASTQ preprocessor.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('fastp', '0.23.4', camel)
+        super().__init__('fastp', '0.23.4')
 
     def _check_input(self) -> None:
         """
         Checks whether the required input files are specified.
         :return: None
         """
-        if 'FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError(f'FASTQ input is required')
+        toolutils.check_input(self, keys_required=['FASTQ'])
+        if len(self._tool_inputs['FASTQ']) not in (1, 2):
+            raise InvalidToolInputError('One or two FASTQ input files expected')
         super()._check_input()
 
     def __get_output_path(self, orientation: Optional[str], compress: bool = True) -> Path:
@@ -59,20 +60,21 @@ class Fastp(Tool):
             parts.append(f"--unpaired1 {self.__get_output_path(orientation='1U')}")
             parts.append(f"--unpaired2 {self.__get_output_path(orientation='2U')}")
         else:
-            raise InvalidInputSpecificationError(f'Invalid number of FASTQ input files (1 or 2 expected)')
+            raise ToolExecutionError(self.name, 'Invalid number of FASTQ input files (1 or 2 expected)')
         self._command.command = ' '.join([*parts, *self._build_options(excluded_parameters=['output_name'])])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Tool execution failed: {self._command.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """
-        set the output file to check
+        Collects the tool output.
+        :return: None
         """
         if len(self._tool_inputs['FASTQ']) == 1:
             self._tool_outputs['FASTQ'] = [ToolIOFile(self.__get_output_path(orientation=None))]
@@ -99,6 +101,7 @@ class Fastp(Tool):
         with self._tool_outputs['JSON'][0].path.open() as handle:
             data = json.load(handle)
         self._informs['summary'] = data['summary']
+        self._informs['duplication'] = data['duplication']
 
     def _execute_tool(self) -> None:
         """

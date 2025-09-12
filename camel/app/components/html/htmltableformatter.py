@@ -58,7 +58,11 @@ class HtmlTableFormatter:
                 if column.get('fmt') is None:
                     current_row.append(row_in[column['key']])
                 else:
-                    current_row.append(column['fmt'](row_in[column['key']]))
+                    try:
+                        current_row.append(column['fmt'](row_in[column['key']]))
+                    except ValueError as err:
+                        logger.error(f'Failed to format {column["key"]}: {err}')
+                        raise err
             if use_colors:
                 row_color = row_in['color']
                 current_row = [HtmlTableCell(value, color=row_color) for value in current_row]

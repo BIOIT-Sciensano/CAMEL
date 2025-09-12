@@ -7,26 +7,26 @@ from camel.resources.snakefile import trimming_illumina, trimming_ont, gene_dete
 #######################
 # Included Snakefiles #
 #######################
-include: core.SNAKEFILE_CORE
-include: human_read_scrubbing.SNAKEFILE_SCRUBBING
-include: read_simulation.SNAKEFILE_READ_SIMULATION
-include: downsampling.SNAKEFILE_DOWNSAMPLING
-include: trimming_illumina.SNAKEFILE_TRIMMING_ILLUMINA
-include: trimming_ont.SNAKEFILE_TRIMMING_ONT
-include: assembly.SNAKEFILE_ASSEMBLY
-include: quast.SNAKEFILE_QUAST
-include: contamination_check_kraken.SNAKEFILE_CONTAMINATION_CHECK_KRAKEN
-include: confindr.SNAKEFILE_CONFINDR
-include: quality_checks.SNAKEFILE_QUALITY_CHECKS
-include: variant_calling.SNAKEFILE_VARIANT_CALLING
-include: variant_filtering.SNAKEFILE_VARIANT_FILTERING
-include: lrefinder.SNAKEFILE_LREFINDER
-include: amrfinder.SNAKEFILE_AMRFINDER
-include: resfinder4.SNAKEFILE_RESFINDER4
-include: gene_detection.SNAKEFILE_GENE_DETECTION
-include: mobsuite.SNAKEFILE_MOB_SUITE
-include: bacmet.SNAKEFILE_BACMET
-include: sequence_typing.SNAKEFILE_SEQUENCE_TYPING
+include: core.SNAKEFILE
+include: human_read_scrubbing.SNAKEFILE
+include: read_simulation.SNAKEFILE
+include: downsampling.SNAKEFILE
+include: trimming_illumina.SNAKEFILE
+include: trimming_ont.SNAKEFILE
+include: assembly.SNAKEFILE
+include: quast.SNAKEFILE
+include: contamination_check_kraken.SNAKEFILE
+include: confindr.SNAKEFILE
+include: quality_checks.SNAKEFILE
+include: variant_calling.SNAKEFILE
+include: variant_filtering.SNAKEFILE
+include: lrefinder.SNAKEFILE
+include: amrfinder.SNAKEFILE
+include: resfinder4.SNAKEFILE
+include: gene_detection.SNAKEFILE
+include: mobsuite.SNAKEFILE
+include: bacmet.SNAKEFILE
+include: sequence_typing.SNAKEFILE
 
 
 rule all:
@@ -43,28 +43,28 @@ rule report_command_section:
     """
     input:
         INFORMS_scrubbing = human_read_scrubbing.get_command_informs(config),
-        INFORMS_simulation = Path(config['working_dir']) / read_simulation.OUTPUT_SIMULATION_INFORMS if config['input_type'] == 'fasta' else [],
+        INFORMS_simulation = read_simulation.OUTPUT_INFORMS if config['input_type'] == 'fasta' else [],
         INFORMS_downsampling = downsampling.get_command_informs(config),
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_assembly = assembly.get_command_informs(config),
-        INFORMS_quast = Path(config['working_dir']) / quast.OUTPUT_QUAST_INFORMS,
-        INFORMS_busco = Path(config['working_dir']) / quast.OUTPUT_BUSCO_INFORMS,
+        INFORMS_quast = quast.OUTPUT_INFORMS,
+        INFORMS_busco = quast.OUTPUT_INFORMS_BUSCO,
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_assembly_map = assembly.get_qc_informs(config, config['input_type']),
         INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses'] else [],
-        INFORMS_variant_filtering_all = Path(config['working_dir']) / variant_filtering.OUTPUT_VARIANT_FILTERING_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
-        INFORMS_lrefinder = Path(config['working_dir']) / lrefinder.OUTPUT_LREFINDER_INFORMS if 'lrefinder' in config['analyses'] else [],
-        INFORMS_amrfinder = Path(config['working_dir']) / amrfinder.OUTPUT_AMRFINDER_INFORMS if 'amrfinder' in config['analyses'] else [],
-        INFORMS_resfinder4 = Path(config['working_dir']) / resfinder4.OUTPUT_RESFINDER4_INFORMS if 'resfinder4' in config['analyses'] else [],
-        INFORMS_mob_suite = Path(config['working_dir']) / mobsuite.OUTPUT_MOB_SUITE_INFORMS if 'mob_suite' in config['analyses'] else [],
-        INFORMS_virulencefinder = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='virulencefinder') if 'virulencefinder' in config['analyses'] else [],
-        INFORMS_vfdb_core = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
-        IFNORMS_bacmet = Path(config['working_dir']) / bacmet.OUTPUT_BACMET_INFORMS if 'bacmet' in config['analyses'] else [],
-        INFORMS_prodigal = Path(config['working_dir']) / bacmet.OUTPUT_PRODIGAL_INFORMS if 'bacmet' in config['analyses'] else [],
-        INFORMS_mlst = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='mlst') if 'mlst' in config['analyses'] else []
+        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
+        INFORMS_lrefinder = lrefinder.OUTPUT_INFORMS if 'lrefinder' in config['analyses'] else [],
+        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses'] else [],
+        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses'] else [],
+        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses'] else [],
+        INFORMS_virulencefinder = gene_detection.OUTPUT_INFORMS.format(db='virulencefinder') if 'virulencefinder' in config['analyses'] else [],
+        INFORMS_vfdb_core = gene_detection.OUTPUT_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
+        IFNORMS_bacmet = bacmet.OUTPUT_INFORMS if 'bacmet' in config['analyses'] else [],
+        INFORMS_prodigal = bacmet.OUTPUT_PRODIGAL_INFORMS if 'bacmet' in config['analyses'] else [],
+        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst') if 'mlst' in config['analyses'] else []
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-commands.io'
+        HTML = 'report/html-commands.iob'
     params:
         dir_ = config['working_dir']
     run:
@@ -79,33 +79,33 @@ rule report_combine_all:
         reports_scrubbing = human_read_scrubbing.get_reports(config),
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
-        report_quast = Path(config['working_dir']) /quast.OUTPUT_QUAST_REPORT,
+        report_quast = quast.OUTPUT_REPORT,
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
-        report_adv_qc = Path(config['working_dir']) / str(quality_checks.OUTPUT_QUALITY_CHECKS_REPORT).format(input_type=config['input_type']),
+        report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input_type']),
         report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
         # Species identification
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         # AMR detection
-        report_lrefinder = Path(config['working_dir']) / (lrefinder.OUTPUT_LREFINDER_REPORT if 'lrefinder' in config['analyses'] else lrefinder.OUTPUT_LREFINDER_REPORT_EMPTY),
-        report_amrfinder = Path(config['working_dir']) / (amrfinder.OUTPUT_AMRFINDER_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_AMRFINDER_REPORT_EMPTY),
-        report_resfinder4 = Path(config['working_dir']) / (resfinder4.OUTPUT_RESFINDER4_REPORT if 'resfinder4' in config['analyses'] else resfinder4.OUTPUT_RESFINDER4_REPORT_EMPTY),
+        report_lrefinder = lrefinder.OUTPUT_REPORT if 'lrefinder' in config['analyses'] else lrefinder.OUTPUT_REPORT_EMPTY,
+        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
+        report_resfinder4 = resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses'] else resfinder4.OUTPUT_REPORT_EMPTY,
         # Virulence gene detection
         report_virulencefinder = gene_detection.get_gene_detection_report('virulencefinder', config),
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
         # Plasmid characterization
         report_plasmidfinder = gene_detection.get_gene_detection_report('plasmidfinder', config),
-        report_mob_suite = Path(config['working_dir']) / (mobsuite.OUTPUT_MOB_SUITE_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_MOB_SUITE_REPORT_EMPTY),
-        report_genomic_context = Path(config['working_dir']) / (mobsuite.OUTPUT_MOB_SUITE_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_MOB_SUITE_CONTEXT_REPORT_EMPTY),
+        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_REPORT_EMPTY,
+        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
         # BacMet
-        report_prodigal = Path(config['working_dir']) / (bacmet.OUTPUT_PRODIGAL_REPORT if 'bacmet' in config['analyses'] else bacmet.OUTPUT_PRODIGAL_REPORT_EMPTY),
-        report_bacmet = Path(config['working_dir']) / (bacmet.OUTPUT_BACMET_REPORT if 'bacmet' in config['analyses'] else bacmet.OUTPUT_BACMET_REPORT_EMPTY),
+        report_prodigal = bacmet.OUTPUT_PRODIGAL_REPORT if 'bacmet' in config['analyses'] else bacmet.OUTPUT_PRODIGAL_REPORT_EMPTY,
+        report_bacmet = bacmet.OUTPUT_REPORT if 'bacmet' in config['analyses'] else bacmet.OUTPUT_REPORT_EMPTY,
         # Typing
         report_mlst = sequence_typing.get_sequence_typing_report('mlst', config) if not config['is_generic'] else [],
         report_mlst_bezdicek = sequence_typing.get_sequence_typing_report('mlst_bezdicek', config) if not config['is_generic'] else [],
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config) if not config['is_generic'] else [],
         # Report
-        report_citations = Path(config['working_dir'], core.OUTPUT_HTML_CITATIONS),
+        report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_command_section.output.HTML
     output:
         HTML = config['output_report']
@@ -181,39 +181,38 @@ rule summary_combine_all:
     Combines the summary information of several steps into a single TSV file.
     """
     input:
-        Path(config['working_dir'], core.OUTPUT_TSV_SUMMARY_INIT),
-        human_read_scrubbing.get_summaries(config),
-        downsampling.get_summaries(config),
+        core.OUTPUT_SUMMARY_INIT,
+        lambda wildcards: human_read_scrubbing.get_summaries(config, wildcards.ext),
+        lambda wildcards: downsampling.get_summaries(config, ext=wildcards.ext),
         trimming.get_summaries(config),
-        Path(config['working_dir']) / quast.OUTPUT_QUAST_SUMMARY,
-        contamination_check_kraken.get_summaries(config),
+        quast.OUTPUT_SUMMARY,
+        lambda wildcards: contamination_check_kraken.get_summaries(config, ext=wildcards.ext),
         confindr.get_summary(config),
-        Path(config['working_dir']) / quality_checks.OUTPUT_QUALITY_CHECKS_SUMMARY,
+        quality_checks.OUTPUT_SUMMARY,
         variant_calling.get_summaries(config) if 'variant_calling' in config['analyses'] else [],
         # AMR detection
-        Path(config['working_dir']) / lrefinder.OUTPUT_LREFINDER_SUMMARY if 'lrefinder' in config['analyses'] else [],
-        Path(config['working_dir']) / amrfinder.OUTPUT_AMRFINDER_SUMMARY if 'amrfinder' in config['analyses'] else [],
-        Path(config['working_dir']) / resfinder4.OUTPUT_RESFINDER4_SUMMARY if 'resfinder4' in config['analyses'] else [],
+        lrefinder.OUTPUT_SUMMARY if 'lrefinder' in config['analyses'] else [],
+        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses'] else [],
+        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses'] else [],
         # Virulence detection
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='virulencefinder') if 'virulencefinder' in config['analyses'] else [],
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='virulencefinder', ext=wildcards.ext) if 'virulencefinder' in config['analyses'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses'] else [],
         # Plasmid characterization
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='plasmidfinder') if 'plasmidfinder' in config['analyses'] else [],
-        Path(config['working_dir']) / mobsuite.OUTPUT_MOB_SUITE_SUMMARY if 'mob_suite' in config['analyses'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='plasmidfinder', ext=wildcards.ext) if 'plasmidfinder' in config['analyses'] else [],
+        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses'] else [],
         # BacMet
-        Path(config['working_dir']) / bacmet.OUTPUT_BACMET_SUMMARY if 'bacmet' in config['analyses'] else [],
+        bacmet.OUTPUT_SUMMARY if 'bacmet' in config['analyses'] else [],
         # Sequence typing
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='rmlst') if 'rmlst' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='mlst') if 'mlst' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='mlst_bezdicek') if 'mlst_bezdicek' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else []
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst_bezdicek', ext=wildcards.ext) if 'mlst_bezdicek' in config['analyses'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses'] else []
     output:
-        TSV = config['output_tabular']
+        FILE = 'summary/output.{ext}'
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        with open(output.TSV, 'w') as handle_out:
-            for summary_input in input:
-                with open(summary_input) as handle_in:
-                    handle_out.write(handle_in.read())
+        SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))
 
 rule link_genomic_context:
     """
@@ -221,16 +220,16 @@ rule link_genomic_context:
     """
     input:
         # AMR
-        TSV_amrfinder = Path(config['working_dir']) / 'amrfinder' / 'tsv.io' if 'amrfinder' in config['analyses'] else [],
+        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses'] else [],
         # Virulence
-        TSV_gd_vfdb = Path(config['working_dir']) / 'gene_detection' / 'vfdb_core' / 'metadata' / 'tsv.io' if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_gd_vfdb = Path(config['working_dir']) / 'gene_detection' / 'vfdb_core' / 'db_manager' / 'informs.io' if 'vfdb_core' in config['analyses'] else [],
-        TSV_gd_virulencefinder = Path(config['working_dir']) / 'gene_detection' / 'virulencefinder' / 'metadata' / 'tsv.io' if 'virulencefinder' in config['analyses'] else [],
-        INFORMS_gd_virulencefinder = Path(config['working_dir']) / 'gene_detection' / 'virulencefinder' / 'db_manager' / 'informs.io' if 'virulencefinder' in config['analyses'] else [],
+        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses'] else [],
+        INFORMS_gd_vfdb = str(gene_detection.OUTPUT_DB_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
+        TSV_gd_virulencefinder = 'gene_detection/virulencefinder/metadata/tsv.io' if 'virulencefinder' in config['analyses'] else [],
+        INFORMS_gd_virulencefinder = str(gene_detection.OUTPUT_DB_INFORMS).format(db='virulencefinder') if 'virulencefinder' in config['analyses'] else [],
         # BacMet
-        TSV_bacmet = Path(config['working_dir']) / 'bacmet' / 'hit_filtering' / 'tsv.io' if 'bacmet' in config['analyses'] else []
+        TSV_bacmet = 'bacmet/hit_filtering/tsv.io' if 'bacmet' in config['analyses'] else []
     output:
-        TSV = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'input' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'input' / 'informs.io'
+        TSV = 'mob_suite/genomic_context/input/tsv.io',
+        INFORMS = 'mob_suite/genomic_context/input/informs.io'
     run:
         mobsuite.collect_genomic_context_input(input, Path(output.TSV), Path(output.INFORMS))

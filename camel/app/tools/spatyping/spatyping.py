@@ -1,11 +1,10 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from camel.app.camel import Camel
 from camel.app.components.blast.blastformat7parser import BlastFormat7Parser
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -17,11 +16,11 @@ class SpaTypingHit:
     This class represents a hit for a spa type.
     """
     spa_type: str
-    repeats: List[int]
+    repeats: list[int]
     length: int
     percent_identity: float
     percent_covered: float
-    blast_output: Dict[str, Any]
+    blast_output: dict[str, Any]
 
     def is_perfect(self) -> bool:
         """
@@ -54,12 +53,11 @@ class SpaTyping(Tool):
 
     BLASTN_OUTPUT_FORMAT = '"7 qseqid sseqid pident slen qstart qend length sseq sstrand"'
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Spa typing', '0.1', camel)
+        super().__init__('Spa typing', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -67,9 +65,9 @@ class SpaTyping(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Tabular BLAST input is required')
+            raise InvalidToolInputError('Tabular BLAST input is required')
         if 'CSV_profiles' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('spa type profiles input is required')
+            raise InvalidToolInputError('spa type profiles input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -83,7 +81,7 @@ class SpaTyping(Tool):
         self.__set_output(spa_type_hits, profiles)
 
     @staticmethod
-    def __parse_spa_type_profiles(profiles_tsv: Path) -> Dict[str, List[int]]:
+    def __parse_spa_type_profiles(profiles_tsv: Path) -> dict[str, list[int]]:
         """
         Parses the spa types from the tabular profiles file.
         :return: Dictionary of spa types.
@@ -97,7 +95,7 @@ class SpaTyping(Tool):
                 profiles[profile] = [int(x) for x in repeats.split('-')]
         return profiles
 
-    def __parse_blast_output(self, blast_output_path: Path) -> List[Dict]:
+    def __parse_blast_output(self, blast_output_path: Path) -> list[dict]:
         """
         Parses the tabular blast output, returns a list of hits sorted by percent covered and percent identity.
         Hits that cover less than 90% or have less than 90% identity are filtered out.
@@ -113,8 +111,8 @@ class SpaTyping(Tool):
         filtered_hits.sort(key=lambda x: self.__calculate_percent_covered(x), reverse=True)
         return filtered_hits
 
-    def __convert_blast_output(self, blast_output: List[Dict[str, Any]], profiles: Dict[str, List[int]]) -> \
-            List[SpaTypingHit]:
+    def __convert_blast_output(self, blast_output: list[dict[str, Any]], profiles: dict[str, list[int]]) -> \
+            list[SpaTypingHit]:
         """
         Converts the BLAST output to spa typing hits.
         :param blast_output: BLAST output
@@ -128,7 +126,7 @@ class SpaTyping(Tool):
         logger.debug(f"{len(hits)} hits detected")
         return hits
 
-    def __set_output(self, spa_type_hits: List[SpaTypingHit], profiles: Dict[str, List[int]]) -> None:
+    def __set_output(self, spa_type_hits: list[SpaTypingHit], profiles: dict[str, list[int]]) -> None:
         """
         Sets the output of this tool.
         :param spa_type_hits: List of spa type hits
@@ -151,7 +149,7 @@ class SpaTyping(Tool):
         self._tool_outputs['VAL_hits'] = [ToolIOValue(h) for h in spa_type_hits]
 
     @staticmethod
-    def __calculate_percent_covered(blast_data: Dict[str, Any]) -> float:
+    def __calculate_percent_covered(blast_data: dict[str, Any]) -> float:
         """
         Calculates the percentage of the subject sequence that is covered by the alignment.
         :param blast_data: Dictionary containing the BLAST output data
@@ -160,7 +158,7 @@ class SpaTyping(Tool):
         return min(100 * blast_data['length'] / blast_data['slen'], 100.0)
 
     @staticmethod
-    def __get_db_info(dir_db: Path) -> Optional[Dict]:
+    def __get_db_info(dir_db: Path) -> Optional[dict]:
         """
         Returns the date of the last database update.
         :param dir_db: Database directory
@@ -169,6 +167,6 @@ class SpaTyping(Tool):
         path_json = dir_db / 'db_update_info.json'
         if not path_json.exists():
             logger.info(f'No database update file found: {path_json}')
-            return
+            return None
         with path_json.open() as handle:
             return json.load(handle)

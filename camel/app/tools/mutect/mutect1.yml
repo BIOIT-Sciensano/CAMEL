@@ -1,37 +1,119 @@
-dependencies: [mutect/1.1.7, openJDK/1.7.0]
+dependencies:
+  - mutect/1.1.7
+  - openJDK/1.7.0
 parameters:
-  dbsnp_normal_lod: {default: false, mandatory: false, option: --dbsnp_normal_lod,
-    p_index: 0, value: '5.5'}
-  downsampling_coverage_target: {default: false, mandatory: false, option: -dcov,
-    p_index: 0, value: '1000'}
-  downsampling_type: {default: false, mandatory: false, option: -dt, p_index: 0, value: BY_SAMPLE}
-  fraction_contamination: {default: false, mandatory: false, option: --fraction_contamination,
-    p_index: 0, value: '0.02'}
-  fraction_mapq_threshold: {default: false, mandatory: false, option: --fraction_mapq_threshold,
-    p_index: 0, value: '0.5'}
-  gap_events_threshold: {default: false, mandatory: false, option: --gap_events_threshold,
-    p_index: 0, value: '3'}
-  intervals: {default: false, mandatory: false, option: -L, p_index: 0, value: null}
-  max_alt_allele_in_normal_fraction: {default: false, mandatory: false, option: --max_alt_allele_in_normal_fraction,
-    p_index: 0, value: '0.03'}
-  max_alt_alleles_in_normal_count: {default: false, mandatory: false, option: --max_alt_alleles_in_normal_count,
-    p_index: 0, value: '2'}
-  max_alt_alleles_in_normal_qscore_sum: {default: false, mandatory: false, option: --max_alt_alleles_in_normal_qscore_sum,
-    p_index: 0, value: '20'}
-  normal_lod_threshold: {default: false, mandatory: false, option: --normal_lod_threshold,
-    p_index: 0, value: '2.2'}
-  output_callstats_file: {default: true, mandatory: true, option: -o, p_index: 0,
-    value: call_stats.txt}
-  output_vcf_file: {default: true, mandatory: false, option: --vcf, p_index: 0, value: variant_call.vcf}
-  pir_mad_threshold: {default: false, mandatory: false, option: --pir_mad_threshold,
-    p_index: 0, value: '3'}
-  pir_median_threshold: {default: true, mandatory: false, option: --pir_median_threshold,
-    p_index: 0, value: '0'}
-  required_maximum_alt_allele_mapping_quality_score: {default: false, mandatory: false,
-    option: --required_maximum_alt_allele_mapping_quality_score, p_index: 0, value: '20'}
-  strand_artifact_lod: {default: false, mandatory: false, option: --strand_artifact_lod,
-    p_index: 0, value: '2.0'}
-  strand_artifact_power_threshold: {default: false, mandatory: false, option: --strand_artifact_power_threshold,
-    p_index: 0, value: '0.9'}
-  tumor_lod: {default: false, mandatory: false, option: --tumor_lod, p_index: 0, value: '6.3'}
+  dbsnp_normal_lod:
+    default: false
+    mandatory: false
+    option: '--dbsnp_normal_lod'
+    p_index: 0
+    value: '5.5'
+  downsampling_coverage_target:
+    default: false
+    mandatory: false
+    option: '-dcov'
+    p_index: 0
+    value: '1000'
+  downsampling_type:
+    default: false
+    mandatory: false
+    option: '-dt'
+    p_index: 0
+    value: BY_SAMPLE
+  fraction_contamination:
+    default: false
+    mandatory: false
+    option: '--fraction_contamination'
+    p_index: 0
+    value: '0.02'
+  fraction_mapq_threshold:
+    default: false
+    mandatory: false
+    option: '--fraction_mapq_threshold'
+    p_index: 0
+    value: '0.5'
+  gap_events_threshold:
+    default: false
+    mandatory: false
+    option: '--gap_events_threshold'
+    p_index: 0
+    value: '3'
+  intervals:
+    default: false
+    mandatory: false
+    option: '-L'
+    p_index: 0
+    value: null
+  max_alt_allele_in_normal_fraction:
+    default: false
+    mandatory: false
+    option: '--max_alt_allele_in_normal_fraction'
+    p_index: 0
+    value: '0.03'
+  max_alt_alleles_in_normal_count:
+    default: false
+    mandatory: false
+    option: '--max_alt_alleles_in_normal_count'
+    p_index: 0
+    value: '2'
+  max_alt_alleles_in_normal_qscore_sum:
+    default: false
+    mandatory: false
+    option: '--max_alt_alleles_in_normal_qscore_sum'
+    p_index: 0
+    value: '20'
+  normal_lod_threshold:
+    default: false
+    mandatory: false
+    option: '--normal_lod_threshold'
+    p_index: 0
+    value: '2.2'
+  output_callstats_file:
+    default: true
+    mandatory: true
+    option: '-o'
+    p_index: 0
+    value: call_stats.txt
+  output_vcf_file:
+    default: true
+    mandatory: false
+    option: '--vcf'
+    p_index: 0
+    value: variant_call.vcf
+  pir_mad_threshold:
+    default: false
+    mandatory: false
+    option: '--pir_mad_threshold'
+    p_index: 0
+    value: '3'
+  pir_median_threshold:
+    default: true
+    mandatory: false
+    option: '--pir_median_threshold'
+    p_index: 0
+    value: '0'
+  required_maximum_alt_allele_mapping_quality_score:
+    default: false
+    mandatory: false
+    option: '--required_maximum_alt_allele_mapping_quality_score'
+    p_index: 0
+    value: '20'
+  strand_artifact_lod:
+    default: false
+    mandatory: false
+    option: '--strand_artifact_lod'
+    p_index: 0
+    value: '2.0'
+  strand_artifact_power_threshold:
+    default: false
+    mandatory: false
+    option: '--strand_artifact_power_threshold'
+    p_index: 0
+    value: '0.9'
+  tumor_lod:
+    default: false
+    mandatory: false
+    option: '--tumor_lod'
+    p_index: 0
+    value: '6.3'
 tool_command: run_mutect.sh -T MuTect

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any, Optional
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.loggers import logger, initialize_logging
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import variant_calling
 
@@ -22,7 +22,6 @@ class MainCalling:
         Initializes the main script.
         """
         self._args = MainCalling._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -65,13 +64,15 @@ class MainCalling:
         target_dir = self._args.working_dir / 'variant_calling' / 'read_mapping' / self._args.input_type
         if not target_dir.exists():
             target_dir.mkdir(parents=True)
-        SnakemakeUtils.dump_object([ToolIOFile(self._args.bam)], target_dir / 'bam.io')
+        snakemakeutils.dump_object([ToolIOFile(self._args.bam)], target_dir / 'bam.io')
 
         # Run Snakemake to generate output file
-        output_path = self._args.working_dir / variant_calling.OUTPUT_VARIANT_CALLING_UNFILTERED_VCF
         SnakePipelineUtils.run_snakemake(
-            variant_calling.SNAKEFILE_VARIANT_CALLING, config_file, [output_path], self._args.working_dir,
-            self._args.threads)
+            snakefile=variant_calling.SNAKEFILE,
+            config_path=config_file,
+            targets=[Path(variant_calling.OUTPUT_UNFILTERED_VCF)],
+            working_dir=self._args.working_dir,
+            threads=self._args.threads)
 
         # Generate consensus sequence
         if self._args.output_consensus:
@@ -79,7 +80,7 @@ class MainCalling:
 
         # Copy output
         logger.info("Collecting Snakemake output file")
-        output_vcf_path = SnakemakeUtils.load_object(output_path)[0].path
+        output_vcf_path = snakemakeutils.load_object(self._args.working_dir / variant_calling.OUTPUT_UNFILTERED_VCF)[0].path
         shutil.copyfile(output_vcf_path, self._args.output)
 
     def __create_snakemake_config_data(self) -> dict:
@@ -116,14 +117,23 @@ class MainCalling:
         :return: None
         """
         config_file = SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir, 'consensus.yml')
-        output_path_consensus = self._args.working_dir / variant_calling.OUTPUT_VARIANT_CALLING_CONSENSUS
         SnakePipelineUtils.run_snakemake(
-            variant_calling.SNAKEFILE_VARIANT_CALLING, config_file, [output_path_consensus],  self._args.working_dir,
+            variant_calling.SNAKEFILE, config_file, [Path(variant_calling.OUTPUT_CONSENSUS)],  self._args.working_dir,
             self._args.threads)
-        fasta_consensus = SnakemakeUtils.load_object(output_path_consensus)[0].path
+        fasta_consensus = snakemakeutils.load_object(self._args.working_dir / variant_calling.OUTPUT_CONSENSUS)[0].path
         shutil.copyfile(fasta_consensus, output_path)
 
 
+def main(args: Sequence[str] | None = None) -> None:
+    """
+    Entry point for the common interface.
+    :param args: Command line arguments
+    :return: None
+    """
+    script = MainCalling(args)
+    script.run()
+
+
 if __name__ == '__main__':
-    main = MainCalling()
-    main.run()
+    initialize_logging()
+    main()

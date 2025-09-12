@@ -1,9 +1,10 @@
 import pandas as pd
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -21,13 +22,12 @@ class Pharokka(Tool):
         'TSV_INPHARED': 'pharokka_top_hits_mash_inphared.tsv'
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Pharokka', '1.7.3', camel)
+        super().__init__('Pharokka', '1.7.3')
 
     def _execute_tool(self) -> None:
         """
@@ -41,7 +41,7 @@ class Pharokka(Tool):
         for key, basename in Pharokka.OUTPUT_DICT.items():
             path_out = Path(self.folder, self._parameters['outdir'].value, basename)
             if not path_out.exists():
-                raise ToolExecutionError(f'{path_out} not generated ({key})')
+                raise ToolExecutionError(self.name, f'{path_out} not generated ({key})')
             self._tool_outputs[key] = [ToolIOFile(path_out)]
 
         # Parse output files
@@ -55,18 +55,18 @@ class Pharokka(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No FASTA input found")
+            raise InvalidToolInputError("No FASTA input found")
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError("Only one FASTA file can be annotated at a time.")
+            raise InvalidToolInputError("Only one FASTA file can be annotated at a time.")
         super()._check_input()
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks the command output to see if the program ran correctly.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing Pharokka: {self.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __build_command(self) -> None:
         """

@@ -1,0 +1,7 @@
+# Configuration
+dir_temp: /scratch/temp/
+dependency_service: conda
+
+# Resource locations
+dir_db: /db
+dir_testdata: /testdata/camel

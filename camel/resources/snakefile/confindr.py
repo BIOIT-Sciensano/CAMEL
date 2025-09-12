@@ -1,26 +1,24 @@
 from pathlib import Path
 
-SNAKEFILE_CONFINDR = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-
-_dir_confindr = Path('confindr')
-OUTPUT_CONFINDR_INFORMS = _dir_confindr / 'informs.io'
-OUTPUT_CONFINDR_REPORT = _dir_confindr / 'report' / 'html.io'
-OUTPUT_CONFINDR_REPORT_EMPTY = _dir_confindr / 'report' / 'html-empty.io'
-OUTPUT_CONFINDR_SUMMARY = _dir_confindr / 'summary' / 'summary_confindr.tsv'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+OUTPUT_INFORMS = 'confindr/tool/informs.io'
+OUTPUT_REPORT = 'confindr/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'confindr/report/html-empty.iob'
+OUTPUT_SUMMARY = 'confindr/summary/summary_confindr.{ext}'
 
 
-def get_report(config) -> Path:
+def get_report(config) -> str:
     """
     Returns the path to the ConFindr report io file.
     :param config: Snakemake configuration
     :return: Path to report
     """
     if ('confindr' not in config['analyses']) or (config['input_type'] not in ['illumina', 'hybrid', 'ont']):
-        return Path(config['working_dir'], OUTPUT_CONFINDR_REPORT_EMPTY)
-    return Path(config['working_dir'], OUTPUT_CONFINDR_REPORT)
+        return OUTPUT_REPORT_EMPTY
+    return OUTPUT_REPORT
 
 
-def get_command_informs(config) -> list[Path]:
+def get_command_informs(config) -> list[str]:
     """
     Returns the path to the ConFindr informs io file.
     :param config: Snakemake configuration
@@ -28,10 +26,10 @@ def get_command_informs(config) -> list[Path]:
     """
     if ('confindr' not in config['analyses']) or (config['input_type'] not in ['illumina', 'hybrid', 'ont']):
         return []
-    return [Path(config['working_dir'], OUTPUT_CONFINDR_INFORMS)]
+    return [OUTPUT_INFORMS]
 
 
-def get_summary(config) -> list[Path]:
+def get_summary(config) -> list[str]:
     """
     Returns the path to the ConFindr summay file.
     :param config: Snakemake configuration
@@ -39,4 +37,4 @@ def get_summary(config) -> list[Path]:
     """
     if ('confindr' not in config['analyses']) or (config['input_type'] not in ['illumina', 'hybrid', 'ont']):
         return []
-    return [Path(config['working_dir'], OUTPUT_CONFINDR_SUMMARY)]
+    return [OUTPUT_SUMMARY]

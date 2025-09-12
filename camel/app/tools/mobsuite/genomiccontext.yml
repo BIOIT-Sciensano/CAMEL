@@ -1,5 +1,13 @@
 dependencies: []
 parameters:
-  detection_method: {default: true, mandatory: true, option: null, value: blast}
-  input_type: {default: true, mandatory: false, option: null, value: illumina}
+  detection_method:
+    default: true
+    mandatory: true
+    option: null
+    value: blast
+  input_type:
+    default: true
+    mandatory: false
+    option: null
+    value: illumina
 tool_command: null

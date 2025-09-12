@@ -1,4 +1,9 @@
-dependencies: [shigatyper/2.0.5]
+dependencies:
+  - shigatyper/2.0.5
 parameters:
-  ont: {default: false, mandatory: false, option: --ont, value: null}
+  ont:
+    default: false
+    mandatory: false
+    option: '--ont'
+    value: null
 tool_command: shigatyper

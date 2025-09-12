@@ -1,8 +1,29 @@
-dependencies: [fastani/1.33]
+dependencies:
+  - fastani/1.33
 parameters:
-  kmer: {default: false, mandatory: false, option: --kmer, value: '16'}
-  threads: {default: false, mandatory: false, option: --threads, value: '1'}
-  output_file: {default: true, mandatory: true, option: --output, value: 'fastani.tsv'}
-  fragment_len: {default: false, mandatory: false, option: --fragLen, value: '3000'}
-  minimum_fraction: {default: false, mandatory: false, option: --minFraction, value: '0.2'}
+  kmer:
+    default: false
+    mandatory: false
+    option: --kmer
+    value: '16'
+  threads:
+    default: false
+    mandatory: false
+    option: --threads
+    value: '1'
+  output_file:
+    default: true
+    mandatory: true
+    option: --output
+    value: 'fastani.tsv'
+  fragment_len:
+    default: false
+    mandatory: false
+    option: --fragLen
+    value: '3000'
+  minimum_fraction:
+    default: false
+    mandatory: false
+    option: --minFraction
+    value: '0.2'
 tool_command: fastANI

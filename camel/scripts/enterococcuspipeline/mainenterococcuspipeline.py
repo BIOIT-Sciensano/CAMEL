@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 import argparse
-from typing import Optional, Sequence, Any
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Any, Optional
 
 import yaml
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
+from camel.app.config import config
 from camel.app.loggers import logger
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.enterococcuspipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.enterococcuspipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 class MainEnterococcusPipeline(ReportPipeline):
@@ -24,28 +27,28 @@ class MainEnterococcusPipeline(ReportPipeline):
     DATA_BY_SPECIES = {
         'faecalis': {
             'amrfinder_species': 'Enterococcus_faecalis',
-            'cgmlst_db': '/db/sequence_typing/enterococcus_faecalis/cgmlst',
+            'cgmlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecalis/cgmlst')),
             'full_name': 'Enterococcus faecalis',
             'reference': {
-                'fasta': '/db/refgenomes/Enterococcus_faecalis/KB944666.1.fasta',
-                'gff3': '/db/refgenomes/Enterococcus_faecalis/KB944666.1.gff3',
+                'fasta': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecalis/KB944666.1.fasta')),
+                'gff3': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecalis/KB944666.1.gff3')),
                 'name': 'KB944666.1',
                 'url': 'https://www.ncbi.nlm.nih.gov/nuccore/KB944666.1',
             },
-            'mlst_db': '/db/sequence_typing/enterococcus_faecalis/mlst',
+            'mlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecalis/mlst')),
             'resfinder4_species': 'Enterococcus faecalis',
         },
         'faecium': {
             'amrfinder_species': 'Enterococcus_faecium',
-            'cgmlst_db': '/db/sequence_typing/enterococcus_faecium/cgmlst',
+            'cgmlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecium/cgmlst')),
             'full_name': 'Enterococcus faecium',
             'reference': {
-                'fasta': '/db/refgenomes/Enterococcus_faecium/CP038996.1.fasta',
-                'gff3': '/db/refgenomes/Enterococcus_faecium/CP038996.1.gff3',
+                'fasta': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecium/CP038996.1.fasta')),
+                'gff3': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecium/CP038996.1.gff3')),
                 'name': 'CP038996.1',
                 'url': 'https://www.ncbi.nlm.nih.gov/nuccore/CP038996.1/',
             },
-            'mlst_db': '/db/sequence_typing/enterococcus_faecium/mlst',
+            'mlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecium/mlst')),
             'resfinder4_species': 'Enterococcus faecium',
         },
         'spp': {
@@ -125,11 +128,6 @@ class MainEnterococcusPipeline(ReportPipeline):
 
         # Set the species
         config_data['selected_species'] = MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species]['full_name']
-
-        # Set the detection method for cgMLST
-        config_data['sequence_typing']['cgmlst']['detection_method'] = {
-            'blast': 'blast', 'srst2': 'blast', 'kma': 'kma'}.get(self._args.detection_method)
-
         return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
 
     @staticmethod

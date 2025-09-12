@@ -13,7 +13,7 @@ from camel.app.io.tooliofile import ToolIOFile
 from camel.app.pipeline.pipeline import Pipeline
 
 
-class GATKSomaticMain(object):
+class GATKSomaticMain:
     """
     Main class to run the GATK somatic variant caller pipeline.
     Generates a config yml file based on CL arguments;
@@ -45,11 +45,11 @@ class GATKSomaticMain(object):
         self._config_dump_dir = os.path.join(self._camel.config["config_dump_dir"])
         # self._config_dump_dir = "/scratch/todel/temp/GATK_MuTect_configs"
 
-    def run(self):
+    def run(self) -> None:
         """
         Sets-up and runs the pipeline and logs stderr and stdout if running the command fails.
         Logs the initial input.
-        :return: None 
+        :return: None
         """
         self._pipeline = Pipeline(name='GATK somatic calling', camel=self._camel, logging_level=self.LOGGING_LEVEL)
         self._args = self.__parse_command_line()

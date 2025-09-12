@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,12 +15,11 @@ class MOBRecon(Tool):
     MOB-suite: Software tools for clustering, reconstruction and typing of plasmids from draft assemblies.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('MOB-recon', '3.1.8', camel)
+        super().__init__('MOB-recon', '3.1.8')
 
     def _check_input(self) -> None:
         """
@@ -28,9 +27,9 @@ class MOBRecon(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required")
+            raise InvalidToolInputError("FASTA input is required")
         if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database input (DB) is required")
+            raise InvalidToolInputError("Database input (DB) is required")
         super()._check_input()
 
     def _build_command(self, dir_out: Path) -> None:
@@ -42,7 +41,7 @@ class MOBRecon(Tool):
         self._command.command = ' '.join([
             self._tool_command,
             f"-i {self._tool_inputs['FASTA'][0].path}",
-            f'--database_directory', str(self._tool_inputs['DB'][0].path),
+            '--database_directory', str(self._tool_inputs['DB'][0].path),
             f'-o {dir_out}',
             *self._build_options()
         ])
@@ -98,9 +97,10 @@ class MOBRecon(Tool):
             ctg: cluster_id if cluster_id != '-' else None for
             ctg, cluster_id in zip(data_in['contig_id'], data_in['primary_cluster_id'])}
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
+        :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f'Error executing {self.name}: {self._command.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)

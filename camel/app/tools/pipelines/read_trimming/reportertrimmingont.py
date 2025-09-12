@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
@@ -11,12 +10,12 @@ class ReporterTrimmingONT(Tool):
     This class is used to create the trimming report for ONT reads.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('Trimming-ONT: reporter', '0.1', camel)
+        super().__init__('Trimming-ONT: reporter', '0.1')
         self._sub_folder = Path('read_trimming')
         self._report_section = None
 

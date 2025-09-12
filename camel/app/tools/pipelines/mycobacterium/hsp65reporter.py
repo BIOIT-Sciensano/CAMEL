@@ -1,11 +1,9 @@
 from pathlib import Path
-from typing import List, Dict
 
 from Bio import SeqIO
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -24,12 +22,11 @@ class Hsp65Reporter(Tool):
 
     TITLE = '<i>hsp65</i>-based differentiation'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: hsp65 reporter', '0.1', camel)
+        super().__init__('Mycobacterium: hsp65 reporter', '0.1')
         self._sub_folder = Path('hsp65')
 
     def _check_input(self) -> None:
@@ -38,11 +35,11 @@ class Hsp65Reporter(Tool):
         :return: None
         """
         if 'FASTA_DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required")
+            raise InvalidToolInputError("FASTA input is required")
         if 'hits' not in self._input_informs:
-            raise InvalidInputSpecificationError("Hits input is required")
+            raise InvalidToolInputError("Hits input is required")
         if 'columns' not in self._input_informs:
-            raise InvalidInputSpecificationError("Column name input ('columns') is required")
+            raise InvalidToolInputError("Column name input ('columns') is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -65,7 +62,7 @@ class Hsp65Reporter(Tool):
         self._report_section.add_file(fasta_path, relative_path)
         self._report_section.add_link_to_file('Database (FASTA)', relative_path)
 
-    def __get_mapping(self) -> Dict[str, str]:
+    def __get_mapping(self) -> dict[str, str]:
         """
         Returns the mapping of the sequence id to the metadata.
         :return: Mapping
@@ -77,7 +74,7 @@ class Hsp65Reporter(Tool):
                 mapping[seq.id] = ' '.join(seq.description.split(' ')[1:])
         return mapping
 
-    def __add_output_table(self, hits: List) -> None:
+    def __add_output_table(self, hits: list) -> None:
         """
         Adds the output table.
         :param hits: Detected hits

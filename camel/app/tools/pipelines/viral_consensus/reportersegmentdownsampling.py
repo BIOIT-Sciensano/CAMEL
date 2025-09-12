@@ -9,13 +9,12 @@ from pathlib import Path
 import pandas as pd
 import plotnine
 
-from camel.app.camel import Camel
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -38,21 +37,20 @@ class ReporterSegmentDownsampling(Tool):
             'fmt': lambda x: f'{100 * x:.2f}'}
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Reporter: Segment downsampling', '0.1', camel)
+        super().__init__('Reporter: Segment downsampling', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Stats input file is required (TSV)')
+            raise InvalidToolInputError('Stats input file is required (TSV)')
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Reference genome input file is required (FASTA)')
+            raise InvalidToolInputError('Reference genome input file is required (FASTA)')
         super()._check_input()
 
     def _execute_tool(self) -> None:

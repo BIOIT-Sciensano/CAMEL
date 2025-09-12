@@ -1,8 +1,7 @@
-from typing import Optional, List, Dict
+from typing import Optional
 
 import yaml
 
-from camel.app.camel import Camel
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
@@ -17,12 +16,11 @@ class SCCmecTyping(Tool):
         {'key': 'SCC_mec_types', 'name': 'SCC<i>mec</i> type'}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('SCCmec typing', '0.1', camel)
+        super().__init__('SCCmec typing', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -52,7 +50,7 @@ class SCCmecTyping(Tool):
             self._informs['complexes'].append({'value': matching_complex, **complex_})
 
     @staticmethod
-    def __get_matching_complex(detected_genes: List[str], genes_by_complex: Dict[str, List[str]]) -> \
+    def __get_matching_complex(detected_genes: list[str], genes_by_complex: dict[str, list[str]]) -> \
             Optional[str]:
         """
         Returns the matching complex (if there is one).

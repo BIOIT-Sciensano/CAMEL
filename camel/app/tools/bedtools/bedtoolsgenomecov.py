@@ -1,14 +1,11 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.invalidparametererror import InvalidParameterError
+from camel.app.error import InvalidToolInputError, InvalidParameterError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.bedtools.bedtools import Bedtools
 
 
 class BedtoolsGenomecov(Bedtools):
-
     """
     Bedtools genomecov computes histograms (default), per-base reports (-d) and BEDGRAPH (-bg) summaries of feature
     coverage (e.g., aligned sequences) for a given genome.
@@ -18,13 +15,12 @@ class BedtoolsGenomecov(Bedtools):
     # Mutually exclusive, only ONE can be specified.
     OUTPUT_FORMAT_OPTIONS = ['BedGraphWithZeroCoverage', 'BedGraph', 'DepthWithZeroCoverage', 'Depth']
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize a samtools tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('bedtools genomecov', '2.31.0', camel)
+        super().__init__('bedtools genomecov', '2.31.0')
         self._output_filename = None
         self._required_inputs = ['BAM']
 
@@ -35,7 +31,7 @@ class BedtoolsGenomecov(Bedtools):
         """
         self._check_required_inputs()
         if len(self._tool_inputs['BAM']) != 1:
-            raise InvalidInputSpecificationError("Exactly one BAM input file expected.")
+            raise InvalidToolInputError("Exactly one BAM input file expected.")
         super()._check_input()
 
     def _execute_tool(self) -> None:

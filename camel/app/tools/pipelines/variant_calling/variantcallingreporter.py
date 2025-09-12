@@ -3,12 +3,11 @@ from distutils.util import strtobool
 from pathlib import Path
 from typing import Any
 
-from camel.app.camel import Camel
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -20,12 +19,11 @@ class VariantCallingReporter(Tool):
 
     SUB_FOLDER = 'variant_calling'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__("Variant Calling Reporter", "0.1", camel)
+        super().__init__("Variant Calling Reporter", "0.1")
         self._section = None
 
     def _check_input(self) -> None:
@@ -34,17 +32,17 @@ class VariantCallingReporter(Tool):
         :return: None
         """
         if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("VCF input is required")
+            raise InvalidToolInputError("VCF input is required")
         if 'VCF_filt' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Filtered VCF input is required")
+            raise InvalidToolInputError("Filtered VCF input is required")
         if 'VAL_Sample' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Sample name is required")
+            raise InvalidToolInputError("Sample name is required")
         if 'reference' not in self._input_informs:
-            raise InvalidInputSpecificationError("Reference information is required")
+            raise InvalidToolInputError("Reference information is required")
         if 'mapping' not in self._input_informs:
-            raise InvalidInputSpecificationError("Mapping informs are required")
+            raise InvalidToolInputError("Mapping informs are required")
         if 'JSON' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("JSON output of variant filtering is required")
+            raise InvalidToolInputError("JSON output of variant filtering is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:

@@ -1,5 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
 
@@ -9,12 +8,12 @@ class BcftoolsView(BcftoolsBase):
     VCF/BCF conversion, view, subset and filter VCF/BCF files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('bcftools view', '1.17', camel)
+        super().__init__('bcftools view', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -22,7 +21,7 @@ class BcftoolsView(BcftoolsBase):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('BCF', 'VCF', 'VCF_GZ')):
-            raise InvalidInputSpecificationError("No input file found (BCF / VCF_GZ / VCF supported)")
+            raise InvalidToolInputError("No input file found (BCF / VCF_GZ / VCF supported)")
         super()._check_input()
 
     def _execute_tool(self) -> None:

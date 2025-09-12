@@ -1,14 +1,13 @@
 import json
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import Union
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.mycobacterium import amrutils
 from camel.app.components.mycobacterium.amrutils import ConfidenceLevel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -19,12 +18,11 @@ class AMRPhenotypePredictor(Tool):
     This tool determines the AMR type of based on the detected mutations.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: AMR phenotype predictor', '0.1', camel)
+        super().__init__('Mycobacterium: AMR phenotype predictor', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -32,13 +30,13 @@ class AMRPhenotypePredictor(Tool):
         :return: None
         """
         if 'DIR_DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database directory is required (DIR_DB).")
+            raise InvalidToolInputError("Database directory is required (DIR_DB).")
         if 'JSON' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("AMR association information is required (JSON).")
+            raise InvalidToolInputError("AMR association information is required (JSON).")
         super()._check_input()
 
     @staticmethod
-    def __get_mutations_by_antibiotic(input_file: Path) -> Dict[str, Dict[str, Dict]]:
+    def __get_mutations_by_antibiotic(input_file: Path) -> dict[str, dict[str, dict]]:
         """
         Returns the detected mutations grouped by antibiotic and confidence level.
         :param input_file: Input file with mutation information
@@ -61,7 +59,7 @@ class AMRPhenotypePredictor(Tool):
         return mutations_by_ab
 
     @staticmethod
-    def __predict_phenotype(mutations_by_confidence: Union[Dict[amrutils.ConfidenceLevel, List], None]) -> str:
+    def __predict_phenotype(mutations_by_confidence: Union[dict[amrutils.ConfidenceLevel, list], None]) -> str:
         """
         Predicts the phenotype based on the detected mutations.
         :param mutations_by_confidence: Mutations group by confidence level.
@@ -99,7 +97,7 @@ class AMRPhenotypePredictor(Tool):
 
         if len(mutations_by_ab) > 0:
             logger.error(f'Unparsed mutations for: {mutations_by_ab.keys()}')
-            raise ToolExecutionError('unparsed mutations')
+            raise ToolExecutionError(self.name, 'unparsed mutations')
 
         # Predict phenotype
         for row in data_out:

@@ -1,0 +1,13 @@
+dependencies:
+  - seqtk/1.4
+parameters:
+  output_file:
+    default: true
+    mandatory: true
+    option: null
+    value: interleaved.fastq
+  compress_output:
+    default: false
+    mandatory: false
+    flag: true
+tool_command: seqtk mergepe

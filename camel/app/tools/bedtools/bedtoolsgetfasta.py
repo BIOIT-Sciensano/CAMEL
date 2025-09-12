@@ -1,25 +1,20 @@
-import os
-
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.bedtools.bedtools import Bedtools
 
 
 class BedtoolsGetFasta(Bedtools):
-
     """
-    Bedtools GetFasta func class
+    Bedtools GetFasta func class.
     """
     DEFAULT_OUTPUT_NAME = 'bedtools_getfata_extracted_sequences.fa'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize a samtools tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('bedtools getfasta', '2.31.0', camel)
+        super().__init__('bedtools getfasta', '2.31.0')
         self._required_inputs = ['BED', 'FASTA']
 
     def _execute_tool(self) -> None:
@@ -39,9 +34,9 @@ class BedtoolsGetFasta(Bedtools):
         self._command.command = ' '.join([
             self._tool_command,
             ' '.join(self._build_options()),
-            '-bed {}'.format(self._tool_inputs['BED'][0].path),
-            '-fi {}'.format(self._tool_inputs['FASTA'][0].path),
-            '-fo {}'.format(self.DEFAULT_OUTPUT_NAME)
+            f'-bed {self._tool_inputs["BED"][0].path}',
+            f'-fi {self._tool_inputs["FASTA"][0].path}',
+            f'-fo {self.DEFAULT_OUTPUT_NAME}'
         ])
 
     def __set_output(self) -> None:
@@ -49,7 +44,7 @@ class BedtoolsGetFasta(Bedtools):
         Sets the output of this tool.
         :return: None
         """
-        self._tool_outputs['FASTA'] = [ToolIOFile(os.path.join(self._folder, self.DEFAULT_OUTPUT_NAME))]
+        self._tool_outputs['FASTA'] = [ToolIOFile(self._folder / self.DEFAULT_OUTPUT_NAME)]
 
     def _check_input(self) -> None:
         """
@@ -59,8 +54,7 @@ class BedtoolsGetFasta(Bedtools):
         self._check_required_inputs()
 
         if len(self._tool_inputs['BED']) != 1:
-            raise InvalidInputSpecificationError("Exactly one BED input file expected.")
+            raise InvalidToolInputError("Exactly one BED input file expected.")
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError("Exactly one FASTA input file expected.")
-
-        super(BedtoolsGetFasta, self)._check_input()
+            raise InvalidToolInputError("Exactly one FASTA input file expected.")
+        super()._check_input()

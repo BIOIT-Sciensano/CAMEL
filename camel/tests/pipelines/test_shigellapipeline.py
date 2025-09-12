@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from camel.app.camel import Camel
+
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.scripts.shigellapipeline import CONFIG_DATA
@@ -40,7 +40,7 @@ class TestShigellaPipeline(CamelTestSuite):
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
             # Check if metadata can be loaded
-            manager = LocusSetManager(Camel.get_instance())
+            manager = LocusSetManager()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.informs), 0)
@@ -59,7 +59,7 @@ class TestShigellaPipeline(CamelTestSuite):
             self.assertGreater(Path(db_data['path']).stat().st_size, 0)
 
             # Check if metadata and FASTA files can be loaded
-            manager = DBManager(Camel.get_instance())
+            manager = DBManager()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(db_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.tool_outputs), 0)
@@ -79,26 +79,6 @@ class TestShigellaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainShigellaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainShigellaPipeline(args)
-        main.run()
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    @longRunningTest()
-    def test_shigella_pipeline_srst2(self) -> None:
-        """
-        Tests the Shigella pipeline with all assays except for cgMLST.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestShigellaPipeline.input_fastq_pe[0]), str(TestShigellaPipeline.input_fastq_pe[1]),
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir),
-            '--detection-method', 'srst2'
         ] + [f"--{a.replace('_', '-')}" for a in MainShigellaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
         main = MainShigellaPipeline(args)
         main.run()

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.invalidparametererror import InvalidParameterError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import InvalidParameterError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
@@ -12,12 +12,12 @@ class BcftoolsCall(BcftoolsBase):
     SNP/indel variant calling from VCF/BCF. To be used in conjunction with samtools mpileup.
     """
 
-    def __init__(self, camel):
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('bcftools call', '1.17', camel)
+        super().__init__('bcftools call', '1.17')
 
     def _check_parameters(self) -> None:
         """
@@ -35,7 +35,7 @@ class BcftoolsCall(BcftoolsBase):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('VCF', 'VCF_GZ', 'BCF')):
-            raise InvalidInputSpecificationError("No input file found (BCF / VCF / VCF_GZ supported)")
+            raise InvalidToolInputError("No input file found (BCF / VCF / VCF_GZ supported)")
         super()._check_input()
 
     def _execute_tool(self) -> None:

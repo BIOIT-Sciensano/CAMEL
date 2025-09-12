@@ -1,22 +1,24 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
 
 import tempfile
 
-from camel.app.camel import Camel
 from camel.app.command.command import Command
+from camel.app.config import config
 from camel.app.tools.toolpipeable import ToolPipeable
 
 
 @dataclass
 class PipedTool:
+    """
+    Holder class for piped tools.
+    """
     tool: ToolPipeable
     command: str
     stderr_path: Path
 
 
-def _combine_dependencies(tools: List[ToolPipeable]) -> str:
+def _combine_dependencies(tools: list[ToolPipeable]) -> str:
     """
     Combines the dependencies for tools.
     :param tools: List of tools.
@@ -41,7 +43,7 @@ def _combine_dependencies(tools: List[ToolPipeable]) -> str:
     return f"module load {' '.join([f'{name}/{versions[0]}' for name, versions in versions_by_name.items()])}"
 
 
-def run_as_pipe(tools: List[ToolPipeable], dir_: Path) -> List[PipedTool]:
+def run_as_pipe(tools: list[ToolPipeable], dir_: Path) -> list[PipedTool]:
     """
     Runs a set of tools as a single pipe.
     :param tools: List of tools
@@ -51,13 +53,12 @@ def run_as_pipe(tools: List[ToolPipeable], dir_: Path) -> List[PipedTool]:
     # Collect separate commands
     piped_tools = []
     for i, tool in enumerate(tools):
-        stderr_path = Path(tempfile.NamedTemporaryFile(
-            dir=Camel.get_instance().config['temp_dir'], prefix='stderr_', suffix='.txt').name)
-        piped_tools.append((PipedTool(
+        stderr_path = Path(tempfile.NamedTemporaryFile(dir=config.dir_temp, prefix='stderr_', suffix='.txt').name)
+        piped_tools.append(PipedTool(
             tool,
             f'{tool.prepare_pipe(dir_, i > 0, i != len(tools) - 1).command} 2> {stderr_path}',
             stderr_path
-        )))
+        ))
 
     # Construct and run full command
     lmod_command = _combine_dependencies(tools)

@@ -5,7 +5,7 @@ from typing import Any
 from camel.app.components.vcf.vcfutils import VCFUtils
 from camel.app.components.workflows.utils.fastqinput import FastqInput
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import variant_calling
 
@@ -58,7 +58,7 @@ class VariantCallingWrapper:
         # Create input
         if not self._working_dir.exists():
             self._working_dir.mkdir(parents=True)
-        SnakemakeUtils.dump_object(fastq_input.to_fq_dict(), self._working_dir / 'fq_dict.io')
+        snakemakeutils.dump_object(fastq_input.to_fq_dict(), self._working_dir / 'fq_dict.io')
         config_data = self.__get_config_data(sample_name, reference_info, options)
         config_data['input_type'] = input_type
         config_file = SnakePipelineUtils.generate_config_file(config_data, self._working_dir)
@@ -66,13 +66,12 @@ class VariantCallingWrapper:
         # Execute Snakemake
         output_files = {
             'BAM': variant_calling.get_bam({'input_type': input_type, 'working_dir': self._working_dir}),
-            'VCF': self._working_dir / variant_calling.OUTPUT_VARIANT_CALLING_UNFILTERED_VCF,
-            'INFORMS_MAPPING': self._working_dir / variant_calling.OUTPUT_VARIANT_CALLING_MAPPING_INFORMS,
-            'INFORMS_ALL': self._working_dir / variant_calling.OUTPUT_VARIANT_CALLING_INFORMS_ALL
+            'VCF': Path(variant_calling.OUTPUT_UNFILTERED_VCF_GZ),
+            'INFORMS_MAPPING': Path(variant_calling.OUTPUT_MAPPING_INFORMS),
+            'INFORMS_ALL': Path(variant_calling.OUTPUT_INFORMS_ALL)
         }
         SnakePipelineUtils.run_snakemake(
-            variant_calling.SNAKEFILE_VARIANT_CALLING, config_file, list(output_files.values()), self._working_dir,
-            cores)
+            variant_calling.SNAKEFILE, config_file, list(output_files.values()), self._working_dir, cores)
 
         # Collect output
         self.__collect_output(output_files)
@@ -105,12 +104,12 @@ class VariantCallingWrapper:
         :param output_files: Output files dictionary by key
         :return: None
         """
-        vcf_file = SnakemakeUtils.load_object(output_files['VCF'])[0]
+        vcf_file = snakemakeutils.load_object(self._working_dir / output_files['VCF'])[0]
         number_of_variants = VCFUtils.count_variants(vcf_file.path)
         self._output = VariantCallingOutput(
-            bam_file=SnakemakeUtils.load_object(output_files['BAM'])[0],
+            bam_file=snakemakeutils.load_object(self._working_dir / output_files['BAM'])[0],
             vcf_unfiltered=vcf_file,
             nb_of_variants=number_of_variants,
-            informs_mapping=SnakemakeUtils.load_object(output_files['INFORMS_MAPPING']),
-            informs_all=SnakemakeUtils.load_object(output_files['INFORMS_ALL'])
+            informs_mapping=snakemakeutils.load_object(self._working_dir / output_files['INFORMS_MAPPING']),
+            informs_all=snakemakeutils.load_object(self._working_dir / output_files['INFORMS_ALL'])
         )

@@ -2,13 +2,17 @@
 import argparse
 import json
 import shutil
-from typing import Any, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Optional
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
 from camel.app.components.html.htmlreport import HtmlReport
 from camel.app.components.pipelines import absolute_path_by_pathlib
-from camel.app.components.workflows.genedetectionwrapper import GeneDetectionWrapper, GeneDetectionOutput
+from camel.app.components.workflows.genedetectionwrapper import (
+    GeneDetectionOutput,
+    GeneDetectionWrapper,
+)
 from camel.app.components.workflows.inputtype import helper_by_input_type
 
 
@@ -37,7 +41,7 @@ class MainGeneDetection:
         mainscriptutils.add_assembly_arguments(argument_parser)
         mainscriptutils.add_input_files_arguments(argument_parser)
         argument_parser.add_argument('--database-dir', type=absolute_path_by_pathlib, required=True)
-        argument_parser.add_argument('--detection-method', type=str, choices=['blast', 'srst2', 'kma'], default='blast')
+        argument_parser.add_argument('--detection-method', type=str, choices=['blast', 'kma'], default='blast')
 
         # BLAST specific parameters
         argument_parser.add_argument('--output-fasta', type=absolute_path_by_pathlib, help='output path for assembled contigs')
@@ -48,12 +52,6 @@ class MainGeneDetection:
         argument_parser.add_argument('--blast-score-nb-of-hits', type=int, default=5)
         argument_parser.add_argument('--blast-reads', action='store_true', default=None,
                                      help='perform blast search of the reads directly instead of on the assembly' )
-
-        # SRST2 specific parameters
-        argument_parser.add_argument('--srst2-min-cov', type=int, default=90)
-        argument_parser.add_argument('--srst2-max-div', type=int, default=10)
-        argument_parser.add_argument('--srst2-max-unaligned-overlap', type=int, default=100)
-        argument_parser.add_argument('--srst2-max-mismatch', type=int, default=10)
 
         # KMA specific parameters
         argument_parser.add_argument('--kma-min-percent-identity', type=int, default=90)
@@ -94,10 +92,6 @@ class MainGeneDetection:
         elif self._args.detection_method == 'kma':
             fastq_input = self._helper.prepare_fastq_input(report, self._args)
             wrapper.run_workflow_kma(fastq_input, self._sample_name, db_data, self._args.threads)
-        elif self._args.detection_method == 'srst2':
-            fastq_input = self._helper.prepare_fastq_input(report, self._args)
-            wrapper.run_workflow_srst2(
-                fastq_input, self._sample_name, db_data, self._args.threads)
 
         # Export all output
         self.__export_output(report, wrapper.output)
@@ -118,13 +112,6 @@ class MainGeneDetection:
                 'min_percent_identity': self._args.blast_min_percent_identity,
                 'score_nb_of_hits': self._args.blast_score_nb_of_hits,
                 'task': self._args.blast_task,
-            }}})
-        elif self._args.detection_method == 'srst2':
-            config_data.update({'params': {'srst2': {
-                'max_divergence': self._args.srst2_max_div,
-                'max_mismatch': self._args.srst2_max_mismatch,
-                'max_unaligned_overlap': self._args.srst2_max_unaligned_overlap,
-                'min_coverage': self._args.srst2_min_cov,
             }}})
         elif self._args.detection_method == 'kma':
             config_data.update({'params': {'kma': {
@@ -149,7 +136,7 @@ class MainGeneDetection:
         :param output: Workflow output
         :return: None
         """
-        self._helper.logs['gene_detection'] = str(output.log_file)
+        self._helper.logs['gene_detection'] = str(output.log_file) if output.log_file is not None else None
         self._helper.informs.append(output.informs)
         self._helper.export_output_and_commands_section(report, output.report_section)
 

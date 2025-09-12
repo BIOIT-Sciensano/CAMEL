@@ -1,26 +1,25 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.tools.seqkit.seqkitbase import SeqkitBase
 
 
-class SeqkitSplit2(Tool):
+class SeqkitSplit2(SeqkitBase):
     """
     Seqkit split2 splits sequences into files by part size or number of parts.
     """
 
     INPUT_KEYS = ('FASTQ', 'FASTA')
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Seqkit split2', '2.3.1', camel)
+        super().__init__('Seqkit split2', version=None)
 
     def _check_input(self) -> None:
         """
@@ -28,7 +27,7 @@ class SeqkitSplit2(Tool):
         :return: None
         """
         if not any(x in self._tool_inputs for x in SeqkitSplit2.INPUT_KEYS):
-            raise InvalidInputSpecificationError('{} input is required.'.format(' or '.join(SeqkitSplit2.INPUT_KEYS)))
+            raise InvalidToolInputError('{} input is required.'.format(' or '.join(SeqkitSplit2.INPUT_KEYS)))
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -36,7 +35,7 @@ class SeqkitSplit2(Tool):
         Executes this tool.
         :return: None
         """
-        dir_out = Path(self._parameters['output_dir'].value)
+        dir_out = (self._folder / Path(self._parameters['output_dir'].value)).absolute()
         self.__build_command(dir_out)
         self._execute_command()
         self._collect_tool_output(dir_out)
@@ -70,10 +69,10 @@ class SeqkitSplit2(Tool):
             for path_fastq in sorted(dir_out.glob('*.fastq')):
                 self._tool_outputs['FASTQ'].append(ToolIOFile(path_fastq))
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)

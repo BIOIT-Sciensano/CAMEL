@@ -1,9 +1,11 @@
 import os
 import os.path
+from pathlib import Path
 
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.tools.tool import Tool
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 
 
@@ -13,13 +15,12 @@ class RefCovSort(Tool):
     data across a reference. This Class sorts the raw output of RefCov to something that is easier to interpret.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('refcov_sort', '0.3', camel)
+        super().__init__('refcov_sort', '0.3')
 
     def _execute_tool(self):
         """
@@ -40,9 +41,9 @@ class RefCovSort(Tool):
         """
         super(RefCovSort, self)._check_input()
         if 'TSV' not in self._tool_inputs or len(self._tool_inputs['TSV']) > 1:
-                raise InvalidInputSpecificationError('Invalid input given for RefCovSort (TSV and 1 file): {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input given for RefCovSort (TSV and 1 file): {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Only TSV allowed as input for RefCovSort: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Only TSV allowed as input for RefCovSort: {!r}'.format(self._tool_inputs))
 
     def __get_basename(self):
         """
@@ -64,7 +65,7 @@ class RefCovSort(Tool):
         Sets the name of the output files, and fills the common stream object with them
         :return: None
         """
-        self._tool_outputs['TSV'] = [ToolIOFile(self.__get_output_name())]
+        self._tool_outputs['TSV'] = [ToolIOFile(Path(self.__get_output_name()))]
 
     def __build_command(self):
         """
@@ -90,12 +91,13 @@ class RefCovSort(Tool):
         # Else: sort by read depth first (column 6) then sort by coverage (column 2)
         else:
             sort_cmd = "sort -k6,6nr -k2,2nr -t$'\t'"
-        self._command.command = ' '.join([sort_cmd, self._tool_inputs['TSV'][0].path, awk_cmd, '>', self.__get_output_name()])
+        self._command.command = ' '.join([
+            sort_cmd, str(self._tool_inputs['TSV'][0].path), awk_cmd, '>', self.__get_output_name()])
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

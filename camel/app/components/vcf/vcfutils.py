@@ -1,14 +1,12 @@
 from pathlib import Path
-from typing import List
 
 import vcf
 
 from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error.invalidparametererror import InvalidParameterError
+from camel.app.error import InvalidParameterError
 
 
-class VCFUtils(object):
-
+class VCFUtils:
     """
     Helper to perform VCF file related functions
     """
@@ -44,7 +42,7 @@ class VCFUtils(object):
         return vcf.Reader(filename=str(vcf_file))
 
     @staticmethod
-    def retrieve_variants(vcf_file: Path, types: List[str] = None, excluded_types: List[str] = None):
+    def retrieve_variants(vcf_file: Path, types: list[str] = None, excluded_types: list[str] = None):
         """
         Function to retrieve certain types of variants. Parameter
         'types' and 'excluded_types' is mutual exclusive. Either specify
@@ -63,8 +61,9 @@ class VCFUtils(object):
         excluded_types = [] if excluded_types is None else excluded_types
 
         if len(types) > 0 and len(excluded_types) > 0:
-            raise InvalidParameterError("Mutually exclusive parameters 'included types' and 'excluded types' are "
-                                        "specified. Only one is allowed.")
+            raise InvalidParameterError(
+                "Mutually exclusive parameters 'included types' and 'excluded types' are specified. Only one is "
+                "allowed.")
 
         vcf_reader = vcf.Reader(filename=str(vcf_file))
         records = []

@@ -1,9 +1,8 @@
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -13,11 +12,11 @@ class MenDeVARReporter(Tool):
     Creates an HTML output report for the MenDeVAR indexes.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the reporter.
         """
-        super().__init__('MenDeVAR reporter', '0.1', camel)
+        super().__init__('MenDeVAR reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -25,9 +24,9 @@ class MenDeVARReporter(Tool):
         :return: None
         """
         if 'mendevar' not in self._input_informs:
-            raise InvalidInputSpecificationError("MenDeVAR informs are required ('mendevar')")
+            raise InvalidToolInputError("MenDeVAR informs are required ('mendevar')")
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("MenDeVAR tabular output is required ('TSV')")
+            raise InvalidToolInputError("MenDeVAR tabular output is required ('TSV')")
         super()._check_input()
 
     def __add_bexsero_index_table(self, section: HtmlReportSection) -> None:

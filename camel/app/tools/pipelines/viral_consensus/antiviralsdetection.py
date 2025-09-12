@@ -3,8 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,13 +14,12 @@ class AntiviralsDetection(Tool):
     Detects antiviral mutations by cross-checking the Nextclade output with an in-house database.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('antiviral detection', '0.1', camel)
+        super().__init__('antiviral detection', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -29,9 +27,9 @@ class AntiviralsDetection(Tool):
         :return: None
         """
         if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('DB input is required')
+            raise InvalidToolInputError('DB input is required')
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('TSV input from Nextclade is required')
+            raise InvalidToolInputError('TSV input from Nextclade is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:

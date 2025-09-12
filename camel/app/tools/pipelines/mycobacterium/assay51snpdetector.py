@@ -1,8 +1,6 @@
-from typing import List, Dict
 
 from vcf import VCFReader
 
-from camel.app.camel import Camel
 from camel.app.components.mycobacterium import assay51snputils
 from camel.app.components.mycobacterium.assay51snputils import SNPPosition, SCGProfile
 from camel.app.loggers import logger
@@ -16,12 +14,11 @@ class Assay51SnpDetector(Tool):
     https://jcm.asm.org/content/52/6/1962.full
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: 51SNP detector', '0.1', camel)
+        super().__init__('Mycobacterium: 51SNP detector', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -41,7 +38,7 @@ class Assay51SnpDetector(Tool):
         self.__extract_best_scg_group(self._informs['snp_positions_by_name'], scg_profiles)
         self.__extract_snp_informs(self._informs['snp_positions_by_name'])
 
-    def __add_vcf_records(self, snp_positions: List[SNPPosition]) -> None:
+    def __add_vcf_records(self, snp_positions: list[SNPPosition]) -> None:
         """
         Adds VCF records to the SNP positions, if no SNP is found the value is kept at None.
         :param snp_positions: SNP positions
@@ -59,7 +56,7 @@ class Assay51SnpDetector(Tool):
             if snp_position.pos in records_filt_by_pos:
                 snp_position.vcf_filt_record = records_filt_by_pos[snp_position.pos]
 
-    def __extract_positive_control_snp(self, snp_positions_by_name: Dict[str, SNPPosition]) -> None:
+    def __extract_positive_control_snp(self, snp_positions_by_name: dict[str, SNPPosition]) -> None:
         """
         Checks the positive control SNP position.
         :param snp_positions_by_name: SNP positions by name
@@ -69,7 +66,7 @@ class Assay51SnpDetector(Tool):
                 snp_positions_by_name['SNP01'].vcf_record is None and
                 snp_positions_by_name['SNP01'].vcf_filt_record is None) else 'NOT OK'
 
-    def __extract_gyrb_group(self, snp_positions_by_name: Dict[str, SNPPosition]) -> None:
+    def __extract_gyrb_group(self, snp_positions_by_name: dict[str, SNPPosition]) -> None:
         """
         Extracts the gyrB group.
         :param snp_positions_by_name: SNP positions by name
@@ -82,7 +79,7 @@ class Assay51SnpDetector(Tool):
                 self._informs['gyrB_group'] = profile['group']
                 self._informs['gyrB_species'] = profile['species']
 
-    def __extract_genetic_group(self, snp_positions_by_name: Dict[str, SNPPosition]) -> None:
+    def __extract_genetic_group(self, snp_positions_by_name: dict[str, SNPPosition]) -> None:
         """
         Extracts the genetic group.
         :param snp_positions_by_name: SNP positions by name
@@ -93,7 +90,7 @@ class Assay51SnpDetector(Tool):
             if all(snp_positions_by_name[key].nucl == genetic_group[key] for key in ['SNP05', 'SNP06']):
                 self._informs['genetic_group'] = genetic_group['name']
 
-    def __extract_best_scg_group(self, snp_positions_by_name: Dict[str, SNPPosition], profiles: List[SCGProfile]) ->\
+    def __extract_best_scg_group(self, snp_positions_by_name: dict[str, SNPPosition], profiles: list[SCGProfile]) ->\
             None:
         """
         Returns the best matching SCG profile.
@@ -109,7 +106,7 @@ class Assay51SnpDetector(Tool):
             counts.append((profile, nb_matching_snps))
         self._informs['scg_profile'], self._informs['scg_nb_snps_matched'] = sorted(counts, key=lambda x: -x[-1])[0]
 
-    def __extract_snp_informs(self, snp_positions_by_name: Dict[str, SNPPosition]) -> None:
+    def __extract_snp_informs(self, snp_positions_by_name: dict[str, SNPPosition]) -> None:
         """
         Extracts the informs for the individual SNPs.
         :param snp_positions_by_name: SNP positions by name

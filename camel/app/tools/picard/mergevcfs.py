@@ -1,4 +1,3 @@
-from camel.app.camel import Camel
 from camel.app.tools.picard.picard import Picard
 
 
@@ -7,13 +6,12 @@ class MergeVCFs(Picard):
     Class for picard MergeVCFs function
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Picard MergeVCFs', '2.23.3', camel)
+        super().__init__('Picard MergeVCFs', '2.23.3')
 
         self._required_inputs = ['VCF']
         self._output_type = 'VCF'

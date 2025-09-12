@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -8,13 +8,12 @@ class MothurCountGroups(Mothur):
     The count.groups command counts sequences from a specific group or set of groups.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_count_groups', '1.39.1', camel)
+        super().__init__('mothur_count_groups', '1.39.1')
 
     def _check_input(self):
         """
@@ -24,13 +23,13 @@ class MothurCountGroups(Mothur):
         - Only one input file per key is allowed
         :return: None
         """
-        super(MothurCountGroups, self)._check_input()
+        super()._check_input()
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_Groups', 'TSV_Counts', 'TSV_Shared', 'TSV_Accnos']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur '
+                raise InvalidToolInputError('Invalid input key given for Mothur '
                                                      'count.groups: {!r}'.format(self._tool_inputs))
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
+                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
                                                      count.groups: {!r}'.format(self._tool_inputs))
 
     def _build_input_string(self):
@@ -58,9 +57,9 @@ class MothurCountGroups(Mothur):
         basename = ''
         # TSV_Groups, TSV_Shared and TSV_Counts are mutually exclusive
         if 'TSV_Groups' in self._tool_inputs:
-            basename = super(MothurCountGroups, self)._get_basename('TSV_Groups')
+            basename = super()._get_basename('TSV_Groups')
         elif 'TSV_Shared' in self._tool_inputs:
-            basename = super(MothurCountGroups, self)._get_basename('TSV_Shared')
+            basename = super()._get_basename('TSV_Shared')
         elif 'TSV_Counts' in self._tool_inputs:
-            basename = super(MothurCountGroups, self)._get_basename('TSV_Counts')
+            basename = super()._get_basename('TSV_Counts')
         self._tool_outputs['TSV_Summary'] = [ToolIOFile(basename + '.count.summary')]

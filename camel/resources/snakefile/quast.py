@@ -1,7 +1,7 @@
 from pathlib import Path
 
-SNAKEFILE_QUAST = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-OUTPUT_QUAST_REPORT = Path('quast') / 'report' / 'html.io'
-OUTPUT_QUAST_SUMMARY = Path('quast') / 'report' / 'summary_quast.tsv'
-OUTPUT_QUAST_INFORMS = Path('quast') / 'output' / 'informs.io'
-OUTPUT_BUSCO_INFORMS = Path('quast') / 'busco' / 'informs.io'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+OUTPUT_REPORT = 'quast/report/html.iob'
+OUTPUT_SUMMARY = 'quast/summary/summary_quast.{ext}'
+OUTPUT_INFORMS = 'quast/output/informs.io'
+OUTPUT_INFORMS_BUSCO = 'quast/busco/informs.io'

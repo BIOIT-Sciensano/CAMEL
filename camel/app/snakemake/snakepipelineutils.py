@@ -1,7 +1,9 @@
+import json
 import re
 from datetime import datetime
+from importlib.resources import files
 from pathlib import Path
-from typing import List, Tuple, Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 import yaml
 
@@ -11,37 +13,37 @@ from camel.app.components.html.htmlcitation import HtmlCitation
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreport import HtmlReport
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.snakemakeexecutionerror import SnakemakeExecutionError
+from camel.app.config import config
+from camel.app.error import SnakemakeExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.resources import CSS_STYLE
-from camel.resources.javascript import JQUERY_SRC
 
 
-class SnakePipelineUtils(object):
+class SnakePipelineUtils:
     """
     This class contains utility functions for Snakemake pipelines.
     """
 
-    DATE_FORMAT = '%d/%m/%Y - %X'
-
     @staticmethod
-    def init_pipeline_report(output_path: Path, output_dir: Path, pipeline_info: Dict[str, str]) -> HtmlReport:
+    def init_pipeline_report(output_path: Path, output_dir: Path, pipeline_info: dict[str, str]) -> HtmlReport:
         """
         Initializes an empty pipeline report.
         :return: Report
         """
-        report = HtmlReport(output_path, output_dir, [JQUERY_SRC])
-        report.initialize(pipeline_info['name'], CSS_STYLE)
+        path_css = Path(str(files('camel').joinpath('resources/css/style.css')))
+        path_jquery = Path(str(files('camel').joinpath('resources/javascript/jquery-3.2.1.min.js')))
+        report = HtmlReport(output_path, output_dir, [path_jquery])
+        report.initialize(pipeline_info['name'], path_css)
         report.add_pipeline_header(f"{pipeline_info['title']} {pipeline_info['version']}")
         return report
 
     @staticmethod
     def create_input_section(
             sample_name: str, date: datetime, pipeline_version: str, input_files: str, input_type: str,
-            detection_method: Optional[str] = None, extra_data: Optional[List[Tuple[str, str]]] = None,
+            detection_method: Optional[str] = None, extra_data: Optional[list[tuple[str, str]]] = None,
             key_citation: str = None) -> HtmlReportSection:
         """
         Creates the input section for the HTML report.
@@ -57,7 +59,7 @@ class SnakePipelineUtils(object):
         """
         table_data = [
             ['Sample:', sample_name],
-            ['Analysis date:', date.strftime(SnakePipelineUtils.DATE_FORMAT)],
+            ['Analysis date:', date.strftime(config.date_fmt)],
             ['Pipeline version:', pipeline_version],
             ['Input files:', input_files],
             ['Input type:', input_type]
@@ -80,7 +82,7 @@ class SnakePipelineUtils(object):
         return section
 
     @staticmethod
-    def add_report_content(report: HtmlReport, report_structure: List[Tuple[str, str, List[Path]]]) -> None:
+    def add_report_content(report: HtmlReport, report_structure: list[tuple[str, str, list[Path]]]) -> None:
         """
         Adds the content to the HTML report.
         :param report: Report
@@ -93,7 +95,7 @@ class SnakePipelineUtils(object):
         overview_list = HtmlElement('ul')
         for title, key, _ in report_structure:
             list_item = HtmlElement('li')
-            list_item.add_html_object(HtmlElement('a', title, [('href', '#{}'.format(key))]))
+            list_item.add_html_object(HtmlElement('a', title, [('href', f'#{key}')]))
             overview_list.add_html_object(list_item)
         section.add_html_object(overview_list)
         report.add_html_object(section)
@@ -104,7 +106,7 @@ class SnakePipelineUtils(object):
             for pickle in items:
                 if not pickle.exists():
                     continue
-                section = SnakemakeUtils.load_object(pickle)[0].value
+                section = snakemakeutils.load_object(pickle)[0].value
                 report.add_html_object(section)
                 section.copy_files(report.output_dir)
         report.save()
@@ -123,8 +125,8 @@ class SnakePipelineUtils(object):
         SnakemakeUtils.dump_object([ToolIOValue(section)], output_file)
 
     @staticmethod
-    def symlink_input_files(output_dir: Path, file_paths: List[str], file_names: List[str], sanitize: bool = False) ->\
-            List[Path]:
+    def symlink_input_files(output_dir: Path, file_paths: list[str], file_names: list[str], sanitize: bool = False) ->\
+            list[Path]:
         """
         Creates symlinks with the given names for the given files.
         This can be used for files that come from Galaxy that have a fixed name (dataset_XXXXX.dat).
@@ -135,8 +137,7 @@ class SnakePipelineUtils(object):
         :return: List of absolute paths to symlinks
         """
         if len(file_names) != len(file_paths):
-            raise ValueError("File names ({}) and file paths ({}) should be the same length".format(
-                len(file_names), len(file_paths)))
+            raise ValueError(f"File names ({len(file_names)}) and file paths ({len(file_paths)}) should be the same length")
         if not output_dir.exists():
             output_dir.mkdir(parents=True)
         links = []
@@ -149,7 +150,7 @@ class SnakePipelineUtils(object):
         return links
 
     @staticmethod
-    def generate_config_file(config_data: Dict[str, Any], output_dir: Path, output_basename: str = 'config.yml') -> str:
+    def generate_config_file(config_data: dict[str, Any], output_dir: Path, output_basename: str = 'config.yml') -> str:
         """
         Generates a configuration file for Snakemake in YAML file format.
         :param config_data: Configuration data
@@ -166,9 +167,9 @@ class SnakePipelineUtils(object):
         return str(config_path)
 
     @staticmethod
-    def run_snakemake(snakefile: str, config_path: str, targets: List[Path], working_dir: Path,
-                      threads: int = 8, resources: Optional[Dict[str, Any]] = None,
-                      slurm_args: Optional[Dict[str, int]] = None) -> Command:
+    def run_snakemake(snakefile: str | Path, config_path: str, targets: list[Path], working_dir: Path,
+                      threads: int = 8, resources: Optional[dict[str, Any]] = None,
+                      slurm_args: Optional[dict[str, int]] = None) -> Command:
         """
         Helper function to run snakemake workflows.
         :param snakefile: Workflow snakefile
@@ -225,9 +226,10 @@ class SnakePipelineUtils(object):
             if not m:
                 continue
             return m.group(1)
+        return None
 
     @staticmethod
-    def create_commands_section(tool_informs: List[Dict[str, Any]], working_dir: Path) -> HtmlReportSection:
+    def create_commands_section(tool_informs: list[dict[str, Any]], working_dir: Path) -> HtmlReportSection:
         """
         Creates a section with an overview of the commands.
         :param tool_informs: Tool informs
@@ -246,8 +248,8 @@ class SnakePipelineUtils(object):
 
     @staticmethod
     def extracts_fq_input(io_dict: Path, key_pe: Optional[str] = 'FASTQ_PE', key_se: Optional[str] = None,
-                          keys_se: Optional[List[str]] = None, drop_empty: bool = False, read_type: str = 'PE') -> \
-            Dict[str, List[ToolIOFile]]:
+                          keys_se: Optional[list[str]] = None, drop_empty: bool = False, read_type: str = 'PE') -> \
+            dict[str, list[ToolIOFile]]:
         """
         Extracts a specific FASTQ input dictionary from the standardized FASTQ dictionary.
         :param io_dict: Path to input IO file
@@ -258,7 +260,7 @@ class SnakePipelineUtils(object):
         :param read_type: Type of reads ('PE' or 'SE')
         :return: Reformatted dictionary
         """
-        io = SnakemakeUtils.load_object(io_dict)
+        io = snakemakeutils.load_object(io_dict)
         output_dict = {}
 
         # Single end reads (no paired / orphaned reads available)
@@ -280,7 +282,7 @@ class SnakePipelineUtils(object):
             se_reads = io.get('SE_FWD', []) + io.get('SE_REV', [])
             output_dict[key_se] = se_reads
         else:
-            logger.debug(f"No key(s) provided for SE reads")
+            logger.debug("No key(s) provided for SE reads")
 
         # Remove keys that are empty
         if drop_empty:
@@ -294,7 +296,7 @@ class SnakePipelineUtils(object):
         return output_dict
 
     @staticmethod
-    def create_citations_section(keys_other: List[str], key_main: Optional[str] = None) -> HtmlReportSection:
+    def create_citations_section(keys_other: list[str], key_main: Optional[str] = None) -> HtmlReportSection:
         """
         Creates the report section with the citations.
         :param keys_other: List of key for citations for tools and databases
@@ -308,3 +310,31 @@ class SnakePipelineUtils(object):
         for citation_key in keys_other:
             section_citations.add_html_object(HtmlCitation.parse_from_json(citation_key))
         return section_citations
+
+    @staticmethod
+    def combine_summary_data(snake_in: Any, path_out: Path, ext: str) -> None:
+        """
+        Combines the summary data into a single file.
+        :param snake_in: Snakemake input
+        :param path_out: Output path
+        :param ext: Summary format (TSV / JSON)
+        :return: None
+        """
+        if ext == 'json':
+            json_dict = {}
+            for summary_input in snake_in:
+                with Path(summary_input).open() as handle_in:
+                    try:
+                        json_dict = {**json_dict, **json.load(handle_in)}
+                    except json.JSONDecodeError as err:
+                        logger.error(f"Could not parse {summary_input}")
+                        raise err
+            with path_out.open('w') as handle_out:
+                json.dump(json_dict, handle_out, indent=2)
+        elif ext == 'tsv':
+            with path_out.open('w') as handle_out:
+                for summary_input in snake_in:
+                    with open(summary_input) as handle_in:
+                        handle_out.write(handle_in.read())
+        else:
+            raise ValueError(f"Invalid 'ext' value: {ext}")

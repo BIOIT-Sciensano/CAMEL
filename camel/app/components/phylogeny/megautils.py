@@ -2,7 +2,7 @@ from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 from camel.app.tools.mega.modelselection import ModelSelection
 
 
-class MEGAUtils(object):
+class MEGAUtils:
     """
     This class contains utility functions to work with the MEGA tools.
     """

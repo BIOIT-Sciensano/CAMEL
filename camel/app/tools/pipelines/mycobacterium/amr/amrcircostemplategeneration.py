@@ -1,11 +1,9 @@
 import json
 from pathlib import Path
-from typing import List
 
-from camel.app.camel import Camel
 from camel.app.components.mycobacterium import amrutils
 from camel.app.components.mycobacterium.amrutils import ConfidenceLevel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -50,12 +48,11 @@ class AMRCircosTemplateGeneration(Tool):
     This tool creates the circos template to visualize the AMR mutations.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: AMR circos template generation', '0.1', camel)
+        super().__init__('Mycobacterium: AMR circos template generation', '0.1')
         self._plots = []
         self._highlights = []
         self.__total_length = 0
@@ -71,7 +68,7 @@ class AMRCircosTemplateGeneration(Tool):
         :return: None
         """
         if 'TSV_depth' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input with depth values is required ('TSV_depth')")
+            raise InvalidToolInputError("TSV input with depth values is required ('TSV_depth')")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -295,7 +292,7 @@ class AMRCircosTemplateGeneration(Tool):
             """
         )
 
-    def __parse_coverage_values(self, tsv_file: Path, window_size: int = 500) -> List[int]:
+    def __parse_coverage_values(self, tsv_file: Path, window_size: int = 500) -> list[int]:
         """
         Parses the coverage values reported by samtools depth.
         :param tsv_file: TSV file containing depth values

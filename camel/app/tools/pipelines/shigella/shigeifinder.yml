@@ -1,3 +1,7 @@
-dependencies: [shigeifinder/1.3.5, samtools/1.17, blast/2.14.0, bwa/0.7.17]
+dependencies:
+  - shigeifinder/1.3.5
+  - samtools/1.17
+  - blast/2.14.0
+  - bwa/0.7.17
 parameters: {}
 tool_command: shigeifinder

@@ -1,5 +1,16 @@
-dependencies: [seqtk/1.4]
+dependencies:
+  - seqtk/1.4
 parameters:
-  output_fasta: {default: true, mandatory: false, option: -A, p_index: 0, value: null}
-  output_file: {default: true, mandatory: true, option: null, p_index: 0, value: seqtk_converted.fasta}
+  output_fasta:
+    default: true
+    mandatory: false
+    option: '-A'
+    p_index: 0
+    flag: true
+  output_file:
+    default: true
+    mandatory: true
+    option: null
+    p_index: 0
+    value: seqtk_converted.fasta
 tool_command: seqtk seq

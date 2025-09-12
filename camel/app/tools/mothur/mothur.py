@@ -3,7 +3,9 @@ import tempfile
 
 import abc
 import os
+from pathlib import Path
 
+from camel.app.command.command import Command
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,18 +17,17 @@ class Mothur(Tool):
     Mothur commands.
     """
 
-    def __init__(self, name, version, camel):
+    def __init__(self, name, version):
         """
         Initialize tool
         :param name: Name of the tool
         :param version: Version of the tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(name, version, camel)
+        super().__init__(name, version)
         # For reproducibility a seed is specified for each operation
         self._seed = random.randint(1, 10000000)
-        logger.debug('Set seed to: {}'.format(self._seed))
+        logger.debug(f'Set seed to: {self._seed}')
         self.__symlinks = []
         self.__temp_dir = tempfile.mkdtemp(dir='/scratch/temp')
 
@@ -54,7 +55,7 @@ class Mothur(Tool):
                     link_name = os.path.join(self.__temp_dir, tool_input.basename.replace('-', '_'))
                     os.symlink(tool_input.path, link_name)
                     self.__symlinks.append(link_name)
-                    new_inputs[input_key] += [ToolIOFile(link_name)]
+                    new_inputs[input_key] += [ToolIOFile(Path(link_name))]
                 else:
                     new_inputs[input_key] += [tool_input]
         self._tool_inputs = new_inputs
@@ -101,7 +102,7 @@ class Mothur(Tool):
         :param separator: separator used to combine the option and value (Optional)
         :return: String with command parameters
         """
-        option_list = super(Mothur, self)._build_options(excluded_parameters, separator)
+        option_list = super()._build_options(excluded_parameters, separator)
         option_list += ['seed=' + str(self._seed)]
         return ', ' + ', '.join(option_list)
 
@@ -113,20 +114,20 @@ class Mothur(Tool):
         if 'label' in self._parameters:
             return self._parameters['label'][1].strip().split('-')
         # If no label parameter is specified all the labels in the file will be used
-        with open(self._tool_inputs['TSV_List'][0].path, 'r') as label_file:
+        with open(self._tool_inputs['TSV_List'][0].path) as label_file:
             label_file.readline()
             return [line.split(None, 1)[0] for line in label_file]
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
         Analyzes output to discover if the run was successful. If an error was present in stdout, a RuntimeError is
         raised and stdout is displayed
         :return: None
         """
-        for line in self.stdout.splitlines():
+        for line in command.stdout.splitlines():
             if line.startswith('[ERROR]') or line.startswith('Unable to open'):
-                raise RuntimeError('\n'.join(self.stdout.splitlines()) + '\n' +
-                                   '!!! Mothur failed to run !!! See above for more information.')
+                raise RuntimeError('\n'.join(
+                    command.stdout.splitlines()) + '\n' + '!!! Mothur failed to run !!! See above for more information.')
 
     def _get_basename(self, input_key='FASTA', suffix='.'):
         """

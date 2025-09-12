@@ -3,8 +3,7 @@ from typing import Any
 import pandas as pd
 import vcf
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -17,18 +16,18 @@ class CallMultiAllelicSites(Tool):
 
     AMBIGUITY_BASES = {'AC': 'M', 'AG': 'R', 'AT': 'W', 'CG': 'S', 'CT': 'Y', 'GT': 'K'}
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
         """
-        super().__init__('Call multi-allelic sites', '0.1', camel)
+        super().__init__('Call multi-allelic sites', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Pileup input is required (VCF)')
+            raise InvalidToolInputError('Pileup input is required (VCF)')
         super()._check_input()
 
     def _execute_tool(self) -> None:

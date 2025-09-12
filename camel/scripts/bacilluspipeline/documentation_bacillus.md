@@ -203,10 +203,7 @@ The `--organism` option is set to `Escherichia`.
 ## 8. Virulence characterization
 
 Gene detection is performed as described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/) using an 
-updated version of blast (`blast 2.14.0`). Alternative detection using `kma 1.4.12a` or `srst2 0.2.0` is available by 
-changing the `--detection-method` parameter.
-
-**Note:** srst2 is not available for ONT data input
+updated version of blast (`blast 2.14.0`). Alternative detection using `kma 1.4.12a` is available by changing the `--detection-method` parameter.
 
 The following databases are available: 
 
@@ -249,9 +246,7 @@ plasmids are cross-checked against the gene detection results for the virulence 
 
 Sequence typing is performed as described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/) with an 
 updated version of blast (`blast 2.14.0`). 
-Alternative detection using `kma 1.4.12a` or `srst2 0.2.0` is available by changing the `--detection-method` parameter.
-
-**Note:** srst2 is not available for ONT data input
+Alternative detection using `kma 1.4.12a` is available by changing the `--detection-method` parameter.
 
 The following typing schemes are available:
 

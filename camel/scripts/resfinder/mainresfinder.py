@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
@@ -14,7 +14,7 @@ from camel.app.tools.resfinder.resfinder import ResFinder
 from camel.app.tools.resfinder.resfinderreporter import ResFinderReporter
 
 
-class MainResFinder(object):
+class MainResFinder:
     """
     This class is used to run the main ResFinder local script.
     """
@@ -102,7 +102,7 @@ class MainResFinder(object):
         Runs ResFinder.
         :return: ResFinder tool instance.
         """
-        resfinder = ResFinder(Camel.get_instance())
+        resfinder = ResFinder()
         resfinder.add_input_files({'DIR': [ToolIODirectory(self._args.db_directory)]})
         if self._args.fasta is not None:
             resfinder.add_input_files({'FASTA': [ToolIOFile(self._args.fasta)]})
@@ -122,7 +122,7 @@ class MainResFinder(object):
             try:
                 resfinder.update_parameters(point=True, species='"' + self._args.species.replace('_', ' ') + '"')
             except AttributeError:
-                raise InvalidInputSpecificationError('--point requires a --species argument')
+                raise ValueError('--point requires a --species argument')
         if self._args.acquired is not None:
             resfinder.update_parameters(acquired=True, acq_overlap=self._args.acq_overlap)
 
@@ -135,7 +135,7 @@ class MainResFinder(object):
         :param resfinder: ResFinder tool instance.
         :return: None.
         """
-        reporter = ResFinderReporter(Camel.get_instance())
+        reporter = ResFinderReporter()
         reporter.add_input_files({'TSV_pheno_general': resfinder.tool_outputs['TSV_pheno_general']})
         if self._args.acquired is not None:
             reporter.add_input_files({'TSV_genes': resfinder.tool_outputs['TSV_genes']})

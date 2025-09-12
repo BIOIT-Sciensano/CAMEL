@@ -1,138 +1,181 @@
+import shutil
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import human_read_scrubbing
 from camel.resources.snakefile.human_read_scrubbing import get_removed
-
-camel = Camel.get_instance()
 
 
 rule scrubbing_fasta_fa2fq:
     """
-    Convert the input FASTA to FASTQ to be able to be used by the scrubber, it only accepts FASTQ.
+    Convert the input FASTA file to FASTQ format to ensure compatibility with the scrubber tool, which accepts only 
+    FASTQ input.
     """
     input:
-        FASTA = Path(config['working_dir']) / human_read_scrubbing.INPUT_SCRUBBING_FASTA
+        FASTA = human_read_scrubbing.INPUT_FASTA
     output:
-        FASTQ_from_fasta = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'input' / 'fasta2fastq.io'
+        FASTQ = 'human_read_scrubbing/fasta/input/fastq.io'
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'human_read_scrubbing' / wildcards.input_format / 'input'
+        dir_ = 'human_read_scrubbing/fasta/input'
     run:
         from camel.app.components.files.fastautils import FastaUtils
 
-        fasta_path_in = (SnakemakeUtils.load_object(Path(input.FASTA)))[0].path
-        fastq_path_out = Path(str(params.running_dir), f"{fasta_path_in.stem}.fastq")
+        fasta_path_in = (snakemakeutils.load_object(Path(input.FASTA)))[0].path
+        fastq_path_out = Path(str(params.dir_), f"{fasta_path_in.stem}.fastq")
 
         FastaUtils.convert_fasta_to_fastq(fasta_path_in, fastq_path_out)
-        SnakemakeUtils.dump_object([ToolIOFile(fastq_path_out)], Path(output.FASTQ_from_fasta))
+        snakemakeutils.dump_object([ToolIOFile(fastq_path_out)], Path(output.FASTQ))
 
-rule scrubbing_fastq_interleave_and_gunzip:
+rule scrubbing_decompress_fastq_se:
     """
-    Gunzips input FASTQ files if they are gzipped, and interleaves the input if there are two files, 
-    because the tool only accepts a single input FASTQ file.
+    Decompresses the input SE FASTQ file (if needed). 
     """
     input:
-        FASTQ = Path(config['working_dir']) / human_read_scrubbing.INPUT_SCRUBBING_FASTQ
+        FASTQ = str(human_read_scrubbing.INPUT_FASTQ).format(input_format='fastq_se')
     output:
-        FASTQ_SINGLE_GUNZIP = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'input' / 'fastq_gunzip_interleaved.io'
+        FASTQ = 'human_read_scrubbing/fastq_se/decompress/fastq.io'
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'human_read_scrubbing' / wildcards.input_format / 'input'
-    threads: 8
+        dir_ = 'human_read_scrubbing/fastq_se/decompress',
+        name = config['sample_name']
+    threads: 4
     run:
         from camel.app.components.filesystemhelper import FileSystemHelper
-        from camel.app.components.files.fastqutils import FastqUtils
-
-        # Get the FASTQ file(s)
-        fastq_in = SnakemakeUtils.load_object(Path(input.FASTQ))
-        nb_of_fq_files = len(fastq_in)
-
-        if nb_of_fq_files == 1:
-            path_in = fastq_in[0].path
-            path_out = Path(str(params.running_dir), path_in.name.replace('.gz', ''))
-
-            if not FileSystemHelper.is_gzipped(path_in):
-                SnakemakeUtils.dump_object([ToolIOFile(path_in)], Path(output.FASTQ_SINGLE_GUNZIP))
-            else:
-                FileSystemHelper.pigz_extract(path_in, path_out, threads=threads)
-                SnakemakeUtils.dump_object([ToolIOFile(path_out)], Path(output.FASTQ_SINGLE_GUNZIP))
-
+        path_fq = snakemakeutils.load_object(Path(input.FASTQ))[0].path
+        if not FileSystemHelper.is_gzipped(path_fq):
+            logger.info(f'Input FASTQ file is already decompressed')
+            path_out = path_fq
         else:
-            interleaved_out = Path(str(params.running_dir), f"{fastq_in[0].path.stem}_interleaved.fastq")
-            FastqUtils.convert_fastqs_to_interleaved_fastq(fastq_in[0].path, fastq_in[1].path, Path(str(params.running_dir), f"{fastq_in[0].path.stem}_interleaved.fastq"))
-            SnakemakeUtils.dump_object([ToolIOFile(interleaved_out)], Path(output.FASTQ_SINGLE_GUNZIP))
+            path_out = Path(params.dir_, f'{params.name}.fastq').absolute()
+            FileSystemHelper.pigz_extract(path_fq, path_out, threads=threads)
+        snakemakeutils.dump_object([ToolIOFile(path_out)], Path(output.FASTQ))
+
+rule scrubbing_interleave_fastq_pe:
+    """
+    Interleaves the input PE FASTQ data.
+    """
+    input:
+        FASTQ = lambda wildcards: human_read_scrubbing.INPUT_FASTQ.format(input_format='fastq_pe')
+    output:
+        FASTQ = 'human_read_scrubbing/fastq_pe/interleave_pe/fastq.io'
+    params:
+        dir_ = 'human_read_scrubbing/fastq_pe/interleave_pe'
+    threads: 8
+    run:
+        from camel.app.tools.seqtk.seqtkmergepe import SeqtkMergePE
+        merge_pe = SeqtkMergePE()
+        merge_pe.add_input_files({
+            'FASTQ_PE': snakemakeutils.load_object(Path(str(input.FASTQ)))
+        })
+        step = Step(rule_name=str(rule), tool=merge_pe, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(merge_pe, output)
+
+rule scrubbing_select_input:
+    """
+    Selects the input for the read scrubbing tool.
+    """
+    input:
+        FASTQ_PE_IL = lambda wildcards: rules.scrubbing_interleave_fastq_pe.output.FASTQ if wildcards.input_format == 'fastq_pe' else [],
+        FASTQ_SE_GZ = lambda wildcards: rules.scrubbing_decompress_fastq_se.output.FASTQ if wildcards.input_format == 'fastq_se' else [],
+        FASTQ_FORM_FASTA = lambda wildcards: rules.scrubbing_fasta_fa2fq.output.FASTQ if wildcards.input_format == 'fasta' else []
+    output:
+        FASTQ = 'human_read_scrubbing/{input_format}/scrubbing/in/fastq.io'
+    params:
+        input_format = lambda wildcards: wildcards.input_format
+    run:
+        if params.input_format == 'fastq_pe':
+            shutil.copyfile(Path(str(input.FASTQ_PE_IL)), output.FASTQ)
+        elif params.input_format == 'fastq_se':
+            shutil.copyfile(Path(str(input.FASTQ_SE_GZ)), output.FASTQ)
+        elif params.input_format == 'fasta':
+            shutil.copyfile(Path(str(input.FASTQ_FORM_FASTA)), output.FASTQ)
+        else:
+            raise ValueError(f'Unsupported input format: {params.input_format}')
 
 rule scrubbing_run_scrubber:
     """
     Runs the NCBI human read scrubber on the input FASTQ, only accepts single gunzipped FASTQ files.
     """
     input:
-        FASTQ = Path(config['working_dir']) / human_read_scrubbing.INPUT_SCRUBBING_FASTQ if 'fasta' not in config['input'] else [],
-        FASTQ_SINGLE_GUNZIP = rules.scrubbing_fastq_interleave_and_gunzip.output.FASTQ_SINGLE_GUNZIP if 'fasta' not in config['input'] else rules.scrubbing_fasta_fa2fq.output.FASTQ_from_fasta
+        FASTQ_SE = rules.scrubbing_select_input.output.FASTQ
     output:
-        FASTQ_SCRUBBED = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'scrubbing' / 'fastq_scrubbed.io',
-        FASTQ_REMOVED = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'scrubbing' / 'fastq_removed.io' if config['read_scrubbing'].get('export_removed_reads') else [],
-        INFORMS = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'scrubbing' / 'informs.io'
+        FASTQ_SCRUBBED = 'human_read_scrubbing/{input_format}/scrubbing/fastq_scrubbed.io',
+        FASTQ_REMOVED = 'human_read_scrubbing/{input_format}/scrubbing/fastq_removed.io',
+        INFORMS = 'human_read_scrubbing/{input_format}/scrubbing/informs.io'
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'human_read_scrubbing' / wildcards.input_format / 'scrubbing',
+        running_dir = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/scrubbing',
         input_format = lambda wildcards: wildcards.input_format,
-        export_removed_reads = config['read_scrubbing'].get('export_removed_reads')
+        export_removed_reads = config['read_scrubbing'].get('export_removed_reads'),
+        is_interleaved = lambda wildcards: True if wildcards.input_format == 'fastq_pe' else False,
+        input_type = config['input_type']
     threads: max(16, workflow.cores * 0.75)
     run:
         from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import NcbiHumanReadScrubber
-        if params.input_format != 'fasta':
-            # Get the FASTQ file(s)
-            fastq_in = SnakemakeUtils.load_object(Path(input.FASTQ))
-            fqfile_number = len(fastq_in)
-            interleaved = True if fqfile_number == 2 else False
-        else:
-            interleaved = False
 
-        outputfile_scrubbing = str(Path(output.FASTQ_SCRUBBED).with_suffix('.fastq')) if params.input_format != 'fasta' \
-            else str(Path(str(params.running_dir), f"{SnakemakeUtils.load_object(Path(input.FASTQ_SINGLE_GUNZIP))[0].path.name}_scrubbed.fastq"))
-
-        scrubber = NcbiHumanReadScrubber(camel)
-        step = Step(str(rule), scrubber, camel, Path(str(params.running_dir)))
-        scrubber.update_parameters(interleaved=interleaved, outputfile=outputfile_scrubbing, threads=threads)
+        scrubber = NcbiHumanReadScrubber()
+        step = Step(rule_name=str(rule), tool=scrubber, dir_=Path(str(params.running_dir)))
+        scrubber.update_parameters(
+            interleaved=bool(params.is_interleaved),
+            outputfile='reads_kept.fastq',
+            threads=threads)
         if params.export_removed_reads:
-            outputfile_removed_reads = str(Path(output.FASTQ_REMOVED).with_suffix('.fastq'))
-            scrubber.update_parameters(export_human_reads=params.export_removed_reads, outputfile_removed=outputfile_removed_reads)
-        SnakemakeUtils.add_pickle_inputs(scrubber, input, excluded_keys=['FASTQ'])
-        step.run_step()
+            outputfile_removed_reads = 'reads_removed.fastq'
+            scrubber.update_parameters(
+                export_human_reads=True,
+                outputfile_removed=outputfile_removed_reads
+            )
+        snakemakeutils.add_pickle_inputs(scrubber, input)
+        step.run()
 
-        if config['input_type'] == 'hybrid':
+        # Informs for hybrid input
+        if params.input_type == 'hybrid':
             if params.input_format == 'fastq_pe':
                 scrubber.informs['_tag'] = 'Illumina'
             else:
                 scrubber.informs['_tag'] = 'ONT'
 
-        SnakemakeUtils.dump_tool_outputs(scrubber, output, keys=['FASTQ_SCRUBBED', 'INFORMS'])
-        SnakemakeUtils.dump_tool_outputs(scrubber, output, keys=['FASTQ_REMOVED'], ignore_missing_output=True) if params.export_removed_reads else ''
+        # Store the output
+        snakemakeutils.dump_tool_outputs(scrubber, output, keys=['FASTQ_SCRUBBED', 'INFORMS'])
+        if 'FASTQ_REMOVED' not in scrubber.tool_outputs:
+            snakemakeutils.dump_object([], Path(output.FASTQ_REMOVED))
+        else:
+            snakemakeutils.dump_object(scrubber.tool_outputs['FASTQ_REMOVED'], Path(output.FASTQ_REMOVED))
+
+rule scrubbing_select_output_fastq:
+    """
+    Links the FASTQ SE output to the FASTQ output.
+    """
+    input:
+        FASTQ = str(rules.scrubbing_run_scrubber.output.FASTQ_SCRUBBED).format(input_format='fastq_se')
+    output:
+        FASTQ = 'human_read_scrubbing/fastq_se/output/fastq.io'
+    shell:
+        """
+        cp {input.FASTQ} {output.FASTQ}
+        """
 
 rule scrubbing_fasta_fq2fa:
     """
-    Convert the FASTQ back to FASTA in order for the rest of the pipeline to be able 
-    to use it as output or as input in bacterial pipelines.
+    Converts the FASTQ output from the scrubber to FASTA format. 
     """
     input:
-        FASTQ_SCRUBBED = rules.scrubbing_run_scrubber.output.FASTQ_SCRUBBED,
+        FASTQ_SCRUBBED = lambda wildcards: str(rules.scrubbing_run_scrubber.output.FASTQ_SCRUBBED).format(input_format='fasta')
     output:
-        FASTA = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'output' / 'fasta.io'
+        FASTA = 'human_read_scrubbing/fasta/output/fasta.io'
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'human_read_scrubbing' / wildcards.input_format / 'output'
+        dir_ = 'human_read_scrubbing/fasta/output'
     run:
         from Bio import SeqIO
-        path_in = (SnakemakeUtils.load_object(Path(input.FASTQ_SCRUBBED)))[0].path
-        path_out = Path(str(params.running_dir), f"{path_in.stem}.fasta")
+        path_in = (snakemakeutils.load_object(Path(str(input.FASTQ_SCRUBBED))))[0].path
+        path_out = Path(str(params.dir_), f"{path_in.stem}.fasta")
 
         with path_in.open('r') as fastq_file, path_out.open('w') as fasta_file:
-            # Write the FASTQ SeqRecords in FASTA format, not using SeqIO.write directly because it writes multine fasta's
+            # Write the FASTQ SeqRecords in FASTA format, not using SeqIO.write directly because it writes multi FASTA
             fasta_out = SeqIO.FastaIO.FastaWriter(fasta_file, wrap=None)
             fasta_out.write_file(SeqIO.parse(fastq_file, 'fastq'))
-        SnakemakeUtils.dump_object([ToolIOFile(path_out)], Path(output.FASTA))
-
+        snakemakeutils.dump_object([ToolIOFile(path_out)], Path(output.FASTA))
 
 rule scrubbing_fasta_fq2fa_removed:
     """
@@ -142,14 +185,14 @@ rule scrubbing_fasta_fq2fa_removed:
         FASTQ_REMOVED = rules.scrubbing_run_scrubber.output.FASTQ_REMOVED,
         INFORMS_SCRUBBER = rules.scrubbing_run_scrubber.output.INFORMS
     output:
-        FASTA_REMOVED = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'output' / 'fasta_removed.io'
+        FASTA_REMOVED = 'human_read_scrubbing/{input_format}/output/fasta_removed.io'
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'human_read_scrubbing' / wildcards.input_format / 'output'
+        running_dir = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/output'
     run:
         from Bio import SeqIO
 
-        scrubber_informs = SnakemakeUtils.load_object(Path(input.INFORMS_SCRUBBER))
-        path_removed_in = (SnakemakeUtils.load_object(Path(input.FASTQ_REMOVED)))[0].path
+        scrubber_informs = snakemakeutils.load_object(Path(input.INFORMS_SCRUBBER))
+        path_removed_in = (snakemakeutils.load_object(Path(input.FASTQ_REMOVED)))[0].path
         path_removed_out = Path(str(params.running_dir), f"{path_removed_in.stem}.fasta")
 
         if scrubber_informs['statistics']['count_removed'] != 0:
@@ -157,138 +200,121 @@ rule scrubbing_fasta_fq2fa_removed:
                 # Write the FASTQ SeqRecords in FASTA format, not using SeqIO.write directly because it writes multine fasta's
                 fasta_removed_out = SeqIO.FastaIO.FastaWriter(fasta_removed_file, wrap=None)
                 fasta_removed_out.write_file(SeqIO.parse(fastq_removed_file, 'fastq'))
-            SnakemakeUtils.dump_object([ToolIOFile(path_removed_out)], Path(output.FASTA_REMOVED))
+            snakemakeutils.dump_object([ToolIOFile(path_removed_out)], Path(output.FASTA_REMOVED))
         else:
-            SnakemakeUtils.dump_object([], Path(output.FASTA_REMOVED))
+            snakemakeutils.dump_object([], Path(output.FASTA_REMOVED))
 
-
-rule scrubbing_fastq_deinterleave_and_gzip:
+rule scrubbing_deinterleave_fastq_pe:
     """
-    If the input is a paired-end interleaved file, deinterleaves. Gzips in all cases.
+    De-interleaves the PE FASTQ file after scrubbing.
     """
     input:
-        FASTQ = Path(config['working_dir']) / human_read_scrubbing.INPUT_SCRUBBING_FASTQ,
-        FASTQ_SCRUBBED = rules.scrubbing_run_scrubber.output.FASTQ_SCRUBBED,
+        FASTQ = lambda wildcards: {
+            'scrubbed': str(rules.scrubbing_run_scrubber.output.FASTQ_SCRUBBED).format(input_format='fastq_pe'),
+            'removed': str(rules.scrubbing_run_scrubber.output.FASTQ_REMOVED).format(input_format='fastq_pe'),
+        }[wildcards.group]
     output:
-        FASTQ_DEINTERLEAVED_GZIPPED = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'output' / 'fastq.io'
+        FASTQ = 'human_read_scrubbing/fastq_pe/output/{group}/fastq.io'
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'human_read_scrubbing' / wildcards.input_format / 'output',
-        is_paired = lambda wildcards: wildcards.input_format == 'fastq_pe'
+        dir_ = lambda wildcards: f'human_read_scrubbing/fastq_pe/output/{wildcards.group}',
+        name = config['sample_name']
     threads: 8
     run:
-        from camel.app.components.filesystemhelper import FileSystemHelper
-        from camel.app.components.files.fastqutils import FastqUtils
-
-        # Get the FASTQ file(s)
-        fastq_in = SnakemakeUtils.load_object(Path(input.FASTQ))
-
-        if not params.is_paired:
-            output.FASTQ_SINGLE_GUNZIP = input.FASTQ_SCRUBBED
-            path_in = (SnakemakeUtils.load_object(Path(input.FASTQ_SCRUBBED)))[0].path
-            path_out = Path(str(params.running_dir), f"{fastq_in[0].path.stem.split('.fastq')[0].split('.fq')[0]}.fastq.gz")
-            FileSystemHelper.pigz_file(path_in, path_out, threads=threads)
-            SnakemakeUtils.dump_object([ToolIOFile(path_out)], Path(output.FASTQ_DEINTERLEAVED_GZIPPED))
+        from camel.app.tools.seqkit.seqkitsplit2 import SeqkitSplit2
+        paths_fq = snakemakeutils.load_object(Path(input.FASTQ))
+        if len(paths_fq) == 0:
+            snakemakeutils.dump_object([], Path(output.FASTQ))
         else:
-            params.running_dir.mkdir(parents=True, exist_ok=True)
-            fastq_1 = Path(str(params.running_dir), f"{FastqUtils.get_sample_name(fastq_in[0].path, pattern=FastqUtils.PATTERN_FQ_SE)}_1.fastq.gz")
-            fastq_2 = Path(str(params.running_dir), f"{FastqUtils.get_sample_name(fastq_in[1].path, pattern=FastqUtils.PATTERN_FQ_SE)}_2.fastq.gz")
-            FastqUtils.split_interleaved_fastq((SnakemakeUtils.load_object(Path(input.FASTQ_SCRUBBED)))[0].path, fastq_1, fastq_2, gzip_output=True, pigz=True)
-            SnakemakeUtils.dump_object([ToolIOFile(fastq_1), ToolIOFile(fastq_2)], Path(output.FASTQ_DEINTERLEAVED_GZIPPED))
+            split2 = SeqkitSplit2()
+            snakemakeutils.add_pickle_inputs(split2, input)
+            split2.update_parameters(by_part=2)
+            step = Step(rule_name=str(rule), tool=split2, dir_=Path(str(params.dir_)))
+            step.run()
+            snakemakeutils.dump_tool_outputs(split2, output)
 
-
-rule scrubbing_fastq_deinterleave_and_gzip_removed:
+rule scrubbing_fastq_gzip:
     """
-    If the input is a paired-end interleaved file, deinterleaves the removed reads. Gzips in all cases the removed reads.
+    Compresses the FASTQ output.
+    The 'group' wildcards corresponds to 'scrubbed' or 'removed' reads.
+    Note: The FASTQ_PE reads need to be deinterleaved first.
     """
     input:
-        FASTQ_REMOVED = rules.scrubbing_run_scrubber.output.FASTQ_REMOVED,
-        INFORMS_SCRUBBER = rules.scrubbing_run_scrubber.output.INFORMS
+        FASTQ = lambda wildcards: \
+            'human_read_scrubbing/{input_format}/scrubbing/fastq_{group}.io' if not wildcards.input_format == 'fastq_pe'
+            else rules.scrubbing_deinterleave_fastq_pe.output.FASTQ
     output:
-        FASTQ_REMOVED_DEINTERLEAVED_GZIPPED = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'output' / 'fastq_removed.io'
-    params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'human_read_scrubbing' / wildcards.input_format / 'output',
-        is_paired = lambda wildcards: wildcards.input_format == 'fastq_pe'
+        FASTQ_GZ = 'human_read_scrubbing/{input_format}/compress/{group}/fastq_gz.io'
+    threads: 4
     run:
         from camel.app.components.filesystemhelper import FileSystemHelper
-        from camel.app.components.files.fastqutils import FastqUtils
-
-        scrubber_informs = SnakemakeUtils.load_object(Path(input.INFORMS_SCRUBBER))
-        fastq_removed_in = SnakemakeUtils.load_object(Path(input.FASTQ_REMOVED))
-
-        if scrubber_informs['statistics']['count_removed'] != 0:
-            if not params.is_paired:
-                path_removed_in = (SnakemakeUtils.load_object(Path(input.FASTQ_REMOVED)))[0].path
-                path_removed_out = Path(str(params.running_dir), f"{fastq_removed_in[0].path.stem.split('.fastq')[0].split('.fq')[0]}.fastq.gz")
-                FileSystemHelper.gzip_file(path_removed_in, path_removed_out)
-                SnakemakeUtils.dump_object([ToolIOFile(path_removed_out)], Path(output.FASTQ_REMOVED_DEINTERLEAVED_GZIPPED))
-            else:
-                fastq_removed_1 = Path(str(params.running_dir), f"{FastqUtils.get_sample_name(fastq_removed_in[0].path, pattern=FastqUtils.PATTERN_FQ_SE)}_1.fastq.gz")
-                fastq_removed_2 = Path(str(params.running_dir), f"{FastqUtils.get_sample_name(fastq_removed_in[0].path, pattern=FastqUtils.PATTERN_FQ_SE)}_2.fastq.gz")
-                FastqUtils.split_interleaved_fastq((SnakemakeUtils.load_object(Path(input.FASTQ_REMOVED)))[0].path, fastq_removed_1, fastq_removed_2, gzip_output=True)
-                SnakemakeUtils.dump_object([ToolIOFile(fastq_removed_1), ToolIOFile(fastq_removed_2)], Path(output.FASTQ_REMOVED_DEINTERLEAVED_GZIPPED))
-        else:
-            SnakemakeUtils.dump_object([],Path(output.FASTQ_REMOVED_DEINTERLEAVED_GZIPPED))
+        output_io = []
+        for io in snakemakeutils.load_object(Path(str(input.FASTQ))):
+            path_out = io.path.parent / f'{io.path.name}.gz'
+            FileSystemHelper.pigz_file(io.path, path_out, threads=threads)
+            output_io.append(ToolIOFile(path_out))
+        snakemakeutils.dump_object(output_io, Path(output.FASTQ_GZ))
 
 rule scrubbing_report:
     """
     Generates a tiny html report containing the tool name/version and a single phrase about how many reads were removed.
     """
     input:
-        INFORMS_SCRUBBER = Path(config['working_dir']) / human_read_scrubbing.OUTPUT_SCRUBBING_INFORMS,
-        REMOVED = lambda wildcards: get_removed(config, input_format=wildcards.input_format) if config['read_scrubbing'].get('export_removed_reads') else []
+        INFORMS_SCRUBBER = rules.scrubbing_run_scrubber.output.INFORMS,
+        REMOVED = lambda wildcards: get_removed(input_format=wildcards.input_format) if config['read_scrubbing'].get('export_removed_reads') else []
     output:
-        HTML = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'output' / 'html.io'
+        HTML = 'human_read_scrubbing/{input_format}/output/html.iob' # human_read_scrubbing.OUTPUT_REPORT
     params:
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'human_read_scrubbing' / wildcards.input_format / 'output',
+        running_dir = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/output',
         input_format = lambda wildcards: wildcards.input_format,
         export_removed_reads = config['read_scrubbing'].get('export_removed_reads')
     run:
         from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubberreporter import NcbiHumanReadScrubberReporter
 
-        reporter = NcbiHumanReadScrubberReporter(Camel.get_instance())
+        reporter = NcbiHumanReadScrubberReporter()
         if params.export_removed_reads:
-            SnakemakeUtils.add_pickle_inputs(reporter, input, keys=['REMOVED'])
-        SnakemakeUtils.add_pickle_inputs(reporter, input, keys=['INFORMS_SCRUBBER'])
+            snakemakeutils.add_pickle_inputs(reporter, input, keys=['REMOVED'])
+        snakemakeutils.add_pickle_inputs(reporter, input, keys=['INFORMS_SCRUBBER'])
         reporter.update_parameters(input_format=str(params.input_format))
-        step = Step(str(rule), reporter, Camel.get_instance(), Path(str(params.running_dir)))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.running_dir)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule scrubbing_create_summary:
     """
     Creates the tabular summary output for the HRRT assay.
     """
     input:
-        INFORMS_SCRUBBER = Path(config['working_dir']) / human_read_scrubbing.OUTPUT_SCRUBBING_INFORMS
+        INFORMS_SCRUBBER = rules.scrubbing_run_scrubber.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'output' / 'summary_out.tsv'
+        OUT = 'human_read_scrubbing/{input_format}/output/summary_out.{ext}' # human_read_scrubbing.OUTPUT_SUMMARY
     params:
-        input_format = lambda wildcards: wildcards.input_format
+        input_format = lambda wildcards: wildcards.input_format,
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS_SCRUBBER))
+        informs = snakemakeutils.load_object(Path(input.INFORMS_SCRUBBER))
 
-        subject = 'read_pairs' if params.input_format == 'fastq_pe' else 'reads' if params.input_format == 'fastq_se' \
-            else 'contigs'
+        subject_map = {
+            'fastq_pe': 'read_pairs',
+            'fastq_se': 'reads',
+            'fasta': 'contigs'
+        }
+        subject = subject_map.get(str(params.input_format), 'contigs')
         count_total = informs['statistics']['count_total']
         count_removed = informs['statistics']['count_removed']
 
-        data_summary = {
-            'scrubbing_tool_version': informs['_name'],
-            f'scrubbing_{subject}_in': count_total,
-            f'scrubbing_{subject}_removed': count_removed
-        }
-
-        with Path(output.TSV).open('w') as handle:
-            for k, v in data_summary.items():
-                handle.write('\t'.join([k, str(v)]))
-                handle.write('\n')
+        data_summary = [
+            ('scrubbing_tool_version', informs['_name']),
+            (f'scrubbing_{subject}_in', count_total),
+            (f'scrubbing_{subject}_removed', count_removed)
+        ]
+        snakemakeutils.export_summary(data_summary, Path(output.OUT), str(params.ext), 'human_read_scrubbing')
 
 rule scrubbing_report_empty:
     """
     Creates an empty report when this analysis is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'human_read_scrubbing' / '{input_format}' / 'output' / 'html-empty.io'
+        VAL_HTML = 'human_read_scrubbing/{input_format}/output/html-empty.iob' # human_read_scrubbing.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('Human read removal', Path(output.VAL_HTML))

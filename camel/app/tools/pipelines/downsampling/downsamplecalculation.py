@@ -2,8 +2,7 @@ import json
 import statistics
 from typing import Any
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -13,12 +12,11 @@ class DownsampleCalculation(Tool):
     Calculates the factor for downsampling based on the estimated coverage.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Downsample calculation', '0.1', camel)
+        super().__init__('Downsample calculation', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -26,7 +24,7 @@ class DownsampleCalculation(Tool):
         :return: None
         """
         if 'stats' not in self._input_informs:
-            raise InvalidInputSpecificationError("Stats input is required")
+            raise InvalidToolInputError("Stats input is required")
         super()._check_input()
 
     def __calculate_stats(self, fq_stats: list[dict[str, Any]]) -> dict[str, Any]:

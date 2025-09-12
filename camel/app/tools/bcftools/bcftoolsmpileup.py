@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.toolpipeable import ToolPipeable
 
@@ -13,13 +13,12 @@ class BcftoolsMpileup(ToolPipeable):
     Multi-way pileup producing genotype likelihoods.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('bcftools mpileup', '1.17', camel)
+        super().__init__('bcftools mpileup', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -27,9 +26,9 @@ class BcftoolsMpileup(ToolPipeable):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Reference genome input is required (FASTA)")
+            raise InvalidToolInputError("Reference genome input is required (FASTA)")
         if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Alignment input is required (BAM)")
+            raise InvalidToolInputError("Alignment input is required (BAM)")
         super()._check_input()
 
     def __get_output_key(self) -> str:
@@ -85,12 +84,13 @@ class BcftoolsMpileup(ToolPipeable):
             command_parts.extend(['--output', str(path_out)])
         self._command.command = ' '.join(command_parts)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command executed successfully.
+        :param command: Command to check
+        :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f'Error executing {self._name}: {self._command.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _before_pipe(self, dir_: Path, pipe_in: bool, pipe_out: bool) -> None:
         """

@@ -15,7 +15,7 @@ class ToolIOValue(ToolIO):
         :param value: Value
         :param logged: If True, the output can be logged
         """
-        super(ToolIOValue, self).__init__(logged)
+        super().__init__(logged)
         self._value = value
 
     @property
@@ -44,17 +44,17 @@ class ToolIOValue(ToolIO):
 
     def __str__(self) -> str:
         """
-        String representation
+        String representation.
         :return: String representation
         """
         return str(self.value)
 
     def __repr__(self) -> str:
         """
-        Internal representation
+        Internal representation.
         :return: Internal representation representation
         """
-        return 'ToolIOValue({})'.format(repr(self.value))
+        return f'ToolIOValue({repr(self.value)})'
 
     def is_valid(self) -> bool:
         """

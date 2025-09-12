@@ -1,30 +1,29 @@
 from pathlib import Path
-
-from camel.app.camel import Camel
+from camel.app.snakemake import snakemakeutils
 from camel.app.pipeline.step import Step
-from camel.scripts.yersiniapipeline.snakefile import species_determination
+
 
 rule species_determination_analysis:
     """
     This rule is used to determine the species based on the cgST.
     """
     input:
-        TSV_profile_matches = Path(config['working_dir']) / 'species_determination' / 'input' / 'tsv_profile_matches.io',
-        TSV_taxonomic = Path(config['working_dir']) / 'species_determination' / 'input' / 'tsv_taxonomic.io'
+        TSV_profile_matches = 'species_determination/input/tsv_profile_matches.io',
+        TSV_taxonomic = 'species_determination/input/tsv_taxonomic.io'
     output:
-        INFORMS = Path(config['working_dir']) / species_determination.OUTPUT_SPECIES_DETERMINATION_INFORMS,
-        TSV = Path(config['working_dir']) / species_determination.OUTPUT_SPECIES_DETERMINATION_TSV
+        TSV = 'species_determination/tool/tsv.io',
+        INFORMS = 'species_determination/tool/informs.io' # species_determination.OUTPUT_INFORMS
     params:
-        working_dir = Path(config['working_dir']) / 'species_determination'
+        dir_ = 'species_determination/tool'
     run:
         from camel.app.tools.pipelines.yersinia.speciesdetermination import SpeciesDetermination
-        from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-        detector = SpeciesDetermination(Camel.get_instance())
-        detector.add_input_files({'TSV_profile_matches': SnakemakeUtils.load_object(Path(str(input.TSV_profile_matches))),
-                                  'TSV_taxonomic': SnakemakeUtils.load_object(Path(str(input.TSV_taxonomic)))})
-        step = Step(str(rule), detector, Camel.get_instance(), params.working_dir)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(detector, output)
+        detector = SpeciesDetermination()
+        detector.add_input_files({
+            'TSV_profile_matches': snakemakeutils.load_object(Path(str(input.TSV_profile_matches))),
+            'TSV_taxonomic': snakemakeutils.load_object(Path(str(input.TSV_taxonomic)))})
+        step = Step(rule_name=str(rule), tool=detector, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(detector, output)
 
 rule species_determination_report:
     """
@@ -34,25 +33,23 @@ rule species_determination_report:
         INFORMS_analysis = rules.species_determination_analysis.output.INFORMS,
         TSV_analysis = rules.species_determination_analysis.output.TSV
     output:
-        VAL_HTML = Path(config['working_dir']) / species_determination.OUTPUT_SPECIES_DETERMINATION_REPORT
+        VAL_HTML = 'species_determination/report/html.iob' # species_determination.OUTPUT_REPORT
     params:
-        working_dir = Path(config['working_dir']) / 'species_determination'
+        dir_ = 'species_determination/report'
     run:
         from camel.app.tools.pipelines.yersinia.speciesdeterminationreporter import SpeciesDeterminationReporter
-        reporter = SpeciesDeterminationReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, Camel.get_instance(), params.working_dir)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = SpeciesDeterminationReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule species_determination_report_empty:
     """
     This rule is used to create an empty report for the species determination.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / species_determination.OUTPUT_SPECIES_DETERMINATION_REPORT_EMPTY
-    params:
-        working_dir = Path(config['working_dir']) / 'species_determination'
+        VAL_HTML = 'species_determination/report/html-empty.iob' # species_determination.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('Species determination', Path(output.VAL_HTML))
@@ -62,12 +59,12 @@ rule species_determination_create_summary:
     Creates the tabular summary output for the species determination.
     """
     input:
-        INFORMS = Path(config['working_dir']) / species_determination.OUTPUT_SPECIES_DETERMINATION_INFORMS
+        INFORMS = rules.species_determination_analysis.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / species_determination.OUTPUT_SPECIES_DETERMINATION_SUMMARY
+        FILE = 'species_determination/summary/summary.{ext}' # species_determination.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS))['best_match']
-        with open(output.TSV, 'w') as handle:
-            for k, v in informs.items():
-                handle.write('\t'.join(["species_determination_"+k, str(v)]))
-                handle.write('\n')
+        informs = snakemakeutils.load_object(Path(input.INFORMS))['best_match']
+        data_summary = [(f'species_determination_{key}', str(v)) for key, v in informs.items()]
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'species_determination')

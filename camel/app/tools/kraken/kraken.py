@@ -2,8 +2,9 @@ import os
 import re
 from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -17,13 +18,12 @@ class Kraken(Tool):
     exact alignments of k-mers and a novel classification algorithm.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('kraken', '0.10.5', camel)
+        super().__init__('kraken', '0.10.5')
         self._input_key = None
 
     def _execute_tool(self):
@@ -45,14 +45,14 @@ class Kraken(Tool):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('FASTA', 'FASTQ', 'FASTQ_PE')) or 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA/Q input or DB input missing for Kraken: {!r}'.format(
+            raise InvalidToolInputError('FASTA/Q input or DB input missing for Kraken: {!r}'.format(
                 self._tool_inputs))
         for key, value in self._tool_inputs.items():
             if (key != 'FASTQ_PE' and len(value) > 1) or (key == 'FASTQ_PE' and len(value) != 2):
-                raise InvalidInputSpecificationError('There is more than 1 FASTA/Q file or more/less than two FASTQ_PE '
+                raise InvalidToolInputError('There is more than 1 FASTA/Q file or more/less than two FASTQ_PE '
                                                      'files given for Kraken: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidInputSpecificationError('Too many input keys given for Kraken ((FASTA or FASTQ or FASTQ_PE) '
+            raise InvalidToolInputError('Too many input keys given for Kraken ((FASTA or FASTQ or FASTQ_PE) '
                                                  'and DB): {!r}'.format(self._tool_inputs))
 
     def __get_basename(self):
@@ -107,6 +107,7 @@ class Kraken(Tool):
             return re.sub(r'--preload\s', '', options)
         elif 'preload' not in options:
             return '--preload ' + options
+        raise ValueError('Cannot determine pre-load')
 
     def __build_command(self):
         """
@@ -114,14 +115,15 @@ class Kraken(Tool):
         :return: None
         """
         options_string = self.__check_preload(' '.join(self._build_options()))
-        self._command.command = '{} {} {}'.format(self._tool_command, self.__build_input_string(), options_string)
+        self._command.command = f'{self._tool_command} {self.__build_input_string()} {options_string}'
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command):
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if 'error' in self.stderr.lower():
-            raise ToolExecutionError("Command execution failed (stderr: {}).".format(self.stderr))
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        if 'error' in command.stderr.lower():
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        if command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {command.exit_code})")

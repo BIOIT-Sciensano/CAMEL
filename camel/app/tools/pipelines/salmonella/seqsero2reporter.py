@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
@@ -13,12 +12,11 @@ class SeqSero2Reporter(Tool):
     """
     TITLE = 'SeqSero2'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('SeqSero2 Reporter', '0.1', camel)
+        super().__init__('SeqSero2 Reporter', '0.1')
         self._section = None
 
     def _execute_tool(self) -> None:

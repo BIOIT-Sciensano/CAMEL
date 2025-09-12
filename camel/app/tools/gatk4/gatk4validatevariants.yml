@@ -1,6 +1,23 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  output: {default: true, mandatory: true, option: None, p_index: 0, value: "validate_variants.txt"}
-  gvcf: { default: false, mandatory: false, option: -gvcf, p_index: 10, value: true }
-  val_type_to_exclude: { default: false, mandatory: false, option: --validation-type-to-exclude, p_index: 10, value: ALL }
+  output:
+    default: true
+    mandatory: true
+    option: None
+    p_index: 0
+    value: validate_variants.txt
+  gvcf:
+    default: false
+    mandatory: false
+    option: '-gvcf'
+    p_index: 10
+    value: true
+  val_type_to_exclude:
+    default: false
+    mandatory: false
+    option: '--validation-type-to-exclude'
+    p_index: 10
+    value: ALL
 tool_command: ValidateVariants

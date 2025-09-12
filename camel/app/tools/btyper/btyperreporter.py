@@ -1,14 +1,13 @@
 import re
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -21,12 +20,12 @@ class BTyperReporter(Tool):
     TITLE = 'BTyper'
     URL_PUBMED = 'https://www.ncbi.nlm.nih.gov/pubmed/{id}'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('BTyper Reporter', '0.1', camel)
+        super().__init__('BTyper Reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -34,9 +33,9 @@ class BTyperReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BTyper input (TSV) is required.')
+            raise InvalidToolInputError('BTyper input (TSV) is required.')
         if 'btyper' not in self._input_informs:
-            raise InvalidInputSpecificationError('BTyper informs are required.')
+            raise InvalidToolInputError('BTyper informs are required.')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -57,10 +56,10 @@ class BTyperReporter(Tool):
         section.add_table(species_table_data, ['', *species_table.columns], [('class', 'data')])
 
         # Add other tables
-        self.__add_output_table(section, formatted_tables['virulence'].columns,
-                                formatted_tables['virulence'].values.tolist(), 'Virulence genes')
-        self.__add_output_table(section, formatted_tables['typing'].columns,
-                                formatted_tables['typing'].values.tolist(), 'Typing')
+        self.__add_output_table(
+            section, formatted_tables['virulence'].columns, formatted_tables['virulence'].values.tolist(), 'Virulence genes')
+        self.__add_output_table(
+            section, formatted_tables['typing'].columns, formatted_tables['typing'].values.tolist(), 'Typing')
 
         # Add link to TSV file
         relative_path = Path('btyper') / self._tool_inputs['TSV'][0].path.name
@@ -68,12 +67,12 @@ class BTyperReporter(Tool):
         section.add_file(self._tool_inputs['TSV'][0].path, relative_path)
 
         # Tool output
-        self._tool_outputs['VAL_HTML'] = [ToolIOValue(section)]
+        self._tool_outputs['HTML'] = [ToolIOValue(section)]
 
-    def __sanitize_table_lines(self, input_list: List[str]) -> List[str]:
+    def __sanitize_table_lines(self, input_list: list[str]) -> list[str]:
         """
         Format nicely the entries in the HTML output table
-        :input_list: split line from the raw output table
+        :param input_list: split line from the raw output table
         :return: List
         """
         for k in range(len(input_list)):
@@ -90,7 +89,7 @@ class BTyperReporter(Tool):
             match_re = re.findall(r'[a-z]{3}[A-Z]', input_list[k])
             if match_re:
                 input_list[k] = '{} ({})'.format(
-                    input_list[k][:3], '; '.join(['<i>{}</i>'.format(gene) for gene in match_re]))
+                    input_list[k][:3], '; '.join([f'<i>{gene}</i>' for gene in match_re]))
         return input_list
 
     def _format_species_subtable(self, input_table: pd.DataFrame) -> pd.DataFrame:
@@ -104,11 +103,11 @@ class BTyperReporter(Tool):
         ani_species_match = re.findall(ani_regex, str(input_table['Species'].values[0]))
         if ani_species_match:
             species_match = re.findall(species_regex, str(input_table['Species'].values[0]))[0]
-            ani_species_match = '{:.2f}'.format(float(ani_species_match[0]))
+            ani_species_match = f'{float(ani_species_match[0]):.2f}'
         ani_subspecies_match = re.findall(ani_regex, str(input_table['Sub-species'].values[0]))
         if ani_subspecies_match:
             subspecies_match = re.findall(species_regex, str(input_table['Sub-species'].values[0]))[0]
-            ani_subspecies_match = '{:.2f}'.format(float(ani_subspecies_match[0]))
+            ani_subspecies_match = f'{float(ani_subspecies_match[0]):.2f}'
         table_dictionary = {'Species': ['n/a' if not ani_species_match else species_match,
                                         'n/a' if not ani_species_match else ani_species_match],
                             'Sub-species': ['n/a' if not ani_subspecies_match else subspecies_match,
@@ -153,6 +152,7 @@ class BTyperReporter(Tool):
     def __generate_output_filename(self, prefix: str) -> str:
         """
         Generates the filename of the tabular output.
+        :param prefix: prefix for the output file
         :return: Output filename
         """
         if 'sample_name' in self._parameters:
@@ -161,8 +161,8 @@ class BTyperReporter(Tool):
             return f'btyper_{prefix}.tsv'
 
     def __add_output_table(
-            self, section: HtmlReportSection, header: List[str],
-            data: List[List[Union[str, HtmlTableCell]]], prefix: str) -> None:
+            self, section: HtmlReportSection, header: list[str],
+            data: list[list[Union[str, HtmlTableCell]]], prefix: str) -> None:
         """
         Adds an output table to the HTML report.
         :param section: Report section

@@ -1,16 +1,13 @@
 import re
 from pathlib import Path
-from typing import List, Dict
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
 
 class SPAdes(Tool):
-
     """
     SPAdes de novo short-reads or hybrid assembler, especially supports handling of single-cell (MDA) data utilizing its
     own reads error correction method
@@ -19,13 +16,12 @@ class SPAdes(Tool):
     FASTA_SCAFFOLDS = 'scaffolds.fasta'
     FASTG = 'assembly_graph.fastg'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('SPAdes', '3.15.5', camel)
+        super().__init__('SPAdes', '3.15.5')
         self._input_string = None
 
     def _execute_tool(self) -> None:
@@ -39,7 +35,7 @@ class SPAdes(Tool):
         self.__set_output()
 
     @staticmethod
-    def __compose_input_str(input_type: str, files: List[Path], ordinal: str = '0') -> str:
+    def __compose_input_str(input_type: str, files: list[Path], ordinal: str = '0') -> str:
         """
         Compose input option string
         :param input_type: type of the input
@@ -57,11 +53,11 @@ class SPAdes(Tool):
         elif input_type in ('pe-s', 'mp-s', 'hqmp-s'):
             input_type = input_type.split("-")[0]
             # unpaired reads from pe, mp, hqmp libraries
-            return " ".join(["--{}{}-s {}".format(input_type, ordinal, f) for f in files])
+            return " ".join([f"--{input_type}{ordinal}-s {f}" for f in files])
 
         else:
             # other types: contigs, sanger, pacbio, nanopore
-            return " ".join(["--{} {}".format(input_type, f) for f in files])
+            return " ".join([f"--{input_type} {f}" for f in files])
 
     @staticmethod
     def __check_shortreads_library_limitation(reads_type: str, count: int) -> None:
@@ -72,11 +68,11 @@ class SPAdes(Tool):
         :return: None
         """
         if count > 5:
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 f"SPAdes does not support more than 5 libraries of input type {reads_type}, {count} are found.")
 
     @staticmethod
-    def __check_min_input_requirement(se_count: int, pe_count: int, inputs: Dict[str, List[ToolIOFile]]):
+    def __check_min_input_requirement(se_count: int, pe_count: int, inputs: dict[str, list[ToolIOFile]]):
         """
         Check whether the minimum input requirement, at least one library of type SE or PE
         :param se_count: number of SE libraries
@@ -84,10 +80,10 @@ class SPAdes(Tool):
         :param inputs: dictionary of input files
         """
         if se_count == 0 and pe_count == 0:
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 f"SPAdes requires at least one library of SE or PE read to work, none is found. tool_inputs: {inputs}")
 
-    def __set_long_sequences(self, key_informs: List[str], files: List[Path], infiles_options: List[str]) -> bool:
+    def __set_long_sequences(self, key_informs: list[str], files: list[Path], infiles_options: list[str]) -> bool:
         """
         Set long sequences part of the input specification
         :param key_informs: the information in the key of input file
@@ -101,7 +97,7 @@ class SPAdes(Tool):
                     # untrusted contigs
                     infiles_options.append(self.__compose_input_str('untrusted-contigs', files))
                 else:
-                    raise InvalidInputSpecificationError(
+                    raise InvalidToolInputError(
                         "Unsupported SPAdes contig input specification found {!r}. Supports only FAST{{Q/A}}_contigs("
                         "_untrusted).".format("_".join(key_informs)))
             else:
@@ -134,9 +130,9 @@ class SPAdes(Tool):
             #              (PE-S, MP-S, HQMP-S)
             if key_informs[1] in {'SE', 'PE', 'PE-S', 'MP', 'MP-S'}:
                 if len(key_informs) != 3:
-                    raise InvalidInputSpecificationError(
-                        "SPAdes input specification requires a strict format: {{FASTQ/FASTA}}_{{SE/PE/PE-S/MP/MP-S}}_"
-                        "{{(HQ)1..5}}. Found an unsupported one {!r}.".format(key))
+                    raise InvalidToolInputError(
+                        "SPAdes input specification requires a strict format: {FASTQ/FASTA}_{SE/PE/PE-S/MP/MP-S}_"
+                        f"{{(HQ)1..5}}. Found an unsupported one {key!r}.")
 
                 res = re.match(r"HQ(\d)", key_informs[2])
                 if res:
@@ -157,7 +153,7 @@ class SPAdes(Tool):
 
                 if key_informs[1].lower() in ('pe', 'mp', 'hqmp'):
                     if len(files) != 2:
-                        raise InvalidInputSpecificationError(
+                        raise InvalidToolInputError(
                             f"For input type {key_informs[1]!r}, SPAdes requirses two and only two files!")
 
                 infiles_options.append(
@@ -165,7 +161,7 @@ class SPAdes(Tool):
 
             # long sequences
             elif not self.__set_long_sequences(key_informs, files, infiles_options):
-                raise InvalidInputSpecificationError(f"Unsupported input library type {key!r} for SPAdes.")
+                raise InvalidToolInputError(f"Unsupported input library type {key!r} for SPAdes.")
 
         # check short reads library count (not more then 5)
         reads_types = ['se', 'pe', 'mp', 'hqmp']

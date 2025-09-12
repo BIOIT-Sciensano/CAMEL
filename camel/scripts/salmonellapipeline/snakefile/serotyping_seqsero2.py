@@ -2,17 +2,18 @@ import re
 from pathlib import Path
 from typing import Any
 
-SNAKEFILE_SEROTYPE_SEQSERO2 = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_serotype = Path('serotyping_seqsero2')
-OUTPUT_SEROTYPE_SEQSERO2_KMER_INFORMS = _dir_serotype / 'serotyping_seqsero2_kmer' / 'informs.io'
-OUTPUT_SEROTYPE_SEQSERO2_ALLELE_INFORMS = _dir_serotype / 'serotyping_seqsero2_allele' / 'informs.io'
-OUTPUT_SEROTYPE_SEQSERO2_KMERREAD_INFORMS = _dir_serotype / 'serotyping_seqsero2_kmerread' / 'informs.io'
-OUTPUT_SEROTYPE_SEQSERO2_REPORT = _dir_serotype / 'html_seqsero2.io'
-OUTPUT_SEROTYPE_SEQSERO2_REPORT_EMPTY = _dir_serotype / 'html_seqsero2-empty.io'
-OUTPUT_SEROTYPE_SEQSERO2_SUMMARY = _dir_serotype / 'summary_out_seqsero2.tsv'
+
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+OUTPUT_KMER_INFORMS = 'serotyping/seqsero2/kmer/informs.io'
+OUTPUT_ALLELE_INFORMS = 'serotyping/seqsero2/allele/informs.io'
+OUTPUT_KMERREAD_INFORMS = 'serotyping/seqsero2/kmerread/informs.io'
+
+OUTPUT_REPORT = 'serotyping/seqsero2/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'serotyping/seqsero2/report/html-empty.iob'
+OUTPUT_SUMMARY = 'serotyping/seqsero2/summary/summary_seqsero2.{ext}'
 
 
-def get_command_informs(config: dict[str, Any]) -> list[Path]:
+def get_command_informs(config: dict[str, Any]) -> list[str]:
     """
     Returns a list of informs IO files for serotyping.
     :param config: Snakemake configuration
@@ -26,20 +27,19 @@ def get_command_informs(config: dict[str, Any]) -> list[Path]:
 
     # FASTA or hybrid input
     if input_type in ('fasta', 'hybrid'):
-        paths.append(str(OUTPUT_SEROTYPE_SEQSERO2_KMER_INFORMS))
+        paths.append(str(OUTPUT_KMER_INFORMS))
 
     # PE reads
     if input_type == 'illumina':
-        paths.append(str(OUTPUT_SEROTYPE_SEQSERO2_KMER_INFORMS))
-        paths.append(str(OUTPUT_SEROTYPE_SEQSERO2_ALLELE_INFORMS))
-        paths.append(str(OUTPUT_SEROTYPE_SEQSERO2_KMERREAD_INFORMS))
+        paths.append(str(OUTPUT_KMER_INFORMS))
+        paths.append(str(OUTPUT_ALLELE_INFORMS))
+        paths.append(str(OUTPUT_KMERREAD_INFORMS))
 
     # SE reads
     if input_type == 'ont':
-        paths.append(str(OUTPUT_SEROTYPE_SEQSERO2_KMER_INFORMS))
-        paths.append(str(OUTPUT_SEROTYPE_SEQSERO2_KMERREAD_INFORMS))
-
-    return [Path(config['working_dir']) / p for p in paths]
+        paths.append(str(OUTPUT_KMER_INFORMS))
+        paths.append(str(OUTPUT_KMERREAD_INFORMS))
+    return paths
 
 
 def seqsero2_output_parser(seqsero2_file: Path, seqsero2_mode: str) -> list[str]:

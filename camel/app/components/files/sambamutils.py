@@ -6,8 +6,7 @@ from Bio import SeqIO
 from camel.app.loggers import logger
 
 
-class SAMBAMutils(object):
-
+class SAMBAMutils:
     """
     Helper to perform SAM BAM file related functions
     """

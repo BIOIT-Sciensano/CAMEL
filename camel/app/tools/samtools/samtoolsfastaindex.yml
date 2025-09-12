@@ -1,6 +1,19 @@
-dependencies: [samtools/1.17]
+dependencies:
+  - samtools/1.17
 parameters:
-  output_filename: {default: false, mandatory: false, option: null, value: regions_out.fasta}
-  regions: {default: false, mandatory: false, option: null, value: '''fumC_290:1-12'''}
-  symlink_input: {default: true, mandatory: false, option: null, value: null}
+  output_filename:
+    default: false
+    mandatory: false
+    option: null
+    value: regions_out.fasta
+  regions:
+    default: false
+    mandatory: false
+    option: null
+    value: '''fumC_290:1-12'''
+  symlink_input:
+    default: true
+    mandatory: false
+    option: null
+    value: null
 tool_command: samtools faidx

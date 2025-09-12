@@ -1,38 +1,167 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  aligned_reads_only: {default: false, mandatory: false, option: ALIGNED_READS_ONLY,
-    p_index: 40, value: 'false'}
-  aligner_paring: {default: true, mandatory: false, option: ALIGNER_PROPER_PAIR_FLAGS,
-    p_index: 60, value: 'false'}
-  clip_overlapping_reads: {default: true, mandatory: false, option: CLIP_OVERLAPPING_READS,
-    p_index: 80, value: 'true'}
-  create_index: {default: true, mandatory: false, option: CREATE_INDEX, p_index: 20,
-    value: 'true'}
-  include_secondary_alignments: {default: true, mandatory: false, option: INCLUDE_SECONDARY_ALIGNMENTS,
-    p_index: 70, value: 'true'}
-  is_bisulfite_sequence: {default: false, mandatory: false, option: IS_BISULFITE_SEQUENCE,
-    p_index: 90, value: 'false'}
-  max_gaps: {default: true, mandatory: false, option: MAX_GAPS, p_index: 30, value: '1'}
-  orientations: {default: false, mandatory: false, option: ORIENTATIONS, p_index: 0,
-    value: null}
-  output: {default: true, mandatory: false, option: O, p_index: 0, value: alignment_merged.bam}
-  primary_alignment_strategy: {default: true, mandatory: false, option: PRIMARY_ALIGNMENT_STRATEGY,
-    p_index: 50, value: BestMapq}
-  sort_order: {default: true, mandatory: false, option: SORT_ORDER, p_index: 10, value: coordinate}
-  validation_stringency: {default: false, mandatory: false, option: VALIDATION_STRINGENCY, p_index: 10, value: SILENT}
-  attributes_to_retain: {default: false, mandatory: false, option: ATTRIBUTES_TO_RETAIN, p_index: 10, value: X0}
-  expected_orientations: {default: false, mandatory: false, option: EXPECTED_ORIENTATIONS, p_index: 10, value: FR}
-  attributes_to_remove: {default: false, mandatory: false, option: ATTRIBUTES_TO_REMOVE, p_index: 10, value: NM}
-  attributes_to_remove_multi: {default: false, mandatory: false, option: ATTRIBUTES_TO_REMOVE, p_index: 10, value: NM,MD}
-  paired_run: {default: false, mandatory: false, option: PAIRED_RUN, p_index: 10, value: 'true'}
-  clip_adapters: {default: false, mandatory: false, option: CLIP_ADAPTERS, p_index: 10, value: 'false'}
-  max_records_in_ram: {default: false, mandatory: false, option: MAX_RECORDS_IN_RAM, p_index: 10, value: 2000000}
-  add_mate_cigar: {default: false, mandatory: false, option: ADD_MATE_CIGAR, p_index: 10, value: 'true'}
-  program_group_command_line: {default: false, mandatory: false, option: PROGRAM_GROUP_COMMAND_LINE, p_index: 10, value: ""}
-  program_group_name: {default: false, mandatory: false, option: PROGRAM_GROUP_NAME, p_index: 10, value: null}
-  program_group_version: {default: false, mandatory: false, option: PROGRAM_GROUP_VERSION, p_index: 10, value: null}
-  program_record_id: {default: false, mandatory: false, option: PROGRAM_RECORD_ID, p_index: 10, value: null}
-  unmapped_read_strategy: {default: false, mandatory: false, option: UNMAPPED_READ_STRATEGY, p_index: 10, value: COPY_TO_TAG}
-  unmap_contaminant_reads: {default: false, mandatory: false, option: UNMAP_CONTAMINANT_READS, p_index: 10, value: 'true'}
-  add_pg_tag_to_reads: {default: false, mandatory: false, option: ADD_PG_TAG_TO_READS, p_index: 10, value: 'false'}
+  aligned_reads_only:
+    default: false
+    mandatory: false
+    option: ALIGNED_READS_ONLY
+    p_index: 40
+    value: 'false'
+  aligner_paring:
+    default: true
+    mandatory: false
+    option: ALIGNER_PROPER_PAIR_FLAGS
+    p_index: 60
+    value: 'false'
+  clip_overlapping_reads:
+    default: true
+    mandatory: false
+    option: CLIP_OVERLAPPING_READS
+    p_index: 80
+    value: 'true'
+  create_index:
+    default: true
+    mandatory: false
+    option: CREATE_INDEX
+    p_index: 20
+    value: 'true'
+  include_secondary_alignments:
+    default: true
+    mandatory: false
+    option: INCLUDE_SECONDARY_ALIGNMENTS
+    p_index: 70
+    value: 'true'
+  is_bisulfite_sequence:
+    default: false
+    mandatory: false
+    option: IS_BISULFITE_SEQUENCE
+    p_index: 90
+    value: 'false'
+  max_gaps:
+    default: true
+    mandatory: false
+    option: MAX_GAPS
+    p_index: 30
+    value: '1'
+  orientations:
+    default: false
+    mandatory: false
+    option: ORIENTATIONS
+    p_index: 0
+    value: null
+  output:
+    default: true
+    mandatory: false
+    option: O
+    p_index: 0
+    value: alignment_merged.bam
+  primary_alignment_strategy:
+    default: true
+    mandatory: false
+    option: PRIMARY_ALIGNMENT_STRATEGY
+    p_index: 50
+    value: BestMapq
+  sort_order:
+    default: true
+    mandatory: false
+    option: SORT_ORDER
+    p_index: 10
+    value: coordinate
+  validation_stringency:
+    default: false
+    mandatory: false
+    option: VALIDATION_STRINGENCY
+    p_index: 10
+    value: SILENT
+  attributes_to_retain:
+    default: false
+    mandatory: false
+    option: ATTRIBUTES_TO_RETAIN
+    p_index: 10
+    value: X0
+  expected_orientations:
+    default: false
+    mandatory: false
+    option: EXPECTED_ORIENTATIONS
+    p_index: 10
+    value: FR
+  attributes_to_remove:
+    default: false
+    mandatory: false
+    option: ATTRIBUTES_TO_REMOVE
+    p_index: 10
+    value: NM
+  attributes_to_remove_multi:
+    default: false
+    mandatory: false
+    option: ATTRIBUTES_TO_REMOVE
+    p_index: 10
+    value: NM
+  paired_run:
+    default: false
+    mandatory: false
+    option: PAIRED_RUN
+    p_index: 10
+    value: 'true'
+  clip_adapters:
+    default: false
+    mandatory: false
+    option: CLIP_ADAPTERS
+    p_index: 10
+    value: 'false'
+  max_records_in_ram:
+    default: false
+    mandatory: false
+    option: MAX_RECORDS_IN_RAM
+    p_index: 10
+    value: 2000000
+  add_mate_cigar:
+    default: false
+    mandatory: false
+    option: ADD_MATE_CIGAR
+    p_index: 10
+    value: 'true'
+  program_group_command_line:
+    default: false
+    mandatory: false
+    option: PROGRAM_GROUP_COMMAND_LINE
+    p_index: 10
+    value: ''
+  program_group_name:
+    default: false
+    mandatory: false
+    option: PROGRAM_GROUP_NAME
+    p_index: 10
+    value: null
+  program_group_version:
+    default: false
+    mandatory: false
+    option: PROGRAM_GROUP_VERSION
+    p_index: 10
+    value: null
+  program_record_id:
+    default: false
+    mandatory: false
+    option: PROGRAM_RECORD_ID
+    p_index: 10
+    value: null
+  unmapped_read_strategy:
+    default: false
+    mandatory: false
+    option: UNMAPPED_READ_STRATEGY
+    p_index: 10
+    value: COPY_TO_TAG
+  unmap_contaminant_reads:
+    default: false
+    mandatory: false
+    option: UNMAP_CONTAMINANT_READS
+    p_index: 10
+    value: 'true'
+  add_pg_tag_to_reads:
+    default: false
+    mandatory: false
+    option: ADD_PG_TAG_TO_READS
+    p_index: 10
+    value: 'false'
 tool_command: MergeBamAlignment

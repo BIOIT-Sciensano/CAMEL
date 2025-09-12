@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
-from typing import Optional, List, Dict, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import yaml
 
@@ -46,7 +47,7 @@ class MainListeriaPipeline(ReportPipeline):
         self._run_snakemake_main(config_file)
         self._export_assembly()
 
-    def __construct_config_file(self, input_files: Dict[str, List[Dict[str, str]]]) -> str:
+    def __construct_config_file(self, input_files: dict[str, list[dict[str, str]]]) -> str:
         """
         Constructs the configuration file.
         :param input_files: Dictionary with the input files (keys can be FASTQ_PE, FASTQ_SE).

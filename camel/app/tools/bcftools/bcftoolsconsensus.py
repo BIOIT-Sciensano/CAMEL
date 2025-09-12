@@ -1,5 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
 
@@ -9,12 +8,12 @@ class BcftoolsConsensus(BcftoolsBase):
     Create consensus sequences by applying VCF variants to a reference fasta file.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('bcftools consensus', '1.17', camel)
+        super().__init__('bcftools consensus', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -22,10 +21,10 @@ class BcftoolsConsensus(BcftoolsBase):
         :return: None
         """
         if not any(x in self._tool_inputs for x in ('VCF', 'VCF_GZ')):
-            raise InvalidInputSpecificationError("No variants input found (VCF/VCF_GZ).")
+            raise InvalidToolInputError("No variants input found (VCF/VCF_GZ).")
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No reference FASTA input found.")
-        super(BcftoolsConsensus, self)._check_input()
+            raise InvalidToolInputError("No reference FASTA input found.")
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
@@ -45,7 +44,7 @@ class BcftoolsConsensus(BcftoolsBase):
             self._tool_command,
             f'--fasta-ref {self._tool_inputs["FASTA"][0].path}',
             str(next(self._tool_inputs[k][0].path for k in ('VCF', 'VCF_GZ') if k in self._tool_inputs)),
-            ' '.join(self._build_options())
+            *self._build_options()
         ])
 
     def __set_output(self) -> None:

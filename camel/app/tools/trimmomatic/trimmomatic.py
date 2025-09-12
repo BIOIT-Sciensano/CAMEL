@@ -1,27 +1,25 @@
 import re
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
-from camel.app.camel import Camel
 from camel.app.components.files.fastqutils import FastqUtils
 from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
 
 class Trimmomatic(Tool):
-
     """
     A flexible read trimming tool for Illumina NGS Data.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes Trimmomatic.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('Trimmomatic', '0.39', camel)
+        super().__init__('Trimmomatic', '0.39')
         self._mode = None
 
     def _execute_tool(self) -> None:
@@ -34,7 +32,7 @@ class Trimmomatic(Tool):
         self.__set_output()
         self.__set_informs()
         if not self._informs.get('succeed', 'False'):
-            raise ToolExecutionError("Error running trimmomatic")
+            raise ToolExecutionError(self.name, "Error running trimmomatic")
 
     def _check_input(self) -> None:
         """
@@ -51,7 +49,7 @@ class Trimmomatic(Tool):
                 raise ValueError("Single end input requires exactly 1 file.")
         else:
             raise ValueError("No FASTQ_PE of FASTQ_SE input found")
-        super(Trimmomatic, self)._check_input()
+        super()._check_input()
 
     def __build_command(self) -> None:
         """
@@ -67,7 +65,7 @@ class Trimmomatic(Tool):
         option_string = ' '.join(options)
         self._command.command = f'{self._tool_command} {option_string}'
 
-    def __build_se_command(self) -> List[str]:
+    def __build_se_command(self) -> list[str]:
         """
         Builds the command to run in single end mode.
         :return: Command options
@@ -83,7 +81,7 @@ class Trimmomatic(Tool):
 
         return options
 
-    def __build_pe_command(self) -> List[str]:
+    def __build_pe_command(self) -> list[str]:
         """
         Builds the command to run in paired end mode.
         :return: Command options
@@ -114,7 +112,6 @@ class Trimmomatic(Tool):
         Sets the output of this tool.
         :return: None
         """
-
         if self._mode == 'PE':
             self._tool_outputs['FASTQ_PE'] = [
                 ToolIOFile(self.__get_output_path('1P')), ToolIOFile(self.__get_output_path('2P'))]
@@ -139,7 +136,7 @@ class Trimmomatic(Tool):
         :return: None
         """
         self._informs['mode'] = self._mode
-        for line in self.stdout.splitlines():
+        for line in self._command.stdout.splitlines():
             qc_encoding = re.search("Quality encoding detected as (?P<encode>\\w+)", line)
             if qc_encoding:
                 self._informs['encoding'] = qc_encoding.group('encode')

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-SNAKEFILE_SNPIT = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-OUTPUT_SNPIT_REPORT = Path('snpit') / 'html.io'
-OUTPUT_SNPIT_REPORT_EMPTY = Path('snpit') / 'html-empty.io'
-OUTPUT_SNPIT_SUMMARY = Path('snpit') / 'summary_out.tsv'
-OUTPUT_SNPIT_INFORMS = Path('snpit') / 'informs.io'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+OUTPUT_REPORT = 'snpit/html.iob'
+OUTPUT_REPORT_EMPTY = 'snpit/html-empty.iob'
+OUTPUT_SUMMARY = 'snpit/summary_out.{ext}'
+OUTPUT_INFORMS = 'snpit/informs.io'

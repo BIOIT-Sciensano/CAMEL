@@ -3,10 +3,9 @@ from pathlib import Path
 
 import vcf
 
-from camel.app.camel import Camel
 from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
@@ -18,12 +17,11 @@ class Clair3(Tool):
     Clair3 is a germline small variant caller for long-reads.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool
-        :param camel: CAMEL instance
         """
-        super().__init__('Clair3', '1.0.4', camel)
+        super().__init__('Clair3', '1.0.4')
 
     def _check_input(self) -> None:
         """
@@ -31,15 +29,15 @@ class Clair3(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA reference is required')
+            raise InvalidToolInputError('FASTA reference is required')
         if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BAM alignment file is required')
+            raise InvalidToolInputError('BAM alignment file is required')
 
         input_folder = self._tool_inputs['FASTA'][0].path.parent
         base_fasta_name = self._tool_inputs['FASTA'][0].path.name
         fasta_index_file = [f for f in input_folder.glob(f'{base_fasta_name}.fai')]
         if not (len(fasta_index_file) > 0):
-            raise InvalidInputSpecificationError('FASTA reference needs to be indexed')
+            raise InvalidToolInputError('FASTA reference needs to be indexed')
         super()._check_input()
 
     def _build_command(self, fasta_input: Path, bam_input: Path) -> None:
@@ -54,13 +52,12 @@ class Clair3(Tool):
             *self._build_options(excluded_parameters=['chunk_size', 'model_path', 'platform', 'threads', 'output_path'])
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks command output.
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """
@@ -70,7 +67,7 @@ class Clair3(Tool):
         path_out = dir_out / 'merge_output.vcf.gz'
         path_out_fixed = self.__filter_problematic_positions(path_out)
         # Convert back to VCF GZ
-        bcftools_view = BcftoolsView(Camel.get_instance())
+        bcftools_view = BcftoolsView()
         bcftools_view.add_input_files({
             'VCF': [ToolIOFile(path_out_fixed)]
         })

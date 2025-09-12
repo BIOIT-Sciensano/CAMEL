@@ -1,15 +1,14 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.components.files.fastautils import FastaUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
 
 class ALE(Tool):
-
     """
     ALE is the Assembly Likelihood Evaluation framework that systematically evaluates the accuracy of an assembly
     in a reference-independent manner using rigorous statistical methods.
@@ -17,13 +16,12 @@ class ALE(Tool):
 
     ALE_OUTPUT = "ALE.ale"
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes ALE.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('ALE', '2022.05.03', camel)
+        super().__init__('ALE', '2022.05.03')
 
     def _execute_tool(self) -> None:
         """
@@ -44,12 +42,12 @@ class ALE(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA reference is required')
+            raise InvalidToolInputError('FASTA reference is required')
         if 'SAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('SAM alignment file is required')
+            raise InvalidToolInputError('SAM alignment file is required')
 
         if not FastaUtils.is_indexed(self._tool_inputs['FASTA'][0].path):
-            raise InvalidInputSpecificationError('FASTA reference needs to be indexed')
+            raise InvalidToolInputError('FASTA reference needs to be indexed')
         super()._check_input()
 
     def _build_command(self, fasta_input: Path, sam_input: Path, ale_output: Path) -> None:
@@ -63,13 +61,13 @@ class ALE(Tool):
         self._command.command = ' '.join([
             self._tool_command, *self._build_options(), str(sam_input), str(fasta_input), str(ale_output)])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks command output.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self, ale_output: Path) -> None:
         """

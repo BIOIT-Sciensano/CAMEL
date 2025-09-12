@@ -3,11 +3,10 @@ from typing import Callable, Union
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
 from camel.app.tools.tool import Tool
@@ -70,27 +69,26 @@ class ReporterIterativeMapping(Tool):
         }
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Reporter: Iterative mapping', '0.1', camel)
+        super().__init__('Reporter: Iterative mapping', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Mapping to consensus sequence input file is required (BAM)')
+            raise InvalidToolInputError('Mapping to consensus sequence input file is required (BAM)')
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Consensus sequence input file is required (FASTA)')
+            raise InvalidToolInputError('Consensus sequence input file is required (FASTA)')
         if 'FASTA_ref' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Reference for last iteration is required (FASTA_ref)')
+            raise InvalidToolInputError('Reference for last iteration is required (FASTA_ref)')
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Stats input file is required (TSV)')
+            raise InvalidToolInputError('Stats input file is required (TSV)')
         if 'TSV_seg' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Stats input file is required (TSV_seg)')
+            raise InvalidToolInputError('Stats input file is required (TSV_seg)')
         super()._check_input()
 
     @staticmethod
@@ -210,7 +208,7 @@ class ReporterIterativeMapping(Tool):
 
         # Add link to the BED file
         nb_iter = data_stats['iter'].iloc[-1]
-        path_bed_io = self.folder.parents[0] / str(data_stats['dirname'].iloc[-1]) / 'phase_2-mapping' / 'bed.io'
+        path_bed_io = self.folder.parents[1] / str(data_stats['dirname'].iloc[-1]) / 'phase_2-mapping' / 'bed.io'
         path_bed = SnakemakeUtils.load_object(path_bed_io)[0].path
         relative_path = Path('iterative_mapping', f"{self._parameters['name'].value}-iter_{nb_iter}-low_depth.bed")
         section.add_file(path_bed, relative_path)

@@ -1,3 +1,4 @@
-dependencies: [snpit/1.0]
+dependencies:
+  - snpit/1.0
 parameters: {}
 tool_command: snpit

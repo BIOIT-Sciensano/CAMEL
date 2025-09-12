@@ -1,16 +1,22 @@
 import abc
 import argparse
-from typing import Optional, List, Dict, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
-from camel.app.components.phylogeny.snpphylogenyutils import SnpPhylogenyUtils, Sample, MappingInput
-from camel.app.error.invalidinputerror import InvalidInputError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.components.phylogeny.snpphylogenyutils import (
+    MappingInput,
+    Sample,
+    SnpPhylogenyUtils,
+)
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.mega.modelselection import ModelSelection
+import sys
 
 
-class BasePhylo(object, metaclass=abc.ABCMeta):
+class BasePhylo(metaclass=abc.ABCMeta):
     """
     Base class for the SNP phylogeny pipelines.
     """
@@ -28,7 +34,7 @@ class BasePhylo(object, metaclass=abc.ABCMeta):
         self._informs = []
 
     @property
-    def samples_by_name(self) -> Dict[str, Sample]:
+    def samples_by_name(self) -> dict[str, Sample]:
         """
         Returns the samples as a dictionary with the sample name as key.
         :return: Samples by name
@@ -44,20 +50,20 @@ class BasePhylo(object, metaclass=abc.ABCMeta):
         """
         pass
 
-    def __extract_samples(self) -> List[Sample]:
+    def __extract_samples(self) -> list[Sample]:
         """
         Extracts sample objects from the provided input.
         :return: List of samples
         """
         try:
             return SnpPhylogenyUtils.extract_samples(self._args)
-        except InvalidInputError as err:
+        except InvalidToolInputError as err:
             logger.error(f"Invalid input: {err}")
             self._report.add_error_message(str(err))
             self._report.save()
             exit(0)
 
-    def _get_mapping_input(self) -> Dict[Sample, MappingInput]:
+    def _get_mapping_input(self) -> dict[Sample, MappingInput]:
         """
         Returns the input for the read mapping.
         :return: Mapping input per sample
@@ -91,7 +97,7 @@ class BasePhylo(object, metaclass=abc.ABCMeta):
             SnpPhylogenyUtils.check_snp_matrix_size(snp_matrix.path)
         except ValueError as err:
             SnpPhylogenyUtils.add_model_selection_section(self._report, error_message=str(err))
-            exit(0)
+            sys.exit(0)
         else:
             model_selection = SnpPhylogenyUtils.run_model_selection(snp_matrix, self._args)
             SnpPhylogenyUtils.add_model_selection_section(self._report, model_selection=model_selection)

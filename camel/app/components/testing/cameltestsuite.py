@@ -89,7 +89,7 @@ class CamelTestSuite(unittest.TestCase):
         :param report_section: HTML report section
         :return: Path to the exported report
         """
-        path_out = dir_out / f'report_section.html'
+        path_out = dir_out / 'report_section.html'
         path_out.parent.mkdir(exist_ok=True, parents=True)
         report = HtmlReport(path_out, path_out.parent)
         report.initialize('Exported report section', CSS_STYLE)

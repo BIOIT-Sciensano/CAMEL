@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.freebayes.freebayes import Freebayes
 
 
-class MainFreebayesCalling(object):
+class MainFreebayesCalling:
     """
     Class to run freebayes variant calling using CAMEL.
     """
@@ -53,7 +54,7 @@ class MainFreebayesCalling(object):
         Runs Freebayes.
         :return: Freebayes tool instance.
         """
-        freebayes = Freebayes(Camel.get_instance())
+        freebayes = Freebayes()
         if self._args.reference is not None:
             freebayes.add_input_files({'FASTA': [ToolIOFile(self._args.reference)]})
         if self._args.bam is not None:

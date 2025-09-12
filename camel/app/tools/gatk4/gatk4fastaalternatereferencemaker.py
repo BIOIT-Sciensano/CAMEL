@@ -1,31 +1,27 @@
 from pathlib import Path
-from typing import Tuple, List
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from camel.app.camel import Camel
 from camel.app.components.files.fastautils import FastaUtils
-from camel.app.components.sequence_extraction import MASK_NT
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
+from camel.app.tools.gatk import MASK_NT
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
 class GATK4FastaAlternateReferenceMaker(GATK4):
-
     """
     Class for GATK FastaAlternateReferenceMaker function
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize the GATK FASTA Alternate Reference Maker
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk4 FastaAlternateReferenceMaker', '4.1.9.0', camel)
+        super().__init__('gatk4 FastaAlternateReferenceMaker', '4.1.9.0')
         self._required_inputs = ['VCF', 'FASTA_REF']
         self._output_type = 'FASTA'
         self._specific_parameters = ['concatenate_sequence_segments']
@@ -38,8 +34,7 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
         Run GATK FastaAlternateReferenceMaker
         :return: None
         """
-        super(GATK4FastaAlternateReferenceMaker, self)._execute_tool()
-
+        super()._execute_tool()
         if self._concatenate_sequence:
             FastaUtils.write(self.__concatenate_sequence_segments(), self._fasta_concatenated)
 
@@ -48,8 +43,7 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
         Checks tool parameters
         :return: None
         """
-        super(GATK4FastaAlternateReferenceMaker, self)._check_parameters()
-
+        super()._check_parameters()
         if 'concatenate_sequence_segments' in self._parameters:
             self._concatenate_sequence = True
 
@@ -63,16 +57,14 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
                 logger.warning(
                     "FastaAlternateReferenceMaker opt 'concatenate_sequence_segments' required 'TXT_intervals' input is missing, option disabled.")
                 self._concatenate_sequence = False
-
-        super(GATK4FastaAlternateReferenceMaker, self)._check_input()
+        super()._check_input()
 
     def _set_input(self) -> None:
         """
         Set the input specification
         :return: None
         """
-        super(GATK4FastaAlternateReferenceMaker, self)._set_input()
-
+        super()._set_input()
         if 'VCF_SNPmask' in self._tool_inputs:
             self._input_string += f"--snp-mask {self._tool_inputs['VCF_SNPmask'][0].path} "
 
@@ -81,7 +73,7 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
         Set the output specification
         :return: None
         """
-        super(GATK4FastaAlternateReferenceMaker, self)._set_output()
+        super()._set_output()
         # set default output type self._output_type: 'FASTA'
         self._fasta_extracted = self._tool_outputs['FASTA'][0].path
 
@@ -94,7 +86,7 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
             self._tool_outputs['FASTA_concatenated'] = []
 
     @staticmethod
-    def __get_interval_inform(interval: str) -> Tuple[str, int, int]:
+    def __get_interval_inform(interval: str) -> tuple[str, int, int]:
         """
         Extract interval information from a interval specificaiton seqid:pstart-pend
         :return: seqid, sequence id
@@ -106,7 +98,7 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
 
         return seq_id, int(pstart), int(pend)
 
-    def __rearrange_seq_intervals(self, seq_intervals: List[str]) -> List[str]:
+    def __rearrange_seq_intervals(self, seq_intervals: list[str]) -> list[str]:
         """
         Rearrange seq intervals according to the FASTA_REF seqid order, as GATK keeps sequence in this ordering
         :return: seq intervals ordered (list)
@@ -130,13 +122,13 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
 
         return seq_intervals_ordered
 
-    def __concatenate_sequence_segments(self) -> List[SeqRecord]:
+    def __concatenate_sequence_segments(self) -> list[SeqRecord]:
         """
         Concatenate sequence segments for each sequence (identified by seqid from interval file)
         :return: segments concatenated sequences
         """
         extracted_seq_dict = FastaUtils.read_as_dict(self._fasta_extracted)
-        seq_intervals = [x.strip() for x in open(self._tool_inputs['TXT_intervals'][0].path, 'r')]
+        seq_intervals = [x.strip() for x in open(self._tool_inputs['TXT_intervals'][0].path)]
         seq_intervals_ordered = self.__rearrange_seq_intervals(seq_intervals)
 
         concatenated_seqs = []

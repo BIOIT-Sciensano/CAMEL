@@ -1,10 +1,9 @@
 import pandas as pd
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.tools.tool import Tool
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 
 
 class SpeciesDetermination(Tool):
@@ -12,12 +11,11 @@ class SpeciesDetermination(Tool):
     This tool is used to determine the species and lineage of Yersinia isolates.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Yersinia: species determination', '1.0', camel)
+        super().__init__('Yersinia: species determination', '1.0')
 
     def _execute_tool(self) -> None:
         """
@@ -44,9 +42,9 @@ class SpeciesDetermination(Tool):
         :return: None
         """
         if 'TSV_taxonomic' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV taxonomic file is required")
+            raise InvalidToolInputError("TSV taxonomic file is required")
         if 'TSV_profile_matches' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV profile matches file is required")
+            raise InvalidToolInputError("TSV profile matches file is required")
         super()._check_input()
 
     def __find_matches(self, taxonomic: pd.DataFrame, profile_matches: pd.DataFrame) -> pd.DataFrame:

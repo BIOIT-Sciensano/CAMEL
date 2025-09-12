@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import humanize
@@ -18,19 +17,19 @@ class ToolIOFile(ToolIO):
         :param path: Path to the file
         :param logged: If True, the output can be logged
         """
-        super(ToolIOFile, self).__init__(logged)
+        super().__init__(logged)
         self._path = path.absolute()
 
     def __str__(self) -> str:
         """
-        String representation
+        String representation.
         :return: String representation
         """
         return str(self._path)
 
     def __repr__(self) -> str:
         """
-        Internal representation
+        Internal representation.
         :return: Internal representation
         """
         return f'ToolIOFile("{self.path}", {humanize.naturalsize(self.size)})'
@@ -72,7 +71,7 @@ class ToolIOFile(ToolIO):
         Checks whether this file exists.
         :return: True if the file exists, False otherwise
         """
-        return os.path.isfile(self._path)
+        return self._path.is_file()
 
     @property
     def size(self) -> int:

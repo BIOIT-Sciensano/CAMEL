@@ -1,11 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -16,13 +15,12 @@ class HtmlReporterGeneDetection(Tool):
     Tool that creates HTML reports for the gene detection pipeline.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Gene Detection: Report', '0.1', camel)
+        super().__init__('Gene Detection: Report', '0.1')
         self._sub_folder = None
         self._report_section = None
 
@@ -62,12 +60,12 @@ class HtmlReporterGeneDetection(Tool):
         :return: None
         """
         if 'db_info' not in self._input_informs:
-            raise InvalidInputSpecificationError("No database info found")
+            raise InvalidToolInputError("No database info found")
         if 'VAL_Hits' not in self._tool_inputs:
             logger.warning("No blast hits found")
         if ('VAL_Hits' in self._tool_inputs) and (len(self._tool_inputs['VAL_Hits']) > 0) and \
                 ('TSV' not in self._tool_inputs):
-            raise InvalidInputSpecificationError("TSV input is required when hits were detected.")
+            raise InvalidToolInputError("TSV input is required when hits were detected.")
         super()._check_input()
 
     def __initialize_report(self) -> None:

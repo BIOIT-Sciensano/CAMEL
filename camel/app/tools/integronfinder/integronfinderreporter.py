@@ -2,10 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltableformatter import HtmlTableFormatter
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.components.html.htmltableformatter import HtmlTableFormatter, FormatEntry
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -15,7 +14,7 @@ class IntegronFinderReporter(Tool):
     Tool to generate HTML output for the IntegronFinder tool.
     """
 
-    COLUMNS = [
+    COLUMNS: list[FormatEntry] = [
         {'key': 'ID_integron', 'title': 'Integron'},
         {'key': 'ID_replicon', 'title': 'Replicon'},
         {'key': 'pos_beg', 'title': 'Start'},
@@ -28,12 +27,11 @@ class IntegronFinderReporter(Tool):
         {'key': 'considered_topology', 'title': 'Topology'}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('IntegronFinder reporter', '0.1', camel)
+        super().__init__('IntegronFinder reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -41,9 +39,9 @@ class IntegronFinderReporter(Tool):
         :return: None
         """
         if 'integron_finder' not in self._input_informs:
-            raise InvalidInputSpecificationError('IntegronFinder informs are required')
+            raise InvalidToolInputError('IntegronFinder informs are required')
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('IntegronFinder output file is required (TSV)')
+            raise InvalidToolInputError('IntegronFinder output file is required (TSV)')
         super()._check_input()
 
     def _execute_tool(self) -> None:

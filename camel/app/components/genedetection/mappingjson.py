@@ -1,13 +1,13 @@
-from typing import Dict, Any, Optional, List
+from typing import Any, Optional
 
 
-class MappingJSON(object):
+class MappingJSON:
     """
     This class contains metadata for the standardized FASTA files of the gene detection workflow.
     The main purpose of this class is to avoid cluttering of the log with the complete mapping as a dictionary.
     """
 
-    def __init__(self, content: Dict[str, Any]) -> None:
+    def __init__(self, content: dict[str, Any]) -> None:
         """
         Initializes the mapping.
         :param content: Mapping content
@@ -28,7 +28,7 @@ class MappingJSON(object):
         """
         return len(self._content)
 
-    def keys(self) -> List[str]:
+    def keys(self) -> list[str]:
         """
         Returns the keys of the mapping.
         """

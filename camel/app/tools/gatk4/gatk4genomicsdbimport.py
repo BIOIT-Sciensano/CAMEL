@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
@@ -22,13 +22,12 @@ class GATK4GenomicsDBImport(GATK4):
 
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize the GenomicsDBImport tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk4 GenomicsDBImport', '4.1.9.0', camel)
+        super().__init__('gatk4 GenomicsDBImport', '4.1.9.0')
 
         self._required_inputs = ['gVCF', 'TXT_intervals']
         self._output_type = 'TXT_success'
@@ -41,17 +40,16 @@ class GATK4GenomicsDBImport(GATK4):
         Overrides method in parent class.
         :return: None
         """
-        super(GATK4GenomicsDBImport, self)._set_input()
-
+        super()._set_input()
         for f in self._tool_inputs['gVCF']:
             self._input_string += f"--variant {f.path} "
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Check the result of the GATK run
+        :param command: Command to check
         :return: None
         """
-        super(GATK4GenomicsDBImport, self)._check_command_output()
-
+        super()._check_command_output(command)
         # Snakemake placeholder
         Path.touch(Path(self._parameters['output'].value))

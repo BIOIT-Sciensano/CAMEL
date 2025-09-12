@@ -2,8 +2,9 @@ import argparse
 import itertools
 import re
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence, Union, Any
+from typing import Any, Optional, Union
 
 import pandas as pd
 from Bio import SeqIO
@@ -13,7 +14,6 @@ from Bio.Seq import Seq
 from camel.app.camel import Camel
 from camel.app.components.mycobacterium.amrutils import ConfidenceLevel
 from camel.app.loggers import logger
-
 
 # Example usage:
 # update_amr_db.py \
@@ -25,7 +25,7 @@ from camel.app.loggers import logger
 #   --ref-fasta /db/refgenomes/Mycobacterium_tuberculosis/H37Rv.fasta
 #   --ref-gff /db/refgenomes/Mycobacterium_tuberculosis/H37Rv.gff
 
-class UpdateAMRDB(object):
+class UpdateAMRDB:
     """
     Class to update the Mycobacterium AMR database.
     """
@@ -106,7 +106,7 @@ class UpdateAMRDB(object):
                 new_codon = codon_in[:idx] + nucl_alt + codon_in[idx + 1:]
                 if new_codon not in codon_targets:
                     continue
-                mutations_out.append((codon_in[idx], idx, nucl_alt))
+                mutations_out.append((nucl, idx, nucl_alt))
 
         # Double nucleotide changes
         for i in (0, 1):
@@ -124,7 +124,7 @@ class UpdateAMRDB(object):
 
         # Return mutations
         if len(mutations_out) == 0:
-            logger.warning(f'No mutations found')
+            logger.warning('No mutations found')
         else:
             logger.debug(f'{len(mutations_out)} mutations found')
         return mutations_out
@@ -233,7 +233,7 @@ class UpdateAMRDB(object):
                 logger.info(f"Processing '{row['gene']} {row['mutation']}' ({gene_data['strand']})")
 
                 # Parse the mutation
-                m = re.match('p.([A-z]+)(\d+)([A-z*]+)', row['mutation'])
+                m = re.match(r'p.([A-z]+)(\d+)([A-z*]+)', row['mutation'])
                 position = int(m.group(2))
                 aa_alt = m.group(3)
                 aa_alt_short = IUPACData.protein_letters_3to1.get(aa_alt)
@@ -386,7 +386,7 @@ class UpdateAMRDB(object):
         # Verify that the antibiotics in the AMR catalogue are present in the TSV file
         short_by_full = {ab['AB']: ab for ab in self._data_antibiotics.to_dict('records')}
         data_amr_associations['drug'].apply(lambda x: short_by_full[x])
-        logger.info(f'All antibiotics from AMR catalogue are present in the input TSV file')
+        logger.info('All antibiotics from AMR catalogue are present in the input TSV file')
 
     def __export_db_files(self, data_amr_associations: pd.DataFrame) -> None:
         """
@@ -403,7 +403,7 @@ class UpdateAMRDB(object):
         with open(self._args.dir_out / 'VERSION', 'w') as handle:
             handle.write(self._args.version)
             handle.write('\n')
-        logger.info(f'Version file created')
+        logger.info('Version file created')
 
     def run(self) -> None:
         """

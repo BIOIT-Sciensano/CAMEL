@@ -1,5 +1,14 @@
-dependencies: [mykrobe/0.13.0]
+dependencies:
+  - mykrobe/0.13.0
 parameters:
-   threads: {default: true, mandatory: false, option: -t, value: '1'}
-   output_filename: {default: true, mandatory: true, option: --out, value: mykrobe.csv}
+  threads:
+    default: true
+    mandatory: false
+    option: '-t'
+    value: '1'
+  output_filename:
+    default: true
+    mandatory: true
+    option: '--out'
+    value: mykrobe.csv
 tool_command: mykrobe

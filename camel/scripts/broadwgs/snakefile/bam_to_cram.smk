@@ -33,14 +33,14 @@ rule samtools_convert_to_cram:
         bam_to_cram = SamtoolsView(camel)
         SnakemakeUtils.add_pickle_input(bam_to_cram, "BAM", Path(input.BAM))
         SnakemakeUtils.add_pickle_input(bam_to_cram, "FASTA_REF", Path(input.FASTA_REF))
-        step = Step(rule, bam_to_cram, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=bam_to_cram, params.working_dir)
         bam_to_cram.update_parameters(
             output_filename = params.output_file,
             output_format = 'CRAM',
             threads = threads,
             **config['rule_params']['bam_to_cram'][rule]
         )
-        step.run_step()
+        step.run()
         SnakemakeUtils.dump_tool_output(bam_to_cram, 'CRAM', Path(output.CRAM))
 
 rule checksum_cram:
@@ -86,7 +86,7 @@ rule samtools_index_cram:
 
         cram_index = SamtoolsIndexCram(camel)
         SnakemakeUtils.add_pickle_inputs(cram_index, input)
-        step = Step(rule, cram_index, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=cram_index, params.working_dir)
         cram_index.update_parameters(output_filename = params.working_dir / params.output_file)
-        step.run_step()
+        step.run()
         SnakemakeUtils.dump_tool_output(cram_index, 'CRAI', Path(output.CRAI))

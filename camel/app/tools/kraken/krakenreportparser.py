@@ -4,7 +4,7 @@ from typing import Iterable
 import pandas as pd
 
 from camel.app.components.kraken2.taxonnode import TaxonNode
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,12 +15,11 @@ class KrakenReportParser(Tool):
     Parses Kraken output reports for fastq files.
     """
 
-    def __init__(self, camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Kraken2 report parser', '0.1', camel)
+        super().__init__('Kraken2 report parser', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -75,7 +74,7 @@ class KrakenReportParser(Tool):
         """
         logger.info('Normalizing percentages for read lengths')
         if not 'TSV_full' in self._tool_inputs:
-            raise InvalidInputSpecificationError("'TSV_full' input is required for normalization")
+            raise InvalidToolInputError("'TSV_full' input is required for normalization")
         data_raw = pd.read_table(
             self._tool_inputs['TSV_full'][0].path,
             names=['is_classified', 'seq_id', 'tax_id', 'seq_len'], usecols=range(4))
@@ -164,5 +163,5 @@ class KrakenReportParser(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input is required.")
+            raise InvalidToolInputError("TSV input is required.")
         super()._check_input()

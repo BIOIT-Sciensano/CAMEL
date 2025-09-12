@@ -2,7 +2,6 @@ import vcf
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
 
-from camel.app.camel import Camel
 from camel.app.components.csq.csqutils import BCSQInfo
 from camel.app.components.csq.mutations.aminoacidmutation import AminoAcidMutation
 from camel.app.components.csq.mutations.basemutation import BaseMutation
@@ -11,7 +10,7 @@ from camel.app.components.csq.mutations.nucelotidemutation import NucleotideMuta
 from camel.app.components.csq.mutations.stopmutation import StopMutation
 from camel.app.components.csq.mutations.unknownmutation import UnknownMutation
 from camel.app.components.tabix import tabixparser
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -29,12 +28,11 @@ class CsqParser(Tool):
     This tool is used to parse the annotated VCF files generated with bcftools csq.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('bcftools csq parser', '0.1', camel)
+        super().__init__('bcftools csq parser', '0.1')
         self._annot_tabix = {}
 
     def _check_input(self) -> None:
@@ -43,7 +41,7 @@ class CsqParser(Tool):
         :return: None
         """
         if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("VCF input is required")
+            raise InvalidToolInputError("VCF input is required")
         if 'TSV' not in self._tool_inputs:
             logger.warning("TABIX annotation ('TSV') is missing, nucleotide mutations will be skipped.")
         super()._check_input()

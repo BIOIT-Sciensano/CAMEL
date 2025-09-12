@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from yattag import Doc
 
 from camel.app.components.html.htmlelement import HtmlElement
@@ -22,10 +20,10 @@ class HtmlExpandableDiv(HtmlElement):
             }} else {{
                 $('#content-{id_}').hide()
             }}
-        }});        
+        }});
     """
 
-    def __init__(self, id_: str, label: str, attributes: List[Tuple[str, str]]=None):
+    def __init__(self, id_: str, label: str, attributes: list[tuple[str, str]]=None):
         """
         Initializes an expandable div.
         :param id_: Id of the element that is hidden / shown
@@ -46,12 +44,12 @@ class HtmlExpandableDiv(HtmlElement):
         with tag('div'):
             with tag('p'):
                 with tag('b'):
-                    text('Show / hide {}'.format(self._label))
+                    text(f'Show / hide {self._label}')
             with tag('label', klass='switch'):
-                doc.stag('input', type='checkbox', id='toggle-{}'.format(self._id))
+                doc.stag('input', type='checkbox', id=f'toggle-{self._id}')
                 with tag('span', klass='slider round'):
                     text('')
-            with tag('div', id='content-{}'.format(self._id)):
+            with tag('div', id=f'content-{self._id}'):
                 doc.asis(self._doc.getvalue())
             with tag('script', type='text/javascript'):
                 text(HtmlExpandableDiv.SCRIPT_TEMPLATE.format(id_=self._id))

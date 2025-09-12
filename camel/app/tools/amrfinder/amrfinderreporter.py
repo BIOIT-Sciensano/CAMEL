@@ -1,12 +1,10 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -16,7 +14,7 @@ class AMRFinderReporter(Tool):
     Reporting class for the AMRFinder tool.
     """
 
-    URL_ACCESSION_BASE = f'https://www.ncbi.nlm.nih.gov/protein/'
+    URL_ACCESSION_BASE = 'https://www.ncbi.nlm.nih.gov/protein/'
     OUTPUT_COLS_OVERVIEW = [
         'Element symbol', 'Type', 'Subtype', 'Class', 'Subclass', 'Method',
         'Closest reference accession']
@@ -25,13 +23,12 @@ class AMRFinderReporter(Tool):
         'Reference sequence length', '% Coverage of reference', '% Identity to reference']
     OUTPUT_COL_ACCESSION = 'Closest reference accession'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance.
         :return: None
         """
-        super().__init__('AMRFinder reporter', '0.1', camel)
+        super().__init__('AMRFinder reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -39,12 +36,12 @@ class AMRFinderReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input is required")
+            raise InvalidToolInputError("TSV input is required")
         if 'amrfinder' not in self._input_informs:
-            raise InvalidInputSpecificationError("AMRFinder informs are required")
+            raise InvalidToolInputError("AMRFinder informs are required")
         super()._check_input()
 
-    def __add_stats_table(self, section: HtmlReportSection, df_in: pd.DataFrame, columns: List[str]) -> None:
+    def __add_stats_table(self, section: HtmlReportSection, df_in: pd.DataFrame, columns: list[str]) -> None:
         """
         Formats the column data.
         :param section: Report section

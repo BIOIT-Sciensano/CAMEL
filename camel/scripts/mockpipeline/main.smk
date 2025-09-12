@@ -4,26 +4,26 @@ from camel.resources.snakefile import trimming_illumina, downsampling, trimming_
     contamination_check_kraken, quality_checks, confindr, gene_detection, assembly, core, human_read_scrubbing, \
     read_simulation, variant_calling, variant_filtering
 from camel.scripts.mycobacteriumpipeline.snakefile import snpit
+from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 
 #######################
 # Included snakefiles #
 #######################
-include: core.SNAKEFILE_CORE
-include: human_read_scrubbing.SNAKEFILE_SCRUBBING
-include: read_simulation.SNAKEFILE_READ_SIMULATION
-include: downsampling.SNAKEFILE_DOWNSAMPLING
-include: trimming_illumina.SNAKEFILE_TRIMMING_ILLUMINA
-include: trimming_ont.SNAKEFILE_TRIMMING_ONT
-include: assembly.SNAKEFILE_ASSEMBLY
-include: variant_calling.SNAKEFILE_VARIANT_CALLING
-include: variant_filtering.SNAKEFILE_VARIANT_FILTERING
-include: quast.SNAKEFILE_QUAST
-include: contamination_check_kraken.SNAKEFILE_CONTAMINATION_CHECK_KRAKEN
-include: confindr.SNAKEFILE_CONFINDR
-include: quality_checks.SNAKEFILE_QUALITY_CHECKS
-include: gene_detection.SNAKEFILE_GENE_DETECTION
-
-include: snpit.SNAKEFILE_SNPIT
+include: core.SNAKEFILE
+include: human_read_scrubbing.SNAKEFILE
+include: read_simulation.SNAKEFILE
+include: downsampling.SNAKEFILE
+include: trimming_illumina.SNAKEFILE
+include: trimming_ont.SNAKEFILE
+include: assembly.SNAKEFILE
+include: variant_calling.SNAKEFILE
+include: variant_filtering.SNAKEFILE
+include: quast.SNAKEFILE
+include: contamination_check_kraken.SNAKEFILE
+include: confindr.SNAKEFILE
+include: quality_checks.SNAKEFILE
+include: gene_detection.SNAKEFILE
+include: snpit.SNAKEFILE
 
 #########s
 # Rules #
@@ -34,7 +34,8 @@ rule all:
     """
     input:
         config['output_report'],
-        config['output_tabular']
+        config['output_tabular'],
+        config['output_json'] if config['output_json'] is not None else []
 
 rule report_create_command_section:
     """
@@ -42,18 +43,18 @@ rule report_create_command_section:
     """
     input:
         INFORMS_scrubbing = human_read_scrubbing.get_command_informs(config),
-        INFORMS_simulation = Path(config['working_dir']) / read_simulation.OUTPUT_SIMULATION_INFORMS if config['input_type'] == 'fasta' else [],
+        INFORMS_simulation =  read_simulation.OUTPUT_INFORMS if config['input_type'] == 'fasta' else [],
         INFORMS_downsampling = downsampling.get_command_informs(config),
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_assembly = assembly.get_command_informs(config),
-        INFORMS_quast = Path(config['working_dir'], quast.OUTPUT_QUAST_INFORMS),
-        INFORMS_busco = Path(config['working_dir'], quast.OUTPUT_BUSCO_INFORMS),
+        INFORMS_quast = quast.OUTPUT_INFORMS,
+        INFORMS_busco = quast.OUTPUT_INFORMS_BUSCO,
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
-        INFORMS_ncbi_amr = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='ncbi_amr') if 'ncbi_amr' in config['analyses'] else [],
-        INFORMS_snpit = Path(config['working_dir']) / snpit.OUTPUT_SNPIT_INFORMS if 'snpit' in config['analyses'] else []
+        INFORMS_ncbi_amr = gene_detection.OUTPUT_INFORMS.format(db='ncbi_amr') if 'ncbi_amr' in config['analyses'] else [],
+        INFORMS_snpit = snpit.OUTPUT_INFORMS if 'snpit' in config['analyses'] else []
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-commands.io'
+        HTML = 'report/html-commands.iob'
     params:
         dir_ = config['working_dir']
     run:
@@ -68,14 +69,13 @@ rule report_create:
         reports_scrubbing = human_read_scrubbing.get_reports(config),
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
-        report_quast = Path(config['working_dir'], quast.OUTPUT_QUAST_REPORT),
+        report_quast = quast.OUTPUT_REPORT,
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
-        report_adv_qc = Path(config['working_dir']) / str(quality_checks.OUTPUT_QUALITY_CHECKS_REPORT).format(
-            input_type=config['input_type']),
+        report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input_type']),
         report_ncbi_amr = gene_detection.get_gene_detection_report('ncbi_amr', config),
-        report_snpit = Path(config['working_dir']) / (snpit.OUTPUT_SNPIT_REPORT if 'snpit' in config['analyses'] else snpit.OUTPUT_SNPIT_REPORT_EMPTY),
-        report_commands= rules.report_create_command_section.output.HTML
+        report_snpit = snpit.OUTPUT_REPORT if 'snpit' in config['analyses'] else snpit.OUTPUT_REPORT_EMPTY,
+        report_commands = rules.report_create_command_section.output.HTML
     output:
         HTML = config['output_report']
     params:
@@ -88,7 +88,6 @@ rule report_create:
     run:
         import datetime
         from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 
         # Add the header section
         report = SnakePipelineUtils.init_pipeline_report(
@@ -124,19 +123,18 @@ rule summary_combine:
     In this rule all summary files are combined into a complete summary output file.
     """
     input:
-        Path(config['working_dir'], core.OUTPUT_TSV_SUMMARY_INIT),
-        human_read_scrubbing.get_summaries(config),
-        downsampling.get_summaries(config),
+        core.OUTPUT_SUMMARY_INIT,
+        lambda wildcards: human_read_scrubbing.get_summaries(config, wildcards.ext),
+        lambda wildcards: downsampling.get_summaries(config, wildcards.ext),
         trimming.get_summaries(config),
-        Path(config['working_dir'], quast.OUTPUT_QUAST_SUMMARY),
-        contamination_check_kraken.get_summaries(config),
+        quast.OUTPUT_SUMMARY,
+        lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
-        Path(config['working_dir'], quality_checks.OUTPUT_QUALITY_CHECKS_SUMMARY),
-        Path(config['working_dir']) / snpit.OUTPUT_SNPIT_SUMMARY if 'snpit' in config['analyses'] else []
+        quality_checks.OUTPUT_SUMMARY,
+        snpit.OUTPUT_SUMMARY if 'snpit' in config['analyses'] else []
     output:
-        TSV = config.get('output_tabular')
+        FILE = 'summary/output.{ext}'
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        with open(output.TSV, 'w') as handle_out:
-            for summary_input in input:
-                with open(summary_input) as handle_in:
-                    handle_out.write(handle_in.read())
+        SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))

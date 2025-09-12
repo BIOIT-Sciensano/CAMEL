@@ -1,26 +1,25 @@
 import pandas as pd
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.tools.seqkit.seqkitbase import SeqkitBase
 
 
-class SeqkitStats(Tool):
+class SeqkitStats(SeqkitBase):
     """
     Seqkit stats reports simple statistics of FASTA/Q files.
     """
 
     INPUT_KEYS = ('FASTQ', 'FASTA')
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Seqkit stats', '2.3.1', camel)
+        super().__init__('Seqkit stats', version=None)
 
     def _check_input(self) -> None:
         """
@@ -28,7 +27,7 @@ class SeqkitStats(Tool):
         :return: None
         """
         if not any(x in self._tool_inputs for x in SeqkitStats.INPUT_KEYS):
-            raise InvalidInputSpecificationError('{} input is required.'.format(' or '.join(SeqkitStats.INPUT_KEYS)))
+            raise InvalidToolInputError(f'{" or ".join(SeqkitStats.INPUT_KEYS)} input is required.')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -41,7 +40,7 @@ class SeqkitStats(Tool):
         self._execute_command()
         data = pd.read_table(tsv_out)
         for k, v in next(iter(data.to_dict('records'))).items():
-            self._informs[k] = v
+            self._informs[str(k)] = v
         self._tool_outputs['TSV'] = [ToolIOFile(tsv_out)]
 
     def __build_command(self) -> None:
@@ -53,14 +52,14 @@ class SeqkitStats(Tool):
         self._command.command = ' '.join([
             self._tool_command,
             '--all', '--tabular',
-            ' '.join([str(f.path) for f in self._tool_inputs[input_key]]),
+            *([str(f.path) for f in self._tool_inputs[input_key]]),
             *self._build_options()
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

@@ -1,8 +1,0 @@
-dependencies: [TreeVector]
-parameters:
-  output_filename: {default: true, mandatory: true, option: -out, value: tree.svg}
-  output_format: {default: true, mandatory: true, option: null, value: svg}
-  size: {default: true, mandatory: false, option: -size, value: 500 500}
-  triangle_branches: {default: false, mandatory: false, option: -triangle, value: null}
-  type: {default: true, mandatory: false, option: '', value: clad}
-tool_command: TreeVector

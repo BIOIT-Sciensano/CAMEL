@@ -2,22 +2,22 @@ from pathlib import Path
 from typing import Any
 
 from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 
 DIR_MOB_SUITE = Path('mob_suite')
-SNAKEFILE_MOB_SUITE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+SNAKEFILE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
 
 # Input
-INPUT_MOBSUITE_FASTA = DIR_MOB_SUITE / 'input' / 'fasta.io'
+INPUT_FASTA = 'mob_suite/input/fasta.io'
 
 # Report and summary
-OUTPUT_MOB_SUITE_INFORMS = DIR_MOB_SUITE / 'informs.io'
-OUTPUT_MOB_SUITE_REPORT = DIR_MOB_SUITE / 'html.io'
-OUTPUT_MOB_SUITE_REPORT_EMPTY = DIR_MOB_SUITE / 'html-empty.io'
-OUTPUT_MOB_SUITE_SUMMARY = DIR_MOB_SUITE / 'summary_mob_suite.tsv'
+OUTPUT_INFORMS = 'mob_suite/tool/informs.io'
+OUTPUT_REPORT = 'mob_suite/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'mob_suite/report/html-empty.iob'
+OUTPUT_SUMMARY = 'mob_suite/summary/summary_mob_suite.{ext}'
 
-OUTPUT_MOB_SUITE_CONTEXT_REPORT = DIR_MOB_SUITE / 'genomic_context' / 'html.io'
-OUTPUT_MOB_SUITE_CONTEXT_REPORT_EMPTY = DIR_MOB_SUITE / 'genomic_context' / 'html-empty.io'
+OUTPUT_CONTEXT_REPORT = 'mob_suite/genomic_context/html.iob'
+OUTPUT_CONTEXT_REPORT_EMPTY = 'mob_suite/genomic_context/html-empty.iob'
 
 GENOMIC_CONTEXT_DB = {
     'amrfinder': {'key': 'amrfinder', 'title': 'AMRFinder', 'contig': 'Contig id', 'gene': 'Element symbol'},
@@ -50,11 +50,11 @@ def collect_genomic_context_input(snake_in: Any, output_tsv: Path, output_inform
             try:
                 # Retrieve title from informs
                 path_informs = input_as_dict[k.replace('TSV_', 'INFORMS_')]
-                informs = SnakemakeUtils.load_object(path_informs)
+                informs = snakemakeutils.load_object(path_informs)
             except KeyError as err:
                 logger.error(f"INFORMS for gene detection DB '{k}' are missing")
                 raise err
-            tsv_out = SnakemakeUtils.load_object(io_tsv)
+            tsv_out = snakemakeutils.load_object(io_tsv)
             data_out.append({
                 'tsv': tsv_out[0] if len(tsv_out) > 0 else None,
                 'meta': {
@@ -67,7 +67,7 @@ def collect_genomic_context_input(snake_in: Any, output_tsv: Path, output_inform
         else:
             try:
                 data_out.append({
-                    'tsv': SnakemakeUtils.load_object(io_tsv)[0],
+                    'tsv': snakemakeutils.load_object(io_tsv)[0],
                     'meta': GENOMIC_CONTEXT_DB[db_type]
                 })
             except KeyError as err:
@@ -76,8 +76,8 @@ def collect_genomic_context_input(snake_in: Any, output_tsv: Path, output_inform
 
     # Save output
     tsv_out_all = [row['tsv'] for row in data_out if row['tsv'] is not None]
-    SnakemakeUtils.dump_object(tsv_out_all, Path(output_tsv))
-    SnakemakeUtils.dump_object([{
+    snakemakeutils.dump_object(tsv_out_all, Path(output_tsv))
+    snakemakeutils.dump_object([{
         **row['meta'],
         'idx': tsv_out_all.index(row['tsv']) if row['tsv'] is not None else None
     } for row in data_out], Path(output_informs))

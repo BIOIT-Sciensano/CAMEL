@@ -27,12 +27,12 @@ rule picard_create_interval_lists:
 
         generate_interval_list = IntervalListTools(camel)
         SnakemakeUtils.add_pickle_inputs(generate_interval_list, input)
-        step = Step(rule, generate_interval_list, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=generate_interval_list, params.working_dir)
         generate_interval_list.update_parameters(
             **config['rule_params']['variant_calling'][rule],
             output = params.working_dir
         )
-        step.run_step()
+        step.run()
 
         SnakemakeUtils.dump_tool_output(generate_interval_list, 'TXT_intervalLists', Path(output.TXT_intervalLists))
 
@@ -78,11 +78,11 @@ rule gatk4_haplotype_caller:
 
         hc = GATK4HaplotypeCaller(camel)
         SnakemakeUtils.add_pickle_inputs(hc, input)
-        step = Step(rule, hc, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=hc, params.working_dir)
         hc.update_parameters(
             **config['rule_params']['variant_calling'][rule],
         )
-        step.run_step()
+        step.run()
         SnakemakeUtils.dump_tool_output(hc, 'VCF', Path(output.VCF))
 
 rule picard_merge_vcfs:
@@ -104,6 +104,6 @@ rule picard_merge_vcfs:
 
         merge_vcf = MergeVCFs(camel)
         merge_vcf.add_input_files({"VCF": [SnakemakeUtils.load_object(Path(path))[0] for path in input.VCF]})
-        step = Step(rule, merge_vcf, camel, params.working_dir)
-        step.run_step()
+        step = Step(rule_name=str(rule), tool=merge_vcf, params.working_dir)
+        step.run()
         SnakemakeUtils.dump_tool_output(merge_vcf, "VCF", Path(output.VCF))

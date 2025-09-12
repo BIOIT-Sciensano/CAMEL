@@ -1,7 +1,0 @@
-dependencies: [fqtools/1.1]
-parameters:
-  exclude: {default: false, mandatory: false, option: -x, p_index: 0, value: null}
-  no_pair_information: {default: true, mandatory: false, option: -p, p_index: -1,
-    value: null}
-  output: {default: true, mandatory: true, option: -o, p_index: 0, value: extracted_reads.fastq}
-tool_command: fqextract

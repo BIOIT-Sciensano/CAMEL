@@ -1,6 +1,6 @@
 import abc
 import hashlib
-from typing import Optional, List, Any, Union
+from typing import Optional, Any, Union
 
 from Bio.Seq import Seq
 
@@ -92,7 +92,7 @@ class SequenceTypingHitBase(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def table_column_names() -> List[str]:
+    def table_column_names() -> list[str]:
         """
         Returns the table column names.
         :return: Table column names
@@ -100,7 +100,7 @@ class SequenceTypingHitBase(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def to_table_row(self, hash_allele_ids: bool = False) -> List[str]:
+    def to_table_row(self, hash_allele_ids: bool = False) -> list[str]:
         """
         Returns the hit as a row in a table.
         :param hash_allele_ids: If True, hashes for new allele ids are included
@@ -108,9 +108,17 @@ class SequenceTypingHitBase(metaclass=abc.ABCMeta):
         """
         pass
 
+    def to_dict(self, include_hashing: bool = False) -> dict[str, Any]:
+        """
+        Returns the hit as a dictionary.
+        :param include_hashing: Whether to include the hashing info if a new allele is found
+        :return: Hit as a dictionary
+        """
+        return {k: v for k, v in zip(self.table_column_names(), self.to_table_row())}
+
     @staticmethod
     @abc.abstractmethod
-    def html_column_names() -> List[str]:
+    def html_column_names() -> list[str]:
         """
         Returns the HTML column names.
         :return: HTML column names
@@ -118,7 +126,7 @@ class SequenceTypingHitBase(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def to_html_row(self, report_section: HtmlReportSection, sub_dir: str = None) -> List[Any]:
+    def to_html_row(self, report_section: HtmlReportSection, sub_dir: str = None) -> list[Any]:
         """
         Returns the hit as a row in a table.
         :param report_section: Section is passed to save the alignments

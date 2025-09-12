@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence, Dict, Any
+from typing import Any, Optional
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
@@ -13,7 +14,7 @@ from camel.app.tools.confindr.confindr import ConFindr
 from camel.app.tools.confindr.confindrreporter import ConFindrReporter
 
 
-class MainConFindr(object):
+class MainConFindr:
     """
     This class contains the main script for the ConFindr tool.
     """
@@ -66,7 +67,7 @@ class MainConFindr(object):
 
         # Run ConFindr
         input_dict = self.__prepare_input()
-        confindr = ConFindr(Camel.get_instance())
+        confindr = ConFindr()
         confindr.update_parameters(
             databases=str(self._args.db),
             quality_cutoff=self._args.quality_cutoff,
@@ -88,7 +89,7 @@ class MainConFindr(object):
                 logger.info(f'ConFindr informs saved to {self._args.output_json}')
 
         # Create output report
-        confindr_reporter = ConFindrReporter(Camel.get_instance())
+        confindr_reporter = ConFindrReporter()
         confindr_reporter.add_input_informs({'confindr': confindr.informs})
         confindr_reporter.update_parameters(input_type=self._args.input_type)
         confindr_reporter.run(self._args.working_dir)
@@ -100,7 +101,7 @@ class MainConFindr(object):
         report.save()
         logger.info(f'Report saved to: {self._args.output_html}')
 
-    def __prepare_input(self) -> Dict[str, Any]:
+    def __prepare_input(self) -> dict[str, Any]:
         """
         Prepares the input for the confindr tool.
         :return: Input dictionary

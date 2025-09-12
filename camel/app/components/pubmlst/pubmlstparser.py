@@ -1,20 +1,21 @@
-from typing import Tuple
-
 import requests
 from bs4 import BeautifulSoup
 
 
 class PubMLSTParsingError(RuntimeError):
+    """
+    Error that is raised when parsing PubMLST fails.
+    """
     pass
 
 
-class PubMLSTParser(object):
+class PubMLSTParser:
     """
     Parsers for PubMLST web pages.
     """
 
     @staticmethod
-    def parse_linked_data(url: str) -> Tuple[str, str]:
+    def parse_linked_data(url: str) -> tuple[str, str]:
         """
         Retrieves the linked data from a PubMLST page.
         :param url: URL of the web page to parse

@@ -1,14 +1,14 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List, Any, Dict
+from typing import Optional, Any
 
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.sequencetyping.sequencetypingutils import SequenceTypingUtils
 from camel.app.components.workflows.utils.fastqinput import FastqInput
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import sequence_typing
 
@@ -33,11 +33,11 @@ class SequenceTypingOutput:
     """
     report_section: HtmlReportSection
     tsv: Optional[Path]
-    informs: List[Dict[str, Any]]
+    informs: list[dict[str, Any]]
     log_file: Optional[Path] = None
 
 
-class SequenceTypingWrapper(object):
+class SequenceTypingWrapper:
     """
     This class is used as a wrapper class around the sequence typing Snakemake workflow.
     """
@@ -76,37 +76,6 @@ class SequenceTypingWrapper(object):
         )
         self.__run_snakefile(config_path, workflow_input, threads)
 
-    def run_workflow_srst2(
-            self, workflow_input: SequenceTypingInput, srst2_options: Optional[Dict[str, Any]] = None,
-            threads: Optional[int] = 8) -> None:
-        """
-        Runs the SRST2 based sequence typing workflow.
-        :param workflow_input: Input for the workflow
-        :param srst2_options: Additional options for SRST2
-        :param threads: Number of threads to use
-        :return: None
-        """
-        if not self._working_dir.exists():
-            self._working_dir.mkdir()
-        if workflow_input.fastq is None:
-            raise ValueError('FASTQ input is required to run the SRST2 analysis')
-        scheme_metadata = SequenceTypingUtils.parse_scheme_metadata(workflow_input.db_path)
-        if len([locus for locus in scheme_metadata['loci'] if locus['type'] == 'peptide']) > 0:
-            if workflow_input.fasta is None:
-                raise ValueError('FASTA input is required when there are protein loci in the scheme')
-            else:
-                self.__create_blast_input(workflow_input.fasta.path, workflow_input.db_key)
-        SnakemakeUtils.dump_object(workflow_input.fastq.to_fq_dict(), self._working_dir / 'fq_dict.io')
-        config_path = self.__create_config_file(
-            sample_name=workflow_input.sample_name,
-            detection_method='srst2',
-            input_type=workflow_input.input_type,
-            db_key=workflow_input.db_key,
-            db_path=workflow_input.db_path,
-            additional_options=srst2_options if srst2_options else None
-        )
-        self.__run_snakefile(config_path, workflow_input, threads)
-
     def run_workflow_kma(self, workflow_input: SequenceTypingInput, threads: Optional[int] = 8) -> None:
         """
         Runs the KMA based sequence typing workflow.
@@ -124,7 +93,7 @@ class SequenceTypingWrapper(object):
                 raise ValueError('FASTA input is required when there are protein loci in the scheme')
             else:
                 self.__create_blast_input(workflow_input.fasta.path, workflow_input.db_key)
-        SnakemakeUtils.dump_object(workflow_input.fastq.to_fq_dict(), self._working_dir / 'fq_dict.io')
+        snakemakeutils.dump_object(workflow_input.fastq.to_fq_dict(), self._working_dir / 'fq_dict.io')
         config_path=self.__create_config_file(
             sample_name=workflow_input.sample_name,
             detection_method='kma',
@@ -137,11 +106,11 @@ class SequenceTypingWrapper(object):
 
     def __create_config_file(
             self, sample_name: str, detection_method: str, input_type: str, db_key: str, db_path: Path,
-            additional_options: Dict[str, Any]) -> str:
+            additional_options: dict[str, Any]) -> str:
         """
         Creates the configuration file for the sequence typing workflow.
         :param sample_name: Sample name
-        :param detection_method: Detection method ('blast', 'srst2)
+        :param detection_method: Detection method
         :param input_type: Input type
         :param db_key: Database key (e.g. 'mlst')
         :param db_path: Database path
@@ -173,7 +142,7 @@ class SequenceTypingWrapper(object):
         if not fasta_in.parent.exists():
             fasta_in.parent.mkdir(parents=True)
         logger.debug(f'Creating FASTA input: {fasta_in}')
-        SnakemakeUtils.dump_object([ToolIOFile(fasta_path)], fasta_in)
+        snakemakeutils.dump_object([ToolIOFile(fasta_path)], fasta_in)
 
     def __run_snakefile(self, config_path: str, workflow_input: SequenceTypingInput, threads: int) -> None:
         """
@@ -185,10 +154,8 @@ class SequenceTypingWrapper(object):
         """
         # Create dictionary with output files
         output_files = {
-            'report': self._working_dir / str(sequence_typing.OUTPUT_TYPING_REPORT).format(
-                scheme=workflow_input.db_key),
-            'informs': self._working_dir / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(
-                scheme=workflow_input.db_key),
+            'report': sequence_typing.OUTPUT_REPORT.format(scheme=workflow_input.db_key),
+            'informs': sequence_typing.OUTPUT_INFORMS.format(scheme=workflow_input.db_key),
         }
 
         # Check if all loci are of the same type (DNA, peptide), otherwise tabular output cannot be created
@@ -196,20 +163,19 @@ class SequenceTypingWrapper(object):
             data_scheme = json.load(handle)
         locus_type = data_scheme['loci'][0]['type']
         if all(locus['type'] == locus_type for locus in data_scheme['loci']):
-            output_files['tsv'] = self._working_dir / str(sequence_typing.OUTPUT_TYPING_TSV).format(
-                scheme=workflow_input.db_key, locus_type=locus_type)
+            output_files['tsv'] = sequence_typing.OUTPUT_TSV.format(scheme=workflow_input.db_key, locus_type=locus_type)
 
         # Run Snakemake
         SnakePipelineUtils.run_snakemake(
-            sequence_typing.SNAKEFILE_SEQUENCE_TYPING, config_path, list(output_files.values()), self._working_dir,
+            sequence_typing.SNAKEFILE, config_path, [Path(x) for x in output_files.values()], self._working_dir,
             threads)
 
         # Collect output
         log_file_path = self._working_dir / 'camel.log'
         self._output = SequenceTypingOutput(
-            report_section=SnakemakeUtils.load_object(output_files['report'])[0].value,
-            tsv=SnakemakeUtils.load_object(output_files['tsv'])[0].path if 'tsv' in output_files else None,
-            informs=SnakemakeUtils.load_object(output_files['informs']),
+            report_section=snakemakeutils.load_object(self._working_dir / output_files['report'])[0].value,
+            tsv=snakemakeutils.load_object(self._working_dir / output_files['tsv'])[0].path if 'tsv' in output_files else None,
+            informs=snakemakeutils.load_object(self._working_dir / output_files['informs']),
             log_file=log_file_path if log_file_path.exists() else None
         )
 

@@ -2,7 +2,6 @@ import argparse
 from pathlib import Path
 from typing import Union
 
-from camel.app.camel import Camel
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.html.htmlreport import HtmlReport
 from camel.app.components.workflows.inputtype.inputtypehelperbase import InputTypeHelperBase
@@ -122,8 +121,7 @@ class ONTHelper(InputTypeHelperBase):
             convert_input = self.trim_reads(fastq_input, report, args.report_include_fastq, args.threads)
         else:
             convert_input = fastq_input
-        camel = Camel.get_instance()
-        convert = SeqtkConvert(camel)
+        convert = SeqtkConvert()
         convert.add_input_files({'FASTQ': convert_input.se})
         working_dir = Path(self._working_dir / 'conversion')
         working_dir.mkdir(parents=True, exist_ok=True)

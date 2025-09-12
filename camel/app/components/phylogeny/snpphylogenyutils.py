@@ -1,14 +1,13 @@
 import argparse
 import datetime
 from dataclasses import dataclass
+from importlib.resources import files
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import Optional, Any, Union
 
 import pandas as pd
-import pkg_resources
 from Bio import SeqIO
 
-from camel.app.camel import Camel
 from camel.app.components.files.fastqutils import FastqUtils
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.html.htmlelement import HtmlElement
@@ -18,11 +17,11 @@ from camel.app.components.html.htmltablecell import HtmlTableCell
 from camel.app.components.phylogeny.megautils import MEGAUtils
 from camel.app.components.phylogeny.newickutils import NewickUtils
 from camel.app.components.workflows.trimmingilluminawrapper import TrimmingIlluminaWrapper
-from camel.app.error.invalidinputerror import InvalidInputError
+from camel.app.config import config
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 from camel.app.tools.mega.modelselection import ModelSelection
@@ -39,8 +38,8 @@ class Sample:
     """
     name_full: str
     name_valid: str
-    reads_raw: List[ToolIOFile]
-    reads_names: List[str]
+    reads_raw: list[ToolIOFile]
+    reads_names: list[str]
 
     def __hash__(self) -> int:
         """
@@ -63,16 +62,16 @@ class MappingInput:
     """
     This class contains the input for the read mapping step.
     """
-    pe: List[ToolIOFile]
+    pe: list[ToolIOFile]
     se_fwd: Optional[ToolIOFile] = None
     se_rev: Optional[ToolIOFile] = None
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """
         Return the mapping input as a dictionary
         :return: Mapping input in YAML format
         """
-        mapping_data = {'PE': [str(x.path) for x in self.pe]}
+        mapping_data: dict[str, Union[list[str], str]] = {'PE': [str(x.path) for x in self.pe]}
         if self.se_fwd is not None:
             mapping_data['SE_FWD'] = str(self.se_fwd.path)
         if self.se_rev is not None:
@@ -80,7 +79,7 @@ class MappingInput:
         return mapping_data
 
 
-class SnpPhylogenyUtils(object):
+class SnpPhylogenyUtils:
     """
     Utility class for the SNP phylogeny pipelines.
     """
@@ -101,7 +100,7 @@ class SnpPhylogenyUtils(object):
         report.add_pipeline_header(f'SNP Phylogeny ({pipeline_name})')
         section = HtmlReportSection('Analysis info')
         section.add_table([
-            ['Analysis date:', datetime.datetime.now().strftime(SnakePipelineUtils.DATE_FORMAT)],
+            ['Analysis date:', datetime.datetime.now().strftime(config.date_fmt)],
             ['Nb. of samples:', len(args.sample)],
             ['Reference:', args.reference_name if args.reference_name else Path(args.reference).name]],
             table_attributes=[('class', 'information')]
@@ -138,7 +137,7 @@ class SnpPhylogenyUtils(object):
         argument_parser.add_argument('--ml-method', choices=['nni', 'spr3', 'spr5'], default='spr3')
 
     @staticmethod
-    def extract_samples(args: argparse.Namespace) -> List[Sample]:
+    def extract_samples(args: argparse.Namespace) -> list[Sample]:
         """
         Returns the sample names (sorted alphabetically).
         :param args: Command line arguments
@@ -158,20 +157,20 @@ class SnpPhylogenyUtils(object):
         if len(set(s.name_valid for s in samples)) != len(args.sample):
             sample_names = [s.name_valid for s in samples]
             duplicate_sample_names = [x for x in set(sample_names) if sample_names.count(x) > 1]
-            raise InvalidInputError("Duplicate sample names are not allowed. Conflicting sample(s): {}".format(
-                ', '.join(["'{}' ({} times)".format(n, sample_names.count(n)) for n in duplicate_sample_names])))
+            raise ValueError("Duplicate sample names are not allowed. Conflicting sample(s): {}".format(
+                ', '.join([f"'{n}' ({sample_names.count(n)} times)" for n in duplicate_sample_names])))
 
         # Check for empty sample names
         empty_samples = [s for s in samples if len(s.name_valid) == 0]
         if len(empty_samples) > 0:
-            raise InvalidInputError("Empty sample name for sample(s): {}".format(', '.join([
+            raise ValueError("Empty sample name for sample(s): {}".format(', '.join([
                 str(s.reads_names) for s in empty_samples])))
 
         # Sort samples by name
         return sorted(samples, key=lambda s: s.name_valid)
 
     @staticmethod
-    def symlink_input_files(samples: List[Sample], dir_working: Path) -> Dict[Sample, List[ToolIOFile]]:
+    def symlink_input_files(samples: list[Sample], dir_working: Path) -> dict[Sample, list[ToolIOFile]]:
         """
         This function creates symlinks for the raw read files that belong to the given samples.
         :param samples: Samples
@@ -194,8 +193,8 @@ class SnpPhylogenyUtils(object):
         return fq_by_sample
 
     @staticmethod
-    def trim_all_reads(fq_by_sample: Dict[Sample, List[ToolIOFile]], working_dir: Path, adapter: str,
-                       threads: int = 8) -> Dict[Sample, TrimmingIlluminaWrapper.ReadTrimmingOutput]:
+    def trim_all_reads(fq_by_sample: dict[Sample, list[ToolIOFile]], working_dir: Path, adapter: str,
+                       threads: int = 8) -> dict[Sample, TrimmingIlluminaWrapper.ReadTrimmingOutput]:
         """
         Trims all the reads in parallel using Snakemake.
         :param fq_by_sample: FASTQ files by sample
@@ -210,10 +209,10 @@ class SnpPhylogenyUtils(object):
             'read_trimming': {'adapter': adapter}
         }
         config_file = SnakePipelineUtils.generate_config_file(config_data, working_dir)
-        output_file = working_dir / TRIMMING_ALL
+        output_file = TRIMMING_ALL
         SnakePipelineUtils.run_snakemake(
             SNAKEFILE_TRIMMING_ALL, config_file, [output_file], working_dir, threads)
-        trimming_out_by_sample = SnakemakeUtils.load_object(output_file)
+        trimming_out_by_sample = snakemakeutils.load_object(working_dir / output_file)
         return {s: trimming_out_by_sample[s.name_valid] for s in fq_by_sample}
 
     @staticmethod
@@ -229,7 +228,7 @@ class SnpPhylogenyUtils(object):
         report.save()
 
     @staticmethod
-    def add_trimming_section(report: HtmlReport, trimming_output_by_sample: Dict[
+    def add_trimming_section(report: HtmlReport, trimming_output_by_sample: dict[
             Sample, TrimmingIlluminaWrapper.ReadTrimmingOutput]) -> None:
         """
         Adds the trimming section to the report.
@@ -264,7 +263,7 @@ class SnpPhylogenyUtils(object):
         report.save()
 
     @staticmethod
-    def construct_snp_matrix(sample_names: List[str], vcf_files: List[ToolIOFile], working_dir: Path,
+    def construct_snp_matrix(sample_names: list[str], vcf_files: list[ToolIOFile], working_dir: Path,
                              include_ref: bool = False, include_filtered: bool = True) -> ToolIOFile:
         """
         Constructs a SNP matrix based on the given VCF files.
@@ -277,7 +276,7 @@ class SnpPhylogenyUtils(object):
         """
         if not working_dir.exists():
             working_dir.mkdir(parents=True)
-        snp_matrix_constructor = SnpMatrixConstructor(Camel.get_instance())
+        snp_matrix_constructor = SnpMatrixConstructor()
 
         # Parameters and input
         if include_ref is True:
@@ -294,8 +293,8 @@ class SnpPhylogenyUtils(object):
         return snp_matrix_constructor.tool_outputs['FASTA'][0]
 
     @staticmethod
-    def add_output_files_section(report: HtmlReport, column_names: List[str], output_files: Dict[
-            Sample, List[Optional[Path]]], snp_matrix: Path) -> None:
+    def add_output_files_section(report: HtmlReport, column_names: list[str], output_files: dict[
+            Sample, list[Optional[Path]]], snp_matrix: Path) -> None:
         """
         Adds the section with the output files.
         :param report: Report
@@ -318,7 +317,7 @@ class SnpPhylogenyUtils(object):
         # Add other output files table
         table_data = []
         for sample, output in output_files.items():
-            row = [sample.name_full]
+            row: list[Union[str, HtmlTableCell]] = [sample.name_full]
             for file_ in output:
                 if file_ is None:
                     row.append('Not available')
@@ -333,7 +332,7 @@ class SnpPhylogenyUtils(object):
         report.save()
 
     @staticmethod
-    def add_metrics_section(report: HtmlReport, stats: Dict[Sample, List], header: List[str]) -> None:
+    def add_metrics_section(report: HtmlReport, stats: dict[Sample, list], header: list[str]) -> None:
         """
         Adds a section with analysis metrics to the report.
         :param report: Report
@@ -377,11 +376,11 @@ class SnpPhylogenyUtils(object):
         """
         snp_matrix_size = SnpPhylogenyUtils.get_snp_matrix_size(snp_matrix)
         if snp_matrix_size > size_max:
-            raise ValueError('SNP matrix is too big ({}, max={}) to perform model selection / tree building.'.format(
-                snp_matrix_size, size_max))
+            raise ValueError(
+                f'SNP matrix is too big ({snp_matrix_size}, max={size_max}) to perform model selection / tree building.')
         elif snp_matrix_size < size_min:
-            raise ValueError('SNP matrix is too small ({}, min={}) to perform model selection / tree building.'.format(
-                    snp_matrix_size, size_min))
+            raise ValueError(
+                f'SNP matrix is too small ({snp_matrix_size}, min={size_min}) to perform model selection / tree building.')
 
     @staticmethod
     def add_model_selection_section(report: HtmlReport, model_selection: Optional[ModelSelection] = None,
@@ -417,7 +416,7 @@ class SnpPhylogenyUtils(object):
         :param args: Command line arguments
         :return: Model selection
         """
-        model_selection = ModelSelection(Camel.get_instance())
+        model_selection = ModelSelection()
         model_selection.add_input_files({'FASTA': [snp_matrix]})
         MEGAUtils.update_model_selection_parameters(
             model_selection, args.missing_data, args.branch_swap, args.site_cov_cutoff, args.threads)
@@ -450,7 +449,7 @@ class SnpPhylogenyUtils(object):
             # Render tree
             output_path = Path(report.output_dir) / 'tree.png'
             NewickUtils.create_image_figtree(
-                newick_path, Path(pkg_resources.resource_filename('camel', 'resources/figtree/template_snp_tree.txt')),
+                newick_path, Path(str(files('camel').joinpath('resources/figtree/template_snp_tree.txt'))),
                 output_path, 480, NewickUtils.calculate_tree_image_height(256, NewickUtils.count_leaves(newick_path))
             )
             section.add_html_object(HtmlElement('img', attributes=[('src', 'tree.png'), ('border', '1')]))
@@ -470,7 +469,7 @@ class SnpPhylogenyUtils(object):
         :param args: Command line arguments
         :return: Tree building tool instance
         """
-        tree_building = MLTreeConstruction(Camel.get_instance())
+        tree_building = MLTreeConstruction()
         tree_building.add_input_files({'FASTA': [snp_matrix]})
         MEGAUtils.update_tree_building_parameters(
             tree_building, model, rates, args.bootstraps, args.missing_data, args.site_cov_cutoff,

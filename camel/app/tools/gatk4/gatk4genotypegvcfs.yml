@@ -1,11 +1,41 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  include-non-variant-sites: {default: false, mandatory: false, option: --include-non-variant-sites, p_index: 50,
-    value: null}
-  output: {default: true, mandatory: false, option: --output, p_index: 0, value: genotype_gvcf_multisample.vcf}
-  ploidy: {default: true, mandatory: false, option: -ploidy, p_index: 10, value: '1'}
-  standard-min-confidence-threshold-for-calling: {default: true, mandatory: false,
-    option: --standard-min-confidence-threshold-for-calling, p_index: 20, value: '30'}
-  gendb: {default: true, mandatory: false, option: -V, p_index: 0, value: None}
-  annotation_group: {default: false, mandatory: false, option: -G, p_index: 0, value: "StandardAnnotation"}
+  include-non-variant-sites:
+    default: false
+    mandatory: false
+    option: '--include-non-variant-sites'
+    p_index: 50
+    value: null
+  output:
+    default: true
+    mandatory: false
+    option: '--output'
+    p_index: 0
+    value: genotype_gvcf_multisample.vcf
+  ploidy:
+    default: true
+    mandatory: false
+    option: '-ploidy'
+    p_index: 10
+    value: '1'
+  standard-min-confidence-threshold-for-calling:
+    default: true
+    mandatory: false
+    option: '--standard-min-confidence-threshold-for-calling'
+    p_index: 20
+    value: '30'
+  gendb:
+    default: true
+    mandatory: false
+    option: '-V'
+    p_index: 0
+    value: None
+  annotation_group:
+    default: false
+    mandatory: false
+    option: '-G'
+    p_index: 0
+    value: StandardAnnotation
 tool_command: GenotypeGVCFs

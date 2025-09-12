@@ -1,5 +1,3 @@
-import os
-
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.gatk.gatk import GATK
 
@@ -32,13 +30,12 @@ class GATKPrintReads(GATK):
     - bam_output       Output BAM file name. Default value: 'recalibrated.bam'
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize GATKPrintReads tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk PrintReads', '3.7', camel)
+        super().__init__('gatk PrintReads', '3.7')
 
         self._required_inputs = ['BAM', 'FASTA_REF']
         self._specific_parameters = ["bam_external_output"]
@@ -71,7 +68,7 @@ class GATKPrintReads(GATK):
         :return: None
         """
         bam_output_file = self._parameters['bam_output'].value
-        self._tool_outputs['BAM'] = [ToolIOFile(os.path.join(self._folder, bam_output_file))]
+        self._tool_outputs['BAM'] = [ToolIOFile(self._folder / bam_output_file)]
 
     def run(self, folder='.'):
         """

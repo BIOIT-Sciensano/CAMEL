@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 
 from camel.app.components.sequencetyping.sequencetypinghitbase import SequenceTypingHitBase
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -28,13 +28,12 @@ class SequenceTypeDetector(Tool):
 
     SYMBOL_NO_ST = 'ND'
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize this tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Typing: Sequence Type Detector', '0.1', camel)
+        super().__init__('Typing: Sequence Type Detector', '0.1')
         self._wildcards = None
         self._symbol_allele_absent = None
         self._metadata_columns = []
@@ -80,9 +79,9 @@ class SequenceTypeDetector(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Sequence type profiles ('TSV') are required.")
+            raise InvalidToolInputError("Sequence type profiles ('TSV') are required.")
         if len(self._tool_inputs['hits_nucl']) + len(self._tool_inputs['hits_pept']) == 0:
-            raise InvalidInputSpecificationError("Typing hits are required.")
+            raise InvalidToolInputError("Typing hits are required.")
         super()._check_input()
 
     def __parse_profiles(self, gene_names: list[str]) -> list[STProfile]:
@@ -102,7 +101,7 @@ class SequenceTypeDetector(Tool):
         profiles = []
         for row in data_in.fillna('n/a').to_dict('records'):
             profiles.append(STProfile(
-                name=row[data_in.columns[0]],
+                name=row[str(data_in.columns[0])],
                 alleles={c: row[c] for c in cols_alleles},
                 metadata=[(c, row[c] if not pd.isna(row[c]) else '-') for c in cols_metadata],
             ))

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import yaml
 
 from camel.app.camel import Camel
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.stecpipeline import CONFIG_DATA
-from camel.scripts.stecpipeline import SNAKEFILE_MAIN
+from camel.scripts.stecpipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 class MainSTECPipeline(ReportPipeline):
@@ -57,12 +57,6 @@ class MainSTECPipeline(ReportPipeline):
         # Read trimming
         if self._args.library is not None:
             config_data['read_trimming']['adapter'] = self._args.library
-
-        # cgMLST detection method
-        detection_method_cgmlst = {
-            'blast': 'blast', 'srst2': 'blast', 'kma': 'kma'}.get(self._args.detection_method)
-        config_data['sequence_typing']['cgmlst']['detection_method'] = detection_method_cgmlst
-        config_data['sequence_typing']['innuendo_cgmlst']['detection_method'] = detection_method_cgmlst
         return Path(SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir))
 
     @staticmethod

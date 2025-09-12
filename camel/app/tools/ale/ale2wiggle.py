@@ -1,28 +1,26 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
 
 class ALE2Wiggle(Tool):
-
     """
     ALE is the Assembly Likelihood Evaluation framework that systematically evaluates the accuracy of an assembly
     in a reference-independent manner using rigorous statistical methods.
 
-    Ale2Wiggle converts the ALE output file to a set of wiggle files, which can be read by IGV.
+    Ale2Wiggle converts the ALE output file to a set of wiggle files, which can be opened in IGV.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize the ALE2Wiggle tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('ALE2Wiggle', '2022.05.03', camel)
+        super().__init__('ALE2Wiggle', '2022.05.03')
 
     def _execute_tool(self) -> None:
         """
@@ -45,7 +43,7 @@ class ALE2Wiggle(Tool):
         :return: None
         """
         if 'ALE' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('ALE file is required')
+            raise InvalidToolInputError('ALE file is required')
         super()._check_input()
 
     def _build_command(self, ale_output: Path) -> None:
@@ -56,13 +54,12 @@ class ALE2Wiggle(Tool):
         """
         self._command.command = ' '.join([self._tool_command, str(ale_output)])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks command output.
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """

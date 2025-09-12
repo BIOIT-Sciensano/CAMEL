@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Union, Any
+from typing import Optional, Union, Any
 
 import abc
 
@@ -8,7 +8,7 @@ from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
 
 
-class GeneDetectionHitBase(object, metaclass=abc.ABCMeta):
+class GeneDetectionHitBase(metaclass=abc.ABCMeta):
     """
     This is the base class for hits detected by the gene detection workflows.
     """
@@ -91,7 +91,7 @@ class GeneDetectionHitBase(object, metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def table_column_names(self) -> List[str]:
+    def table_column_names(self) -> list[str]:
         """
         Returns the names of the columns of the tabular output.
         :return: List of column names
@@ -99,16 +99,23 @@ class GeneDetectionHitBase(object, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def to_table_row(self) -> List[str]:
+    def to_table_row(self) -> list[str]:
         """
         Returns the hit as a table row.
         :return: List of table cell values
         """
         raise NotImplementedError()
 
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Returns the hit as a dictionary.
+        :return: Dictionary with hit data
+        """
+        return {k: v for k, v in zip(self.table_column_names, self.to_table_row())}
+
     @property
     @abc.abstractmethod
-    def html_column_names(self) -> List[str]:
+    def html_column_names(self) -> list[str]:
         """
         Returns the names of the columns of the HTML output.
         :return: List of column names
@@ -117,7 +124,7 @@ class GeneDetectionHitBase(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def to_html_row(self, report_section: HtmlReportSection, sub_directory: Path, colored: bool = True) \
-            -> List[Union[str, HtmlTableCell]]:
+            -> list[Union[str, HtmlTableCell]]:
         """
         Returns the hit as a HTML table row.
         :param report_section: Section is passed to save additional data

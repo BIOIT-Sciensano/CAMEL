@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Optional
+from typing import Optional
 
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
@@ -23,7 +23,7 @@ class NucleotideMutation(BaseMutation):
         self.pos_rel = pos_rel
 
     @staticmethod
-    def parse(record: VcfRecord, tabix_by_pos: Dict[int, Dict]) -> 'NucleotideMutation':
+    def parse(record: VcfRecord, tabix_by_pos: dict[int, dict]) -> 'NucleotideMutation':
         """
         Parses a nucleotide mutation.
         :param record: VCF record
@@ -59,7 +59,7 @@ class NucleotideMutation(BaseMutation):
         ])
 
     @property
-    def key(self) -> Tuple[str, str, int, str]:
+    def key(self) -> tuple[str, str, int, str]:
         """
         Returns the mutation key.
         """

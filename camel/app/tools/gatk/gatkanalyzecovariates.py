@@ -1,5 +1,3 @@
-import os
-
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.gatk.gatk import GATK
 
@@ -32,13 +30,12 @@ class GATKAnalyzeCovariates(GATK):
     - pdf_output       pdf output file name. Default value: 'recal_QC_plots.pdf'
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize GATKAnalyzeCovariates tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk AnalyzeCovariates', '3.7', camel)
+        super().__init__('gatk AnalyzeCovariates', '3.7')
 
         self._required_inputs = ['TXT_TABLE_BEFORE', 'TXT_TABLE_AFTER', 'FASTA_REF']
 
@@ -66,6 +63,5 @@ class GATKAnalyzeCovariates(GATK):
         Supersedes _set_output in GATK class.
         :return: None
         """
-        self._tool_outputs['PDF'] = [ToolIOFile(os.path.join(self._folder, self._parameters['pdf_output'].value))]
-
-        self._tool_outputs['CSV'] = [ToolIOFile(os.path.join(self._folder, self._parameters['csv_output'].value))]
+        self._tool_outputs['PDF'] = [ToolIOFile(self._folder / self.get_param_value('pdf_output'))]
+        self._tool_outputs['CSV'] = [ToolIOFile(self._folder / self.get_param_value('csv_output'))]

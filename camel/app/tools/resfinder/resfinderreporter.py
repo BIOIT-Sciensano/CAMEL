@@ -3,11 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -23,13 +22,12 @@ class ResFinderReporter(Tool):
     URL_PUBMED = 'https://pubmed.ncbi.nlm.nih.gov/{id}'
     MATCH_COLORS = {0: None, 1: 'grey', 2: 'lightgreen', 3: 'green'}
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('ResFinder Reporter', '0.1', camel)
+        super().__init__('ResFinder Reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -37,9 +35,9 @@ class ResFinderReporter(Tool):
         :return: None
         """
         if 'TSV_pheno_general' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('ResFinder phenotype input (TSV_pheno_general) is required.')
+            raise InvalidToolInputError('ResFinder phenotype input (TSV_pheno_general) is required.')
         if 'resfinder' not in self._input_informs:
-            raise InvalidInputSpecificationError('ResFinder informs are required.')
+            raise InvalidToolInputError('ResFinder informs are required.')
         super()._check_input()
 
     def __add_parameter_section(self, section: HtmlReportSection) -> None:

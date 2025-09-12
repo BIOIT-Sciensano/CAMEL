@@ -1,4 +1,3 @@
-from camel.app.camel import Camel
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
@@ -25,14 +24,12 @@ class GATK4ApplyBQSR(GATK4):
 
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATK4ApplyBQSR tool.
-        :param camel: Camel instance
         :return: None
         """
-        super(GATK4ApplyBQSR, self).__init__('gatk4 ApplyBQSR', '4.1.9.0', camel)
-
+        super().__init__('gatk4 ApplyBQSR', '4.1.9.0')
         self._required_inputs = ['BAM', 'FASTA_REF', 'BQSR']
         self._output_type = 'BAM'
         self._specific_parameters = 'static_quantized_quals_multi'
@@ -43,7 +40,6 @@ class GATK4ApplyBQSR(GATK4):
         Overrides method in parent class.
         :return: None
         """
-
         # set input BAM
         self._input_string += f"--input {self._tool_inputs['BAM'][0].path} "
 
@@ -68,7 +64,4 @@ class GATK4ApplyBQSR(GATK4):
             self._option_string += ' --static-quantized-quals '.join(
                 self._parameters['static_quantized_quals_multi'].value.split(","))
             self._option_string += " "
-
-        super(GATK4ApplyBQSR, self)._build_command()
-
-
+        super()._build_command()

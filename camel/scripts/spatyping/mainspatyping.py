@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
@@ -53,7 +54,7 @@ class MainSpaTyping:
         """
         # Initialize report
         report = mainscriptutils.init_report(
-            self._args.output_html, self._args.output_dir, 'spa typing report', f'<i>spa</i> typing')
+            self._args.output_html, self._args.output_dir, 'spa typing report', '<i>spa</i> typing')
         report.add_html_object(mainscriptutils.generate_analysis_info_section(self._args))
         report.save()
 
@@ -76,7 +77,7 @@ class MainSpaTyping:
         :param fasta_file: Input FASTA file
         :return: None
         """
-        blastn = Blastn(self._camel)
+        blastn = Blastn()
         blastn.add_input_files({
             'DB_BLAST': [ToolIOFile(self._args.db_path / 'profiles.fasta')],
             'FASTA': [ToolIOFile(fasta_file)]})
@@ -97,7 +98,7 @@ class MainSpaTyping:
         :param fasta_file: FASTA file
         :return: None
         """
-        spa_typing = SpaTyping(self._camel)
+        spa_typing = SpaTyping()
         spa_typing.add_input_files({
             'TSV': [ToolIOFile(tsv_output)],
             'FASTA': [ToolIOFile(fasta_file)],
@@ -113,7 +114,7 @@ class MainSpaTyping:
         :param report: Report to append information to
         :return: None
         """
-        reporter = SpaTypingReporter(self._camel)
+        reporter = SpaTypingReporter()
         reporter.add_input_informs({'spa_typing': spa_typing.informs})
         reporter.add_input_files({'VAL_hits': spa_typing.tool_outputs['VAL_hits']})
         reporter.run(self._args.working_dir)
@@ -121,7 +122,16 @@ class MainSpaTyping:
         report.save()
 
 
+def main(args: Sequence[str] | None = None) -> None:
+    """
+    Entry point for the common interface.
+    :param args: Command line arguments
+    :return: None
+    """
+    script = MainSpaTyping(args)
+    script.run()
+
+
 if __name__ == '__main__':
     Camel.get_instance()
-    main = MainSpaTyping()
-    main.run()
+    main()

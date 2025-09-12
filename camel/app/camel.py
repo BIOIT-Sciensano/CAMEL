@@ -7,7 +7,7 @@ from camel.app.loggers import initialize_logging, logger
 from camel.config import MAIN_CONFIG
 
 
-class Camel(object):
+class Camel:
     """
     Main class for camel.
     """

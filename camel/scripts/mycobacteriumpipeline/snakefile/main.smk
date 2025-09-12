@@ -9,28 +9,28 @@ from camel.scripts.mycobacteriumpipeline.snakefile import csb_rd, snpit, hsp65, 
 #######################
 # Included Snakefiles #
 #######################
-include: core.SNAKEFILE_CORE
-include: human_read_scrubbing.SNAKEFILE_SCRUBBING
-include: read_simulation.SNAKEFILE_READ_SIMULATION
-include: downsampling.SNAKEFILE_DOWNSAMPLING
-include: trimming_illumina.SNAKEFILE_TRIMMING_ILLUMINA
-include: trimming_ont.SNAKEFILE_TRIMMING_ONT
-include: assembly.SNAKEFILE_ASSEMBLY
-include: confindr.SNAKEFILE_CONFINDR
-include: contamination_check_kraken.SNAKEFILE_CONTAMINATION_CHECK_KRAKEN
-include: quality_checks.SNAKEFILE_QUALITY_CHECKS
-include: quast.SNAKEFILE_QUAST
-include: gene_detection.SNAKEFILE_GENE_DETECTION
-include: sequence_typing.SNAKEFILE_SEQUENCE_TYPING
-include: variant_calling.SNAKEFILE_VARIANT_CALLING
-include: variant_filtering.SNAKEFILE_VARIANT_FILTERING
+include: core.SNAKEFILE
+include: human_read_scrubbing.SNAKEFILE
+include: read_simulation.SNAKEFILE
+include: downsampling.SNAKEFILE
+include: trimming_illumina.SNAKEFILE
+include: trimming_ont.SNAKEFILE
+include: assembly.SNAKEFILE
+include: confindr.SNAKEFILE
+include: contamination_check_kraken.SNAKEFILE
+include: quality_checks.SNAKEFILE
+include: quast.SNAKEFILE
+include: gene_detection.SNAKEFILE
+include: sequence_typing.SNAKEFILE
+include: variant_calling.SNAKEFILE
+include: variant_filtering.SNAKEFILE
 include: csb_rd.SNAKEFILE_CSB_RD
-include: snpit.SNAKEFILE_SNPIT
-include: hsp65.SNAKEFILE_HSP65
-include: assay51snp.SNAKEFILE_51SNP
-include: spoligotyping.SNAKEFILE_SPOLIGOTYPING
-include: snplineage.SNAKEFILE_SNP_LINEAGE
-include: amrdetection.SNAKEFILE_AMR
+include: snpit.SNAKEFILE
+include: hsp65.SNAKEFILE
+include: assay51snp.SNAKEFILE
+include: spoligotyping.SNAKEFILE
+include: snplineage.SNAKEFILE
+include: amrdetection.SNAKEFILE
 
 #########
 # Rules #
@@ -52,19 +52,19 @@ rule report_command_section:
         INFORMS_downsampling = downsampling.get_command_informs(config),
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_assembly = assembly.get_command_informs(config),
-        INFORMS_quast = Path(config['working_dir']) / quast.OUTPUT_QUAST_INFORMS,
-        INFORMS_busco = Path(config['working_dir']) / quast.OUTPUT_BUSCO_INFORMS,
+        INFORMS_quast = quast.OUTPUT_INFORMS,
+        INFORMS_busco = quast.OUTPUT_INFORMS_BUSCO,
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_variant_calling_all = variant_calling.get_command_informs(config),
-        INFORMS_variant_filtering_all = Path(config['working_dir']) / variant_filtering.OUTPUT_VARIANT_FILTERING_INFORMS_ALL,
-        INFORMS_snpit = Path(config['working_dir']) / snpit.OUTPUT_SNPIT_INFORMS if 'snpit' in config['analyses'] else [],
-        INFORMS_16s = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='ncbi_16s') if 'ncbi_16s' in config['analyses'] else [],
-        INFORMS_csb_rd = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='csb_rd') if 'csb_rd' in config['analyses'] else [],
-        INFORMS_hsp65 = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='hsp65') if 'hsp65' in config['analyses'] else [],
-        INFORMS_spoligo = Path(config['working_dir']) / spoligotyping.OUTPUT_SPOLIGOTYPING_INFORMS if 'spoligotyping' in config['analyses'] else []
+        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL,
+        INFORMS_snpit = snpit.OUTPUT_INFORMS if 'snpit' in config['analyses'] else [],
+        INFORMS_16s = str(gene_detection.OUTPUT_INFORMS).format(db='ncbi_16s') if 'ncbi_16s' in config['analyses'] else [],
+        INFORMS_csb_rd = str(gene_detection.OUTPUT_INFORMS).format(db='csb_rd') if 'csb_rd' in config['analyses'] else [],
+        INFORMS_hsp65 = str(gene_detection.OUTPUT_INFORMS).format(db='hsp65') if 'hsp65' in config['analyses'] else [],
+        INFORMS_spoligo = spoligotyping.OUTPUT_INFORMS if 'spoligotyping' in config['analyses'] else []
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-commands.io'
+        HTML = 'report/html-commands.iob'
     params:
         dir_ = config['working_dir']
     run:
@@ -79,29 +79,29 @@ rule report_combine_all:
         reports_scrubbing = human_read_scrubbing.get_reports(config),
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
-        report_quast = Path(config['working_dir']) / quast.OUTPUT_QUAST_REPORT,
+        report_quast = quast.OUTPUT_REPORT,
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
-        report_adv_qc = Path(config['working_dir']) / str(quality_checks.OUTPUT_QUALITY_CHECKS_REPORT).format(input_type=config['input_type']),
+        report_adv_qc = str(quality_checks.OUTPUT_REPORT).format(input_type=config['input_type']),
         report_variant = variant_calling.get_reports(config),
         # Species identification
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         report_ncbi_16s = gene_detection.get_gene_detection_report('ncbi_16s', config),
-        report_51snp = Path(config['working_dir']) / (assay51snp.OUTPUT_51SNP_REPORT if '51snp' in config['analyses'] else assay51snp.OUTPUT_51SNP_REPORT_EMPTY),
-        report_csb_rd = Path(config['working_dir']) / (csb_rd.OUTPUT_CSB_RD_REPORT if 'csb_rd' in config['analyses'] else csb_rd.OUTPUT_CSB_RD_REPORT_EMPTY),
-        report_hsp65 = Path(config['working_dir']) / (hsp65.OUTPUT_HSP65_REPORT if 'hsp65' in config['analyses'] else hsp65.OUTPUT_HSP65_REPORT_EMPTY),
-        report_snpit = Path(config['working_dir']) / (snpit.OUTPUT_SNPIT_REPORT if 'snpit' in config['analyses'] else snpit.OUTPUT_SNPIT_REPORT_EMPTY),
+        report_51snp = (assay51snp.OUTPUT_REPORT if '51snp' in config['analyses'] else assay51snp.OUTPUT_REPORT_EMPTY),
+        report_csb_rd = (csb_rd.OUTPUT_CSB_RD_REPORT if 'csb_rd' in config['analyses'] else csb_rd.OUTPUT_CSB_RD_REPORT_EMPTY),
+        report_hsp65 = (hsp65.OUTPUT_REPORT if 'hsp65' in config['analyses'] else hsp65.OUTPUT_REPORT_EMPTY),
+        report_snpit = (snpit.OUTPUT_REPORT if 'snpit' in config['analyses'] else snpit.OUTPUT_REPORT_EMPTY),
         # Spoligotyping & lineage determination
-        report_spoligo = Path(config['working_dir']) / (spoligotyping.OUTPUT_SPOLIGOTYPING_REPORT if 'spoligotyping' in config['analyses'] else spoligotyping.OUTPUT_SPOLIGOTYPING_REPORT_EMPTY),
-        report_snp_lineage = Path(config['working_dir']) / (snplineage.OUTPUT_SNP_LINEAGE_REPORT if 'snp_lineage' in config['analyses'] else snplineage.OUTPUT_SNP_LINEAGE_REPORT_EMPTY),
+        report_spoligo = (spoligotyping.OUTPUT_REPORT if 'spoligotyping' in config['analyses'] else spoligotyping.OUTPUT_REPORT_EMPTY),
+        report_snp_lineage = (snplineage.OUTPUT_REPORT if 'snp_lineage' in config['analyses'] else snplineage.OUTPUT_REPORT_EMPTY),
         # AMR
-        report_amr = Path(config['working_dir']) / (amrdetection.OUTPUT_AMR_REPORT if 'amr' in config['analyses'] else amrdetection.OUTPUT_AMR_REPORT_EMPTY),
-        report_amr_genes = Path(config['working_dir']) / 'amr' / 'cds' / 'html.io',
+        report_amr = (amrdetection.OUTPUT_REPORT if 'amr' in config['analyses'] else amrdetection.OUTPUT_REPORT_EMPTY),
+        report_amr_genes = amrdetection.OUTPUT_REPORT_CDS,
         # Typing
         report_mlst = sequence_typing.get_sequence_typing_report('mlst', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
         # Report
-        report_citations = Path(config['working_dir'], core.OUTPUT_HTML_CITATIONS),
+        report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_command_section.output.HTML
     output:
         HTML = config['output_report']
@@ -165,31 +165,30 @@ rule summary_combine_all:
     Combines the summary output files of the different assays into a single summary file.
     """
     input:
-        Path(config['working_dir'], core.OUTPUT_TSV_SUMMARY_INIT),
-        human_read_scrubbing.get_summaries(config),
-        downsampling.get_summaries(config),
+        core.OUTPUT_SUMMARY_INIT,
+        lambda wildcards: human_read_scrubbing.get_summaries(config, wildcards.ext),
+        lambda wildcards: downsampling.get_summaries(config, wildcards.ext),
         trimming.get_summaries(config),
-        Path(config['working_dir']) / quast.OUTPUT_QUAST_SUMMARY,
-        contamination_check_kraken.get_summaries(config),
+        quast.OUTPUT_SUMMARY,
+        lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
-        Path(config['working_dir']) / quality_checks.OUTPUT_QUALITY_CHECKS_SUMMARY,
+        quality_checks.OUTPUT_SUMMARY,
         variant_calling.get_summaries(config),
-        Path(config['working_dir']) / variant_filtering.OUTPUT_VARIANT_FILTERING_SUMMARY,
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='ncbi_16s') if 'ncbi_16s' in config['analyses'] else [],
-        Path(config['working_dir']) / csb_rd.OUTPUT_CSB_RD_SUMMARY if 'csb_rd' in config['analyses'] else [],
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='hsp65') if 'hsp65' in config['analyses'] else [],
-        Path(config['working_dir']) / assay51snp.OUTPUT_51SNP_SUMMARY if '51snp' in config['analyses'] else [],
-        Path(config['working_dir']) / snpit.OUTPUT_SNPIT_SUMMARY if 'snpit' in config['analyses'] else [],
-        Path(config['working_dir']) / spoligotyping.OUTPUT_SPOLIGOTYPING_SUMMARY if 'spoligotyping' in config['analyses'] else [],
-        Path(config['working_dir']) / snplineage.OUTPUT_SNP_LINEAGE_SUMMARY if 'snp_lineage' in config['analyses'] else [],
-        Path(config['working_dir']) / amrdetection.OUTPUT_AMR_SUMMARY if 'amr' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='mlst') if 'mlst' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='rmlst') if 'rmlst' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else []
+        variant_filtering.OUTPUT_SUMMARY,
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='ncbi_16s', ext=wildcards.ext) if 'ncbi_16s' in config['analyses'] else [],
+        csb_rd.OUTPUT_CSB_RD_SUMMARY if 'csb_rd' in config['analyses'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='hsp65', ext=wildcards.ext) if 'hsp65' in config['analyses'] else [],
+        assay51snp.OUTPUT_SUMMARY if '51snp' in config['analyses'] else [],
+        snpit.OUTPUT_SUMMARY if 'snpit' in config['analyses'] else [],
+        spoligotyping.OUTPUT_SUMMARY if 'spoligotyping' in config['analyses'] else [],
+        snplineage.OUTPUT_SUMMARY if 'snp_lineage' in config['analyses'] else [],
+        amrdetection.OUTPUT_SUMMARY if 'amr' in config['analyses'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses'] else []
     output:
-        TSV = config['output_tabular']
+        FILE = 'summary/output.{ext}'
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        with open(output.TSV, 'w') as handle_out:
-            for summary_input in input:
-                with open(summary_input) as handle_in:
-                    handle_out.write(handle_in.read())
+        SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))

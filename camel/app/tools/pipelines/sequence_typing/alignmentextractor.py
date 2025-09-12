@@ -1,11 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.blast.alignmentextraction import AlignmentExtraction
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.sequencetyping.sequencetypingblasthit import SequenceTypingBlastHit
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -22,12 +21,11 @@ class AlignmentExtractor(Tool):
         - TXT: Text file containing the extracted alignment of the hit
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Typing: Alignment Extractor', '0.1', camel)
+        super().__init__('Typing: Alignment Extractor', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -45,7 +43,7 @@ class AlignmentExtractor(Tool):
             self._tool_outputs['TXT'] = [ToolIOFile(self.__save_alignment(
                 f'{hit.locus}_{hit.allele_id}', alignments[key]))]
         else:
-            raise ToolExecutionError("No alignment found for: '{}'".format(key))
+            raise ToolExecutionError(self.name, f"No alignment found for: '{key}'")
 
     def _check_input(self) -> None:
         """
@@ -53,12 +51,12 @@ class AlignmentExtractor(Tool):
         :return: None
         """
         if 'TXT' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No TXT input found.")
+            raise InvalidToolInputError("No TXT input found.")
         if 'VAL_Hits' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No typing hits input found")
+            raise InvalidToolInputError("No typing hits input found")
         if len(self._tool_inputs['TXT']) != 1 or len(self._tool_inputs['VAL_Hits']) != 1:
-            raise InvalidInputSpecificationError("Can only extract one alignment")
-        super(AlignmentExtractor, self)._check_input()
+            raise InvalidToolInputError("Can only extract one alignment")
+        super()._check_input()
 
     def __save_alignment(self, allele_name: str, alignment: str) -> Path:
         """

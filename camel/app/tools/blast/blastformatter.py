@@ -1,6 +1,5 @@
-
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -10,12 +9,11 @@ class BlastFormatter(Tool):
     Formats BLAST output.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('blast_formatter', '2.14.0', camel)
+        super().__init__('blast_formatter', '2.14.0')
 
     def _check_input(self) -> None:
         """
@@ -24,7 +22,7 @@ class BlastFormatter(Tool):
         """
         if 'ASN' not in self._tool_inputs:
             raise ValueError('No blast archive input found')
-        super(BlastFormatter, self)._check_input()
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
@@ -82,10 +80,11 @@ class BlastFormatter(Tool):
         """
         self._tool_outputs[self.__output_key] = [ToolIOFile(self.folder / self.__get_output_name())]
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output for errors.
+        :param command: Command
         :return: None
         """
-        if 'error' in self.stderr.lower() or self._command.returncode != 0:
-            raise ToolExecutionError("Error executing {}: {}".format(self.name, self._command.stderr.strip()))
+        if 'error' in command.stderr.lower() or command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Error executing {self.name}: {command.stderr.strip()}")

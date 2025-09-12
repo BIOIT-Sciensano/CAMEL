@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.components.files.fastqutils import FastqUtils
 from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -16,19 +16,18 @@ class Filtlong(Tool):
     reads pass the filter.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Filtlong', '0.2.0', camel)
+        super().__init__('Filtlong', '0.2.0')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTQ input is required')
+            raise InvalidToolInputError('FASTQ input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -58,9 +57,10 @@ class Filtlong(Tool):
         self._informs['nb_reads_in'] = FastqUtils.count_reads(self._tool_inputs['FASTQ'][0].path)
         self._informs['nb_reads_out'] = FastqUtils.count_reads(path_out)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
+        :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)

@@ -1,10 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.app.components.workflows.kraken2wrapper import Kraken2Wrapper
 from camel.app.components.workflows.utils.fastqinput import FastqInput
+from camel.app.config import config
 from camel.app.io.tooliofile import ToolIOFile
 
 
@@ -27,7 +27,7 @@ class TestWorkflowKraken2(CamelTestSuite):
     fastq_se_nanopore_contamination = test_file_dir / 'kraken2' / 'reads_nanopore_1.fastq.gz'
 
     fasta = test_file_dir / 'contigs.fasta'
-    path_db = Path(Camel.get_instance().config['db_root'], 'kraken2_microbial', 'latest')
+    path_db = Path(config.dir_db / 'kraken2_microbial' / 'latest')
 
     def test_kraken2_illumina_paired_end(self) -> None:
         """

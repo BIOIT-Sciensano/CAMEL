@@ -1,38 +1,179 @@
-dependencies: [ bcftools/1.17 ]
+dependencies:
+  - bcftools/1.17
 parameters:
-  apply_filters: { default: false, mandatory: false, option: --apply-filters, value: null }
-  compress_output: { default: true, mandatory: false, option: null, value: null }
-  compression_level: { default: false, mandatory: false, option: --compression-level, value: '-1' }
-  drop_individual_genotypes: { default: false, mandatory: false, option: --drop-genotypes, value: null }
-  exclude: { default: false, mandatory: false, option: --exclude, value: null }
-  exclude_phased: { default: false, mandatory: false, option: --exclude-phased, value: 'false' }
-  exclude_private: { default: false, mandatory: false, option: --exclude-private, value: 'false' }
-  exclude_types: { default: false, mandatory: false, option: --exclude-types, value: null }
-  exclude_uncalled: { default: false, mandatory: false, option: --exclude-uncalled, value: 'false' }
-  genotype: { default: false, mandatory: false, option: --genotype, value: null }
-  header_only: { default: false, mandatory: false, option: --header-only, value: 'false' }
-  include: { default: false, mandatory: false, option: --include, value: null }
-  known_sites_only: { default: false, mandatory: false, option: --known, value: 'false' }
-  max_allele_freq: { default: false, mandatory: false, option: --max-af, value: null }
-  max_alleles: { default: false, mandatory: false, option: --max-alleles, value: null }
-  maximum_count: { default: false, mandatory: false, option: --max-ac, value: null }
-  min_allele_freq: { default: false, mandatory: false, option: --min-af, value: null }
-  min_alleles: { default: false, mandatory: false, option: --min-alleles, value: null }
-  minimum_count: { default: false, mandatory: false, option: --min-ac, value: null }
-  no_header: { default: false, mandatory: false, option: --no-header, value: 'false' }
-  no_update: { default: false, mandatory: false, option: --no-update, value: 'false' }
-  novel_sites_only: { default: false, mandatory: false, option: --novel, value: 'false' }
-  output_filename: { default: true, mandatory: false, option: --output-file, value: bcftools_view.vcf }
-  output_type: { default: true, mandatory: true, option: --output-type, value: v }
-  phased: { default: false, mandatory: false, option: --phased, value: 'false' }
-  private: { default: false, mandatory: false, option: --private, value: 'false' }
-  regions: { default: false, mandatory: false, option: --regions, value: null }
-  regions_file: { default: false, mandatory: false, option: --regions-file, value: null }
-  samples: { default: false, mandatory: false, option: --samples, value: null }
-  samples_file: { default: false, mandatory: false, option: --samples-file, value: null }
-  targets: { default: false, mandatory: false, option: --targets, value: null }
-  targets_file: { default: false, mandatory: false, option: --targets-file, value: null }
-  trim_alt_alleles: { default: false, mandatory: false, option: --trim-alt-alleles, value: 'false' }
-  types: { default: false, mandatory: false, option: --types, value: null }
-  uncalled: { default: false, mandatory: false, option: --uncalled, value: 'false' }
+  apply_filters:
+    default: false
+    mandatory: false
+    option: '--apply-filters'
+    value: null
+  compress_output:
+    default: true
+    mandatory: false
+    option: null
+    value: null
+  compression_level:
+    default: false
+    mandatory: false
+    option: '--compression-level'
+    value: '-1'
+  drop_individual_genotypes:
+    default: false
+    mandatory: false
+    option: '--drop-genotypes'
+    value: null
+  exclude:
+    default: false
+    mandatory: false
+    option: '--exclude'
+    value: null
+  exclude_phased:
+    default: false
+    mandatory: false
+    option: '--exclude-phased'
+    value: 'false'
+  exclude_private:
+    default: false
+    mandatory: false
+    option: '--exclude-private'
+    value: 'false'
+  exclude_types:
+    default: false
+    mandatory: false
+    option: '--exclude-types'
+    value: null
+  exclude_uncalled:
+    default: false
+    mandatory: false
+    option: '--exclude-uncalled'
+    value: 'false'
+  genotype:
+    default: false
+    mandatory: false
+    option: '--genotype'
+    value: null
+  header_only:
+    default: false
+    mandatory: false
+    option: '--header-only'
+    value: 'false'
+  include:
+    default: false
+    mandatory: false
+    option: '--include'
+    value: null
+  known_sites_only:
+    default: false
+    mandatory: false
+    option: '--known'
+    value: 'false'
+  max_allele_freq:
+    default: false
+    mandatory: false
+    option: '--max-af'
+    value: null
+  max_alleles:
+    default: false
+    mandatory: false
+    option: '--max-alleles'
+    value: null
+  maximum_count:
+    default: false
+    mandatory: false
+    option: '--max-ac'
+    value: null
+  min_allele_freq:
+    default: false
+    mandatory: false
+    option: '--min-af'
+    value: null
+  min_alleles:
+    default: false
+    mandatory: false
+    option: '--min-alleles'
+    value: null
+  minimum_count:
+    default: false
+    mandatory: false
+    option: '--min-ac'
+    value: null
+  no_header:
+    default: false
+    mandatory: false
+    option: '--no-header'
+    value: 'false'
+  no_update:
+    default: false
+    mandatory: false
+    option: '--no-update'
+    value: 'false'
+  novel_sites_only:
+    default: false
+    mandatory: false
+    option: '--novel'
+    value: 'false'
+  output_filename:
+    default: true
+    mandatory: false
+    option: '--output-file'
+    value: bcftools_view.vcf
+  output_type:
+    default: true
+    mandatory: true
+    option: '--output-type'
+    value: v
+  phased:
+    default: false
+    mandatory: false
+    option: '--phased'
+    value: 'false'
+  private:
+    default: false
+    mandatory: false
+    option: '--private'
+    value: 'false'
+  regions:
+    default: false
+    mandatory: false
+    option: '--regions'
+    value: null
+  regions_file:
+    default: false
+    mandatory: false
+    option: '--regions-file'
+    value: null
+  samples:
+    default: false
+    mandatory: false
+    option: '--samples'
+    value: null
+  samples_file:
+    default: false
+    mandatory: false
+    option: '--samples-file'
+    value: null
+  targets:
+    default: false
+    mandatory: false
+    option: '--targets'
+    value: null
+  targets_file:
+    default: false
+    mandatory: false
+    option: '--targets-file'
+    value: null
+  trim_alt_alleles:
+    default: false
+    mandatory: false
+    option: '--trim-alt-alleles'
+    value: 'false'
+  types:
+    default: false
+    mandatory: false
+    option: '--types'
+    value: null
+  uncalled:
+    default: false
+    mandatory: false
+    option: '--uncalled'
+    value: 'false'
 tool_command: bcftools view

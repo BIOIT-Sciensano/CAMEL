@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 import argparse
-from pathlib import Path
-from typing import List, Dict, Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import yaml
 
 from camel.app.camel import Camel
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.shigellapipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.shigellapipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 class MainShigellaPipeline(ReportPipeline):
@@ -46,7 +46,7 @@ class MainShigellaPipeline(ReportPipeline):
         self._run_snakemake_main(config_file)
         self._export_assembly()
 
-    def __construct_config_file(self, input_files: Dict[str, List[Dict[str, str]]]) -> str:
+    def __construct_config_file(self, input_files: dict[str, list[dict[str, str]]]) -> str:
         """
         Constructs the configuration file to run Snakemake.
         :param input_files: Dictionary with the input files (keys can be FASTQ_PE, FASTQ_SE)

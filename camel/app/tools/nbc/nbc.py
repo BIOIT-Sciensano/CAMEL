@@ -3,8 +3,9 @@ import tarfile
 
 import os
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -16,13 +17,12 @@ class Nbc(Tool):
     populations of genera that other classifiers may miss.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('NBC', '1.1', camel)
+        super().__init__('NBC', '1.1')
 
     def _execute_tool(self):
         """
@@ -45,20 +45,20 @@ class Nbc(Tool):
         """
         super(Nbc, self)._check_input()
         if 'FASTA' not in self._tool_inputs or 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input keys given for NBC, FASTA and DB required: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid input keys given for NBC, FASTA and DB required: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) != 2:
-            raise InvalidInputSpecificationError('Invalid number of input keys given for NBC, '
+            raise InvalidToolInputError('Invalid number of input keys given for NBC, '
                                                  'only FASTA and DB allowed: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs['FASTA']) > 1 or len(self._tool_inputs['DB']) > 1:
-            raise InvalidInputSpecificationError('Invalid number (max = 1) of files per key given for NBC: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid number (max = 1) of files per key given for NBC: {!r}'.format(self._tool_inputs))
 
     def __set_output(self):
         """
         Sets the name of the output files, and fills the common stream object with them
         :return: None
         """
-        self._tool_outputs['TGZ'] = [ToolIOFile(os.path.join(self._folder, 'raw_output.tar.gz'))]
-        self._tool_outputs['TSV'] = [ToolIOFile(os.path.join(self._folder, 'processed_output.tsv'))]
+        self._tool_outputs['TGZ'] = [ToolIOFile(self._folder / 'raw_output.tar.gz')]
+        self._tool_outputs['TSV'] = [ToolIOFile(self._folder / 'processed_output.tsv')]
 
     def __build_input_string(self):
         """
@@ -204,10 +204,10 @@ class Nbc(Tool):
                     tar.add(gzfile[:-3], arcname=os.path.basename(gzfile[:-3]))
                     os.remove(gzfile[:-3])
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

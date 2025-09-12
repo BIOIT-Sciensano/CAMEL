@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -16,13 +16,12 @@ class ConFindr(Tool):
     for multiple alleles of core, single copy genes.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('ConFindr', '0.8.2', camel)
+        super().__init__('ConFindr', '0.8.2')
 
     def _check_input(self) -> None:
         """
@@ -30,7 +29,7 @@ class ConFindr(Tool):
         :return: None
         """
         if not any(x in self._tool_inputs for x in ('FASTQ_SE', 'FASTQ_PE')):
-            raise InvalidInputSpecificationError('FASTQ_(SE/PE) input is required')
+            raise InvalidToolInputError('FASTQ_(SE/PE) input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -86,10 +85,10 @@ class ConFindr(Tool):
             # important, setting NumContamSNVs to None will cause the tool to be noted as skipped in the overview
             self._informs['NumContamSNVs'] = None
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)

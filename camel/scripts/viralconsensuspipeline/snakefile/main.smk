@@ -1,7 +1,8 @@
 import shutil
 from pathlib import Path
 
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
+from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import trimming_illumina, trimming_ont, trimming, downsampling, \
     contamination_check_kraken, core, human_read_scrubbing, assembly
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection, preprocess, \
@@ -10,20 +11,19 @@ from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, ref
 #######################
 # Included snakefiles #
 #######################
-include: core.SNAKEFILE_CORE
-include: assembly.SNAKEFILE_ASSEMBLY
-include: human_read_scrubbing.SNAKEFILE_SCRUBBING
-include: downsampling.SNAKEFILE_DOWNSAMPLING
-include: trimming_illumina.SNAKEFILE_TRIMMING_ILLUMINA
-include: contamination_check_kraken.SNAKEFILE_CONTAMINATION_CHECK_KRAKEN
-include: trimming_ont.SNAKEFILE_TRIMMING_ONT
-include: refselection.SNAKEFILE_REF_SELECTION
-include: preprocess.SNAKEFILE_PREPROCESS
-include: iterativemapping.SNAKEFILE_ITERATIVE_MAPPING
+include: core.SNAKEFILE
+include: assembly.SNAKEFILE
+include: human_read_scrubbing.SNAKEFILE
+include: downsampling.SNAKEFILE
+include: trimming_ont.SNAKEFILE
+include: trimming_illumina.SNAKEFILE
+include: contamination_check_kraken.SNAKEFILE
+include: refselection.SNAKEFILE
+include: preprocess.SNAKEFILE
+include: iterativemapping.SNAKEFILE
 include: nextclade3.SNAKEFILE_NEXTCLADE
-include: multiallelicsites.SNAKEFILE_MULTI_ALLELIC
-include: antivirals.SNAKEFILE_ANTIVIRALS
-
+include: multiallelicsites.SNAKEFILE
+include: antivirals.SNAKEFILE
 
 #########
 # Rules #
@@ -35,23 +35,23 @@ rule all:
     input:
         HTML = config['output_report'],
         TSV = config['output_tabular'],
-        TSV_stats = Path(config['working_dir']) / 'preprocess' / 'stats.tsv' if config['input_type'] != 'fasta' else []
+        JSON = config['output_json'] if config['output_json'] is not None else []
 
 rule link_fasta_to_iterative_mapping:
     """
     Selects the FASTA file used as a reference for read mapping.
     """
     input:
-        FASTA = Path(config['working_dir']) / refselection.OUTPUT_REF_SELECTION_FASTA if config['fasta_ref'] is None else []
+        FASTA = refselection.OUTPUT_FASTA if config['fasta_ref'] is None else []
     output:
-        FASTA = Path(config['working_dir']) / iterativemapping.INPUT_FASTA_REF
+        FASTA = iterativemapping.INPUT_FASTA_REF
     params:
         input_type = config['input_type'],
         fasta_ref = config['fasta_ref']
     run:
         from camel.app.io.tooliofile import ToolIOFile
         if params.fasta_ref is not None:
-            SnakemakeUtils.dump_object([ToolIOFile(Path(params.fasta_ref))], Path(output.FASTA))
+            snakemakeutils.dump_object([ToolIOFile(Path(params.fasta_ref))], Path(output.FASTA))
         else:
             shutil.copyfile(input.FASTA, output.FASTA)
 
@@ -60,9 +60,9 @@ rule select_fasta_file:
     This rule selects the fasta file to send to other workflows.
     """
     input:
-        FASTA = Path(config['working_dir']) / iterativemapping.get_fasta(config)
+        FASTA = iterativemapping.get_fasta(config)
     output:
-        FASTA = Path(config['working_dir']) / 'fasta.io'
+        FASTA = 'fasta.io'
     shell:
         "cp {input.FASTA} {output.FASTA};"
 
@@ -75,14 +75,14 @@ rule report_create_command_section:
         INFORMS_downsampling = downsampling.get_command_informs(config),
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
-        INFORMS_reference_selection = Path(config['working_dir']) / 'ref_selection' / 'mash_screen' / refselection.get_segments(
+        INFORMS_reference_selection = Path('ref_selection') / 'mash_screen' / refselection.get_segments(
             Path(config['ref_selection']['db']))[0] / 'informs.io' if config['fasta_ref'] is None and config['input_type'] != 'fasta' and config['ref_selection'].get('db') is not None else [],
-        INFORMS_preprocess = Path(config['working_dir']) / preprocess.OUTPUT_PRE_PROCESS_INFORMS if config['input_type'] != 'fasta' else [],
-        INFORMS_iterative_mapping = Path(config['working_dir']) / iterativemapping.OUTPUT_ITERATIVE_MAPPING_INFORMS if config['input_type'] != 'fasta' else [],
-        INFORMS_mash = Path(config['working_dir']) / 'nextclade' / 'subtype_determination' / 'mash' / 'informs.io' if config['nextclade'].get('db_mash') is not None and config['input_type'] != 'fasta' else [],
-        INFORMS_nextclade = Path(config['working_dir']) / nextclade3.OUTPUT_NEXTCLADE_INFORMS if 'nextclade' in config['analyses'] else []
+        INFORMS_preprocess = preprocess.OUTPUT_INFORMS if config['input_type'] != 'fasta' else [],
+        INFORMS_iterative_mapping = iterativemapping.OUTPUT_INFORMS if config['input_type'] != 'fasta' else [],
+        INFORMS_mash = nextclade3.OUTPUT_INFORMS_MASH if config['nextclade'].get('db_mash') is not None and config['input_type'] != 'fasta' else [],
+        INFORMS_nextclade = nextclade3.OUTPUT_INFORMS if 'nextclade' in config['analyses'] else []
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-commands.io'
+        HTML = 'report/html-commands.iob'
     params:
         working_dir = config['working_dir']
     run:
@@ -98,17 +98,17 @@ rule report_combine_all:
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
         reports_contamination = contamination_check_kraken.get_reports(config),
-        report_reference_selection = Path(config['working_dir']) / (refselection.OUTPUT_REF_SELECTION_REPORT if config['fasta_ref'] is None and config['input_type'] != 'fasta' else refselection.OUTPUT_REF_SELECTION_REPORT_EMPTY),
-        report_preprocess_ampligone = Path(config['working_dir']) / (preprocess.OUTPUT_PRE_PROCESS_AMPLIGONE_REPORT if 'ampligone' in config['analyses'] and config['input_type'] != 'fasta' else preprocess.OUTPUT_PRE_PROCESS_AMPLIGONE_REPORT_EMPTY),
-        report_preprocess_clipping = Path(config['working_dir']) / (preprocess.OUTPUT_PRE_PROCESS_CLIPPING_REPORT if 'ampligone' in config['analyses'] and config['input_type'] != 'fasta' else preprocess.OUTPUT_PRE_PROCESS_CLIPPING_REPORT_EMPTY),
-        report_preprocess = Path(config['working_dir']) / preprocess.OUTPUT_PRE_PROCESS_REPORT if config['input_type'] != 'fasta' else [],
-        report_iterative_mapping = Path(config['working_dir']) / iterativemapping.OUTPUT_ITERATIVE_MAPPING_REPORT if config['input_type'] != 'fasta' else [],
-        report_nexclade_subtype = Path(config['working_dir']) / (nextclade3.OUTPUT_NEXTCLADE_SUBTYPE_REPORT if (config['nextclade'].get('db') is None) and ('nextclade' in config['analyses']) else nextclade3.OUTPUT_NEXTCLADE_SUBTYPE_REPORT_EMPTY),
-        report_nextclade = Path(config['working_dir']) / (nextclade3.OUTPUT_NEXTCLADE_REPORT if 'nextclade' in config['analyses'] else nextclade3.OUTPUT_NEXTCLADE_REPORT_EMPTY),
-        report_multi_allelic = Path(config['working_dir']) / multiallelicsites.OUTPUT_MULTI_ALLELIC_REPORT if config['input_type'] != 'fasta' else [],
-        report_antivirals = Path(config['working_dir']) / (antivirals.OUTPUT_REPORT if 'antivirals' in config['analyses'] else antivirals.OUTPUT_REPORT_EMPTY),
-        report_commands = Path(config['working_dir']) / 'report' / 'html-commands.io',
-        report_citations = Path(config['working_dir'],core.OUTPUT_HTML_CITATIONS)
+        report_reference_selection = refselection.OUTPUT_REPORT if config['fasta_ref'] is None and config['input_type'] != 'fasta' else refselection.OUTPUT_REPORT_EMPTY,
+        report_preprocess_ampligone = preprocess.OUTPUT_AMPLIGONE_REPORT if 'ampligone' in config['analyses'] and config['input_type'] != 'fasta' else preprocess.OUTPUT_AMPLIGONE_REPORT_EMPTY,
+        report_preprocess_clipping = preprocess.OUTPUT_CLIPPING_REPORT if 'ampligone' in config['analyses'] and config['input_type'] != 'fasta' else preprocess.OUTPUT_CLIPPING_REPORT_EMPTY,
+        report_preprocess = preprocess.OUTPUT_REPORT if config['input_type'] != 'fasta' else [],
+        report_iterative_mapping = iterativemapping.OUTPUT_REPORT if config['input_type'] != 'fasta' else [],
+        report_nexclade_subtype = nextclade3.OUTPUT_SUBTYPE_REPORT if (config['nextclade'].get('db') is None) and ('nextclade' in config['analyses']) else nextclade3.OUTPUT_SUBTYPE_REPORT_EMPTY,
+        report_nextclade = nextclade3.OUTPUT_REPORT if 'nextclade' in config['analyses'] else nextclade3.OUTPUT_REPORT_EMPTY,
+        report_multi_allelic = multiallelicsites.OUTPUT_REPORT if config['input_type'] != 'fasta' else [],
+        report_antivirals = antivirals.OUTPUT_REPORT if 'antivirals' in config['analyses'] else antivirals.OUTPUT_REPORT_EMPTY,
+        report_commands = 'report/html-commands.iob',
+        report_citations = core.OUTPUT_HTML_CITATIONS
     output:
         HTML = config['output_report']
     params:
@@ -121,7 +121,6 @@ rule report_combine_all:
     run:
         import datetime
         from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 
         # Add header section
         report = SnakePipelineUtils.init_pipeline_report(
@@ -166,21 +165,20 @@ rule summary_combine_all:
     In this rule all summary files are combined into a complete summary output file.
     """
     input:
-        Path(config['working_dir'], core.OUTPUT_TSV_SUMMARY_INIT),
-        human_read_scrubbing.get_summaries(config),
-        downsampling.get_summaries(config),
+        core.OUTPUT_SUMMARY_INIT,
+        lambda wildcards: human_read_scrubbing.get_summaries(config, wildcards.ext),
+        lambda wildcards: downsampling.get_summaries(config, wildcards.ext),
         trimming.get_summaries(config),
-        contamination_check_kraken.get_summaries(config),
-        Path(config['working_dir']) / refselection.OUTPUT_REF_SELECTION_SUMMARY if config['fasta_ref'] is None and config['input_type'] != 'fasta' else [],
-        Path(config['working_dir']) / preprocess.OUTPUT_PRE_PROCESS_SUMMARY if config['input_type'] != 'fasta' else [],
-        Path(config['working_dir']) / iterativemapping.OUTPUT_ITERATIVE_MAPPING_SUMMARY if config['input_type'] != 'fasta' else [],
-        Path(config['working_dir']) / multiallelicsites.OUTPUT_MULTI_ALLELIC_SUMMARY if config['input_type'] != 'fasta' else [],
-        Path(config['working_dir']) / nextclade3.OUTPUT_NEXTCLADE_SUMMARY if 'nextclade' in config['analyses'] else [],
-        Path(config['working_dir']) / antivirals.OUTPUT_SUMMARY if 'antivirals' in config['analyses'] else []
+        lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
+        refselection.OUTPUT_SUMMARY if config['fasta_ref'] is None and config['input_type'] != 'fasta' else [],
+        preprocess.OUTPUT_SUMMARY if config['input_type'] != 'fasta' else [],
+        iterativemapping.OUTPUT_SUMMARY if config['input_type'] != 'fasta' else [],
+        multiallelicsites.OUTPUT_SUMMARY if config['input_type'] != 'fasta' else [],
+        nextclade3.OUTPUT_SUMMARY if 'nextclade' in config['analyses'] else [],
+        antivirals.OUTPUT_SUMMARY if 'antivirals' in config['analyses'] else []
     output:
-        TSV = config.get('output_tabular')
+        FILE = 'summary/output.{ext}'
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        with open(output.TSV, 'w') as handle_out:
-            for summary_input in input:
-                with open(summary_input) as handle_in:
-                    handle_out.write(handle_in.read())
+        SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))

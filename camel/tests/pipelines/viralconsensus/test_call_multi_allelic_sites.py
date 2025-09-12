@@ -17,7 +17,7 @@ class TestCallMultiAllelicSites(CamelTestSuite):
         Tests the call multi-allelic site calling.
         :return: None
         """
-        call_multi_allelic_sites = CallMultiAllelicSites(self.camel)
+        call_multi_allelic_sites = CallMultiAllelicSites()
         call_multi_allelic_sites.add_input_files({'VCF': [ToolIOFile(TestCallMultiAllelicSites.path_vcf_in)]})
         call_multi_allelic_sites.run(self.running_dir)
         self.assertIn('nb_sites', call_multi_allelic_sites.informs)

@@ -1,4 +1,4 @@
-from typing import List, Union, Optional
+from typing import Union, Optional
 
 from camel.app.components.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.app.components.html.htmlreportsection import HtmlReportSection
@@ -41,7 +41,7 @@ class GeneDetectionSRST2Hit(GeneDetectionHitBase):
         return self._coverage == 100.0
 
     @property
-    def table_column_names(self) -> List[str]:
+    def table_column_names(self) -> list[str]:
         """
         Returns the names of the columns of the tabular output.
         :return: List of column names
@@ -52,7 +52,7 @@ class GeneDetectionSRST2Hit(GeneDetectionHitBase):
             columns.insert(-1, metadata['name'])
         return columns
 
-    def to_table_row(self) -> List[str]:
+    def to_table_row(self) -> list[str]:
         """
         Returns the hit as a table row.
         :return: List of table cell values
@@ -61,11 +61,11 @@ class GeneDetectionSRST2Hit(GeneDetectionHitBase):
             self.cluster,
             self.locus,
             str(self._length),
-            '{:.2f}'.format(self._coverage),
+            f'{self._coverage:.2f}',
             self._mismatches if self._mismatches != '' else '-',
             self._uncertainty if self._uncertainty != '' else '-',
-            '{:.2f}'.format(self._divergence),
-            '{:.2f}'.format(self._depth),
+            f'{self._divergence:.2f}',
+            f'{self._depth:.2f}',
             self._accession if self._accession is not None else '-'
         ]
         for metadata in self._metadata:
@@ -73,7 +73,7 @@ class GeneDetectionSRST2Hit(GeneDetectionHitBase):
         return data
 
     @property
-    def html_column_names(self) -> List[str]:
+    def html_column_names(self) -> list[str]:
         """
         Returns the names of the columns of the HTML output.
         :return: List of column names
@@ -81,7 +81,7 @@ class GeneDetectionSRST2Hit(GeneDetectionHitBase):
         return self.table_column_names[1:]
 
     def to_html_row(self, report_section: HtmlReportSection, sub_directory: str, colored: bool = True) \
-            -> List[Union[str, HtmlTableCell]]:
+            -> list[Union[str, HtmlTableCell]]:
         """
         Returns the hit as a HTML table row.
         :param report_section: Section is passed to save additional data
@@ -92,11 +92,11 @@ class GeneDetectionSRST2Hit(GeneDetectionHitBase):
         data = [
             self.locus,
             str(self._length),
-            '{:.2f}'.format(self._coverage),
+            f'{self._coverage:.2f}',
             self._mismatches if self._mismatches != '' else '-',
             self._uncertainty if self._uncertainty != '' else '-',
-            '{:.2f}'.format(self._divergence),
-            '{:.2f}'.format(self._depth)
+            f'{self._divergence:.2f}',
+            f'{self._depth:.2f}'
         ]
         for metadata in self._metadata:
             data.append(metadata['value'])

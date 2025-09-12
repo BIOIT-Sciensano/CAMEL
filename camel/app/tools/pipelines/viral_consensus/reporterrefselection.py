@@ -5,12 +5,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
 from camel.app.components.html.htmltableformatter import FormatEntry, HtmlTableFormatter
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -30,12 +29,11 @@ class ReporterRefSelection(Tool):
         {'key': 'score_final', 'title': 'Score', 'fmt': HtmlTableFormatter.FLOAT_FMT},
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Reporter: Reference selection', '0.1', camel)
+        super().__init__('Reporter: Reference selection', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -59,11 +57,11 @@ class ReporterRefSelection(Tool):
         Checks if the provided input is valid.
         """
         if 'JSON' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Ref. selection JSON input is required (JSON)')
+            raise InvalidToolInputError('Ref. selection JSON input is required (JSON)')
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Ref. selection FASTA input is required (FASTA)')
+            raise InvalidToolInputError('Ref. selection FASTA input is required (FASTA)')
         if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Database input (DB) is required')
+            raise InvalidToolInputError('Database input (DB) is required')
         super()._check_input()
 
     @staticmethod

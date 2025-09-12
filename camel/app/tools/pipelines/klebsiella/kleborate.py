@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -19,12 +19,11 @@ class Kleborate(Tool):
     * K (capsule) and O antigen (LPS) serotype prediction, via wzi alleles and Kaptive
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Kleborate', '2.4.1', camel)
+        super().__init__('Kleborate', '2.4.1')
 
     def _check_input(self) -> None:
         """
@@ -32,7 +31,7 @@ class Kleborate(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required")
+            raise InvalidToolInputError("FASTA input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -63,9 +62,10 @@ class Kleborate(Tool):
             for k, v in zip(header, values):
                 self._informs[k] = v
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
+        :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f'Error executing {self.name}: {self._command.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)

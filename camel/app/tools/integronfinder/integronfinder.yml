@@ -1,5 +1,15 @@
-dependencies: [ integronfinder/2.0.2, prodigal/2.6.3 ]
+dependencies:
+  - integronfinder/2.0.2
+  - prodigal/2.6.3
 parameters:
-  local_max: {default: false, mandatory: false, option: '--local-max', value: null}
-  threads: {default: true, mandatory: false, option: '--cpu', value: 4}
+  local_max:
+    default: false
+    mandatory: false
+    option: '--local-max'
+    flag: true
+  threads:
+    default: true
+    mandatory: false
+    option: '--cpu'
+    value: 4
 tool_command: integron_finder

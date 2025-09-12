@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Tuple, Optional, Sequence, Dict, Any
+from typing import Any, Optional
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
@@ -14,7 +15,7 @@ from camel.app.tools.checkm.checkm import CheckM
 from camel.app.tools.checkm.checkmreporter import CheckMReporter
 
 
-class MainCheckM(object):
+class MainCheckM:
     """
     This class contains the main script for the CheckM tool.
     """
@@ -56,7 +57,7 @@ class MainCheckM(object):
         report.save()
 
         # Run CheckM
-        checkm = CheckM(Camel.get_instance())
+        checkm = CheckM()
         checkm.add_input_files(input_dict)
         checkm.update_parameters(threads=self._args.threads)
         checkm.update_parameters(reduced_tree=self._args.reduced_tree)
@@ -69,7 +70,7 @@ class MainCheckM(object):
                 logger.info(f'CheckM informs saved to {self._args.output_json}')
 
         # Create output report
-        checkm_reporter = CheckMReporter(Camel.get_instance())
+        checkm_reporter = CheckMReporter()
         checkm_reporter.add_input_informs({'checkm': checkm.informs})
         checkm_reporter.add_input_files({'TSV': checkm.tool_outputs['TSV']})
         checkm_reporter.run(self._args.working_dir)
@@ -82,7 +83,7 @@ class MainCheckM(object):
         report.add_html_object(SnakePipelineUtils.create_citations_section(['Parks_2015-checkm']))
         report.save()
 
-    def __prepare_input(self) -> Tuple[Dict[str, Any], str]:
+    def __prepare_input(self) -> tuple[dict[str, Any], str]:
         """
         Prepares the input for the CheckM tool.
         :return: Input dictionary

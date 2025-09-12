@@ -1,10 +1,10 @@
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 from camel.resources.snakefile import trimming_illumina, trimming_ont
 
 
-def get_reports(config: Dict[str, Any]) -> List[Path]:
+def get_reports(config: dict[str, Any]) -> list[Path]:
     """
     Returns the path to the read trimming report.
     :param config: Snakemake configuration
@@ -19,18 +19,18 @@ def get_reports(config: Dict[str, Any]) -> List[Path]:
 
     # FASTQ input
     if input_type in ('illumina', 'hybrid'):
-        paths.append(trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_REPORT)
+        paths.append(trimming_illumina.OUTPUT_REPORT)
     if input_type in ('ont', 'hybrid'):
-        paths.append(trimming_ont.OUTPUT_TRIMMING_ONT_REPORT)
+        paths.append(trimming_ont.OUTPUT_REPORT)
 
     # Check if at least one path was added
     if len(paths) == 0:
         raise ValueError(f'Invalid input type: {input_type}')
 
-    return [Path(config['working_dir']) / p for p in paths]
+    return paths
 
 
-def get_summaries(config: Dict[str, Any]) -> List[Path]:
+def get_summaries(config: dict[str, Any]) -> list[Path]:
     """
     Returns the paths to the read trimming summary file(s).
     :param config: Snakemake configuration
@@ -45,13 +45,13 @@ def get_summaries(config: Dict[str, Any]) -> List[Path]:
     # FASTQ input
     paths = []
     if input_type in ('illumina', 'hybrid'):
-        paths.append(trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_SUMMARY)
+        paths.append(trimming_illumina.OUTPUT_SUMMARY)
     if input_type in ('ont', 'hybrid'):
-        paths.append(trimming_ont.OUTPUT_TRIMMING_ONT_SUMMARY)
-    return [Path(config['working_dir']) / p for p in paths]
+        paths.append(trimming_ont.OUTPUT_SUMMARY)
+    return paths
 
 
-def get_command_informs(config: Dict[str, Any]) -> List[Path]:
+def get_command_informs(config: dict[str, Any]) -> list[Path]:
     """
     Returns a list of informs IO files for the read trimming steps.
     :param config: Snakemake configuration
@@ -60,7 +60,7 @@ def get_command_informs(config: Dict[str, Any]) -> List[Path]:
     paths = []
     input_type = config['input_type']
     if input_type in ('illumina', 'hybrid'):
-        paths.append(trimming_illumina.OUTPUT_TRIMMING_ILLUMINA_INFORMS)
+        paths.append(trimming_illumina.OUTPUT_INFORMS)
     if input_type in ('ont', 'hybrid'):
-        paths.append(trimming_ont.OUTPUT_TRIMMING_ONT_INFORMS)
-    return [Path(config['working_dir']) / p for p in paths]
+        paths.append(trimming_ont.OUTPUT_INFORMS)
+    return paths

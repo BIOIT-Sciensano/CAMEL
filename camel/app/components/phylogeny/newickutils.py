@@ -1,43 +1,20 @@
 import copy
-import shutil
 import tempfile
 from pathlib import Path
 
 from Bio.Phylo import NewickIO
 from Bio.Phylo.Newick import Tree
 
-from camel.app.camel import Camel
+from camel.app.config import config
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.figtree.figtree import FigTree
-from camel.app.tools.treevector.treevector import TreeVector
 
 
-class NewickUtils(object):
+class NewickUtils:
     """
     This class contains utility functions to work with phylogenetic trees in Newick format.
     """
-
-    @staticmethod
-    @PendingDeprecationWarning
-    def render(camel: Camel, tree_path: Path, output_path: Path, plot_type: str, output_format: str = 'png') -> None:
-        """
-        Renders the tree to image.
-        :param camel: Camel instance
-        :param tree_path: Tree file in Newick format
-        :param output_path: Image output
-        :param plot_type: Type of plot
-        :param output_format: Image output format
-        :return: None
-        """
-        logger.info(f"Rendering tree: {tree_path}")
-        tree_vector = TreeVector(camel)
-        tree_vector.add_input_files({'NWK': [ToolIOFile(tree_path)]})
-        tree_vector.update_parameters(output_format=output_format, output_filename='tree.png', type=plot_type)
-        tree_vector.run(Path(tempfile.mkdtemp(prefix='tree_vector', dir=camel.config['temp_dir'])))
-        logger.debug(f"TreeVector - stdout: {tree_vector.stdout}")
-        logger.debug(f"TreeVector - stderr: {tree_vector.stderr}")
-        shutil.copyfile(tree_vector.tool_outputs['PNG'][0].path, output_path)
 
     @staticmethod
     def calculate_tree_image_height(min_height: int, nb_leaves: int) -> int:
@@ -61,8 +38,8 @@ class NewickUtils(object):
         :return: FigTree instance
         """
         logger.info(f"Creating image for tree: {path_newick}")
-        with tempfile.TemporaryDirectory(prefix='figtree_', dir=Camel.get_instance().config['temp_dir']) as dir_temp:
-            figtree = FigTree(Camel.get_instance())
+        with tempfile.TemporaryDirectory(prefix='figtree_', dir=config.dir_temp) as dir_temp:
+            figtree = FigTree()
             output_path = Path(dir_temp, 'tree.png')
             figtree.update_parameters(output_path=str(path_out), width=width, height=height)
             path_template = path_config

@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -27,12 +26,11 @@ class BacMetReporter(Tool):
         'Compound': {'title': 'Compound'}
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('BacMet reporter', '0.1', camel)
+        super().__init__('BacMet reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -40,15 +38,15 @@ class BacMetReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('TSV input is required')
+            raise InvalidToolInputError('TSV input is required')
         if 'blastp' not in self._input_informs:
-            raise InvalidInputSpecificationError("blastp informs input is required")
+            raise InvalidToolInputError("blastp informs input is required")
         if 'filtering' not in self._input_informs:
-            raise InvalidInputSpecificationError("filtering informs input is required")
+            raise InvalidToolInputError("filtering informs input is required")
         super()._check_input()
 
     @staticmethod
-    def __get_row_color(row: Dict[str, Any]) -> str:
+    def __get_row_color(row: dict[str, Any]) -> str:
         """
         Returns the color for the given row.
         :param row: Input row

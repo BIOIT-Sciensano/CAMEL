@@ -1,12 +1,55 @@
-dependencies: [confindr/0.8.2, kma/1.4.12a, mash/2.3, bbmap/39.15, java/9.0.4, minimap2/2.26, samtools/1.17]
+dependencies:
+  - confindr/0.8.2
+  - kma/1.4.12a
+  - mash/2.3
+  - bbmap/39.15
+  - java/9.0.4
+  - minimap2/2.26
+  - samtools/1.17
 parameters:
-  base_cutoff: {default: false, mandatory: false, option: --base_cutoff, value: 3}
-  base_fraction_cutoff: {default: false, mandatory: false, option: --base_fraction_cutoff, value: 0.05}
-  data_type: {default: false, mandatory: false, option: --data_type, value: Illumina}
-  databases: {default: true, mandatory: false, option: --databases, value: /db/confindr/0.7.4/}
-  min_matching_hashes: {default: false, mandatory: false, option: --min_matching_hashes, value: 150}
-  rmlst: {default: false, mandatory: false, option: --rmlst, value: null}
-  quality_cutoff: {default: false, mandatory: false, option: --quality_cutoff, value: 20}
-  threads: {default: true, mandatory: true, option: --threads, value: 4}
-  xmx: {default: true, mandatory: false, option: --Xmx, value: '20g'}
+  base_cutoff:
+    default: false
+    mandatory: false
+    option: '--base_cutoff'
+    value: 3
+  base_fraction_cutoff:
+    default: false
+    mandatory: false
+    option: '--base_fraction_cutoff'
+    value: 0.05
+  data_type:
+    default: false
+    mandatory: false
+    option: '--data_type'
+    value: Illumina
+  databases:
+    default: true
+    mandatory: false
+    option: '--databases'
+    value: /db/confindr/0.7.4/
+  min_matching_hashes:
+    default: false
+    mandatory: false
+    option: '--min_matching_hashes'
+    value: 150
+  rmlst:
+    default: false
+    mandatory: false
+    option: '--rmlst'
+    flag: true
+  quality_cutoff:
+    default: false
+    mandatory: false
+    option: '--quality_cutoff'
+    value: 20
+  threads:
+    default: true
+    mandatory: true
+    option: '--threads'
+    value: 4
+  xmx:
+    default: true
+    mandatory: false
+    option: '--Xmx'
+    value: 20g
 tool_command: confindr.py

@@ -74,14 +74,14 @@ rule picard_add_readgroups:
 
         add_rg = AddOrReplaceReadGroups(camel)
         SnakemakeUtils.add_pickle_inputs(add_rg, input)
-        step = Step(rule, add_rg, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=add_rg, params.working_dir)
         add_rg.update_parameters(
             output = params.output_file,
             RG_id = params.RG_id,
             RG_sample_name = config['sample'],
             **config['rule_params']['alignment'][rule],
         )
-        step.run_step()
+        step.run()
         SnakemakeUtils.dump_tool_output(add_rg, "BAM", Path(output.BAM))
 
 rule picard_mark_duplicates_sort:
@@ -150,12 +150,12 @@ rule picard_set_tags:
 
         set_tags = SetNmMdAndUqTags(camel)
         SnakemakeUtils.add_pickle_inputs(set_tags, input)
-        step = Step(rule, set_tags, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=set_tags, params.working_dir)
         set_tags.update_parameters(
             output = "aligned_dupmarked_sorted_rgadded_settags.bam",
             **config['rule_params']['alignment'][rule]
         )
-        step.run_step()
+        step.run()
         SnakemakeUtils.dump_tool_output(set_tags, "BAM", Path(output.BAM))
 
 checkpoint create_intervalfiles:
@@ -247,12 +247,12 @@ rule gatk4_baserecalibrator:
         bqsr = GATK4BaseRecalibrator(camel)
         SnakemakeUtils.add_pickle_inputs(bqsr, input)
 
-        step = Step(rule, bqsr, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=bqsr, params.working_dir)
         bqsr.update_parameters(
             **config['rule_params']['alignment'][rule],
             output = params.output_file
         )
-        step.run_step()
+        step.run()
         SnakemakeUtils.dump_tool_output(bqsr, "TXT_RecalibrationTable", Path(output.TXT_RecalibrationTable))
 
 def aggregate_intervals_reports(wildcards):
@@ -287,12 +287,12 @@ rule gatk4_gather_bqsr_reports:
         input_bqsr_reports = aggregate_intervals_reports(wildcards)
 
         gather_bqsr = GATK4GatherBQSRReports(camel)
-        step = Step(rule, gather_bqsr, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=gather_bqsr, params.working_dir)
         gather_bqsr.add_input_files({"TXT_intervals": [SnakemakeUtils.load_object(Path(path))[0] for path in input_bqsr_reports]})
         gather_bqsr.update_parameters(
             output = "recal_data.csv"
         )
-        step.run_step()
+        step.run()
         SnakemakeUtils.dump_tool_output(gather_bqsr, 'TXT_RecalibrationTable', Path(output.bqsr_report_gathered))
 
 rule gatk4_apply_bqsr:
@@ -319,7 +319,7 @@ rule gatk4_apply_bqsr:
 
         apply_bqsr = GATK4ApplyBQSR(camel)
         SnakemakeUtils.add_pickle_inputs(apply_bqsr, input)
-        step = Step(rule, apply_bqsr, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=apply_bqsr, params.working_dir)
         apply_bqsr.update_parameters(
             **config['rule_params']['alignment'][rule],
             output = params.output_file
@@ -358,7 +358,7 @@ rule picard_gather_sorted_bam:
         Path(params.working_dir).mkdir(exist_ok=True)
 
         gather_bam = GatherBamFiles(camel)
-        step = Step(rule, gather_bam, camel, params.working_dir)
+        step = Step(rule_name=str(rule), tool=gather_bam, params.working_dir)
         gather_bam.add_input_files({"BAMs": [SnakemakeUtils.load_object(Path(path))[0] for path in input.bqsr_BAM_interval]})
         gather_bam.update_parameters(
             **config['rule_params']['alignment'][rule],

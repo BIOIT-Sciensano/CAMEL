@@ -1,9 +1,34 @@
-dependencies: [ncbi-sra-human-scrubber/2.2.1]
+dependencies:
+  - ncbi-sra-human-scrubber/2.2.1
 parameters:
-  export_human_reads: {default: false, mandatory: false, option: -r, value: null}
-  interleaved: {default: false, mandatory: false, option: -s, value: null}
-  outputfile: {default: false, mandatory: true, option: -o, value: null}
-  outputfile_removed : {default: false, mandatory: false, option: -u, value: null}
-  remove: {default: true, mandatory: false, option: -x, value: null}
-  threads: {default: true, mandatory: false, option: -p, value: 1}
+  export_human_reads:
+    default: false
+    mandatory: false
+    option: '-r'
+    value: null
+  interleaved:
+    default: false
+    mandatory: false
+    option: '-s'
+    value: null
+  outputfile:
+    default: false
+    mandatory: true
+    option: '-o'
+    value: null
+  outputfile_removed:
+    default: false
+    mandatory: false
+    option: '-u'
+    value: null
+  remove:
+    default: true
+    mandatory: false
+    option: '-x'
+    value: null
+  threads:
+    default: true
+    mandatory: false
+    option: '-p'
+    value: 1
 tool_command: scrub.sh

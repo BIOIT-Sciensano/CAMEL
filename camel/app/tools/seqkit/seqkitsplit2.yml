@@ -1,6 +1,19 @@
-dependencies: [seqkit/2.3.1]
+dependencies:
+  - seqkit/2.3.1
 parameters:
-  by_part: {default: false, mandatory: false, option: '--by-part', value: '1'}
-  by_size: {default: false, mandatory: false, option: '--by-size', value: '1'}
-  output_dir: {default: true, mandatory: true, option: '--out-dir', value: 'parts'}
+  by_part:
+    default: false
+    mandatory: false
+    option: '--by-part'
+    value: '1'
+  by_size:
+    default: false
+    mandatory: false
+    option: '--by-size'
+    value: '1'
+  output_dir:
+    default: true
+    mandatory: true
+    option: '--out-dir'
+    value: parts
 tool_command: seqkit split2

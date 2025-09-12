@@ -1,11 +1,44 @@
-dependencies: [art/2.5.8]
+dependencies:
+  - art/2.5.8
 parameters:
-  sequencing_system: {default: true, mandatory: true, option: -ss, value: 'HS25'}
-  read_length: {default: true, mandatory: true, option: -l, value: 150}
-  fold_coverage: {default: true, mandatory: true, option: -f, value: 30}
-  mean_size: {default: true, mandatory: true, option: -m, value: 200}
-  standard_deviation: {default: true, mandatory: true, option: -s, value: 10}
-  out: {default: true, mandatory: true, option: -o, value: 'art_output'}
-  paired_end: {default: true, mandatory: false, option: -p, value: null}
-  no_alignment_file: {default: true, mandatory: false, option: -na, value: null}
+  sequencing_system:
+    default: true
+    mandatory: true
+    option: '-ss'
+    value: HS25
+  read_length:
+    default: true
+    mandatory: true
+    option: '-l'
+    value: 150
+  fold_coverage:
+    default: true
+    mandatory: true
+    option: '-f'
+    value: 30
+  mean_size:
+    default: true
+    mandatory: true
+    option: '-m'
+    value: 200
+  standard_deviation:
+    default: true
+    mandatory: true
+    option: '-s'
+    value: 10
+  out:
+    default: true
+    mandatory: true
+    option: '-o'
+    value: art_output
+  paired_end:
+    default: true
+    mandatory: false
+    option: '-p'
+    flag: true
+  no_alignment_file:
+    default: true
+    mandatory: false
+    option: '-na'
+    flag: true
 tool_command: art_illumina

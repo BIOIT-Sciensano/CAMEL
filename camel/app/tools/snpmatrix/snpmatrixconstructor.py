@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Dict, List
 
 import vcf
 from Bio import SeqIO
@@ -8,8 +7,7 @@ from Bio.SeqRecord import SeqRecord
 # noinspection PyProtectedMember
 from vcf.model import _Record as VCFRecord
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -17,9 +15,12 @@ from camel.app.tools.tool import Tool
 
 @dataclass(unsafe_hash=True, frozen=True)
 class SNPPosition:
+    """
+    Represents a position in the SNP matrix.
+    """
     contig: str
     position: int
-    reference_base: chr
+    reference_base: str
 
 
 class SnpMatrixConstructor(Tool):
@@ -27,12 +28,11 @@ class SnpMatrixConstructor(Tool):
     Constructs SNP matrices in FASTA format based on VCF input files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('SNP Matrix Constructor', '0.1', camel)
+        super().__init__('SNP Matrix Constructor', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -40,8 +40,8 @@ class SnpMatrixConstructor(Tool):
         :return: None
         """
         if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No VCF input found.")
-        super(SnpMatrixConstructor, self)._check_input()
+            raise InvalidToolInputError("No VCF input found.")
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
@@ -55,14 +55,14 @@ class SnpMatrixConstructor(Tool):
         self._tool_outputs['FASTA'] = [self.__generate_matrix(
             sample_names, nucleotide_by_sample_by_position, include_ref)]
 
-    def __get_nucleotides_per_position(self) -> Dict[SNPPosition, Dict[str, str]]:
+    def __get_nucleotides_per_position(self) -> dict[SNPPosition, dict[str, str]]:
         """
         Returns a dictionary with the nucleotide for each sample at each variant position.
         :return: Sample_names, nucleotide per position per sample
         """
         nucl_by_position = {}
         for vcf_file, io_sample in zip(self._tool_inputs['VCF'], self._tool_inputs['SAMPLE_NAME']):
-            for record in SnpMatrixConstructor.parse_vcf_file(vcf_file.path, 'include_filtered' in self._parameters):
+            for record in SnpMatrixConstructor.parse_vcf_file(str(vcf_file.path), 'include_filtered' in self._parameters):
                 position = SNPPosition(record.CHROM, record.POS, record.REF)
                 if position not in nucl_by_position:
                     nucl_by_position[position] = {}
@@ -75,11 +75,11 @@ class SnpMatrixConstructor(Tool):
         nucl_by_position = {pos: nucl for pos, nucl in nucl_by_position.items() if not all(
             [x == 'N' for x in nucl.values()])}
 
-        logger.info("{} SNP positions found across all samples".format(len(nucl_by_position)))
+        logger.info(f"{len(nucl_by_position):,} SNP positions found across all samples")
         return nucl_by_position
 
     @staticmethod
-    def parse_vcf_file(vcf_path: str, include_filtered: bool) -> List[VCFRecord]:
+    def parse_vcf_file(vcf_path: str, include_filtered: bool) -> list[VCFRecord]:
         """
         Parses a single VCF file.
         :param vcf_path: VCF path
@@ -99,7 +99,7 @@ class SnpMatrixConstructor(Tool):
         logger.info(f"{vcf_path} parsed: {len(vcf_records)} variant positions")
         return vcf_records
 
-    def __generate_matrix(self, sample_names: List[str], nucl_by_pos: Dict[SNPPosition, Dict[str, str]],
+    def __generate_matrix(self, sample_names: list[str], nucl_by_pos: dict[SNPPosition, dict[str, str]],
                           include_ref: bool = True) -> ToolIOFile:
         """
         Generates a SNP matrix.

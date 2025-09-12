@@ -1,8 +1,6 @@
-from typing import List
 
 from enum import Enum
 
-from camel.app.camel import Camel
 from camel.app.components.sequencetyping.sequencetypingblasthit import SequenceTypingBlastHit
 from camel.app.tools.tool import Tool
 
@@ -19,12 +17,11 @@ class SerogroupDetermination(Tool):
     This tool is used to determine the serogroup of Neisseria meningitidis isolates.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Neisseria: serogroup determination', '0.1', camel)
+        super().__init__('Neisseria: serogroup determination', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -58,7 +55,7 @@ class SerogroupDetermination(Tool):
         self._informs['detected_serogroup'] = serogroup_stats[0]['name'] if \
             serogroup_stats[0]['fraction_detected'] >= 0.6 else 'NA'
 
-    def __get_detection_category(self, hits: List[SequenceTypingBlastHit]) -> DetectionCategory:
+    def __get_detection_category(self, hits: list[SequenceTypingBlastHit]) -> DetectionCategory:
         """
         Returns the category of hits for the given list of hits.
         :param hits: Hits

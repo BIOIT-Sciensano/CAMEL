@@ -1,10 +1,15 @@
 from pathlib import Path
 
-SNAKEFILE_ANI = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_ani = Path('ani')
-INPUT_FASTA_ANI = _dir_ani / 'fasta.io'
-OUTPUT_VAL_ANI = _dir_ani / 'val-ani.io'
-OUTPUT_INFORMS_ANI = _dir_ani / 'informs.io'
-OUTPUT_ANI_REPORT = _dir_ani / 'html.io'
-OUTPUT_ANI_REPORT_EMPTY = _dir_ani / 'html-empty.io'
-OUTPUT_ANI_SUMMARY = _dir_ani / 'summary_out.tsv'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+
+# FASTA input
+INPUT_FASTA = 'ani/input/fasta.io'
+
+# Tool outputs
+OUTPUT_VAL = 'ani/tool/val-ani.io'
+OUTPUT_INFORMS = 'ani/tool/informs.io'
+
+# Report and summary
+OUTPUT_REPORT = 'ani/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'ani/report/html-empty.iob'
+OUTPUT_SUMMARY = 'ani/summary/summary_out.{ext}'

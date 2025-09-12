@@ -1,4 +1,3 @@
-from typing import List
 
 from camel.app.components.html.htmltablecell import HtmlTableCell
 from camel.app.components.sequencetyping.sequencetypinghitbase import SequenceTypingHitBase
@@ -38,14 +37,14 @@ class SequenceTypingKMAHit(SequenceTypingHitBase):
         return SequenceTypingKMAHit(locus, '-', 0, 0, 0, 0, 0)
 
     @staticmethod
-    def table_column_names() -> List[str]:
+    def table_column_names() -> list[str]:
         """
         Returns the column names for the tabular output.
         :return: Table column names
         """
         return ['Locus', 'Allele', 'Length', '% Identity', '% Coverage', 'Depth']
 
-    def to_table_row(self, hash_allele_ids: bool = False) -> List[str]:
+    def to_table_row(self, hash_allele_ids: bool = False) -> list[str]:
         """
         Returns the hit as a row in a table.
         :param hash_allele_ids: If True, hashes for new allele ids are included
@@ -55,13 +54,13 @@ class SequenceTypingKMAHit(SequenceTypingHitBase):
             self.locus,
             self.allele_id,
             str(self._length) if self._length > 0 else '-',
-            '{:.2f}'.format(float(self._p_ident)),
-            '{:.2f}'.format(float(self._p_cov)),
-            '{:.2f}'.format(float(self._depth))
+            f'{float(self._p_ident):.2f}',
+            f'{float(self._p_cov):.2f}',
+            f'{float(self._depth):.2f}'
         ]
 
     @staticmethod
-    def html_column_names() -> List[str]:
+    def html_column_names() -> list[str]:
         """
         Returns the HTML column names.
         :return: HTML column names
@@ -79,9 +78,9 @@ class SequenceTypingKMAHit(SequenceTypingHitBase):
             self.locus,
             HtmlTableCell(self.allele_id, self.color, link=self.allele_page_url),
             str(self._length),
-            '{:.2f}'.format(float(self._p_ident)),
-            '{:.2f}'.format(float(self._p_cov)),
-            '{:.2f}'.format(float(self._depth)),
+            f'{float(self._p_ident):.2f}',
+            f'{float(self._p_cov):.2f}',
+            f'{float(self._depth):.2f}',
         ]
 
     @property

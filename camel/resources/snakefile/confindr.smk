@@ -1,21 +1,20 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.resources.snakefile import confindr
+from camel.app.snakemake import snakemakeutils
+
 
 rule confindr_run:
     """
     Runs ConFindr on the input FASTQ datasets.
     """
     input:
-        IO_FASTQ = Path(config['working_dir']) / 'fq_dict.io'
+        IO_FASTQ = 'fq_dict.io'
     output:
-        CSV = Path(config['working_dir']) / 'confindr' / 'csv.io',
-        INFORMS = Path(config['working_dir']) / 'confindr' / 'informs.io'
+        CSV = 'confindr/tool/csv.io',
+        INFORMS = 'confindr/tool/informs.io' # confindr.OUTPUT_INFORMS
     params:
-        dir_ = Path(config['working_dir']) / 'confindr',
+        dir_ = 'confindr/tool',
         db = config.get('confindr', {}).get('db'),
         input_type = config['input_type']
     threads: 4
@@ -23,7 +22,7 @@ rule confindr_run:
         from camel.app.components.workflows.utils.fastqinput import FastqInput
         from camel.app.tools.confindr.confindr import ConFindr
 
-        confindr_ = ConFindr(Camel.get_instance())
+        confindr_ = ConFindr()
         confindr_.update_parameters(rmlst=True, threads=threads)
 
         # Add database
@@ -44,9 +43,9 @@ rule confindr_run:
             confindr_.update_parameters(data_type='Nanopore',quality_cutoff=12)
 
         # Run the tool
-        step = Step(str(rule), confindr_, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(confindr_, output)
+        step = Step(rule_name=str(rule), tool=confindr_, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(confindr_, output)
 
 rule confindr_report:
     """
@@ -55,24 +54,24 @@ rule confindr_report:
     input:
         INFORMS_confindr = rules.confindr_run.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / confindr.OUTPUT_CONFINDR_REPORT
+        HTML = 'confindr/report/html.iob' # confindr.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'confindr' / 'report'
+        dir_ = 'confindr/report'
     run:
         from camel.app.tools.confindr.confindrreporter import ConFindrReporter
-        reporter = ConFindrReporter(Camel.get_instance())
+        reporter = ConFindrReporter()
         reporter.update_parameters(input_type=config['input_type'])
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule confindr_report_empty:
     """
     Creates an empty ConFindr report when the analysis is disabled.
     """
     output:
-        HTML = Path(config['working_dir']) / confindr.OUTPUT_CONFINDR_REPORT_EMPTY
+        HTML = 'confindr/report/html-empty.iob' # confindr.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('ConFindr', Path(output.HTML), 2)
@@ -84,19 +83,18 @@ rule confindr_create_summary:
     input:
         INFORMS_confindr = rules.confindr_run.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / confindr.OUTPUT_CONFINDR_SUMMARY
+        FILE = 'confindr/summary/summary_confindr.{ext}' # confindr.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
         # Collect informs
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS_confindr))
+        informs = snakemakeutils.load_object(Path(input.INFORMS_confindr))
         rows_out = [
             ('genus', informs['Genus']),
             ('nb_contam_snvs', informs['NumContamSNVs']),
             ('contam_status', informs['ContamStatus']),
-            ('tool_version', informs['_name'])
+            ('tool_version', informs['_name']),
+            ('db_version', informs['DatabaseDownloadDate'])
         ]
-
-        # Create TSV output
-        with open(output.TSV, 'w') as handle:
-            for key, value in rows_out:
-                handle.write(f'confindr_{key}\t{value}')
-                handle.write('\n')
+        rows_out = [(f'confindr_{k}', v) for k, v in rows_out]
+        snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), 'confindr')

@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -10,13 +10,12 @@ class MothurCountSeqs(Mothur):
     given, it will also provide the group count breakdown.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_count_seqs', '1.39.1', camel)
+        super().__init__('mothur_count_seqs', '1.39.1')
 
     def _check_input(self):
         """
@@ -26,17 +25,17 @@ class MothurCountSeqs(Mothur):
         - Only one addtional key is allowed: TSV_Groups
         :return: None
         """
-        super(MothurCountSeqs, self)._check_input()
+        super()._check_input()
         if 'TSV_Names' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('No input file given for Mothur count.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('No input file given for Mothur count.seqs: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs['TSV_Names']) != 1:
-            raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
+            raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
                                                  count.seqs: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidInputSpecificationError('Too many input keys given for Mothur count.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Too many input keys given for Mothur count.seqs: {!r}'.format(self._tool_inputs))
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_Names', 'TSV_Groups']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur count.seqs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input key given for Mothur count.seqs: {!r}'.format(self._tool_inputs))
 
     def _build_input_string(self):
         """
@@ -57,5 +56,5 @@ class MothurCountSeqs(Mothur):
         Sets the name of the output files, and fills the common stream object with them
         :return: None
         """
-        basename = super(MothurCountSeqs, self)._get_basename('TSV_Names')
+        basename = super()._get_basename('TSV_Names')
         self._tool_outputs['TSV_Counts'] = [ToolIOFile(basename + '.count_table')]

@@ -1,8 +1,29 @@
-dependencies: [bcftools/1.17]
+dependencies:
+  - bcftools/1.17
 parameters:
-  csi_min_interval: {default: false, mandatory: false, option: --min-shift, value: '14'}
-  force: {default: true, mandatory: false, option: --force, value: null}
-  generate_csi_index: {default: false, mandatory: false, option: --csi, value: null}
-  generate_tbi_index: {default: false, mandatory: false, option: --tbi, value: null}
-  symlink_input: {default: true, mandatory: false, option: null, value: null}
+  csi_min_interval:
+    default: false
+    mandatory: false
+    option: '--min-shift'
+    value: '14'
+  force:
+    default: true
+    mandatory: false
+    option: '--force'
+    flag: true
+  generate_csi_index:
+    default: false
+    mandatory: false
+    option: '--csi'
+    value: null
+  generate_tbi_index:
+    default: false
+    mandatory: false
+    option: '--tbi'
+    value: null
+  symlink_input:
+    default: true
+    mandatory: false
+    option: null
+    value: null
 tool_command: bcftools index

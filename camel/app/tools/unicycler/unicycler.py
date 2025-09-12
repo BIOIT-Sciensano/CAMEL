@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -14,12 +14,11 @@ class Unicycler(Tool):
 
     OUTPUT_NAME = 'assembly.fasta'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the Unicycler tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Unicycler', '0.5.0', camel)
+        super().__init__('Unicycler', '0.5.0')
         self._input_string = ''
 
     def _check_input(self) -> None:
@@ -28,7 +27,7 @@ class Unicycler(Tool):
         :return: None
         """
         if not any(key in ('FASTA', 'FASTQ_PE', 'FASTQ_SE') for key in self._tool_inputs):
-            raise InvalidInputSpecificationError('FASTA or FASTQ_SE or FASTQ_PE input is required')
+            raise InvalidToolInputError('FASTA or FASTQ_SE or FASTQ_PE input is required')
         super()._check_input()
 
     def _build_command(self) -> None:
@@ -42,17 +41,17 @@ class Unicycler(Tool):
         if 'FASTQ_SE' in self._tool_inputs:
             self._input_string += f'--long {self._tool_inputs["FASTQ_SE"][0].path} '
         else:
-            raise InvalidInputSpecificationError('FASTQ_SE input is required')
+            raise InvalidToolInputError('FASTQ_SE input is required')
         self._command.command = ' '.join([
             self._tool_command, self._input_string, *self._build_options()])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self, fasta_output: Path) -> None:
         """

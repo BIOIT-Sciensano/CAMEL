@@ -1,10 +1,8 @@
-import os
-
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 
 
 class Oncotator(Tool):
@@ -35,13 +33,12 @@ class Oncotator(Tool):
                     Default: None
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize Mutect1 tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Oncotator', '1.9.9.0', camel)
+        super().__init__('Oncotator', '1.9.9.0')
         self._required_inputs = ['IN_FILE']
 
     def _execute_tool(self) -> None:
@@ -69,7 +66,7 @@ class Oncotator(Tool):
 
         for input_key in self._required_inputs:
             if input_key not in self._tool_inputs:
-                raise InvalidInputSpecificationError(
+                raise InvalidToolInputError(
                     'Oncotator required {} input is missing in tool inputs!'.format(input_key))
 
     def __build_command(self) -> None:
@@ -89,12 +86,12 @@ class Oncotator(Tool):
         - output file
         :return: None
         """
-        self._tool_outputs['OUT_FILE'] = [ToolIOFile(os.path.join(self._folder, self._parameters['output_file_name'].value))]
+        self._tool_outputs['OUT_FILE'] = [ToolIOFile(self._folder / self.get_param_value('output_file_name'))]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Check the result of tool run
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Oncotator failed to run with message: \n{}".format(self.stderr))
+        toolutils.check_tool_execution(self, command, exit_code=0)

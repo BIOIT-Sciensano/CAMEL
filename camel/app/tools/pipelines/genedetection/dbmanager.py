@@ -2,11 +2,10 @@ import json
 from pathlib import Path
 from typing import Union
 
-from camel.app.camel import Camel
 from camel.app.components.genedetection.mapping import Mapping
 from camel.app.components.genedetection.mappingjson import MappingJSON
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
@@ -33,13 +32,12 @@ class DBManager(Tool):
     - mapping: Mapping of converted sequence names to original headers
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Gene Detection: DB Manager', '0.1', camel)
+        super().__init__('Gene Detection: DB Manager', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -56,9 +54,9 @@ class DBManager(Tool):
         :return: None
         """
         if 'DIR' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No 'DIR' input found.")
+            raise InvalidToolInputError("No 'DIR' input found.")
         if not isinstance(self._tool_inputs['DIR'][0], ToolIODirectory):
-            raise InvalidInputSpecificationError("'{}' is not a directory".format(self._tool_inputs['DIR'][0]))
+            raise InvalidToolInputError("'{}' is not a directory".format(self._tool_inputs['DIR'][0]))
         super(DBManager, self)._check_input()
 
     def __add_informs(self, input_folder: Path) -> None:
@@ -94,7 +92,7 @@ class DBManager(Tool):
             logger.warning(f"The 'mapping.txt' file will become deprecated, please use the 'mapping_full.json' file")
             return Mapping.parse((dir_in / 'mapping.txt'))
         except FileNotFoundError:
-            raise ToolExecutionError(f'No mapping found in {dir_in}')
+            raise ToolExecutionError(self.name, f'No mapping found in {dir_in}')
 
     def __set_database_files(self, folder: Path) -> None:
         """

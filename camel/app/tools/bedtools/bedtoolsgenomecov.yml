@@ -1,9 +1,28 @@
-dependencies: [bedtools/2.31.0]
+dependencies:
+  - bedtools/2.31.0
 parameters:
-  BedGraph: {default: false, mandatory: false, option: -bg, p_index: 0, value: null}
-  BedGraphWithZeroCoverage: {default: false, mandatory: false, option: -bga, p_index: 0,
-    value: null}
-  Depth: {default: true, mandatory: false, option: -d, p_index: 0, value: null}
-  DepthWithZeroCoord: {default: false, mandatory: false, option: -dz, p_index: 0,
-    value: null}
+  BedGraph:
+    default: false
+    mandatory: false
+    option: '-bg'
+    p_index: 0
+    value: null
+  BedGraphWithZeroCoverage:
+    default: false
+    mandatory: false
+    option: '-bga'
+    p_index: 0
+    value: null
+  Depth:
+    default: true
+    mandatory: false
+    option: '-d'
+    p_index: 0
+    value: null
+  DepthWithZeroCoord:
+    default: false
+    mandatory: false
+    option: '-dz'
+    p_index: 0
+    value: null
 tool_command: bedtools genomecov

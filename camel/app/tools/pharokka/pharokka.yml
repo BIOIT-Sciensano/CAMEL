@@ -1,7 +1,28 @@
-dependencies: [pharokka/1.7.3]
+dependencies:
+  - pharokka/1.7.3
 parameters:
-    outdir: {default: true, mandatory: true, option: --outdir, p_index: 0, value: 'pharokka'}
-    database: {default: true, mandatory: false, option: --database, p_index: 0, value: '/db/pharokka/v1.4.0/'}
-    force: {default: true, mandatory: false, option: --force, p_index: 0, value: null}
-    threads: {default: true, mandatory: false, option: --threads, p_index: 0, value: '8'}
+  outdir:
+    default: true
+    mandatory: true
+    option: '--outdir'
+    p_index: 0
+    value: pharokka
+  database:
+    default: true
+    mandatory: false
+    option: '--database'
+    p_index: 0
+    value: /db/pharokka/v1.4.0/
+  force:
+    default: true
+    mandatory: false
+    option: '--force'
+    p_index: 0
+    flag: true
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    p_index: 0
+    value: '8'
 tool_command: pharokka.py

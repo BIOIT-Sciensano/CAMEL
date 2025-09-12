@@ -15,19 +15,19 @@ class ToolIODirectory(ToolIO):
         :param path: Path to the directory
         :param logged: If True, the output can be logged
         """
-        super(ToolIODirectory, self).__init__(logged)
+        super().__init__(logged)
         self._path = path.absolute()
 
     def __str__(self) -> str:
         """
-        String representation
+        String representation.
         :return: String representation
         """
         return str(self._path)
 
     def __repr__(self) -> str:
         """
-        Internal representation
+        Internal representation.
         :return: Internal representation
         """
         return f'ToolIODirectory("{self.path}")'

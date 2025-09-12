@@ -1,6 +1,22 @@
-dependencies: [CheckM/1.2.2 pplacer/1.1.alpha19 prodigal/2.6.3 hmmer/3.4]
+dependencies:
+  - CheckM/1.2.2
+  - pplacer/1.1.alpha19
+  - prodigal/2.6.3
+  - hmmer/3.4
 parameters:
-  tab_table: {default: true, mandatory: true, option: --tab_table, value: null}
-  threads: {default: true, mandatory: false, option: --threads, value: 8}
-  reduced_tree: {default: false, mandatory: false, option: --reduced_tree, value: ''}
+  tab_table:
+    default: true
+    mandatory: true
+    option: '--tab_table'
+    flag: true
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: 8
+  reduced_tree:
+    default: false
+    mandatory: false
+    option: '--reduced_tree'
+    flag: true
 tool_command: checkm

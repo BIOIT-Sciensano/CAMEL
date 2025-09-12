@@ -2,9 +2,10 @@ import re
 import tempfile
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.config import config
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,19 +16,18 @@ class NcbiHumanReadScrubber(Tool):
     NCBI human read scrubbing tool, also called HRRT or human read removal tool.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the HRRT.
-        :param camel: Camel instance
         """
-        super().__init__('HRRT', '2.2.1', camel)
+        super().__init__('HRRT', '2.2.1')
 
     def _execute_tool(self) -> None:
         """
         Runs the HRRT.
         :return: None
         """
-        with tempfile.TemporaryDirectory(prefix='hrrt_', dir=self._camel.config['temp_dir']) as dir_temp:
+        with tempfile.TemporaryDirectory(prefix='hrrt_', dir=config.dir_temp) as dir_temp:
             self.__build_command(Path(dir_temp))
             self._execute_command()
             self._parse_stderr()
@@ -38,8 +38,8 @@ class NcbiHumanReadScrubber(Tool):
         Checks if the input is valid.
         :return: None
         """
-        if 'FASTQ_SINGLE_GUNZIP' not in self._tool_inputs or len(self._tool_inputs['FASTQ_SINGLE_GUNZIP']) == 0:
-            raise InvalidInputSpecificationError("Required FASTQ input file is missing for human read scrubber.")
+        if 'FASTQ_SE' not in self._tool_inputs or len(self._tool_inputs['FASTQ_SE']) != 1:
+            raise InvalidToolInputError("Required FASTQ_SE input file is missing for human read scrubber.")
         super()._check_input()
 
     def __build_command(self, dir_temp: Path) -> None:
@@ -54,7 +54,7 @@ class NcbiHumanReadScrubber(Tool):
             self._tool_command,
             *self._build_options(excluded_parameters=['interleaved', 'export_human_reads', 'outputfile_removed']),
             self._parameters['interleaved'].option if 'interleaved' in self._parameters else '',
-            '-i',  str(self._tool_inputs['FASTQ_SINGLE_GUNZIP'][0].path)
+            '-i', str(self._tool_inputs['FASTQ_SE'][0].path)
         ]
         if 'export_human_reads' in self._parameters:
             parts.extend([
@@ -64,13 +64,13 @@ class NcbiHumanReadScrubber(Tool):
             ])
         self._command.command = ' '.join(parts)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command output is valid.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __set_output(self) -> None:
         """

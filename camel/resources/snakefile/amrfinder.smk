@@ -3,35 +3,35 @@ from pathlib import Path
 import pandas as pd
 import json
 
-from camel.app.camel import Camel
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import amrfinder
+
 
 rule amrfinder_run:
     """
     Runs the AMRFinder tool.
     """
     input:
-        FASTA = Path(config['working_dir']) / amrfinder.INPUT_AMRFINDER_FASTA,
+        FASTA = amrfinder.INPUT_FASTA,
         DIR = config['amrfinder']['db']
     output:
-        TSV = Path(config['working_dir']) / 'amrfinder' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'amrfinder' / 'informs.io'
+        TSV = 'amrfinder/tool/tsv.io', # amrfinder.OUTPUT_TSV
+        INFORMS = 'amrfinder/tool/informs.io' # amrfinder.OUTPUT_INFORMS
     params:
-        dir_ = Path(config['working_dir']) / 'amrfinder',
+        dir_ = 'amrfinder/tool',
         organism = config['amrfinder'].get('species')
     run:
         from camel.app.tools.amrfinder.amrfinder import AMRFinder
-        amrfinder = AMRFinder(Camel.get_instance())
-        SnakemakeUtils.add_pickle_input(amrfinder, 'FASTA', Path(input.FASTA))
+        amrfinder = AMRFinder()
+        snakemakeutils.add_pickle_input(amrfinder, 'FASTA', Path(input.FASTA))
         amrfinder.add_input_files({'DIR': [ToolIODirectory(Path(input.DIR))]})
         if params.organism is not None:
             amrfinder.update_parameters(organism=params.organism)
-        step = Step(str(rule), amrfinder, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(amrfinder, output)
+        step = Step(rule_name=str(rule), tool=amrfinder, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(amrfinder, output)
 
 rule amrfinder_reporter:
     """
@@ -41,23 +41,23 @@ rule amrfinder_reporter:
         TSV = rules.amrfinder_run.output.TSV,
         INFORMS_amrfinder = rules.amrfinder_run.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / 'amrfinder' / 'html.io'
+        HTML = 'amrfinder/report/html.iob' # amrfinder.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'amrfinder'
+        dir_ = 'amrfinder/report'
     run:
         from camel.app.tools.amrfinder.amrfinderreporter import AMRFinderReporter
-        reporter = AMRFinderReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = AMRFinderReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule amrfinder_report_empty:
     """
     Creates an empty report when this analysis is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'amrfinder' / 'html-empty.io'
+        VAL_HTML = 'amrfinder/html-empty.iob' # amrfinder.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('AMRFinder', Path(output.VAL_HTML))
@@ -70,13 +70,15 @@ rule amrfinder_dump_summary_info:
         TSV = rules.amrfinder_run.output.TSV,
         INFORMS = rules.amrfinder_run.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / 'amrfinder' / 'summary_amrfinder.tsv'
+        FILE = 'amrfinder/summary_amrfinder.{ext}' # amrfinder.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        path_tsv = SnakemakeUtils.load_object(Path(input.TSV))[0].path
+        path_tsv = snakemakeutils.load_object(Path(input.TSV))[0].path
         data_amr = pd.read_table(path_tsv)
 
         # Extract the informs
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS))
+        informs = snakemakeutils.load_object(Path(input.INFORMS))
 
         # Parse perfect & other hits
         if not data_amr.empty:
@@ -88,18 +90,20 @@ rule amrfinder_dump_summary_info:
             hits_perfect = []
             hits_other = []
 
+        # Format hits
+        if params.ext == 'tsv':
+            data_hits = json.dumps(data_amr.drop(columns=['is_perfect']).astype(str).values.tolist()) if not data_amr.empty else '-'
+        elif params.ext == 'json':
+            data_hits = list(data_amr.to_dict('records')) if not data_amr.empty else []
+        else:
+            raise ValueError(f'Invalid ext: {params.ext}')
+
         # Summary output
         data = [
             ('amr_hits_perfect', ', '.join(hits_perfect) if len(hits_perfect) > 0 else '-'),
             ('amr_hits_other', ', '.join(hits_other) if len(hits_other) > 0 else '-'),
-            ('amr_genes_hits', json.dumps(data_amr.drop(columns=['is_perfect']).astype(str).values.tolist())
-            if not data_amr.empty else []),
+            ('amr_genes_hits', data_hits),
             ('amr_tool_version', informs['_name']),
             ('amr_db_version', informs['db_version'])
         ]
-
-        # Write to output file
-        with open(output.TSV, 'w') as handle:
-            for key, value in data:
-                handle.write(f'{key}\t{value}')
-                handle.write('\n')
+        snakemakeutils.export_summary(data, Path(output.FILE), str(params.ext), 'amrfinder')

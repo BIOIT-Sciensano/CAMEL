@@ -3,10 +3,9 @@ from pathlib import Path
 import pandas as pd
 import json
 
-from camel.app.camel import Camel
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import assembly
 
 
@@ -15,24 +14,24 @@ rule resfinder4_run:
     Runs the ResFinder4 tool.
     """
     input:
-        FASTA = Path(config['working_dir']) / assembly.OUTPUT_ASSEMBLY_FASTA,
+        FASTA = assembly.OUTPUT_FASTA,
         DIR = config['resfinder4']['db']
     output:
-        TSV_genes = Path(config['working_dir']) / 'resfinder4' / 'tsv-genes.io',
-        TSV_point = Path(config['working_dir']) / 'resfinder4' / 'tsv-point.io',
-        TSV_pheno_species = Path(config['working_dir']) / 'resfinder4' / 'tsv-pheno-species.io',
-        TSV_pheno_general = Path(config['working_dir']) / 'resfinder4' / 'tsv-pheno-general.io',
-        INFORMS = Path(config['working_dir']) / 'resfinder4' / 'informs.io'
+        TSV_genes = 'resfinder4/tsv-genes.io',
+        TSV_point = 'resfinder4/tsv-point.io',
+        TSV_pheno_species = 'resfinder4/tsv-pheno-species.io',
+        TSV_pheno_general = 'resfinder4/tsv-pheno-general.io',
+        INFORMS = 'resfinder4/informs.io' # resfinder4.OUTPUT_INFORMS
     params:
-        dir_ = Path(config['working_dir']) / 'resfinder4',
+        dir_ = 'resfinder4',
         species = config['resfinder4'].get('species'),
         point = config['resfinder4'].get('point', True),
         min_id = config['resfinder4'].get('min_identity'),
         min_cov = config['resfinder4'].get('min_cov')
     run:
         from camel.app.tools.resfinder.resfinder import ResFinder
-        resfinder = ResFinder(Camel.get_instance())
-        SnakemakeUtils.add_pickle_input(resfinder, 'FASTA', Path(input.FASTA))
+        resfinder = ResFinder()
+        snakemakeutils.add_pickle_input(resfinder, 'FASTA', Path(input.FASTA))
         resfinder.add_input_files({'DIR': [ToolIODirectory(Path(input.DIR))]})
         resfinder.update_parameters(min_cov=0.9, acquired=True, point=params.point)
         if params.species is not None:
@@ -41,15 +40,15 @@ rule resfinder4_run:
             resfinder.update_parameters(threshold=params.min_id)
         if params.min_cov is not None:
             resfinder.update_parameters(min_cov=params.min_cov)
-        step = Step(str(rule), resfinder, Camel.get_instance(), params.dir_)
-        step.run_step()
+        step = Step(rule_name=str(rule), tool=resfinder, dir_=Path(str(params.dir_)))
+        step.run()
         if params.point:
-            SnakemakeUtils.dump_tool_outputs(resfinder, output)
+            snakemakeutils.dump_tool_outputs(resfinder, output)
         else:
-            SnakemakeUtils.dump_tool_outputs(resfinder, output,
+            snakemakeutils.dump_tool_outputs(resfinder, output,
                 keys=[key for key in output.keys() if key not in ('TSV_point', 'TSV_pheno_species')])
-            SnakemakeUtils.dump_object([], Path(output.TSV_point))
-            SnakemakeUtils.dump_object([], Path(output.TSV_pheno_species))
+            snakemakeutils.dump_object([], Path(output.TSV_point))
+            snakemakeutils.dump_object([], Path(output.TSV_pheno_species))
 
 rule resfinder4_reporter:
     """
@@ -62,24 +61,24 @@ rule resfinder4_reporter:
         TSV_pheno_general = rules.resfinder4_run.output.TSV_pheno_general,
         INFORMS_resfinder = rules.resfinder4_run.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / 'resfinder4' / 'html.io'
+        VAL_HTML = 'resfinder4/html.iob' # resfinder4.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'resfinder4',
+        dir_ = 'resfinder4',
         point= config['resfinder4'].get('point',True)
     run:
         from camel.app.tools.resfinder.resfinderreporter import ResFinderReporter
-        reporter = ResFinderReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input, excluded_keys = None if params.point else ['TSV_point', 'TSV_pheno_species'])
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = ResFinderReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys = None if params.point else ['TSV_point', 'TSV_pheno_species'])
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule resfinder4_report_empty:
     """
     Creates an empty report when this analysis is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'resfinder4' / 'html-empty.io'
+        VAL_HTML = 'resfinder4/html-empty.iob' # resfinder4.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('ResFinder4', Path(output.VAL_HTML))
@@ -93,29 +92,37 @@ rule resfinder4_create_summary:
         TSV_genes = rules.resfinder4_run.output.TSV_genes,
         TSV_point = rules.resfinder4_run.output.TSV_point
     output:
-        TSV = Path(config['working_dir']) / 'resfinder4' / 'summary_resfinder.tsv'
+        FILE = 'resfinder4/summary_resfinder.{ext}' # resfinder4.OUTPUT_SUMMARY
     params:
-        point = config['resfinder4'].get('point',True)
+        point = config['resfinder4'].get('point', True),
+        ext = lambda wildcards: wildcards.ext
     run:
-        tsv_genes = SnakemakeUtils.load_object(Path(input.TSV_genes))[0].path
+        tsv_genes = snakemakeutils.load_object(Path(input.TSV_genes))[0].path
         if params.point:
-            tsv_point = SnakemakeUtils.load_object(Path(input.TSV_point))[0].path
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS))
-        with open(output.TSV, 'w') as handle:
-            data_genes = pd.read_table(tsv_genes)
-            handle.write('\t'.join([
-                f'resfinder4_genes', ', '.join(list(data_genes['Resistance gene'])) if not data_genes.empty else '-']))
-            handle.write('\n')
-            handle.write('resfinder4_genes_hits\t{}\n'.format(json.dumps(data_genes.astype(str).values.tolist())))
-            if params.point:
-                data_mutations = pd.read_table(tsv_point)
-                handle.write('\t'.join([
-                    'resfinder4_mutations',
-                    ', '.join(list(data_mutations['Mutation'])) if not data_mutations.empty else '-']))
-                handle.write('\n')
-            handle.write(f"resfinder4_tool_version\t{informs['_name']}")
-            handle.write('\n')
-            handle.write(f"resfinder4_db_version_date\t{informs['db_version_resfinder']}")
-            handle.write('\n')
-            handle.write(f"resfinder4_db_version_name\t{informs['db_version_name']}")
-            handle.write('\n')
+            tsv_point = snakemakeutils.load_object(Path(input.TSV_point))[0].path
+        informs = snakemakeutils.load_object(Path(input.INFORMS))
+        data_genes = pd.read_table(tsv_genes)
+
+        # Format hits
+        if params.ext == 'json':
+            hits_data = data_genes.to_dict('records')
+        elif params.ext == 'tsv':
+            hits_data = json.dumps(data_genes.astype(str).values.tolist())
+        else:
+            raise ValueError(f'Invalid format: {params.ext}')
+
+        # Summary output
+        summary_data = [
+            ('resfinder4_genes', ', '.join(list(data_genes['Resistance gene'])) if not data_genes.empty else '-'),
+            ('resfinder4_genes_hits', hits_data),
+            ('resfinder4_tool_version', informs['_name']),
+            ('resfinder4_db_version_date', informs['db_version_resfinder']),
+            ('resfinder4_db_version_name', informs['db_version_name'])
+        ]
+        if params.point:
+            data_mutations = pd.read_table(tsv_point)
+            if params.ext == 'tsv':
+                summary_data.append(('resfinder4_mutations', ', '.join(list(data_mutations['Mutation'])) if not data_mutations.empty else '-'))
+            elif params.ext == 'json':
+                summary_data.append(('resfinder4_mutations', {mutation['Mutation']: mutation['Resistance'].split(', ') for _, mutation in data_mutations.iterrows()} if not data_mutations.empty else '-'))
+        snakemakeutils.export_summary(summary_data, Path(output.FILE), str(params.ext), 'resfinder4')

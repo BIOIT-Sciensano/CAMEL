@@ -1,5 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.star.star import Star
 
@@ -9,13 +8,12 @@ class StarAlign(Star):
     Align spliced transcripts with STAR.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes STAR 2.7.11b alignment.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('STAR', '2.7.11b', camel)
+        super().__init__('STAR', '2.7.11b')
         self._required_inputs = ['FASTQ', 'INDEX_DIR']
         self._input_string = "--runMode alignReads"
 
@@ -26,9 +24,9 @@ class StarAlign(Star):
         """
         super()._check_input()
         if len(self._tool_inputs['FASTQ']) == 0:
-            raise InvalidInputSpecificationError("No FASTQ input provided")
+            raise InvalidToolInputError("No FASTQ input provided")
         elif len(self._tool_inputs['FASTQ']) > 2:
-            raise InvalidInputSpecificationError("Too many inputs of type FASTQ")
+            raise InvalidToolInputError("Too many inputs of type FASTQ")
 
     def _set_input(self) -> None:
         """

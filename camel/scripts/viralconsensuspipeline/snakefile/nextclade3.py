@@ -1,18 +1,22 @@
 from pathlib import Path
 from typing import Any
 
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 
-SNAKEFILE_NEXTCLADE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+SNAKEFILE_NEXTCLADE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
-_dir_nextclade = Path('nextclade')
-OUTPUT_NEXTCLADE_SUBTYPE_REPORT = _dir_nextclade / 'subtype_determination' / 'report' / 'html.io'
-OUTPUT_NEXTCLADE_SUBTYPE_REPORT_EMPTY = _dir_nextclade / 'subtype_determination' / 'report' / 'html-empty.io'
-OUTPUT_NEXTCLADE_REPORT = _dir_nextclade / 'html.io'
-OUTPUT_NEXTCLADE_REPORT_EMPTY = _dir_nextclade / 'html-empty.io'
-OUTPUT_NEXTCLADE_SUMMARY = _dir_nextclade / 'summary_nextclade.tsv'
-OUTPUT_NEXTCLADE_INFORMS = _dir_nextclade / 'informs.io'
+# Subtype determination
+OUTPUT_SUBTYPE_REPORT = 'nextclade/subtype_determination/report/html.iob'
+OUTPUT_SUBTYPE_REPORT_EMPTY = 'nextclade/subtype_determination/report/html-empty.iob'
 
+# Output report
+OUTPUT_REPORT = 'nextclade/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'nextclade/report/html-empty.iob'
+
+# Informs & summary
+OUTPUT_SUMMARY = 'nextclade/summary_nextclade.{ext}'
+OUTPUT_INFORMS = 'nextclade/informs.io'
+OUTPUT_INFORMS_MASH = 'nextclade/subtype_determination/mash/informs.io'
 
 def get_nextclade_db(wildcards, cps, segment: str, config: dict) -> str:
     """
@@ -29,7 +33,7 @@ def get_nextclade_db(wildcards, cps, segment: str, config: dict) -> str:
     # Get data from subtype determination
     # noinspection PyUnresolvedReferences
     path_informs = Path(cps.nextclade3_detect_subtype_report.get().output['INFORMS'])
-    informs_subtype = SnakemakeUtils.load_object(path_informs)
+    informs_subtype = snakemakeutils.load_object(path_informs)
     return informs_subtype['nextclade_dbs'][segment]
 
 
@@ -44,7 +48,7 @@ def get_informs_subtype(wildcards: Any, cps: Any) -> Path:
     return path_informs
 
 
-def get_nextclade_output(wildcards, cps: Any, key: str, config: dict = None) -> list[Path]:
+def get_nextclade_output(wildcards, cps: Any, key: str, config: dict = None) -> list[str]:
     """
     Aggregates the Nextclade output based on the database information.
     :param wildcards: Snakemake wildcards
@@ -59,7 +63,7 @@ def get_nextclade_output(wildcards, cps: Any, key: str, config: dict = None) -> 
     else:
         # noinspection PyUnresolvedReferences
         path_informs = Path(cps.nextclade3_detect_subtype_report.get().output['INFORMS'])
-        informs_subtype = SnakemakeUtils.load_object(path_informs)
+        informs_subtype = snakemakeutils.load_object(path_informs)
         segments = list(informs_subtype['nextclade_dbs'].keys())
 
     # Determine output
@@ -71,4 +75,4 @@ def get_nextclade_output(wildcards, cps: Any, key: str, config: dict = None) -> 
         raise ValueError(f'Invalid key: {key}')
 
     # Return list of outputs
-    return [Path(config['working_dir'], str(base_output).format(segment=segment)) for segment in segments]
+    return [str(base_output).format(segment=segment) for segment in segments]

@@ -32,19 +32,31 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
 
         # Output
         argument_parser.add_argument(
-            '--output-dir', type=absolute_path_by_pathlib, default=Path(Path.cwd(), 'out'))
+            '--output-dir',
+            help='Output directory',
+            type=absolute_path_by_pathlib,
+            default=Path(Path.cwd(), 'out'))
         argument_parser.add_argument(
-            '--output-html', type=absolute_path_by_pathlib, default=Path(Path.cwd(), 'out', 'report.html'))
+            '--output-html',
+            type=absolute_path_by_pathlib,
+            default=Path(Path.cwd(), 'out', 'report.html'))
         argument_parser.add_argument(
-            '--output-tsv', help="Output file for the summary", type=absolute_path_by_pathlib,
-            default=Path(Path.cwd(), 'out', 'report.tsv'))
+            '--output-tsv',
+            help='Output file for the summary in TSV format',
+            type=absolute_path_by_pathlib,
+            default=Path(Path.cwd(), 'out', 'summary.tsv'))
         argument_parser.add_argument(
-            '--output-fasta', type=absolute_path_by_pathlib, help='output path for assembled contigs')
+            '--output-json',
+            help='Output file for the summary JSON format',
+            type=absolute_path_by_pathlib)
+        argument_parser.add_argument(
+            '--output-fasta',
+            type=absolute_path_by_pathlib,
+            help='output path for assembled contigs')
 
         # Options
         argument_parser.add_argument(
-            '--detection-method', help="Type of allele detection: local alignment (blast), read mapping (srst2)",
-            choices=['blast', 'kma', 'srst2'], default='blast')
+            '--detection-method', help="Method for allele / gene detection", choices=['blast', 'kma'], default='blast')
         argument_parser.add_argument(
             '--report-include-fastq', help="Include the FASTQ files in the report", action='store_true')
         argument_parser.add_argument(
@@ -69,6 +81,7 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
             'output_dir': str(self._args.output_dir),
             'output_report': str(self._args.output_html),
             'output_tabular': str(self._args.output_tsv),
+            'output_json': str(self._args.output_json) if self._args.output_json is not None else None,
             'detection_method': self._args.detection_method,
         })
 
@@ -104,7 +117,7 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
         if self._args.output_fasta is None:
             logger.debug('Not exporting assembly')
             return
-        path_io = self._args.working_dir / assembly.OUTPUT_ASSEMBLY_FASTA
+        path_io = self._args.working_dir / assembly.OUTPUT_FASTA
         path_fasta = SnakemakeUtils.load_object(path_io)[0].path
         fastautils.FastaUtils.rename_sequences_regex(
             path_fasta, self._args.output_fasta, '', '', description=self.sample_name)
@@ -225,7 +238,7 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
             next(p.name.replace('trimming_', '') for p in p_html.parents if p.name.startswith('trimming_')):
                 p_html for p_html in [Path(x) for x in reports_trim]}
         report_ds_by_read_key = {
-            p_html.parent.name: p_html for p_html in [Path(x) for x in reports_ds]}
+            p_html.parents[1].name: p_html for p_html in [Path(x) for x in reports_ds]}
 
         # Add the report content
         if input_type in ('fasta', 'fasta_with_vcf'):

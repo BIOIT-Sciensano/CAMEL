@@ -1,5 +1,14 @@
-dependencies: [bcftools/1.17]
+dependencies:
+  - bcftools/1.17
 parameters:
-  haplotype: {default: false, mandatory: false, option: --haplotype, value: '1'}
-  output_filename: {default: true, mandatory: true, option: --output, value: bcftools_consensus.fasta}
+  haplotype:
+    default: false
+    mandatory: false
+    option: '--haplotype'
+    value: '1'
+  output_filename:
+    default: true
+    mandatory: true
+    option: '--output'
+    value: bcftools_consensus.fasta
 tool_command: bcftools consensus

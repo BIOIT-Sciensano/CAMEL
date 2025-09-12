@@ -9,7 +9,7 @@ class TaxonNode:
     """
     name: typing.Union[str, int]
     percentage: typing.Optional[float] = None
-    children: typing.Set['TaxonNode'] = dataclasses.field(default_factory=set, compare=False, hash=False)
+    children: set['TaxonNode'] = dataclasses.field(default_factory=set, compare=False, hash=False)
 
     def add_child(self, node: 'TaxonNode') -> None:
         """
@@ -49,5 +49,4 @@ class TaxonNode:
         """
         yield node
         for child in sorted(node.children, key=lambda x: x.name):
-            for node in TaxonNode.traverse_dfs(child):
-                yield node
+            yield from TaxonNode.traverse_dfs(child)

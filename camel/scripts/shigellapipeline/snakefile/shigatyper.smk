@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.scripts.shigellapipeline.snakefile import shigatyper
+
 
 rule shigatyper_run:
     """
@@ -12,17 +12,17 @@ rule shigatyper_run:
     input:
         IO = shigatyper.get_input(config)
     output:
-        TSV = Path(config['working_dir']) / 'shigatyper' / 'tsv.io',
-        TSV_HITS = Path(config['working_dir']) / 'shigatyper' / 'tsv_hits.io',
-        INFORMS = Path(config['working_dir']) / 'shigatyper' / 'informs.io'
+        TSV = 'shigatyper/tool/tsv.io',
+        TSV_HITS = 'shigatyper/tool/tsv_hits.io',
+        INFORMS = 'shigatyper/tool/informs.io' # shigatyper.OUTPUT_INFORMS
     params:
-        dir_ = Path(config['working_dir']) / 'shigatyper',
+        dir_ = 'shigatyper/tool',
         input_type = config['input_type']
     run:
         from camel.app.tools.pipelines.shigella.shigatyper import ShigaTyper
         from camel.app.components.workflows.utils.fastqinput import FastqInput
 
-        typer = ShigaTyper(Camel.get_instance())
+        typer = ShigaTyper()
 
         # Extract FASTQ paths to add them as ShigaTyper input
         if params.input_type == 'illumina':
@@ -34,12 +34,12 @@ rule shigatyper_run:
             typer.add_input_files({'FASTQ_SE': fq_in.se})
         else:
             # When the input type is FASTA the simulated reads are used as input
-            SnakemakeUtils.add_pickle_input(typer, 'FASTQ_PE', Path(input.IO))
+            snakemakeutils.add_pickle_input(typer, 'FASTQ_PE', Path(input.IO))
 
         # Run tool
-        step = Step(str(rule), typer, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(typer, output)
+        step = Step(rule_name=str(rule), tool=typer, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(typer, output)
 
 rule shigatyper_report:
     """
@@ -50,26 +50,26 @@ rule shigatyper_report:
         TSV_HITS = rules.shigatyper_run.output.TSV_HITS,
         INFORMS_shigatyper = rules.shigatyper_run.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / shigatyper.OUTPUT_SHIGATYPER_REPORT
+        HTML = 'shigatyper/report/html.iob' # shigatyper.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'shigatyper' / 'report',
+        dir_ = 'shigatyper/report',
         input_type = config['input_type']
     run:
         from camel.app.tools.pipelines.shigella.shigatyperreporter import ShigaTyperReporter
-        reporter = ShigaTyperReporter(Camel.get_instance())
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
+        reporter = ShigaTyperReporter()
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        snakemakeutils.add_pickle_inputs(reporter, input)
         if params.input_type == 'fasta':
             reporter.update_parameters(pseudo_reads=True)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule shigatyper_report_empty:
     """
     Creates an empty ShigaTyper report when the analysis is disabled.
     """
     output:
-        HTML = Path(config['working_dir']) / shigatyper.OUTPUT_SHIGATYPER_REPORT_EMPTY
+        HTML = 'shigatyper/report/html-empty.iob' # shigatyper.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('ShigaTyper', Path(output.HTML), 3)
@@ -81,14 +81,13 @@ rule shigatyper_create_summary:
     input:
         INFORMS_shigatyper = rules.shigatyper_run.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / shigatyper.OUTPUT_SHIGATYPER_SUMMARY
+        FILE = 'shigatyper/summary_shigatyper.{ext}' # shigatyper.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        # Collect informs
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS_shigatyper))
-
-        # Create TSV output
-        with open(output.TSV, 'w') as handle:
-            handle.write(f"shigatyper_prediction\t{informs['species']}")
-            handle.write('\n')
-            handle.write(f"shigatyper_tool_version\t{informs['_name']}")
-            handle.write('\n')
+        informs = snakemakeutils.load_object(Path(input.INFORMS_shigatyper))
+        data_summary = [
+            ('shigatyper_prediction', str(informs['species'])),
+            ('shigatyper_tool_version', informs['_name']),
+        ]
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'shigatyper')

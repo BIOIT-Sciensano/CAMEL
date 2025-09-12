@@ -3,14 +3,13 @@ import argparse
 import itertools
 import shutil
 import tempfile
+from collections.abc import Sequence
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import pandas as pd
-import pkg_resources
 
-from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreport import HtmlReport
@@ -18,7 +17,7 @@ from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.phylogeny import mlstphyloutils
 from camel.app.components.phylogeny.newickutils import NewickUtils
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
+from camel.app.loggers import logger, initialize_logging
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.app.tools.figtree.figtree import FigTree
 from camel.app.tools.grapetree.grapetree import GrapeTree
@@ -86,7 +85,7 @@ class MainMLSTPhylogeny:
         grp_input.add_argument('--input-html', type=Path, action='append')
         grp_input.add_argument('--input-tsv', nargs=2, action='append')
         ap.add_argument('--html-key', help='Key for the scheme to use for the HTML input', default='cgmlst')
-        ap.add_argument('--detection-method', type=str, choices=['blast', 'kma', 'rapid', 'srst2'], default='blast')
+        ap.add_argument('--detection-method', type=str, choices=['blast', 'kma', 'rapid'], default='blast')
         ap.add_argument(
             '--tree-method', type=str, choices=['MSTreeV2', 'MSTree', 'NJ', 'RapidNJ', 'ninja', 'distance'],
             help='Tree building method for GrapeTree', default='MSTreeV2')
@@ -311,7 +310,7 @@ class MainMLSTPhylogeny:
         """
         dir_grapetree = self._args.dir_working / 'grapetree'
         dir_grapetree.mkdir(exist_ok=True, parents=True)
-        grapetree = GrapeTree(Camel.get_instance())
+        grapetree = GrapeTree()
         output_path = dir_grapetree / 'tree.nwk'
         grapetree.update_parameters(output_path=str(output_path))
         grapetree.add_input_files({'TSV': [ToolIOFile(allele_matrix)]})
@@ -362,7 +361,16 @@ class MainMLSTPhylogeny:
         report.save()
 
 
+def main(args: Sequence[str] | None = None) -> None:
+    """
+    Entry point for the common interface.
+    :param args: Command line arguments
+    :return: None
+    """
+    script = MainMLSTPhylogeny(args)
+    script.run()
+
+
 if __name__ == '__main__':
-    Camel.get_instance()
-    mlst_phylo = MainMLSTPhylogeny()
-    mlst_phylo.run()
+    initialize_logging()
+    main()

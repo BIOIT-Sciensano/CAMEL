@@ -1,11 +1,11 @@
 from pathlib import Path
-
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import human_read_scrubbing
 
 #######################
 # Included Snakefiles #
 #######################
-include: human_read_scrubbing.SNAKEFILE_SCRUBBING
+include: human_read_scrubbing.SNAKEFILE
 
 #########
 # Rules #
@@ -21,17 +21,16 @@ rule link_scrubbing_input:
     Creates the FASTQ input for the human read scrubbing step.
     """
     output:
-        FASTQ = Path(config['working_dir']) / human_read_scrubbing.INPUT_SCRUBBING_FASTQ if not 'fasta' in config['input'] else [],
-        FASTA = Path(config['working_dir']) / human_read_scrubbing.INPUT_SCRUBBING_FASTA if 'fasta' in config['input'] else []
+        FASTQ = human_read_scrubbing.INPUT_FASTQ if not 'fasta' in config['input'] else [],
+        FASTA = human_read_scrubbing.INPUT_FASTA if 'fasta' in config['input'] else []
     run:
-        from camel.app.snakemake.snakemakeutils import SnakemakeUtils
         from camel.app.io.tooliofile import ToolIOFile
         if 'fasta' in config['input']:
-            SnakemakeUtils.dump_object([ToolIOFile(Path(config['input']['fasta'][0]['path']))], Path(output.FASTA))
+            snakemakeutils.dump_object([ToolIOFile(Path(config['input']['fasta'][0]['path']))], Path(output.FASTA))
         elif 'fastq_pe' in config['input']:
-            SnakemakeUtils.dump_object([ToolIOFile(Path(f['path'])) for f in config['input']['fastq_pe']], Path(output.FASTQ))
+            snakemakeutils.dump_object([ToolIOFile(Path(f['path'])) for f in config['input']['fastq_pe']], Path(output.FASTQ))
         elif 'fastq_se' in config['input']:
-            SnakemakeUtils.dump_object([ToolIOFile(Path(f['path'])) for f in config['input']['fastq_se']], Path(output.FASTQ))
+            snakemakeutils.dump_object([ToolIOFile(Path(f['path'])) for f in config['input']['fastq_se']], Path(output.FASTQ))
 
 
 rule report_command_section:
@@ -41,12 +40,12 @@ rule report_command_section:
     input:
         INFORMS_scrubbing = human_read_scrubbing.get_command_informs(config)
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-commands.io'
+        HTML = 'report/html-commands.iob'
     params:
         dir_ = config['working_dir']
     run:
         from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input,Path(output.HTML),Path(params.dir_))
+        ReportPipeline.export_command_section(input,Path(output.HTML), Path(params.dir_))
 
 
 rule report_combine_all:
@@ -55,8 +54,6 @@ rule report_combine_all:
     """
     input:
         reports_scrubbing = human_read_scrubbing.get_reports(config),
-        # Report
-        # report_citations = rules.report_pickle_citations.output.HTML,
         report_commands = rules.report_command_section.output.HTML
     output:
         HTML = config['output_report']

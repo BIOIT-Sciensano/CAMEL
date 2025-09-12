@@ -1,6 +1,5 @@
-from camel.app.camel import Camel
 from camel.app.tools.vcftools.vcftools import VCFtools
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 
 
 class VCFtoolsAnnotate(VCFtools):
@@ -9,13 +8,12 @@ class VCFtoolsAnnotate(VCFtools):
     Reads an input VCF from stdin and prints output VCF to stdout
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize vcf-annotate tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super(VCFtools, self).__init__('VCFtools vcf-annotate', '0.1.16', camel)
+        super().__init__('VCFtools vcf-annotate', '0.1.16')
         self._specific_parameters = ['output']
 
     def _build_command(self) -> None:
@@ -30,8 +28,10 @@ class VCFtoolsAnnotate(VCFtools):
         elif 'VCF_GZ' in self._tool_inputs:
             input_command = f'gunzip -c {self._tool_inputs["VCF_GZ"][0].path}'
         else:
-            raise InvalidInputSpecificationError("VCFtools vcf-annotate requires a VCF or VCF_GZ input file.")
+            raise InvalidToolInputError("VCFtools vcf-annotate requires a VCF or VCF_GZ input file.")
 
-        self._command.command = '|'.join([input_command,
-                                            f' {self._tool_command} {" ".join(build_options)} ',
-                                            f' bgzip -c > {self.folder / self._parameters["output"].value}'])
+        self._command.command = '|'.join([
+            input_command,
+            f' {self._tool_command} {" ".join(build_options)} ',
+            f' bgzip -c > {self.folder / self._parameters["output"].value}'
+        ])

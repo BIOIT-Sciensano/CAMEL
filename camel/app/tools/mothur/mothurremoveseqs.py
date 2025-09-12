@@ -1,6 +1,6 @@
 import os
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.mothur.mothur import Mothur
@@ -12,13 +12,12 @@ class MothurRemoveSeqs(Mothur):
     align.report file to generate a new file that does not contain the sequences in the list.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_remove_seqs', '1.39.1', camel)
+        super().__init__('mothur_remove_seqs', '1.39.1')
 
     def _check_input(self):
         """
@@ -30,18 +29,18 @@ class MothurRemoveSeqs(Mothur):
         - Only one file per key is allowed
         :return: None
         """
-        super(MothurRemoveSeqs, self)._check_input()
+        super()._check_input()
         if 'TSV_Accnos' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Not enough valid input files given for Mothur '
+            raise InvalidToolInputError('Not enough valid input files given for Mothur '
                                                  'remove.seqs: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) > 3:
-            raise InvalidInputSpecificationError('Too many input keys given for Mothur remove.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Too many input keys given for Mothur remove.seqs: {!r}'.format(self._tool_inputs))
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_Accnos', 'FASTA', 'TSV_Names', 'TSV_Counts', 'TSV_Groups',
                            'TSV_AlignReport', 'TSV_List', 'TSV_Taxonomy', 'TSV_Qfile', 'FASTQ']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur remove.seqs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input key given for Mothur remove.seqs: {!r}'.format(self._tool_inputs))
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
+                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
                                                      remove.seqs: {!r}'.format(self._tool_inputs))
         self.__check_empty_input()
 
@@ -88,7 +87,7 @@ class MothurRemoveSeqs(Mothur):
         for key, input_files in self._tool_inputs.items():
             # The TSV_Accnos file does not directly lead to output
             if key != 'TSV_Accnos':
-                basename = super(MothurRemoveSeqs, self)._get_basename(key, output_extensions[key][0])
+                basename = super()._get_basename(key, output_extensions[key][0])
                 self._tool_outputs[key] = [ToolIOFile(basename + output_extensions[key][1])]
 
     def __check_empty_input(self):

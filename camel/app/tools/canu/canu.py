@@ -1,6 +1,6 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -11,12 +11,12 @@ class Canu(Tool):
     II/Sequel or Oxford Nanopore MinION).
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('Canu', '2.2 commit 7fb66bbff', camel)
+        super().__init__('Canu', '2.2 commit 7fb66bbff')
 
     def _check_input(self) -> None:
         """
@@ -24,7 +24,7 @@ class Canu(Tool):
         :return: None
         """
         if 'FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTQ input is required")
+            raise InvalidToolInputError("FASTQ input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -43,13 +43,13 @@ class Canu(Tool):
         self._execute_command()
         self.__set_output()
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing '{self.name}': {self.stdout}")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __set_output(self) -> None:
         """

@@ -1,14 +1,13 @@
-import re
 from pathlib import Path
 from typing import Any
 
-SNAKEFILE_SEROTYPE_SISTR = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_serotype = Path('serotyping_sistr')
-OUTPUT_SEROTYPE_SISTR = _dir_serotype / 'sistr_output.io'
-OUTPUT_SEROTYPE_SISTR_INFORMS = _dir_serotype / 'informs.io'
-OUTPUT_SEROTYPE_SISTR_REPORT = _dir_serotype / 'html_sistr.io'
-OUTPUT_SEROTYPE_SISTR_REPORT_EMPTY = _dir_serotype / 'html_sistr-empty.io'
-OUTPUT_SEROTYPE_SISTR_SUMMARY = _dir_serotype / 'summary_out_sistr.tsv'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+
+OUTPUT_JSON = 'serotyping/sistr/tool/json.io'
+OUTPUT_INFORMS = 'serotyping/sistr/tool/informs.io'
+OUTPUT_REPORT = 'serotyping/sistr/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'serotyping/sistr/report/html-empty.iob'
+OUTPUT_SUMMARY = 'serotyping/sistr/summary/summary_out_sistr.{ext}'
 
 
 def sistr_output_parser(prediction: dict[str, Any], locus: str, antigen: str, hits_dict_tsv: dict[str, str]) -> None:

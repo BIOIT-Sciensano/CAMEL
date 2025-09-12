@@ -1,6 +1,22 @@
-dependencies: [bedtools/2.31.0]
+dependencies:
+  - bedtools/2.31.0
 parameters:
-  Name: {default: false, mandatory: false, option: -name, p_index: 0, value: null}
-  outputfile_name: {default: true, mandatory: false, option: -fo, p_index: 0, value: extracted_sequences.fa}
-  strandedness: {default: false, mandatory: false, option: -s, p_index: 10, value: null}
+  Name:
+    default: false
+    mandatory: false
+    option: '-name'
+    p_index: 0
+    value: null
+  outputfile_name:
+    default: true
+    mandatory: false
+    option: '-fo'
+    p_index: 0
+    value: extracted_sequences.fa
+  strandedness:
+    default: false
+    mandatory: false
+    option: '-s'
+    p_index: 10
+    value: null
 tool_command: bedtools getfasta

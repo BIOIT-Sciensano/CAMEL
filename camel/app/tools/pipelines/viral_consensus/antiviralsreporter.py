@@ -2,11 +2,10 @@ import json
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
 from camel.app.components.html.htmltableformatter import HtmlTableFormatter, FormatEntry
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -39,13 +38,12 @@ class AntiviralsReporter(Tool):
         {'key': 'resistance', 'title': 'Resistance', 'fmt': get_color},
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('antiviral reporter', '0.1', camel)
+        super().__init__('antiviral reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -53,7 +51,7 @@ class AntiviralsReporter(Tool):
         :return: None
         """
         if 'JSON' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('JSON input is required')
+            raise InvalidToolInputError('JSON input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:

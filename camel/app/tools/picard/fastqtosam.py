@@ -2,25 +2,21 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.invalidparametererror import InvalidParameterError
+from camel.app.error import InvalidToolInputError, InvalidParameterError
 from camel.app.tools.picard.picard import Picard
 
 
 class FastqToSam(Picard):
-
     """
     Class for Picard FastqToSam function
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Picard FastqToSam', '2.23.3', camel)
+        super().__init__('Picard FastqToSam', '2.23.3')
 
         self._required_inputs = []
 
@@ -35,7 +31,7 @@ class FastqToSam(Picard):
         elif 'FASTQ_SE' in self._tool_inputs:
             self._input_string = f"FASTQ={self._tool_inputs['FASTQ_SE'][0].path}"
         else:
-            InvalidInputSpecificationError('Picard FastqToSam requires FASTQ_SE or FASTQ_PE input.')
+            InvalidToolInputError('Picard FastqToSam requires FASTQ_SE or FASTQ_PE input.')
 
         if 'SAMPLE_NAME' in self._tool_inputs:
             # if SAMPLE_NAME specified, it will replace the default values of parameters: RG_sample_name, RG_name
@@ -48,11 +44,9 @@ class FastqToSam(Picard):
         :return: None
         """
         self._output_type = Path(self._parameters['output'].value).suffix.strip(".").upper()
-
         if self._output_type not in ["SAM", "BAM"]:
             raise InvalidParameterError("Picard FastqToSam: output file extension should be .bam or .sam")
-
-        super(FastqToSam, self)._set_output()
+        super()._set_output()
 
     def _set_informs(self, stderr: Optional[str] = None) -> None:
         """
@@ -61,7 +55,7 @@ class FastqToSam(Picard):
             - Reads processed: Number of reads processed
         :return: None
         """
-        for line in (self.stderr if stderr is None else stderr).splitlines():
+        for line in (self._command.stderr if stderr is None else stderr).splitlines():
             m = re.search('Auto-detected quality format as: ([a-zA-Z]+)', line)
             if m:
                 if m.group(1) == 'Standard':
@@ -71,7 +65,7 @@ class FastqToSam(Picard):
                 elif m.group(1) == 'Solexa':
                     self.informs['quality_encoding'] = 'solexa66'
                 else:
-                    self.informs['quality_encoding'] = '[UNKNOWN]{}'.format(m.group(1))
+                    self.informs['quality_encoding'] = f'[UNKNOWN]{m.group(1)}'
 
             m = re.search(r'Processed (\d+) fastq reads', line)
             if m:

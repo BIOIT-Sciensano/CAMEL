@@ -1,7 +1,4 @@
-from typing import List
-
-from camel.app.camel import Camel
-from camel.app.error.invalidparametererror import InvalidParameterError
+from camel.app.error import InvalidParameterError
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
@@ -10,13 +7,12 @@ class GATK4VariantFiltration(GATK4):
     Class for GATK VariantFiltration function
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize the GATK4VariantFiltration tool
-        :param camel: Camel instance
         :return: None
         """
-        super(GATK4VariantFiltration, self).__init__('gatk4 VariantFiltration', '4.1.9.0', camel)
+        super().__init__('gatk4 VariantFiltration', '4.1.9.0')
         self._function_name = 'VariantFiltration'
         self._specific_parameters = ['filter-names', 'filter-expressions', 'genotype-filter-names', 'genotype-filter-expressions']
         self._required_inputs = ['VCF']
@@ -57,7 +53,7 @@ class GATK4VariantFiltration(GATK4):
         if 'genotype-filter-names' in self._parameters:
             self.__set_genotype_filters(self._parameters['genotype-filter-expressions'].value.split(","), self._parameters['genotype-filter-names'].value.split(","))
 
-    def __set_filters(self, filter_list: List[str], filtername_list: List[str]) -> None:
+    def __set_filters(self, filter_list: list[str], filtername_list: list[str]) -> None:
         """
         Set filters (based on VCF INFO fields) to filter variants
         :param filter_list: list of filter expressions
@@ -67,7 +63,7 @@ class GATK4VariantFiltration(GATK4):
         for expression, name in zip(filter_list, filtername_list):
             self._option_string += f'--filter-name {name} --filter-expression "{expression}" '
 
-    def __set_genotype_filters(self, filter_list: List[str], filtername_list: List[str]) -> None:
+    def __set_genotype_filters(self, filter_list: list[str], filtername_list: list[str]) -> None:
         """
         Set genotype filters (based on VCF FORMAT fields) to filter variants
         :param filter_list: list of filter specs

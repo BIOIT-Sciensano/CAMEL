@@ -4,9 +4,9 @@ import pandas as pd
 
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -17,12 +17,11 @@ class Mykrobe(Tool):
     Staphylococcus aureus, Shigella sonnei and Salmonella typhi.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes Mykrobe.
-        :param camel: Camel instance
         """
-        super().__init__('mykrobe', '0.13.0', camel)
+        super().__init__('mykrobe', '0.13.0')
 
     def _execute_tool(self) -> None:
         """
@@ -45,12 +44,12 @@ class Mykrobe(Tool):
 
         super(Mykrobe, self)._check_input()
         if 'SPECIES' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Species (i.e. 'sonnei', 'staph', 'tb' or 'typhi') needs "
+            raise InvalidToolInputError("Species (i.e. 'sonnei', 'staph', 'tb' or 'typhi') needs "
                                                  "to be specified")
         if 'DIR' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database path needs to be specified")
+            raise InvalidToolInputError("Database path needs to be specified")
         if len(input_types.intersection(set(self._tool_inputs))) != 1:
-            raise InvalidInputSpecificationError(f"One input type (i.e. 'FASTQ_PE', 'FASTA' or 'FASTQ_SE') is required "
+            raise InvalidToolInputError(f"One input type (i.e. 'FASTQ_PE', 'FASTA' or 'FASTQ_SE') is required "
                                                  "and accepted")
 
     @staticmethod
@@ -65,6 +64,7 @@ class Mykrobe(Tool):
             return str(input_type['FASTA'][0].path)
         elif 'FASTQ_SE' in input_type:
             return str(input_type["FASTQ_SE"][0].path) + ' --ont'
+        raise ValueError(f'Invalid input type: {input_type}')
 
     def __build_command(self) -> None:
         """
@@ -84,13 +84,13 @@ class Mykrobe(Tool):
             *self._build_options()
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command output is valid.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __set_output(self) -> None:
         """

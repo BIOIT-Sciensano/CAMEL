@@ -1,29 +1,26 @@
-import os
 import re
 import abc
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
 
 class GATK(Tool, metaclass=abc.ABCMeta):
-
     """
     Super class for GATK tools
     """
 
-    def __init__(self, tool_name, version, camel):
+    def __init__(self, tool_name, version):
         """
         Initialize a GATK tool
         :param tool_name: Tool name
         :param version: Tool version
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(tool_name, version, camel)
+        super().__init__(tool_name, version)
         self._specific_parameters = []
         self._required_inputs = []
         self._input_string = ''
@@ -50,7 +47,7 @@ class GATK(Tool, metaclass=abc.ABCMeta):
         """
         for input_file in self._required_inputs:
             if input_file not in self._tool_inputs:
-                raise InvalidInputSpecificationError('GATK {!r} required {!r} input is missing in _tool_inputs!'.format(
+                raise InvalidToolInputError('GATK {!r} required {!r} input is missing in _tool_inputs!'.format(
                     self._name, input_file))
 
         super(GATK, self)._check_input()
@@ -74,9 +71,7 @@ class GATK(Tool, metaclass=abc.ABCMeta):
         Set the output specification
         :return: None
         """
-        self._tool_outputs[self._output_type] = [
-            ToolIOFile(os.path.join(self._folder, self._parameters['output'].value))
-        ]
+        self._tool_outputs[self._output_type] = [ToolIOFile(self._folder / self.get_param_value('output'))]
 
     def _set_specific_parameters(self):
         """
@@ -95,16 +90,16 @@ class GATK(Tool, metaclass=abc.ABCMeta):
             self._tool_command, self._input_string, self._output_string, self._option_string
         ])
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
         Check the result of GATK tool run
+        :param command: Command to check
         :return: None
         """
-        if self.stdout == "":
-            raise ToolExecutionError("GATK tool {} fails to run as stdout is empty.\n".format(self._name))
-        if not re.match('Exit status: 0', self.stdout.split('\n')[-2].rstrip()):
-            raise ToolExecutionError(
-                "GATK tool {} fails to run, message: \n{}".format(self._name, self.stdout))
+        if command.stdout == "":
+            raise ToolExecutionError(self.name, "Fails to run as stdout is empty.")
+        if not re.match('Exit status: 0', command.stdout.split('\n')[-2].rstrip()):
+            raise ToolExecutionError(self.name, command.stdout)
 
     def _set_informs(self):
         """
@@ -112,8 +107,8 @@ class GATK(Tool, metaclass=abc.ABCMeta):
         :return: None
         """
         # log WARNINGS in info.log
-        for l in self.stdout.split('\n'):
-            if re.match('WARNING', l):
+        for l in self._command.stdout.split('\n'):
+            if re.match(r'WARNING', l):
                 logger.info(" GATK - {}".format(l))
 
             # E.g., The Genome Analysis Toolkit (GATK) v3.4-0-g7e26428
@@ -124,13 +119,13 @@ class GATK(Tool, metaclass=abc.ABCMeta):
             # Total filtering statistics
             #   0 reads were filtered out during the traversal out of approximately 1090654 total reads (0.00%)
             match = re.search(
-                '(\d+) reads were filtered out during the traversal out of approximately (\d+) total reads \((.+%)\)', l)
+                r'(\d+) reads were filtered out during the traversal out of approximately (\d+) total reads \((.+%)\)', l)
             if match is not None:
                 self.informs['reads_total'] = match.group(2)
                 if match.group(1) != '0':
                     self.informs['filtered_reads'] = "{}({})".format(match.group(1), match.group(3))
             # per Filter statistics:
             #    0 reads (0.00% of total) failing BadCigarFilter
-            match = re.search('(\d+) reads \((.+%) of total\) failing (.+)', l)
+            match = re.search(r'(\d+) reads \((.+%) of total\) failing (.+)', l)
             if match is not None and match.group(1) != '0':
                 self.informs[match.group(3)] = "{}({})".format(match.group(1), match.group(2))

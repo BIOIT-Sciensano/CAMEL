@@ -1,7 +1,7 @@
 import dataclasses
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import vcf
 
@@ -14,11 +14,11 @@ class FilterVariantsOutput:
     Holder for the output of the variant filtering output.
     """
     path_vcf: Path
-    stats: Dict[str, Any]
-    informs: List[Dict]
+    stats: dict[str, Any]
+    informs: list[dict]
 
 
-class FilterVariants(object):
+class FilterVariants:
     """
     Wrapper around the variant filters for the viral consensus pipeline.
     """
@@ -49,7 +49,7 @@ class FilterVariants(object):
             self._dir.mkdir(parents=True)
         self._informs = []
 
-    def run(self, vcf_in: Path, calling_method: str, filters: Dict[str, Any]) -> FilterVariantsOutput:
+    def run(self, vcf_in: Path, calling_method: str, filters: dict[str, Any]) -> FilterVariantsOutput:
         """
         Runs the variant filtering workflow.
         """
@@ -85,7 +85,7 @@ class FilterVariants(object):
         return path_out
 
     @staticmethod
-    def __extract_stats(path_vcf: Path) -> Dict[str, Any]:
+    def __extract_stats(path_vcf: Path) -> dict[str, Any]:
         """
         Extracts variant filtering stats by parsing the output VCF file.
         :param path_vcf: Input VCF file

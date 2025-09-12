@@ -1,16 +1,16 @@
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 import json
 
 
-class Mapping(object):
+class Mapping:
     """
     This class contains a mapping of the converted sequence name to the original header.
     The main purpose of this class is to avoid cluttering of the log with the complete mapping as a dictionary.
     """
 
-    def __init__(self, content: Dict[str, str]):
+    def __init__(self, content: dict[str, str]):
         """
         Initializes a mapping.
         :param content: Mapping content
@@ -28,7 +28,7 @@ class Mapping(object):
             return Mapping(json.load(handle))
 
     @property
-    def content(self) -> Dict[str, str]:
+    def content(self) -> dict[str, str]:
         """
         Returns the mapping content.
         :return: Content
@@ -40,7 +40,7 @@ class Mapping(object):
         Returns the printable representation of the mapping.
         :return: Representation
         """
-        return 'Mapping({} items)'.format(len(self._content))
+        return f'Mapping({len(self._content):,} items)'
 
     def get(self, key) -> str:
         """

@@ -1,6 +1,7 @@
 import os
 
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -10,13 +11,12 @@ class Prinseq(Tool):
     PRINSEQ can be used to filter, reformat, or trim your genomic and metagenomic sequence data.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('prinseq', '0.20.4', camel)
+        super().__init__('prinseq', '0.20.4')
 
     def _execute_tool(self):
         """
@@ -82,16 +82,17 @@ class Prinseq(Tool):
         infile = os.path.basename(list(self._tool_inputs.values())[0][0].path)
         return os.path.join(self._folder, infile[:infile.rfind('.')])
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command):
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        for line in self.stderr.splitlines():
+        for line in command.stderr.splitlines():
             if 'ERROR' in line:
-                raise ToolExecutionError("Command execution failed (stderr: {}).".format(self.stderr))
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+                raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        if self._command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {command.exit_code})")
 
     def __set_output(self):
         """

@@ -1,23 +1,22 @@
 import datetime
 import json
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
 
 import humanize
 from Bio import SeqIO
 
-from camel.app.camel import Camel
 from camel.app.command.command import Command
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.blast.makeblastdb import MakeBlastDb
 from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
-from camel.app.tools.cdhit.cdhitest import Cluster, CDHitEst
+from camel.app.tools.cdhit.cdhitest import CDHitEst, Cluster
 from camel.app.tools.kma.kma import KMA
 from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
 
 
-class DBHelper(object):
+class DBHelper:
     """
     This helper class is used to construct gene detection databases.
     """
@@ -33,7 +32,7 @@ class DBHelper(object):
         self._informs = []
 
     @property
-    def informs(self) -> List[Dict[str, Any]]:
+    def informs(self) -> list[dict[str, Any]]:
         """
         Returns the informs.
         :return: Informs
@@ -51,7 +50,7 @@ class DBHelper(object):
         path.mkdir(parents=True, exist_ok=True)
         return path
 
-    def get_clusters_form_fasta(self, fasta_file: Path, clustering_cutoff: float, threads: int) -> List[Cluster]:
+    def get_clusters_form_fasta(self, fasta_file: Path, clustering_cutoff: float, threads: int) -> list[Cluster]:
         """
         Returns the clusters of similar sequences from the given FASTA file.
         :param fasta_file: Input FASTA file
@@ -59,7 +58,7 @@ class DBHelper(object):
         :param threads: Threads
         :return: List of clusters
         """
-        cdhit = CDHitEst(Camel.get_instance())
+        cdhit = CDHitEst()
         cdhit.update_parameters(identitiy_threshold=str(clustering_cutoff / 100))
         cdhit.add_input_files({'FASTA': [ToolIOFile(fasta_file)]})
         cdhit.update_parameters(threads=threads)
@@ -74,7 +73,7 @@ class DBHelper(object):
         :param working_dir: Working directory
         :return: None
         """
-        samtools_faindex = SamtoolsFastaIndex(Camel.get_instance())
+        samtools_faindex = SamtoolsFastaIndex()
         samtools_faindex.add_input_files({'FASTA': [ToolIOFile(fasta_file)]})
         samtools_faindex.run(working_dir)
         self._informs.append(samtools_faindex.informs)
@@ -86,7 +85,7 @@ class DBHelper(object):
         :param working_dir: Working directory
         :return: None
         """
-        bowtie2_index = Bowtie2Index(Camel.get_instance())
+        bowtie2_index = Bowtie2Index()
         bowtie2_index.add_input_files({'FASTA_REF': [ToolIOFile(fasta_file)]})
         bowtie2_index.run(working_dir)
         self._informs.append(bowtie2_index.informs)
@@ -98,7 +97,7 @@ class DBHelper(object):
         :param working_dir: Working directory
         :return: None
         """
-        makeblastdb = MakeBlastDb(Camel.get_instance())
+        makeblastdb = MakeBlastDb()
         makeblastdb.add_input_files({'FASTA': [ToolIOFile(fasta_file)]})
         makeblastdb.run(working_dir)
         self._informs.append(makeblastdb.informs)
@@ -111,7 +110,7 @@ class DBHelper(object):
         :return: None
         """
         logger.info(f'Indexing - KMA: {fasta_file}')
-        kma = KMA(Camel.get_instance())
+        kma = KMA()
         path_out = fasta_file.parent / 'kma' / fasta_file.stem
         if not path_out.parent.exists():
             path_out.parent.mkdir(parents=True)
@@ -122,7 +121,7 @@ class DBHelper(object):
             raise RuntimeError(f"Error KMA indexing: {command.stderr}")
         self._informs.append({'_command': command.command, '_name': 'KMA', '_version': kma.version})
 
-    def convert_fasta_headers_to_seq(self, input_file: Path, output_file: Path) -> Dict[str, str]:
+    def convert_fasta_headers_to_seq(self, input_file: Path, output_file: Path) -> dict[str, str]:
         """
         Creates a fasta file where all ids are replaced by seq_{number}.
         This ensures that CD-HIT can work properly.
@@ -134,7 +133,7 @@ class DBHelper(object):
         output_seqs = []
         with input_file.open() as handle_in:
             for seq in SeqIO.parse(handle_in, 'fasta'):
-                new_name = 'seq_{}'.format(len(seq_ids))
+                new_name = f'seq_{len(seq_ids)}'
                 seq_ids[new_name] = seq.description
                 seq.id = new_name
                 seq.description = ''
@@ -142,33 +141,6 @@ class DBHelper(object):
         with output_file.open('w') as handle_out:
             SeqIO.write(output_seqs, handle_out, 'fasta')
         return seq_ids
-
-    @staticmethod
-    def create_srst2_fasta(input_fasta: Path, output_fasta: Path, clusters: List[Cluster]) -> None:
-        """
-        Creates a FASTA file compatible with SRST2.
-        The format is: >[clusterUniqueIdentifier]__[clusterSymbol]__[alleleSymbol]__[alleleUniqueIdentifier]
-        :param input_fasta: FASTA containing the renamed sequences
-        :param output_fasta: Output FASTA file
-        :param clusters: Sequence clusters
-        :return: Path to generated FASTA file
-        """
-        seq_record_by_id = {}
-        with input_fasta.open() as handle_in:
-            for seq in SeqIO.parse(handle_in, 'fasta'):
-                seq_record_by_id[seq.id] = seq
-                seq.description = ''
-
-        output_seqs = []
-        for i, cluster in enumerate(clusters):
-            for sequence_name in cluster.seq_ids:
-                seq = seq_record_by_id[sequence_name]
-                full_name = seq.id
-                seq.id = '__'.join([str(i), cluster.name, full_name, full_name])
-                output_seqs.append(seq)
-
-        with output_fasta.open('w') as handle_out:
-            SeqIO.write(output_seqs, handle_out, 'fasta')
 
     def export_metadata(self, name: str, dir_output: Path) -> None:
         """
@@ -205,7 +177,7 @@ class DBHelper(object):
             f"Reformatted FASTA file created ({humanize.naturalsize(output_path.stat().st_size)}): {output_path}")
         return output_path
 
-    def export_mapping(self, mapping: Dict[str, str], clusters: List[Cluster], output_directory: Path) -> None:
+    def export_mapping(self, mapping: dict[str, str], clusters: list[Cluster], output_directory: Path) -> None:
         """
         Exports the mapping of the novel headers to the original headers.
         :param mapping: Mapping

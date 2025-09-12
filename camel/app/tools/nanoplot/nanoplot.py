@@ -1,8 +1,8 @@
 import pandas as pd
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -13,19 +13,19 @@ class NanoPlot(Tool):
     Plotting tool for long read sequencing data and alignments.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('NanoPlot', '1.41.6', camel)
+        super().__init__('NanoPlot', '1.41.6')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTQ input is required')
+            raise InvalidToolInputError('FASTQ input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -46,17 +46,16 @@ class NanoPlot(Tool):
         self._tool_outputs['TSV'] = [ToolIOFile(self.folder / 'NanoStats.txt')]
         self._tool_outputs['HTML'] = [ToolIOFile(self.folder / 'NanoPlot-report.html')]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks command output.
+        :param command: Command to check
         :return: None
         """
-        for line in self.stderr.splitlines():
+        for line in command.stderr.splitlines():
             if 'skipping' in line:
                 logger.warning(line)
-                self._command.returncode = 0
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __set_informs(self) -> None:
         """

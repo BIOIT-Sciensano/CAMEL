@@ -1,23 +1,21 @@
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
 
 
 class SamtoolsDepth(SamtoolsBase):
-
     """
     Calculates the coverage depth of an alignment.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('samtools depth', '1.17', camel)
+        super().__init__('samtools depth', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -67,7 +65,7 @@ class SamtoolsDepth(SamtoolsBase):
         self._informs['median_depth'] = SamtoolsDepth.calculate_median_coverage(output_file_path)
 
     @staticmethod
-    def median(input_list: List[int]) -> Union[float, int]:
+    def median(input_list: list[int]) -> Union[float, int]:
         """
         Returns the median value of a list.
         :return:

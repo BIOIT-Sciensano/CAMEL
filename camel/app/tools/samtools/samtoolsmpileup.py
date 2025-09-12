@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsbasepipeable import SamtoolsBasePipeable
 
@@ -13,13 +12,12 @@ class SamtoolsMPileup(SamtoolsBasePipeable):
     Note: VCF output for samtools mpileup is deprecated, for VCF output, use bcftools mpileup instead.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('samtools mpileup', '1.17', camel)
+        super().__init__('samtools mpileup', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -27,7 +25,7 @@ class SamtoolsMPileup(SamtoolsBasePipeable):
         :return: None
         """
         if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("BAM input is required")
+            raise InvalidToolInputError("BAM input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -73,14 +71,14 @@ class SamtoolsMPileup(SamtoolsBasePipeable):
         # Construct command
         self._command.command = ' '.join(command_parts)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output.
         Supersedes function in Tool class because warnings printed to stderr can cause false abort.
         """
         self._check_stderr()
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr}")
+        if command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Error executing {self.name}: {command.stderr}")
 
     def _before_pipe(self, dir_, pipe_in: bool, pipe_out: bool) -> None:
         """

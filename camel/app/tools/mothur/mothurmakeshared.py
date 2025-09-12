@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -9,13 +9,12 @@ class MothurMakeShared(Mothur):
     file for each group.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_make_shared', '1.39.1', camel)
+        super().__init__('mothur_make_shared', '1.39.1')
 
     def _check_input(self):
         """
@@ -25,15 +24,15 @@ class MothurMakeShared(Mothur):
         - Only one input file per key allowed
         :return: None
         """
-        super(MothurMakeShared, self)._check_input()
+        super()._check_input()
         if not (('TSV_List' in self._tool_inputs) != ('BIOM' in self._tool_inputs)):
-            raise InvalidInputSpecificationError('Invalid input files (keys) given for Mothur make.shared, only '
+            raise InvalidToolInputError('Invalid input files (keys) given for Mothur make.shared, only '
                                                  'TSV_List or BIOM allowed: {!r}'.format(self._tool_inputs))
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_List', 'BIOM', 'TSV_Groups', 'TSV_Counts']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur make.shared: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input key given for Mothur make.shared: {!r}'.format(self._tool_inputs))
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
+                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
                                                      make.shared: {!r}'.format(self._tool_inputs))
 
     def _build_input_string(self):
@@ -61,8 +60,8 @@ class MothurMakeShared(Mothur):
         :return: None
         """
         if 'TSV_List' in self._tool_inputs:
-            basename = super(MothurMakeShared, self)._get_basename('TSV_List')
+            basename = super()._get_basename('TSV_List')
         # Either TSV_List or BIOM is given
         else:
-            basename = super(MothurMakeShared, self)._get_basename('BIOM')
+            basename = super()._get_basename('BIOM')
         self._tool_outputs['TSV_Shared'] = [ToolIOFile(basename + '.shared')]

@@ -1,5 +1,4 @@
 from pathlib import Path
-from camel.app.camel import Camel
 from camel.app.components.files.fileutils import FileUtils
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
@@ -7,19 +6,16 @@ from camel.app.tools.picard.picard import Picard
 
 
 class CreateSequenceDictionary(Picard):
-
     """
     Class for Picard CreateSequenceDictionary function
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Picard CreateSequenceDictionary', '2.23.3', camel)
-
+        super().__init__('Picard CreateSequenceDictionary', '2.23.3')
         self._required_inputs = ['FASTA_REF']
         self._specific_parameters = ['output_ext', 'symlink']
         self._fasta_file = None

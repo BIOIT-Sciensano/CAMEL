@@ -1,11 +1,55 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  output: {default: true, mandatory: true, option: --output, p_index: 0, value: output.bam}
-  add_output_sam_PR: {default: false, mandatory: false, option: --add-output-sam-program-record, p_index: 10, value: null}
-  create_md5: {default: false, mandatory: false, option: --create-output-bam-md5, p_index: 10, value: null}
-  intervals: {default: false, mandatory: false, option: --intervals, p_index: 0, value: null}
-  sequence_group_interval: {default: false, mandatory: false, option: -L, p_index: 10, value: sequence_group_interval.txt}
-  use_original_qualities: {default: false, mandatory: false, option: --use-original-qualities, p_index: 10, value: null}
-  static_quantized_quals: {default: false, mandatory: false, option: --static-quantized-quals, p_index: 10, value: 10}
-  static_quantized_quals_multi: {default: false, mandatory: false, option: --static-quantized-quals, p_index: 10, value: 10,20,30}
+  output:
+    default: true
+    mandatory: true
+    option: '--output'
+    p_index: 0
+    value: output.bam
+  add_output_sam_PR:
+    default: false
+    mandatory: false
+    option: '--add-output-sam-program-record'
+    p_index: 10
+    value: null
+  create_md5:
+    default: false
+    mandatory: false
+    option: '--create-output-bam-md5'
+    p_index: 10
+    value: null
+  intervals:
+    default: false
+    mandatory: false
+    option: '--intervals'
+    p_index: 0
+    value: null
+  sequence_group_interval:
+    default: false
+    mandatory: false
+    option: '-L'
+    p_index: 10
+    value: sequence_group_interval.txt
+  use_original_qualities:
+    default: false
+    mandatory: false
+    option: '--use-original-qualities'
+    p_index: 10
+    value: null
+  static_quantized_quals:
+    default: false
+    mandatory: false
+    option: '--static-quantized-quals'
+    p_index: 10
+    value: 10
+  static_quantized_quals_multi:
+    '20': null
+    '30': null
+    default: false
+    mandatory: false
+    option: '--static-quantized-quals'
+    p_index: 10
+    value: 10
 tool_command: ApplyBQSR

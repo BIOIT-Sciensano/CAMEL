@@ -1,6 +1,19 @@
-dependencies: [bcftools/1.17]
+dependencies:
+  - bcftools/1.17
 parameters:
-  min_snp_quality: {default: true, mandatory: true, option: null, value: '25'}
-  output_filename: {default: true, mandatory: true, option: null, value: variants_snp_quality_filtered.vcf.gz}
-  soft_filter: {default: false, mandatory: false, option: '--soft-filter', value: 'true'}
+  min_snp_quality:
+    default: true
+    mandatory: true
+    option: null
+    value: '25'
+  output_filename:
+    default: true
+    mandatory: true
+    option: null
+    value: variants_snp_quality_filtered.vcf.gz
+  soft_filter:
+    default: false
+    mandatory: false
+    option: '--soft-filter'
+    flag: true
 tool_command: bcftools filter

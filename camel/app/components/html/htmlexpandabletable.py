@@ -1,5 +1,5 @@
 import string
-from typing import List, Optional
+from typing import Optional
 
 import random
 
@@ -16,12 +16,12 @@ class HtmlExpandableTable(HtmlBase):
         var rowsExtra = $('table#{id_} tr').filter('.extra');
         var rowShowAll = $('table#{id_} tr.rowShowAll');
         rowsExtra.hide();
-        
+
         $('#showAll_{id_}').click(function() {{
             rowShowAll.hide();
             rowsExtra.show();
         }});
-        
+
         $('#showPreviewOnly_{id_}').click(function() {{
             rowShowAll.show();
             rowsExtra.hide();
@@ -29,7 +29,7 @@ class HtmlExpandableTable(HtmlBase):
     }});
     """
 
-    def __init__(self, data: List[List], columns: List[str], nb_rows_shown: int = 5, id_: Optional[str] = None,
+    def __init__(self, data: list[list], columns: list[str], nb_rows_shown: int = 5, id_: Optional[str] = None,
                  class_='data') -> None:
         """
         Initializes the table.

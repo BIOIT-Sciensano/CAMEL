@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -13,13 +13,12 @@ class Sistr(Tool):
     Serovar predictions from whole-genome sequence assemblies by determination of antigen gene and
     cgMLST gene alleles using BLAST.
     """
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('SISTR', '1.1.1', camel)
+        super().__init__('SISTR', '1.1.1')
 
     def _execute_tool(self):
         """
@@ -38,9 +37,9 @@ class Sistr(Tool):
         """
         super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required")
+            raise InvalidToolInputError("FASTA input is required")
         if 'DIR' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database input is required (DIR).")
+            raise InvalidToolInputError("Database input is required (DIR).")
 
     def __set_output(self) -> None:
         """
@@ -64,15 +63,14 @@ class Sistr(Tool):
             str(self._tool_inputs['FASTA'][0].path)
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
         We don't check "if 'error' in self.stderr.lower()" here because some small warnings are wrongfully displayed by
         the tool as errors.
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __add_informs(self, db_dir: Path) -> None:
         """
@@ -86,4 +84,4 @@ class Sistr(Tool):
         with db_metadata_file.open() as handle:
             metadata = json.load(handle)
         self._informs.update(metadata)
-        self._informs['db_path'] = db_dir
+        self._informs['db_path'] = str(db_dir)

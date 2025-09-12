@@ -1,32 +1,30 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
 from camel.resources.snakefile import assembly
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.scripts.shigellapipeline.snakefile import shigeifinder
+from camel.app.snakemake import snakemakeutils
 
 rule shigeifinder_run:
     """
     Runs the ShigEiFinder assay.
     """
     input:
-        FASTA = Path(config['working_dir']) / assembly.OUTPUT_ASSEMBLY_FASTA
+        FASTA = assembly.OUTPUT_FASTA
     output:
-        TSV = Path(config['working_dir']) / 'shigeifinder' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'shigeifinder' / 'informs.io'
+        TSV = 'shigeifinder/tool/tsv.io',
+        INFORMS = 'shigeifinder/tool/informs.io' # shigeifinder.OUTPUT_INFORMS
     params:
-        dir_ = Path(config['working_dir']) / 'shigeifinder'
+        dir_ = 'shigeifinder/tool'
     run:
         from camel.app.tools.pipelines.shigella.shigeifinder import ShigEiFinder
 
-        shigeifinder_ = ShigEiFinder(Camel.get_instance())
-        step = Step(str(rule), shigeifinder_, Camel.get_instance(), params.dir_)
-        SnakemakeUtils.add_pickle_inputs(shigeifinder_,input)
+        shigeifinder_ = ShigEiFinder()
+        step = Step(rule_name=str(rule), tool=shigeifinder_, dir_=Path(str(params.dir_)))
+        snakemakeutils.add_pickle_inputs(shigeifinder_,input)
 
         # Run tool
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(shigeifinder_, output)
+        step.run()
+        snakemakeutils.dump_tool_outputs(shigeifinder_, output)
 
 rule shigeifinder_report:
     """
@@ -36,23 +34,23 @@ rule shigeifinder_report:
         TSV = rules.shigeifinder_run.output.TSV,
         INFORMS_shigeifinder = rules.shigeifinder_run.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / shigeifinder.OUTPUT_SHIGEIFINDER_REPORT
+        HTML = 'shigeifinder/report/html.iob' # shigeifinder.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'shigeifinder' / 'report'
+        dir_ = 'shigeifinder/report'
     run:
         from camel.app.tools.pipelines.shigella.shigeifinderreporter import ShigEiFinderReporter
-        reporter = ShigEiFinderReporter(Camel.get_instance())
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = ShigEiFinderReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule shigeifinder_report_empty:
     """
     Creates an empty ShigEiFinder report when the analysis is disabled.
     """
     output:
-        HTML = Path(config['working_dir']) / shigeifinder.OUTPUT_SHIGEIFINDER_REPORT_EMPTY
+        HTML = 'shigeifinder/report/html-empty.iob' # shigeifinder.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('ShigEiFinder', Path(output.HTML), 3)
@@ -64,16 +62,11 @@ rule shigeifinder_create_summary:
     input:
         INFORMS_shigeifinder = rules.shigeifinder_run.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / shigeifinder.OUTPUT_SHIGEIFINDER_SUMMARY
+        FILE = 'shigeifinder/summary_shigeifinder.{ext}' # shigeifinder.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        # Collect informs
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS_shigeifinder))
-
-        # Create TSV output
+        informs = snakemakeutils.load_object(Path(input.INFORMS_shigeifinder))
         keys = ['species', 'serotype', 'O_antigen', 'H_antigen', 'cluster']
-        with open(output.TSV, 'w') as handle:
-            for key in keys:
-                handle.write(f"shigeifinder_{key}\t{informs[key]}")
-                handle.write('\n')
-            handle.write(f"shigeifinder_tool_version\t{informs['_name']}")
-            handle.write('\n')
+        data_summary = [(f'shigeifinder_{key}', informs[key]) for key in keys]
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'shigeifinder')

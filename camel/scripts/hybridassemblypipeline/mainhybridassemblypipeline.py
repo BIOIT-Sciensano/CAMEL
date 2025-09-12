@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import pandas as pd
 import pkg_resources

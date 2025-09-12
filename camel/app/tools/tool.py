@@ -1,48 +1,89 @@
 import abc
 import inspect
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Any
+from collections import OrderedDict
+
+import pydantic
+import yaml
 
 from camel.app.camel import Camel
 from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.error import InvalidToolInputError
-from camel.app.error.invalidparametererror import InvalidParameterError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidParameterError
+from camel.app.error import ToolExecutionError
 from camel.app.io.toolio import ToolIO
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.services.basetoolservice import BaseToolService
-from camel.app.services.yamltoolservice import YAMLToolService
+from camel.app.parameter.parameter import Parameter
 
 
 class Tool(metaclass=abc.ABCMeta):
     """
-    Contains the common functionality of tools.
+    Base class for tool classes.
     """
 
-    def __init__(self, name: str, version: str, camel: Optional[Camel] = None) -> None:
+    def __init__(self, name: str, version: str | None, camel: Optional[Camel] = None) -> None:
         """
         Initializes a tool.
         :param name: Tool name
         :param version: Tool version
-        :param camel: CAMEL instance (optional)
+        :return: None
         """
-        logger.debug(f"Initializing tool: {name} {version}")
-        self._name = name
-        self._version = version
+        self._name: str = name
+
+        # Read YAML data
+        tool_data = self._read_tool_yml()
+        self._tool_command = tool_data['tool_command']
+        self._dependencies = tool_data['dependencies']
+
+        # Command & directory
+        self._command = Command()
+        self._folder: Optional[Path] = None
+
+        # Get the tool version
+        self._version: str = version if version is not None else self.get_version()
+
+        # Setup inputs / outputs
+        logger.debug(f"Initializing tool: {self._name} {self._version}")
         self._tool_inputs: dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
         self._tool_outputs: dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
-        self._informs = {'_name': self.name, '_version': self._version}
+        self._informs: dict[str, Any] = {'_name': self.name, '_version': self._version}
         self._input_informs = {}
+
+        # Parameters
+        self._param_data: dict[str, Any] = tool_data['parameters'] # All available parameters
+        self._params: OrderedDict[str, Parameter] = self.get_default_params() # Currently active parameters
+
+        # To deprecate
         self._camel = camel
-        self._tool_service = self.get_tool_service()
-        self._tool_command = self._tool_service.get_tool_command()
-        self._dependencies = self._tool_service.get_dependencies()
-        self._parameters = self._tool_service.get_default_parameters()
-        self._command = Command()
-        self._folder = None
+
+    def get_version(self) -> str:
+        """
+        This method can be implemented by subclasses to dynamically retrieve the tool version.
+        :return: Tool version (as a string)
+        """
+        if self._version is None:
+            raise RuntimeError('get_version should be implemented when no version is provided')
+        return self._version
+
+    @property
+    def _parameters(self) -> dict:
+        """
+        Placeholder for accessing parameters (for legacy reasons).
+        :return: Parameter dict
+        """
+        return self._params
+
+    def param_data(self) -> dict:
+        """
+        Returns the parameter data.
+        :return: Parameter data
+        """
+        return self._param_data
 
     @property
     def name(self) -> str:
@@ -50,7 +91,15 @@ class Tool(metaclass=abc.ABCMeta):
         Returns the name of this tool.
         :return: Name
         """
-        return f'{self._name} {self._version}'
+        return self._name
+
+    @property
+    def name_full(self) -> str:
+        """
+        Returns the full name of this tool (including tool version).
+        :return: Name
+        """
+        return f'{self.name} {self.version}'
 
     @property
     def version(self) -> str:
@@ -61,20 +110,20 @@ class Tool(metaclass=abc.ABCMeta):
         return self._version
 
     @property
-    def tool_id(self) -> int:
-        """
-        Returns the tool id.
-        :return: Tool id
-        """
-        return self._tool_service.tool_id
-
-    @property
     def tool_outputs(self) -> dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]]:
         """
         Returns the tool outputs.
         :return: Tool outputs
         """
         return self._tool_outputs
+
+    @property
+    def tool_inputs(self) -> dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]]:
+        """
+        Returns the tool input.
+        :return: Tool inputs
+        """
+        return self._tool_inputs
 
     @property
     def informs(self) -> dict:
@@ -93,29 +142,12 @@ class Tool(metaclass=abc.ABCMeta):
         return self._dependencies
 
     @property
-    def stdout(self) -> Optional[str]:
+    def params(self) -> dict[str, Parameter]:
         """
-        Returns the command line stdout.
-        :return: Stdout
+        Returns the dictionary with currently active parameters.
+        :return: Parameter dictionary
         """
-        return self._command.stdout
-
-    @property
-    def stderr(self) -> Optional[str]:
-        """
-        Returns the command line stderr.
-        :return: Stderr
-        """
-        return self._command.stderr
-
-    @property
-    def parameter_overview(self) -> str:
-        """
-        Returns an overview of the parameters as a string.
-        :return: Parameters overview
-        """
-        return ', '.join([f"{p}: '{self._parameters[p].value}'" for p in sorted(self._parameters)]) if \
-            len(self._parameters) > 0 else '/'
+        return self._params
 
     @property
     def folder(self) -> Path:
@@ -151,35 +183,43 @@ class Tool(metaclass=abc.ABCMeta):
         :param kwargs: Parameters in key value format
         :return: None
         """
-        for parameter_name, new_value in kwargs.items():
-            parameter = self._tool_service.get_parameter(parameter_name)
+        for param_key, new_value in kwargs.items():
+            parameter = self.get_param(param_key)
             if not parameter:
-                raise InvalidParameterError(f"{self._name} has no parameter '{parameter_name}'")
+                raise InvalidParameterError(f"{self._name} has no parameter '{param_key}'")
+
+            # Value is False -> remove the parameter
             if new_value is False:
-                if parameter_name not in self._parameters:
-                    logger.warning(f"Cannot disable parameter '{parameter_name}' (not present in parameters)")
+                if param_key not in self._params:
+                    logger.warning(f"Cannot disable parameter '{param_key}' (not present in parameters)")
                     continue
-                logger.info(f"Disabling parameter: {parameter_name}")
-                del(self._parameters[parameter_name])
-            else:
-                if new_value is True or new_value is None:
-                    parameter.value = None
-                else:
-                    parameter.value = str(new_value)
-                if parameter_name not in self._parameters:
-                    logger.info(f"Parameter '{parameter_name}' added, value: {parameter.value}")
-                else:
-                    old_value = self._parameters[parameter_name].value
-                    logger.info(f"Parameter '{parameter_name}' value '{old_value}' changed to '{new_value}'")
-                self._parameters[parameter_name] = parameter
+                logger.info(f"Disabling parameter: {param_key}")
+                self._params.pop(param_key)
+                continue
+
+            # Flag -> add it to the parameter dict
+            if parameter.flag and new_value is True:
+                self._params[param_key] = parameter
+                continue
+
+            # Value change existing
+            if param_key in self.params:
+                old_value = self._params[param_key].value
+                logger.debug(f"Parameter '{param_key}' value '{old_value}' changed to '{new_value}'")
+                self._params[param_key].value = new_value
+                continue
+
+            # Set parameter
+            parameter.value = new_value
+            self._params[param_key] = parameter
 
     def clear_parameters(self) -> None:
         """
         Clears all the parameters of the given tool.
         :return: None
         """
-        logger.info(f"Removing {len(self._parameters)} parameters")
-        self._parameters.clear()
+        logger.info(f"Removing {len(self._params)} parameters")
+        self._params.clear()
 
     def run(self, folder: Path = Path.cwd()) -> None:
         """
@@ -190,7 +230,7 @@ class Tool(metaclass=abc.ABCMeta):
         self._folder = folder
         logger.info(f'Running tool {self.name}')
         logger.info(f'Working directory: {self._folder}')
-        logger.info(f'Tool parameters: {self.parameter_overview}')
+        logger.info(f'Tool parameters: {toolutils.show_parameters(self)}')
         self._check_parameters()
         self._check_input()
         self._execute_tool()
@@ -206,20 +246,6 @@ class Tool(metaclass=abc.ABCMeta):
             raise FileNotFoundError(f"Tool data file for '{self.name}' not found ({yaml_path})")
         return yaml_path
 
-    def get_tool_service(self) -> BaseToolService:
-        """
-        Returns the tool service for the tool with the given name and version.
-        :return: Tool service
-        """
-        source = self._camel.config.get('tool_service', 'yaml')
-        logger.debug(f'Retrieving tool service. Source = {source}')
-        if source == 'db':
-            raise DeprecationWarning("Parameter loading from database is deprecated, use YAML instead.")
-        elif source == 'yaml':
-            return YAMLToolService(self.get_tool_data_path())
-        else:
-            raise ValueError(f"Invalid 'tool_service' value: {source}")
-
     def _build_dependencies(self) -> str:
         """
         Builds the dependencies.
@@ -234,38 +260,47 @@ class Tool(metaclass=abc.ABCMeta):
         :return: Options string
         """
         options = []
-        for name, parameter in sorted(self._parameters.items(), key=lambda x: x[1].p_index):
+        for name, parameter in sorted(self._params.items(), key=lambda x: x[1].p_index):
             if (excluded_parameters is not None) and (name in excluded_parameters):
                 continue
-            if parameter.value is not None:
-                options.append(parameter.option + delimiter + str(parameter.value))
-            else:
+            if parameter.value is True or parameter.value is None:
+                if parameter.flag is False:
+                    logger.warning(f'Consider changing {name} into a flag parameter')
                 options.append(parameter.option)
+            else:
+                options.append(parameter.option + delimiter + str(parameter.value))
         return options
 
-    def _execute_command(self, folder: Path = None) -> None:
+    def _execute_command(self, command: Command | None = None, dir_: Path | None = None, is_version_cmd: bool = False) -> None:
         """
-        Executes the command.
+        Executes the given command.
+        :param command: Command to execute. Defaults to self._command.
+        :param dir_: Directory in which to execute the command.
+        :param is_version_cmd: Boolean to indicate is this is a version command
         :return: None
         """
-        if folder is None:
-            folder = self._folder
-        if self._command.command is None:
-            raise ValueError("Command is 'None'.")
-        self._command.command = self._build_dependencies() + self._command.command
-        self._informs['_command'] = self._command.command
-        self._command.run(folder)
-        self._check_command_output()
+        # Setup command
+        if command is None:
+            command = self._command
+        if command.command is None:
+            raise ValueError("Command should not be None")
 
-    def _check_command_output(self) -> None:
+        # Setup working directory
+        if dir_ is None:
+            dir_ = self._folder if not is_version_cmd else Path.cwd()
+
+        # Execute the command
+        if not is_version_cmd:
+            self._informs['_command'] = self._build_dependencies() + command.command
+        command.run(dir_, prefix=self._build_dependencies())
+        self._check_command_output(command)
+
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
         :return: None
         """
-        if self.stderr != '':
-            raise ToolExecutionError(f"Command execution failed (stderr: {self.stderr}).")
-        elif self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command)
 
     @abc.abstractmethod
     def _execute_tool(self) -> None:
@@ -280,10 +315,11 @@ class Tool(metaclass=abc.ABCMeta):
         Checks if the tool parameters are valid.
         :return: None
         """
-        mandatory_parameters = self._tool_service.get_names_mandatory_parameter()
-        for mandatory_parameter in mandatory_parameters:
-            if mandatory_parameter not in self._parameters:
-                raise ValueError(f"Mandatory parameter {mandatory_parameter} not set")
+        mandatory = [key for key, value in self._param_data.items() if value.get('mandatory', False) is True]
+        for key in mandatory:
+            if key in self._params:
+                continue
+            raise InvalidParameterError(f"Mandatory parameter '{key}' not set")
 
     def _check_input(self) -> None:
         """
@@ -307,8 +343,72 @@ class Tool(metaclass=abc.ABCMeta):
         for output_key, output_list in self._tool_outputs.items():
             for tool_output in output_list:
                 if tool_output is None:
-                    raise ToolExecutionError(f"Tool output with key {output_key} is None")
+                    raise ToolExecutionError(self.name, f"Tool output with key {output_key} is None")
                 if not isinstance(tool_output, ToolIO):
-                    raise ToolExecutionError(f"'{tool_output} {type(tool_output)}' is not a tool output object")
+                    raise ToolExecutionError(self.name, f"'{tool_output} {type(tool_output)}' is not a ToolIO object")
                 if not tool_output.is_valid():
-                    raise ToolExecutionError(f"Invalid tool output with key {output_key}: {tool_output}")
+                    raise ToolExecutionError(self.name, f"Invalid tool output with key {output_key}: {tool_output}")
+
+    def _get_tool_data_yml_path(self) -> Path:
+        """
+        Returns the path to the tool YAML file.
+        :return: Path
+        """
+        path_yaml = Path(inspect.getfile(self.__class__).replace('.py', '.yml'))
+        if not path_yaml.is_file():
+            raise FileNotFoundError(f"Tool data file for '{self.name}' not found: {path_yaml}")
+        return path_yaml
+
+    def _read_tool_yml(self) -> dict[str, Any]:
+        """
+        Reads the tool YAML file.
+        :return: Tool data as a dictionary
+        """
+        path_yml = self._get_tool_data_yml_path()
+        with path_yml.open() as handle:
+            return yaml.safe_load(handle)
+
+    def get_default_params(self) -> OrderedDict[str, Parameter]:
+        """
+        Returns the default parameters for this tool.
+        :return: Default parameters
+        """
+        param_dict = OrderedDict()
+        for p_name, p_data in sorted(self._param_data.items(), key=lambda x: x[1].get('p_index', 0)):
+            if p_data.get('default', False) is False:
+                continue
+            try:
+                param_dict[p_name] = Parameter(**{'name': p_name, **p_data})
+            except pydantic.ValidationError as err:
+                logger.error(f'Invalid parameter data for {p_name}: {err}')
+                raise err
+        return param_dict
+
+    def get_param(self, key: str) -> Optional[Parameter]:
+        """
+        Returns the parameter with the given key.
+        :param key: Parameter key
+        :return: Parameter (if available, None otherwise)
+        """
+        try:
+            return Parameter(**{'name': key, **self._param_data[key]})
+        except KeyError:
+            return None
+        except pydantic.ValidationError as err:
+            logger.error(f'Invalid parameter data for {key}: {err}')
+            raise err
+
+    def get_param_value(self, key: str) -> Any:
+        """
+        Returns the value for the parameter with the given key.
+        :param key: Parameter key
+        :return: Parameter value
+        """
+        if key not in self._param_data:
+            raise InvalidParameterError(f'Tool {self.name} has no parameter {key}')
+        param = self.get_param(key)
+        if param.flag:
+            return key in self._params
+        if key in self._params:
+            return self._params[key].value
+        return None

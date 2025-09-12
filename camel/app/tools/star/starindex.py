@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.loggers import logger
 from camel.app.tools.star.star import Star
@@ -11,13 +10,12 @@ class StarIndex(Star):
     Index reference genome using STAR.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes STAR 2.7.11b indexing.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('STAR', '2.7.11b', camel)
+        super().__init__('STAR', '2.7.11b')
         self._required_inputs = ['FASTA']
         self._input_string = "--runMode genomeGenerate"
 
@@ -35,9 +33,7 @@ class StarIndex(Star):
         if 'GTF' in self._tool_inputs:
             option_gtf = f"--sjdbGGTFfile {self._tool_inputs['GTF'][0].path}"
 
-        self._input_string = " ".join([self._input_string,
-                                       option_fasta,
-                                       option_gtf])
+        self._input_string = ' '.join([self._input_string, option_fasta, option_gtf])
 
     def _set_output(self) -> None:
         """

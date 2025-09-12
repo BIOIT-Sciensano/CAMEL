@@ -1,25 +1,22 @@
 import abc
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.tool import Tool
 
 
 class Seqtk(Tool, metaclass=abc.ABCMeta):
-
     """
     Base class for all seqtk functionality
     """
 
-    def __init__(self, tool_name: str, version: str, camel: Camel) -> None:
+    def __init__(self, tool_name: str, version: str) -> None:
         """
         Initialize seqtk
         :param tool_name: Tool name
         :param version: Tool version
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(tool_name, version, camel)
+        super().__init__(tool_name, version)
         self._function_name = ''
         # parameters that should not be handled by self.build_options function
         self._specific_parameters = []
@@ -66,7 +63,6 @@ class Seqtk(Tool, metaclass=abc.ABCMeta):
                     self.input_mode = 'SE'
                 self.input_file_type = type_inform[0]
                 return
-
         raise KeyError(f'Seqtk function {self._function_name} required input is missing. Followings are supported: {self._supported_inputs}.')
 
     def __check_supported_input_files(self) -> None:
@@ -75,10 +71,10 @@ class Seqtk(Tool, metaclass=abc.ABCMeta):
         :return: None
         """
         if self.input_mode == 'SE' and len(self._tool_inputs[self.input_type]) != 1:
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 f"Seqtk function {self._function_name} SE mode supports only one input file.")
         elif self.input_mode == 'PE' and len(self._tool_inputs[self.input_type]) != 2:
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 f"Seqtk function {self._function_name} PE mode supports only two input files.")
 
     @abc.abstractmethod
@@ -101,9 +97,9 @@ class Seqtk(Tool, metaclass=abc.ABCMeta):
         Build the command to run tool
         :return: None
         """
-        self._command.command = "{} {} {} > {}".format(
+        self._command.command = ' '.join([
             self._tool_command,
-            " ".join(self._build_options(excluded_parameters=self._specific_parameters)),
-            self._get_input_string(),
-            self._output_string
-        )
+            *self._build_options(excluded_parameters=self._specific_parameters),
+            str(self._get_input_string()),
+            f'> {str(self._output_string)}'
+        ])

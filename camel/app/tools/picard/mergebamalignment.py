@@ -1,12 +1,10 @@
 import re
 from typing import Optional
 
-from camel.app.camel import Camel
 from camel.app.tools.picard.picard import Picard
 
 
 class MergeBamAlignment(Picard):
-
     """
     Class for Picard MergeBamAlignment function
 
@@ -24,13 +22,12 @@ class MergeBamAlignment(Picard):
     'BAM':              ToolIOFile object. Output BAM file containing recalibrated read data.
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Picard MergeBamAlignment', '2.23.3', camel)
+        super().__init__('Picard MergeBamAlignment', '2.23.3')
 
         self._required_inputs = ['BAM_UNMAPPED']
         self._specific_parameters = ["attributes_to_remove_multi"]
@@ -42,7 +39,7 @@ class MergeBamAlignment(Picard):
         :return: None
         """
         # Initialize input string in parent class
-        super(MergeBamAlignment, self)._set_input()
+        super()._set_input()
 
         # Add specific MergeBamAlignment files
         self._input_string += f"UNMAPPED={self._tool_inputs['BAM_UNMAPPED'][0].path} "
@@ -73,7 +70,7 @@ class MergeBamAlignment(Picard):
         Analyse the result of picard run and update tool.informs
         :return: None
         """
-        for line in (self.stderr if stderr is None else stderr).splitlines():
+        for line in (self._command.stderr if stderr is None else stderr).splitlines():
             m = re.search(r'Finished reading (\d+) total records from alignment SAM/BAM.', line)
             if m:
                 self.informs['reads_total'] = m.group(1)

@@ -1,31 +1,29 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
 
 class Quast(Tool):
-
     """
     QUAST evaluates genome assemblies. QUAST works both with and without a reference genome. The tool accepts multiple
     assemblies, thus is suitable for comparison.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('quast', '5.2.0', camel)
+        super().__init__('quast', '5.2.0')
 
     def _execute_tool(self) -> None:
         """
-        Runs Quast
+        Runs QUAST.
         :return: None
         """
         self.__build_command()
@@ -40,18 +38,19 @@ class Quast(Tool):
         - Only one input file allowed for FASTA_Ref, TSV_Gene, and TSV_Operon, multiple files allowed for FASTA
         :return: None
         """
-        super(Quast, self)._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 f'QUAST required FASTA input is missing: {self._tool_inputs!r}')
         for key, values in self._tool_inputs.items():
             if key not in ['FASTA', 'FASTA_Ref', 'TSV_Gene', 'TSV_Operon', 'BAM', 'BAM_Ref', 'FASTQ_PE',
                            'FASTQ_nanopore', 'GFF3_Ref']:
-                raise InvalidInputSpecificationError(
+                raise InvalidToolInputError(
                     f'Illegal input key given for QUAST: {self._tool_inputs!r}')
             if key in ['FASTA_Ref', 'TSV_Gene', 'TSV_Operon'] and len(values) > 1:
-                raise InvalidInputSpecificationError(
-                    f'Too many input files given for QUAST: {self._tool_inputs!r}')
+                raise InvalidToolInputError(
+                    f'Too many input files given for QUAST: {self._tool_inputs!r}'
+                )
+        super()._check_input()
 
     def __build_command(self) -> None:
         """
@@ -89,17 +88,17 @@ class Quast(Tool):
             inputs.append(str(item.path))
         return ' '.join(inputs)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        for line in self.stderr.splitlines():
+        for line in command.stderr.splitlines():
             if 'ERROR' in line:
                 if 'ERRORs: 0' not in line:
-                    raise ToolExecutionError(f"Command execution failed (stderr: {self.stderr}).")
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+                    raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __set_output(self) -> None:
         """
@@ -130,8 +129,8 @@ class Quast(Tool):
         if 'glimmer' in self._parameters:
             self._tool_outputs['GFF'] = [ToolIOFile(next((self.folder / 'predicted_genes').glob('*.gff')))]
         if 'conserved_genes_finding' in self._parameters:
-            self._tool_outputs['TXT_busco'] = [ToolIOFile((next((self.folder / 'busco_stats').glob(
-                'short_summary_*.txt'))))]
+            self._tool_outputs['TXT_busco'] = [ToolIOFile(next((self.folder / 'busco_stats').glob(
+                'short_summary_*.txt')))]
 
         # Reference genome
         if 'FASTA_Ref' in self._tool_inputs:

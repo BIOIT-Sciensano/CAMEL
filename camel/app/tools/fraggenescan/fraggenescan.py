@@ -1,7 +1,8 @@
-import os
+from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -12,13 +13,12 @@ class FragGeneScan(Tool):
     prokaryotic genes in incomplete assemblies or complete genomes.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('fraggenescan', '1.30', camel)
+        super().__init__('fraggenescan', '1.30')
 
     def _execute_tool(self):
         """
@@ -37,18 +37,18 @@ class FragGeneScan(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(FragGeneScan, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs or len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Invalid input keys given for FragGeneScan, only FASTA allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input keys given for FragGeneScan, only FASTA allowed: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError('Invalid number of files given for FragGeneScan, only 1 allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number of files given for FragGeneScan, only 1 allowed: {self._tool_inputs!r}')
 
-    def __get_basename(self):
+    def __get_basename(self) -> Path:
         """
         Returns the prefix that will be used in the output.
         :return: String with the prefix used in the output
         """
-        return os.path.join(self._folder, self._tool_inputs['FASTA'][0].basename)
+        return Path(self._folder, self._tool_inputs['FASTA'][0].basename)
 
     def __set_output(self):
         """
@@ -56,9 +56,9 @@ class FragGeneScan(Tool):
         :return: None
         """
         basename = self.__get_basename()
-        self._tool_outputs['TSV'] = [ToolIOFile(basename + '.processed.out')]
-        self._tool_outputs['FASTA'] = [ToolIOFile(basename + '.processed.ffn')]
-        self._tool_outputs['FASTA_Prot'] = [ToolIOFile(basename + '.processed.faa')]
+        self._tool_outputs['TSV'] = [ToolIOFile(Path(str(basename) + '.processed.out'))]
+        self._tool_outputs['FASTA'] = [ToolIOFile(Path(str(basename) + '.processed.ffn'))]
+        self._tool_outputs['FASTA_Prot'] = [ToolIOFile(Path(str(basename) + '.processed.faa'))]
 
     def __build_input_string(self):
         """
@@ -66,7 +66,7 @@ class FragGeneScan(Tool):
         :return: String with the input parameters
         """
         parts = ['-genome={}'.format(self._tool_inputs['FASTA'][0]),
-                 '-out={}'.format(self.__get_basename() + '.processed')]
+                 '-out={}'.format(str(self.__get_basename()) + '.processed')]
         return ' '.join(parts)
 
     def __build_command(self):
@@ -78,10 +78,10 @@ class FragGeneScan(Tool):
         options_string = ' '.join(self._build_options(delimiter='='))
         self._command.command = ' '.join([self._tool_command, input_string, options_string])
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

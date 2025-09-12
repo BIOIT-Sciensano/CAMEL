@@ -1,7 +1,26 @@
-dependencies: [amrfinder/4.0.19, blast/2.16.0, hmmer/3.4]
+dependencies:
+  - amrfinder/4.0.19
+  - blast/2.16.0
+  - hmmer/3.4
 parameters:
-  min_cov: {default: false, mandatory: false, option: --coverage_min, value: 0.5}
-  min_ident: {default: false, mandatory: false, option: --ident_min, value: -1}
-  organism: {default: false, mandatory: false, option: --organism, value: Escherichia}
-  output_path: {default: true, mandatory: true, option: --output, value: amrfinder_out.tsv}
+  min_cov:
+    default: false
+    mandatory: false
+    option: '--coverage_min'
+    value: 0.5
+  min_ident:
+    default: false
+    mandatory: false
+    option: '--ident_min'
+    value: -1
+  organism:
+    default: false
+    mandatory: false
+    option: '--organism'
+    value: Escherichia
+  output_path:
+    default: true
+    mandatory: true
+    option: '--output'
+    value: amrfinder_out.tsv
 tool_command: amrfinder

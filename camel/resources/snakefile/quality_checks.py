@@ -4,11 +4,10 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Optional, Any
 
-SNAKEFILE_QUALITY_CHECKS = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_qc = Path('quality_checks')
-OUTPUT_QUALITY_CHECKS_REPORT = _dir_qc / 'report' / 'html.io'
-OUTPUT_QUALITY_CHECKS_SUMMARY = _dir_qc / 'summary' / 'summary_out.tsv'
-OUTPUT_QUALITY_CHECKS_REPORT_JSON = _dir_qc / 'report' / 'informs.json'
+SNAKEFILE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+OUTPUT_REPORT = 'quality_checks/report/html.iob'
+OUTPUT_SUMMARY = 'quality_checks/summary/summary_out.{ext}'
+OUTPUT_REPORT_JSON = 'quality_checks/report/informs.json'
 
 
 @dataclasses.dataclass
@@ -268,9 +267,9 @@ def get_qc_checks(input_type: str, skipped_checks: list[str] = None, forced_chec
 
         # Add orientation for PE QC checks
         if '{ori}' in key:
-            paths.extend([Path(_dir_qc, f'{key.format(ori=ori)}.json') for ori in ('fwd', 'rev')])
+            paths.extend([Path('quality_checks', f'{key.format(ori=ori)}.json') for ori in ('fwd', 'rev')])
         else:
-            paths.append(Path(_dir_qc, f'{key}.json'))
+            paths.append(Path('quality_checks', f'{key}.json'))
 
     # Add forced QC checks
     return paths

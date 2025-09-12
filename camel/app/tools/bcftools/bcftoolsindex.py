@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
@@ -12,12 +11,12 @@ class BcftoolsIndex(BcftoolsBase):
     Indexes bgzip compressed VCF files and BCF files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('bcftools index', '1.17', camel)
+        super().__init__('bcftools index', '1.17')
         self._input_key = None
 
     def _check_input(self) -> None:
@@ -26,10 +25,10 @@ class BcftoolsIndex(BcftoolsBase):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('BCF', 'VCF_GZ')):
-            raise InvalidInputSpecificationError("No input file found (BCF / VCF_GZ supported)")
+            raise InvalidToolInputError("No input file found (BCF / VCF_GZ supported)")
         if len(self._tool_inputs) != 1:
-            raise InvalidInputSpecificationError("Only one type of input is supported (VCF_GZ or BCF)")
-        super(BcftoolsIndex, self)._check_input()
+            raise InvalidToolInputError("Only one type of input is supported (VCF_GZ or BCF)")
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """

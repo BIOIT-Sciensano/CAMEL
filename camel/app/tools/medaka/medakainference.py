@@ -1,22 +1,18 @@
-from camel.app.camel import Camel
 from camel.app.tools.medaka.medaka import Medaka
 
 
 class MedakaInference(Medaka):
-
     """
     Class for Medaka inference function.
-
     Runs the medaka inference algorithm and outputs a HDF file in preparation for building a consensus sequence.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes Medaka inference.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('medaka inference', '2.0.0', camel)
+        super().__init__('medaka inference', '2.0.0')
 
         self._required_inputs = ['BAM']
         self._output_type = 'HDF'

@@ -1,11 +1,9 @@
 import json
 from pathlib import Path
-from typing import Tuple, Any
+from typing import Any
 
-from camel.app.camel import Camel
 from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
@@ -26,12 +24,11 @@ class SpoTyping(Tool):
         - VAL_type_octal: Octal spoligotype
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('SpoTyping', '2.1', camel)
+        super().__init__('SpoTyping', '2.1')
         self._input_key = None
 
     def _check_input(self) -> None:
@@ -40,12 +37,12 @@ class SpoTyping(Tool):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('FASTA', 'FASTQ')):
-            raise InvalidInputSpecificationError('FASTA/Q input is required')
+            raise InvalidToolInputError('FASTA/Q input is required')
         for key, value in self._tool_inputs.items():
             if key == 'FASTQ' and not (0 < len(value) <= 2):
-                raise InvalidInputSpecificationError("Only 1 (SE) or 2 (PE) FASTQ inputs are supported")
+                raise InvalidToolInputError("Only 1 (SE) or 2 (PE) FASTQ inputs are supported")
             if key == 'FASTA' and len(value) != 1:
-                raise InvalidInputSpecificationError("Only 1 FASTA input is supported")
+                raise InvalidToolInputError("Only 1 FASTA input is supported")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -70,36 +67,35 @@ class SpoTyping(Tool):
         # Set output
         self._tool_outputs['VAL_type_binary'] = [ToolIOValue(type_binary)]
         self._tool_outputs['VAL_type_octal'] = [ToolIOValue(type_octal)]
-        self._tool_outputs['LOG'] = [ToolIOFile(Path(self._folder) / '{}.log'.format(
-            self._parameters['output_basename'].value))]
+        self._tool_outputs['LOG'] = [ToolIOFile(Path(self._folder) / f'{self.get_param_value("output_basename")}.log')]
         self._informs['metadata'] = self._extract_metadata(type_octal)
 
     @staticmethod
-    def _parse_output_file(output_file: Path) -> Tuple[str, str]:
+    def _parse_output_file(output_file: Path) -> tuple[str, str]:
         """
         Parses the output file.
         :return: Spoligotype (Binary), Spoligotype (Octal)
         """
         if not output_file.exists():
-            raise ToolExecutionError("Output file not found")
+            raise ToolExecutionError('SpoTyping', "Output file not found")
         with output_file.open('r') as handle:
             try:
                 _, type_binary, type_octal = handle.readlines()[-1].strip().split('\t')
                 return type_binary, type_octal
             except IndexError:
-                raise ToolExecutionError("Output file has an invalid format")
+                raise ToolExecutionError('SpoTyping', "Output file has an invalid format")
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output to check if the tool executed successfully.
         :return: None
         """
-        if self._command.returncode != 0:
+        if self._command.exit_code != 0:
             last_line = self._command.stderr.splitlines()[-1]
             if last_line.startswith('urllib2.URLError'):
                 logger.warning('Could not contact SITVIT server')
             else:
-                raise ToolExecutionError(last_line)
+                raise ToolExecutionError(self.name, last_line)
 
     def _extract_metadata(self, type_octal: str) -> dict[str, Any]:
         """

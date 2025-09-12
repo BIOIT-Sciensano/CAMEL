@@ -1,6 +1,6 @@
 import re
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -10,13 +10,12 @@ class MothurMakeContigs(Mothur):
     The make.contigs command reads a forward fastq file and a reverse fastq file and outputs new fasta and report files.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_make_contigs', '1.39.1', camel)
+        super().__init__('mothur_make_contigs', '1.39.1')
 
     def _check_input(self):
         """
@@ -26,19 +25,19 @@ class MothurMakeContigs(Mothur):
         - Only 2 files allowed for PE and 1 for TSV_File and TSV_Oligos files
         :return: None
         """
-        super(MothurMakeContigs, self)._check_input()
+        super()._check_input()
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Too many input keys given for Mothur make.contigs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Too many input keys given for Mothur make.contigs: {!r}'.format(self._tool_inputs))
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTQ_PE', 'FASTA_PE', 'TSV_File', 'TSV_Oligos']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur make.contigs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input key given for Mothur make.contigs: {!r}'.format(self._tool_inputs))
             if key in ['FASTQ_PE', 'FASTA_PE']:
                 if len(input_files) != 2:
-                    raise InvalidInputSpecificationError('Invalid number of files given for Mothur \
+                    raise InvalidToolInputError('Invalid number of files given for Mothur \
                                                          make.contigs: {!r}'.format(self._tool_inputs))
             else:
                 if len(input_files) != 1:
-                    raise InvalidInputSpecificationError('Invalid number of files given for Mothur \
+                    raise InvalidToolInputError('Invalid number of files given for Mothur \
                                                          make.contigs: {!r}'.format(self._tool_inputs))
 
     def _build_input_string(self):
@@ -67,7 +66,7 @@ class MothurMakeContigs(Mothur):
         :return: None
         """
         # As only one key is allowed, take the basename from the file(s) in the first key
-        basename = super(MothurMakeContigs, self)._get_basename(list(self._tool_inputs.keys())[0], '.')
+        basename = super()._get_basename(list(self._tool_inputs.keys())[0], '.')
         self._tool_outputs['FASTA_Contig'] = [ToolIOFile(basename + '.trim.contigs.fasta')]
         self._tool_outputs['FASTA_Scrap'] = [ToolIOFile(basename + '.scrap.contigs.fasta')]
         self._tool_outputs['QUAL_Contig'] = [ToolIOFile(basename + '.trim.contigs.qual')]

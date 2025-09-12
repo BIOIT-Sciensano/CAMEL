@@ -1,14 +1,13 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -27,12 +26,11 @@ class MykrobeReporter(Tool):
         {'key': 'depth', 'fmt': lambda x: f'{int(x):,}' if isinstance(x, float) else x}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mykrobe Reporter', '0.1', camel)
+        super().__init__('Mykrobe Reporter', '0.1')
         self._section = None
 
     def _check_input(self) -> None:
@@ -41,9 +39,9 @@ class MykrobeReporter(Tool):
         :return: None
         """
         if 'CSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Mykrobe output is required ('CSV')")
+            raise InvalidToolInputError("Mykrobe output is required ('CSV')")
         if 'mykrobe' not in self._input_informs:
-            raise InvalidInputSpecificationError("Mykrobe informs are required")
+            raise InvalidToolInputError("Mykrobe informs are required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -141,7 +139,7 @@ class MykrobeReporter(Tool):
             'last_update_date', '{LAST_UPDATE_DATE}')))
 
     @staticmethod
-    def __format_cell(value: Any, col: Dict[str, Any]) -> HtmlTableCell:
+    def __format_cell(value: Any, col: dict[str, Any]) -> HtmlTableCell:
         """
         Formats the corresponding table cell.
         :param value: Input value

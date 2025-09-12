@@ -4,13 +4,12 @@ import gzip
 import hashlib
 import pickle
 from pathlib import Path
-from typing import List, Any
+from typing import Any
 
 from camel.app.components.filesystemhelper import FileSystemHelper
 
 
-class FileUtils(object):
-
+class FileUtils:
     """
     Helper object to perform common operations on the file system.
     """
@@ -32,7 +31,7 @@ class FileUtils(object):
         return hasher.hexdigest()
 
     @staticmethod
-    def get_all_files(directory_path: Path) -> List[Path]:
+    def get_all_files(directory_path: Path) -> list[Path]:
         """
         Returns all files in a directory recursively.
         """
@@ -78,7 +77,7 @@ class FileUtils(object):
                 raise  # re-raise exception if a different error occured
 
     @staticmethod
-    def concatenate_files(output_path: Path, input_files: List[Path]):
+    def concatenate_files(output_path: Path, input_files: list[Path]):
         """
         Concatenate the input files specified into one output file. If the input is gzipped,
         the output will also be a gzipped file.

@@ -2,8 +2,9 @@
 import argparse
 import itertools
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, List, Sequence
+from typing import Optional
 
 from camel.app.camel import Camel
 from camel.app.components.phylogeny.snpphylogenyutils import SnpPhylogenyUtils
@@ -82,7 +83,7 @@ class MainCfsanPhylo(BasePhylo):
             reference_path.symlink_to(self._args.reference)
         return reference_path
 
-    def __run_cfsan(self, reference: Path, mapping_input: List[ToolIOFile]) -> CfsanSnpPipeline:
+    def __run_cfsan(self, reference: Path, mapping_input: list[ToolIOFile]) -> CfsanSnpPipeline:
         """
         Runs the CFSAN SNP pipeline.
         :param reference: Reference genome
@@ -94,7 +95,7 @@ class MainCfsanPhylo(BasePhylo):
             'FASTQ': mapping_input,
             'FASTA': [ToolIOFile(reference)]
         }
-        cfsan = CfsanSnpPipeline(Camel.get_instance())
+        cfsan = CfsanSnpPipeline()
         cfsan.add_input_files(cfsan_input)
         cfsan.run(self._args.working_dir)
         self._informs.append(cfsan.informs)

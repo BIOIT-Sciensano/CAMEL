@@ -1,5 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
 
@@ -9,12 +8,12 @@ class BcftoolsCsq(BcftoolsBase):
     Bcftools csq is a Haplotype-aware consequence caller.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL
+        :return: None
         """
-        super().__init__('bcftools csq', '1.17', camel)
+        super().__init__('bcftools csq', '1.17')
 
     def _check_input(self):
         """
@@ -22,7 +21,7 @@ class BcftoolsCsq(BcftoolsBase):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('VCF', 'VCF_GZ')):
-            raise InvalidInputSpecificationError("VCF/VCF_GZ input is required.")
+            raise InvalidToolInputError("VCF/VCF_GZ input is required.")
         super()._check_input()
 
     def _execute_tool(self) -> None:

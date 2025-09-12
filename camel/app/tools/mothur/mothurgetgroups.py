@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -9,13 +9,12 @@ class MothurGetGroups(Mothur):
     fasta, name, group, list, taxonomy.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_get_groups', '1.39.1', camel)
+        super().__init__('mothur_get_groups', '1.39.1')
 
     def _check_input(self):
         """
@@ -25,16 +24,16 @@ class MothurGetGroups(Mothur):
         - Only one input file per key allowed
         :return: None
         """
-        super(MothurGetGroups, self)._check_input()
+        super()._check_input()
         if 'TSV_Groups' not in self._tool_inputs and 'TSV_Counts' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Not enough valid input files given for Mothur '
+            raise InvalidToolInputError('Not enough valid input files given for Mothur '
                                                  'get.groups: {!r}'.format(self._tool_inputs))
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'TSV_Names', 'TSV_Counts', 'TSV_Groups',
                            'TSV_Accnos', 'TSV_List', 'TSV_Taxonomy']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur get.groups: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input key given for Mothur get.groups: {!r}'.format(self._tool_inputs))
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
+                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
                                                      get.groups: {!r}'.format(self._tool_inputs))
 
     def _build_input_string(self):
@@ -69,5 +68,5 @@ class MothurGetGroups(Mothur):
                              'TSV_Taxonomy': ['.', '.pick.taxonomy']}
         # Based on the key the correct output file is added to the input string
         for key, input_files in self._tool_inputs.items():
-            basename = super(MothurGetGroups, self)._get_basename(key, output_extensions[key][0])
+            basename = super()._get_basename(key, output_extensions[key][0])
             self._tool_outputs[key] = [ToolIOFile(basename + output_extensions[key][1])]

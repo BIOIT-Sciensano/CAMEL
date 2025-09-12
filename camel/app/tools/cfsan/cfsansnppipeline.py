@@ -1,12 +1,13 @@
+from importlib.resources import files
 from pathlib import Path
 
 import os
 import shutil
 
-from camel.app.camel import Camel
+from camel.app.command.command import Command
+from camel.app.components import toolutils
 from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
@@ -18,12 +19,12 @@ class CfsanSnpPipeline(Tool):
     Runs the SNP pipeline developed by CFSAN.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('CFSAN SNP Pipeline', '2.2.1', camel)
+        super().__init__('CFSAN SNP Pipeline', '2.2.1')
 
     def _check_input(self) -> None:
         """
@@ -31,17 +32,17 @@ class CfsanSnpPipeline(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No reference FASTA input found.")
+            raise InvalidToolInputError("No reference FASTA input found.")
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError("Only one reference FASTA file is supported.")
+            raise InvalidToolInputError("Only one reference FASTA file is supported.")
         if 'FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No FASTQ input found.")
+            raise InvalidToolInputError("No FASTQ input found.")
         if 'VAL_name' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No sample name input found ('VAL_name')")
+            raise InvalidToolInputError("No sample name input found ('VAL_name')")
         if len(self._tool_inputs['FASTQ']) % 2 != 0:
-            raise InvalidInputSpecificationError("Only paired end input is supported (2 entries per sample)")
+            raise InvalidToolInputError("Only paired end input is supported (2 entries per sample)")
         if len(self._tool_inputs['VAL_name']) != len(self._tool_inputs['FASTQ']) / 2:
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 "Number of sample names does not correspond to the number of read files.")
         super()._check_input()
 
@@ -62,7 +63,7 @@ class CfsanSnpPipeline(Tool):
         :return: Path to reference FASTA
         """
         link_path = self.folder / self._tool_inputs['FASTA'][0].path.name
-        logger.info("Creating symlink for reference FASTA file: {}".format(link_path))
+        logger.info(f"Creating symlink for reference FASTA file: {link_path}")
         if not os.path.exists(link_path):
             os.symlink(self._tool_inputs['FASTA'][0].path, link_path)
         return link_path
@@ -79,7 +80,7 @@ class CfsanSnpPipeline(Tool):
             forward_reads = Path(self._tool_inputs['FASTQ'][i].path)
             reverse_reads = Path(self._tool_inputs['FASTQ'][i + 1].path)
             sample_name_valid = FileSystemHelper.make_valid(io_sample.value)
-            logger.info("Adding sample '{}' as input".format(sample_name_valid))
+            logger.info(f"Adding sample '{sample_name_valid}' as input")
             dir_sample = dir_reads / sample_name_valid
             if dir_sample.is_dir():
                 shutil.rmtree(str(dir_sample))
@@ -98,13 +99,14 @@ class CfsanSnpPipeline(Tool):
         :param input_dir: Input directory
         :return: None
         """
+        path_config = str(files('camel').joinpath('resources/tools/cfsan/snppipeline.conf'))
         command_parts = [
             'export CLASSPATH=$GATK_JAR:$PICARD_JAR:$CLASSPATH;',
             self._tool_command,
-            '-s {}'.format(input_dir),
-            '--conf {}'.format(os.path.join(os.path.dirname(__file__), 'snppipeline.conf')),
+            f'-s {input_dir}',
+            f'--conf {path_config}',
             str(self.__get_reference()),
-            ' '.join(self._build_options())
+            *self._build_options()
         ]
         self._command.command = ' '.join(command_parts)
 
@@ -137,7 +139,7 @@ class CfsanSnpPipeline(Tool):
         """
         metrics_file = os.path.join(self._folder, 'metrics.tsv')
         if not os.path.isfile(metrics_file):
-            raise IOError("No metrics file generated.")
+            raise FileNotFoundError("No metrics file generated.")
         with open(metrics_file) as handle:
             lines = handle.readlines()
         column_names = lines[0].split('\t')
@@ -147,10 +149,9 @@ class CfsanSnpPipeline(Tool):
             stats = {column_names[i]: line_parts[i] for i in range(0, len(line_parts))}
             self._informs[sample_name] = stats
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output.
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)

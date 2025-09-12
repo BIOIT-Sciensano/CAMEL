@@ -1,14 +1,12 @@
 from pathlib import Path
-from typing import Dict, Any, Optional
-from unicodedata import is_normalized
+from typing import Any, Optional
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -33,12 +31,11 @@ class HtmlReporterContamination(Tool):
         'S': 'Species'
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('HTML Reporter: Contamination', '0.1', camel)
+        super().__init__('HTML Reporter: Contamination', '0.1')
         self._report_section = None
 
     @property
@@ -87,11 +84,11 @@ class HtmlReporterContamination(Tool):
         :return: None
         """
         if 'HTML_Krona' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Krona report input is required.")
+            raise InvalidToolInputError("Krona report input is required.")
         if 'species' not in self._input_informs:
-            raise InvalidInputSpecificationError("Species input is required")
+            raise InvalidToolInputError("Species input is required")
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Kraken report input (TSV) is required")
+            raise InvalidToolInputError("Kraken report input (TSV) is required")
         super()._check_input()
 
     def __add_database_info(self) -> None:
@@ -105,7 +102,7 @@ class HtmlReporterContamination(Tool):
             ['Last update:', db_informs['last_update'] if db_informs is not None else 'NA']
         ], None, [('class', 'information')])
 
-    def __add_filtering_info(self, informs: Dict[str, Any]) -> None:
+    def __add_filtering_info(self, informs: dict[str, Any]) -> None:
         """
         Adds the filtering parameters.
         :param informs: species informs
@@ -124,17 +121,17 @@ class HtmlReporterContamination(Tool):
         """
         header = ['Species' if 'S' in self._input_informs['species']['level_of_depth'] else 'Genus', 'Percentage']
         expected_name, expected_perc = self._input_informs['species']['expected']
-        expected_perc = '{:.2f}'.format(float(expected_perc))
+        expected_perc = f'{float(expected_perc):.2f}'
         table_data = [
             [HtmlElement('th', 'Expected', [('colspan', 2)])],
-            [HtmlTableCell('<i>{}</i>'.format(expected_name), 'green'), HtmlTableCell(expected_perc, 'green')],
+            [HtmlTableCell(f'<i>{expected_name}</i>', 'green'), HtmlTableCell(expected_perc, 'green')],
         ]
         # Allowed species
         if len(self._input_informs['species']['allowed']) > 0:
             table_data.append([HtmlElement('th', 'Allowed', attributes=[('colspan', 2)])])
             for species_name, percentage in self._input_informs['species']['allowed']:
                 table_data.append([
-                    HtmlTableCell('<i>{}</i>'.format(species_name), 'yellow'),
+                    HtmlTableCell(f'<i>{species_name}</i>', 'yellow'),
                     HtmlTableCell(f'{percentage:.2f}', 'yellow')
                 ])
 
@@ -145,12 +142,12 @@ class HtmlReporterContamination(Tool):
             table_data.append([HtmlTableCell('None found', attributes=[('colspan', 2)])])
         for species_name, percentage in self._input_informs['species']['contaminants_fail']:
             table_data.append([
-                HtmlTableCell('<i>{}</i>'.format(species_name), 'red'),
+                HtmlTableCell(f'<i>{species_name}</i>', 'red'),
                 HtmlTableCell(f'{percentage:.2f}', 'red')])
         # Warning contaminants
         for species_name, percentage in self._input_informs['species']['contaminants_warn']:
             table_data.append([
-                HtmlTableCell('<i>{}</i>'.format(species_name), 'orange'),
+                HtmlTableCell(f'<i>{species_name}</i>', 'orange'),
                 HtmlTableCell(f'{percentage:.2f}', 'orange')])
 
         self._report_section.add_table(table_data, header, [('class', 'data')])
@@ -193,11 +190,11 @@ class HtmlReporterContamination(Tool):
         """
         if len(self._input_informs['species']['contaminants_warn']) > 0:
             self._report_section.add_warning_message("The sample is possibly contaminated with: {}".format(
-                ", ".join('<i>{}</i>'.format(species_name) for species_name, _ in
+                ", ".join(f'<i>{species_name}</i>' for species_name, _ in
                           self._input_informs['species']['contaminants_warn'])))
         if len(self._input_informs['species']['contaminants_fail']) > 0:
             self._report_section.add_error_message("There is strong evidence of a contamination with: {}".format(
-                ", ".join('<i>{}</i>'.format(species_name) for species_name, _ in
+                ", ".join(f'<i>{species_name}</i>' for species_name, _ in
                           self._input_informs['species']['contaminants_fail'])))
 
     @staticmethod

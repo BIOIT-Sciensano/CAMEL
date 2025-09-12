@@ -1,25 +1,21 @@
 import re
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.invalidparametererror import InvalidParameterError
+from camel.app.error import InvalidToolInputError, InvalidParameterError
 from camel.app.loggers import logger
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
 class GATK4SelectVariants(GATK4):
-
     """
     Class for GATK SelectVariants function
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATK4SelectVariants
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk4 SelectVariants', '4.1.9.0', camel)
+        super().__init__('gatk4 SelectVariants', '4.1.9.0')
         self._specific_parameters = ['select-type-to-exclude', 'select-type-to-include', 'selectExpressions']
         self._required_inputs = ['VCF']
         self._output_type = 'VCF'
@@ -44,21 +40,20 @@ class GATK4SelectVariants(GATK4):
         Check input for a tool and prepare command line parameters for input
         :return: None
         """
-        super(GATK4SelectVariants, self)._check_input()
+        super()._check_input()
 
         if 'VCF_concordance' in self._tool_inputs and len(self._tool_inputs['VCF_concordance']) > 1:
-            raise InvalidInputSpecificationError('SelectVariant support only ONE concordance VCF file.')
+            raise InvalidToolInputError('SelectVariant support only ONE concordance VCF file.')
 
         if 'VCF_discordance' in self._tool_inputs and len(self._tool_inputs['VCF_discordance']) > 1:
-            raise InvalidInputSpecificationError('SelectVariant support only ONE discordance VCF file.')
+            raise InvalidToolInputError('SelectVariant support only ONE discordance VCF file.')
 
     def _set_input(self) -> None:
         """
         Set the input specification
         :return: None
         """
-        super(GATK4SelectVariants, self)._set_input()
-
+        super()._set_input()
         # To extract only certain samples
         if 'SAMPLES' in self._tool_inputs:
             for sample_name in self._tool_inputs['SAMPLES']:

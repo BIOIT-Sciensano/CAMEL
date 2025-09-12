@@ -5,8 +5,8 @@ import os
 import re
 
 from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -20,13 +20,12 @@ class Phymmbl(Tool):
     higher accuracy.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('phymmbl', '4.0', camel)
+        super().__init__('phymmbl', '4.0')
 
     def _execute_tool(self):
         """
@@ -35,7 +34,7 @@ class Phymmbl(Tool):
         """
         self.__build_command()
         self.__create_phymmbl_copy()
-        self._execute_command(os.path.join(self._folder, 'phymmbl'))
+        self._execute_command(dir_=self._folder / 'phymmbl')
         self.__clean_temp_directory()
         self.__set_output()
 
@@ -48,14 +47,14 @@ class Phymmbl(Tool):
         """
         super(Phymmbl, self)._check_input()
         if 'FASTA' not in self._tool_inputs or 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input key given for PhymmBL, '
+            raise InvalidToolInputError('Invalid input key given for PhymmBL, '
                                                  'only FASTA and DB allowed: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) != 2:
-            raise InvalidInputSpecificationError('Invalid number of input keys given for PhymmBL, '
+            raise InvalidToolInputError('Invalid number of input keys given for PhymmBL, '
                                                  'only FASTA and DB allowed: {!r}'.format(self._tool_inputs))
         for value in self._tool_inputs.values():
             if len(value) > 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files per '
+                raise InvalidToolInputError('Invalid number (max = 1) of files per '
                                                      'key given for PhymmBL: {!r}'.format(self._tool_inputs))
 
     def __build_output_name(self, prefix):
@@ -64,8 +63,8 @@ class Phymmbl(Tool):
         :param prefix: Prefix to use
         :return: Complete path to the output file
         """
-        basename = prefix + re.sub(r'[/.]', '_', self._tool_inputs['FASTA'][0].path) + '.txt'
-        return os.path.join(self._folder, 'phymmbl', basename)
+        basename = prefix + re.sub(r'[/.]', '_', str(self._tool_inputs['FASTA'][0].path)) + '.txt'
+        return self._folder / 'phymmbl' / basename
 
     def __set_output(self):
         """
@@ -142,10 +141,10 @@ class Phymmbl(Tool):
         input_string = self._tool_inputs['FASTA'][0].path
         self._command.command = self._tool_command + ' {}'.format(input_string)
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

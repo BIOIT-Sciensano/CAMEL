@@ -1,10 +1,28 @@
-dependencies: [samtools/1.17]
+dependencies:
+  - samtools/1.17
 parameters:
-  force_output_overwrite: {default: false, mandatory: false, option: -f, p_index: 0,
-    value: null}
-  in_alignments_sorted_by_name: {default: false, mandatory: false, option: -n, p_index: 0,
-    value: null}
-  output_filename: {default: true, mandatory: true, option: null, p_index: 0, value: merged.bam}
-  uncompressed_bam_output: {default: false, mandatory: false, option: -u, p_index: 0,
-    value: null}
+  force_output_overwrite:
+    default: false
+    mandatory: false
+    option: '-f'
+    p_index: 0
+    value: null
+  in_alignments_sorted_by_name:
+    default: false
+    mandatory: false
+    option: '-n'
+    p_index: 0
+    value: null
+  output_filename:
+    default: true
+    mandatory: true
+    option: null
+    p_index: 0
+    value: merged.bam
+  uncompressed_bam_output:
+    default: false
+    mandatory: false
+    option: '-u'
+    p_index: 0
+    value: null
 tool_command: samtools merge

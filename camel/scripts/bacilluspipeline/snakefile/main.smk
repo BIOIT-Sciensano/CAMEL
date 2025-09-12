@@ -1,8 +1,6 @@
-import shutil
 from pathlib import Path
 
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import core, assembly, downsampling, quast, confindr, trimming, trimming_illumina, \
     quality_checks, variant_calling, variant_filtering, contamination_check_kraken, sequence_typing, amrfinder, \
     trimming_ont, gene_detection, mobsuite, human_read_scrubbing, read_simulation
@@ -11,27 +9,26 @@ from camel.scripts.bacilluspipeline.snakefile import btyper, ani, straingst
 #######################
 # Included Snakefiles #
 #######################
-
-include: core.SNAKEFILE_CORE
-include: human_read_scrubbing.SNAKEFILE_SCRUBBING
-include: read_simulation.SNAKEFILE_READ_SIMULATION
-include: downsampling.SNAKEFILE_DOWNSAMPLING
-include: trimming_illumina.SNAKEFILE_TRIMMING_ILLUMINA
-include: trimming_ont.SNAKEFILE_TRIMMING_ONT
-include: assembly.SNAKEFILE_ASSEMBLY
-include: quast.SNAKEFILE_QUAST
-include: contamination_check_kraken.SNAKEFILE_CONTAMINATION_CHECK_KRAKEN
-include: confindr.SNAKEFILE_CONFINDR
-include: quality_checks.SNAKEFILE_QUALITY_CHECKS
-include: variant_calling.SNAKEFILE_VARIANT_CALLING
-include: variant_filtering.SNAKEFILE_VARIANT_FILTERING
-include: sequence_typing.SNAKEFILE_SEQUENCE_TYPING
-include: btyper.SNAKEFILE_BTYPER
-include: amrfinder.SNAKEFILE_AMRFINDER
-include: gene_detection.SNAKEFILE_GENE_DETECTION
-include: mobsuite.SNAKEFILE_MOB_SUITE
-include: ani.SNAKEFILE_ANI
-include: straingst.SNAKEFILE_STRAINGST
+include: core.SNAKEFILE
+include: human_read_scrubbing.SNAKEFILE
+include: read_simulation.SNAKEFILE
+include: downsampling.SNAKEFILE
+include: trimming_illumina.SNAKEFILE
+include: trimming_ont.SNAKEFILE
+include: assembly.SNAKEFILE
+include: quast.SNAKEFILE
+include: contamination_check_kraken.SNAKEFILE
+include: confindr.SNAKEFILE
+include: quality_checks.SNAKEFILE
+include: variant_calling.SNAKEFILE
+include: variant_filtering.SNAKEFILE
+include: sequence_typing.SNAKEFILE
+include: btyper.SNAKEFILE
+include: amrfinder.SNAKEFILE
+include: gene_detection.SNAKEFILE
+include: mobsuite.SNAKEFILE
+include: ani.SNAKEFILE
+include: straingst.SNAKEFILE
 
 #########
 # Rules #
@@ -47,97 +44,62 @@ rule all:
 #####################################
 # Linking workflow inputs & outputs #
 #####################################
-
 rule link_fasta_to_tools_subtilis:
     """
     This rule links the output of the assembly workflow to the fastANI workflow if the species is B. subtilis.
     """
     input:
-        FASTA = Path(config['working_dir'], assembly.OUTPUT_ASSEMBLY_FASTA)
+        FASTA = assembly.OUTPUT_FASTA
     output:
-        FASTA_ani = Path(config['working_dir']) / ani.INPUT_FASTA_ANI
-    run:
-        shutil.copyfile(Path(input.FASTA), Path(output.FASTA_ani))
+        FASTA = ani.INPUT_FASTA
+    shell:
+        "cp {input.FASTA} {output.FASTA}"
 
 rule link_fasta_to_tools_cereus:
     """
     This rule links the output of the assembly workflow to the BTyper workflow if the species is B. cereus.
     """
     input:
-        FASTA = Path(config['working_dir'], assembly.OUTPUT_ASSEMBLY_FASTA)
+        FASTA = assembly.OUTPUT_FASTA
     output:
-        FASTA_btyper = Path(config['working_dir']) / btyper.INPUT_BTYPER_FASTA
-    run:
-        shutil.copyfile(Path(input.FASTA), Path(output.FASTA_btyper))
+        FASTA = btyper.INPUT_FASTA
+    shell:
+        "cp {input.FASTA} {output.FASTA}"
 
 rule main_update_gmm_report:
     """
     This rule updates the report of the GMM detection assay with an interpretation paragraph.
     """
     input:
-        VAL_HTML_VECTORS = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_REPORT).format(db='gmm_genes_vectors') if 'gmo' in config['analyses'] else gene_detection.get_gene_detection_report('gmm_genes_vectors', config),
-        VAL_HTML_JUNCTIONS = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_REPORT).format(db='gmm_junctions') if 'gmo' in config['analyses'] else gene_detection.get_gene_detection_report('gmm_junctions', config),
-        TSV_STRAINS = straingst.get_summaries(config),
-        TSV_GMM_VECTORS = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='gmm_genes_vectors') if 'gmo' in config['analyses'] else [],
-        TSV_GMM_JUNCTIONS = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='gmm_junctions') if 'gmo' in config['analyses'] else [],
+        VAL_HTML_VECTORS = gene_detection.get_gene_detection_report('gmm_genes_vectors', config, analysis_name='gmo'),
+        VAL_HTML_JUNCTIONS = gene_detection.get_gene_detection_report('gmm_junctions', config, analysis_name='gmo'),
+        TSV_STRAINS = straingst.get_summaries(config, ext='tsv'),
+        TSV_GMM_VECTORS = gene_detection.OUTPUT_SUMMARY.format(db='gmm_genes_vectors', ext='tsv') if 'gmo' in config['analyses'] else [],
+        TSV_GMM_JUNCTIONS = gene_detection.OUTPUT_SUMMARY.format(db='gmm_junctions', ext='tsv') if 'gmo' in config['analyses'] else [],
         TSV_GMM_DB = config['gene_detection']['gmm_genes_vectors']['known_gmm_constructs']
     output:
-        VAL_HTML = Path(config['working_dir']) / 'gene_detection' / 'gmo' / 'updated_html_report.io'
+        VAL_HTML = 'gene_detection/gmo/updated_html_report.iob'
     params:
-        running_dir = Path(config['working_dir']) / 'gene_detection' / 'gmo'
+        running_dir = 'gene_detection/gmo'
     run:
         from camel.app.tools.pipelines.bacillus.updategmmreport import UpdateGMMReport
-        from camel.app.camel import Camel
         from camel.app.io.tooliofile import ToolIOFile
         from camel.app.pipeline.step import Step
-        camel = Camel.get_instance()
-        gmmupdater = UpdateGMMReport(camel)
-        SnakemakeUtils.add_pickle_inputs(gmmupdater, input, excluded_keys=['TSV_STRAINS', 'TSV_GMM_VECTORS', 'TSV_GMM_JUNCTIONS', 'TSV_GMM_DB'])
+        gmmupdater = UpdateGMMReport()
+        snakemakeutils.add_pickle_inputs(gmmupdater, input, excluded_keys=['TSV_STRAINS', 'TSV_GMM_VECTORS', 'TSV_GMM_JUNCTIONS', 'TSV_GMM_DB'])
         gmmupdater.add_input_files({
             'TSV_STRAINS': [ToolIOFile(Path(x)) for x in input.TSV_STRAINS],
             'TSV_GMM_DB': [ToolIOFile(Path(input.TSV_GMM_DB))],
             'TSV_GMM_VECTORS': [ToolIOFile(Path(input.TSV_GMM_VECTORS))],
             'TSV_GMM_JUNCTIONS': [ToolIOFile(Path(input.TSV_GMM_JUNCTIONS))]
              })
-        step = Step(str(rule), gmmupdater, camel, params.running_dir)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(gmmupdater, output)
+        step = Step(rule_name=str(rule), tool=gmmupdater, dir_=Path(str(params.running_dir)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(gmmupdater, output)
 
 ##########
 # Report #
 ##########
-rule report_init:
-    """
-    Creates the header section of the report.
-    """
-    output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-init.io'
-    params:
-        sample_name = config['sample_name'],
-        config_input = config['input'],
-        species = config['species'],
-        input_type = config['input_type'],
-        pipeline_info = config['pipeline'],
-        detection_method = config['detection_method'],
-        citation_keys = config['citations']
-    run:
-        import datetime
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        from camel.app.io.tooliovalue import ToolIOValue
-
-        # Create the header section
-        section = SnakePipelineUtils.create_input_section(
-            sample_name=params.sample_name,
-            date=datetime.datetime.now(),
-            pipeline_version=params.pipeline_info['version'],
-            input_files=ReportPipeline.format_input_string(params.config_input),
-            input_type=params.input_type,
-            extra_data=[('Detection method', params.detection_method),
-             ('Selected species', f'<i>{params.species}</i>')],
-            key_citation=params.citation_keys['main']
-        )
-        SnakemakeUtils.dump_object([ToolIOValue(section)], Path(output.HTML))
-
 rule report_create_commands_section:
     """
     Creates the section with the commands.
@@ -147,68 +109,83 @@ rule report_create_commands_section:
         INFORMS_downsampling = downsampling.get_command_informs(config),
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_assembly = assembly.get_command_informs(config),
-        INFORMS_quast = Path(config['working_dir']) / quast.OUTPUT_QUAST_INFORMS,
-        INFORMS_busco = Path(config['working_dir']) / quast.OUTPUT_BUSCO_INFORMS,
+        INFORMS_quast = quast.OUTPUT_INFORMS,
+        INFORMS_busco = quast.OUTPUT_INFORMS_BUSCO,
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
-        INFORMS_confindr = Path(config['working_dir']) / confindr.OUTPUT_CONFINDR_INFORMS if 'confindr' in config['analyses'] else [],
+        INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses'] else [],
-        INFORMS_variant_filtering_all = Path(config['working_dir']) / variant_filtering.OUTPUT_VARIANT_FILTERING_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
-        INFORMS_assembly_map = assembly.get_qc_informs(config, config['input_type']),
-        INFORMS_btyper = Path(config['working_dir']) / btyper.OUTPUT_INFORMS_BTYPER if 'btyper' in config['analyses'] else [],
-        INFORMS_fastani = Path(config['working_dir']) / ani.OUTPUT_INFORMS_ANI if 'fastani' in config['analyses'] else [],
+        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
+        INFORMS_assembly_map = assembly.get_qc_informs(config['input_type']),
+        INFORMS_btyper = btyper.OUTPUT_INFORMS if 'btyper' in config['analyses'] else [],
+        INFORMS_fastani = ani.OUTPUT_INFORMS if 'fastani' in config['analyses'] else [],
         INFORMS_straingst = straingst.get_command_informs(config),
-        INFORMS_amrfinder = Path(config['working_dir']) / str(amrfinder.OUTPUT_AMRFINDER_INFORMS) if 'amrfinder' in config['analyses'] else [],
-        INFORMS_vfdb_core = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_plasmidfinder= Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='plasmidfinder') if 'plasmidfinder' in config['analyses'] else [],
-        INFORMS_mob_suite = Path(config['working_dir']) / mobsuite.OUTPUT_MOB_SUITE_INFORMS if 'mobsuite' in config['analyses'] else [],
-        INFORMS_mlst_cereus = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='mlst_cereus') if 'mlst_cereus' in config['analyses'] else [],
-        INFORMS_mlst_subtilis = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='mlst_subtilis') if 'mlst_subtilis' in config['analyses'] else []
+        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses'] else [],
+        INFORMS_vfdb_core = gene_detection.OUTPUT_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
+        INFORMS_plasmidfinder = gene_detection.OUTPUT_INFORMS.format(db='plasmidfinder') if 'plasmidfinder' in config['analyses'] else [],
+        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses'] else [],
+        INFORMS_mlst_cereus = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_cereus') if 'mlst_cereus' in config['analyses'] else [],
+        INFORMS_mlst_subtilis = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_subtilis') if 'mlst_subtilis' in config['analyses'] else []
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-commands-cereus.io'
+        HTML = 'report/html-commands.iob'
     params:
-        working_dir = config['working_dir']
+        dir_ = config['working_dir']
     run:
         from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input, Path(output.HTML), params.working_dir)
+        ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
 
 rule report_content_cereus:
     """
     Creates the main content of the report when the detected species is Bacillus cereus.
     """
     input:
-        report_init = rules.report_init.output.HTML,
         reports_scrubbing = human_read_scrubbing.get_reports(config),
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
-        report_quast = Path(config['working_dir']) / quast.OUTPUT_QUAST_REPORT,
+        report_quast = quast.OUTPUT_REPORT,
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
-        report_adv_qc = Path(config['working_dir']) / str(quality_checks.OUTPUT_QUALITY_CHECKS_REPORT).format(
-            input_type=config['input_type']),
+        report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input_type']),
         report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
-        report_btyper = Path(config['working_dir']) / (btyper.OUTPUT_BTYPER_REPORT if 'btyper' in config['analyses'] else btyper.OUTPUT_BTYPER_REPORT_EMPTY),
-        report_amrfinder = Path(config['working_dir']) / (amrfinder.OUTPUT_AMRFINDER_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_AMRFINDER_REPORT_EMPTY),
+        report_btyper = btyper.OUTPUT_REPORT if 'btyper' in config['analyses'] else btyper.OUTPUT_REPORT_EMPTY,
+        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
         report_plasmidfinder = gene_detection.get_gene_detection_report('plasmidfinder', config),
-        report_mob_suite = Path(config['working_dir']) / (mobsuite.OUTPUT_MOB_SUITE_REPORT if 'mobsuite' in config['analyses'] else mobsuite.OUTPUT_MOB_SUITE_REPORT_EMPTY),
-        report_genomic_context = Path(config['working_dir']) / (mobsuite.OUTPUT_MOB_SUITE_CONTEXT_REPORT if 'mobsuite' in config['analyses'] else mobsuite.OUTPUT_MOB_SUITE_CONTEXT_REPORT_EMPTY),
+        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_REPORT_EMPTY,
+        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         report_mlst = sequence_typing.get_sequence_typing_report('mlst_cereus', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst_cereus', config),
         report_commands = rules.report_create_commands_section.output.HTML,
-        report_citations = Path(config['working_dir'],core.OUTPUT_HTML_CITATIONS)
+        report_citations = core.OUTPUT_HTML_CITATIONS
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'report_cereus.html'
+        HTML = 'report/report_cereus.html'
     params:
+        sample_name = config['sample_name'],
         output_dir = config['output_dir'],
         pipeline_info = config['pipeline'],
-        input_type = config['input_type']
+        species = config['species'],
+        input_dict = config['input'],
+        input_type = config['input_type'],
+        citation_keys = config['citations'],
+        detection_method = config['detection_method']
     run:
-        # Initialize the report
-        Path(params.output_dir).mkdir(exist_ok=True, parents=True)
+        import datetime
+        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+
+        # Add the header section
         report = SnakePipelineUtils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
-        report.add_html_object(SnakemakeUtils.load_object(Path(input.report_init))[0].value)
+        report.add_html_object(SnakePipelineUtils.create_input_section(
+            sample_name=params.sample_name,
+            date=datetime.datetime.now(),
+            pipeline_version=params.pipeline_info['version'],
+            input_files=ReportPipeline.format_input_string(params.input_dict),
+            input_type=params.input_type,
+            extra_data=[('Selected species', f'<i>{params.species}</i>')],
+            key_citation=params.citation_keys['main'],
+            detection_method=params.detection_method
+        ))
         report_structure = []
 
         # Core sections (shared)
@@ -242,41 +219,57 @@ rule report_content_subtilis:
     Creates the main content of the report when the detected species is Bacillus subtilis.
     """
     input:
-        report_init = rules.report_init.output.HTML,
         reports_scrubbing = human_read_scrubbing.get_reports(config),
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
-        report_quast = Path(config['working_dir']) / quast.OUTPUT_QUAST_REPORT,
+        report_quast = quast.OUTPUT_REPORT,
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
-        report_adv_qc = Path(config['working_dir']) / str(quality_checks.OUTPUT_QUALITY_CHECKS_REPORT).format(
-            input_type=config['input_type']),
+        report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input_type']),
         report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
-        report_fastani = Path(config['working_dir']) / (ani.OUTPUT_ANI_REPORT if 'fastani' in config['analyses'] else ani.OUTPUT_ANI_REPORT_EMPTY),
-        report_amrfinder = Path(config['working_dir']) / (amrfinder.OUTPUT_AMRFINDER_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_AMRFINDER_REPORT_EMPTY),
-        report_gmo = rules.main_update_gmm_report.output.VAL_HTML if 'gmo' in config['analyses'] else gene_detection.get_gene_detection_report('gmm_genes_vectors', config),
-        report_junctions = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_REPORT).format(db='gmm_junctions') if 'gmo' in config['analyses'] else gene_detection.get_gene_detection_report('gmm_junctions', config),
+        report_fastani = ani.OUTPUT_REPORT if 'fastani' in config['analyses'] else ani.OUTPUT_REPORT_EMPTY,
+        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
+        report_gmo = rules.main_update_gmm_report.output.VAL_HTML if 'gmo' in config['analyses'] else gene_detection.get_gene_detection_report('gmm_genes_vectors', config, analysis_name='gmo'),
+        report_junctions = gene_detection.get_gene_detection_report('gmm_junctions', config, analysis_name='gmo'),
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
         report_plasmidfinder = gene_detection.get_gene_detection_report('plasmidfinder', config),
-        report_mob_suite = Path(config['working_dir']) / (mobsuite.OUTPUT_MOB_SUITE_REPORT if 'mobsuite' in config['analyses'] else mobsuite.OUTPUT_MOB_SUITE_REPORT_EMPTY),
-        report_genomic_context = Path(config['working_dir']) / (mobsuite.OUTPUT_MOB_SUITE_CONTEXT_REPORT if 'mobsuite' in config['analyses'] else mobsuite.OUTPUT_MOB_SUITE_CONTEXT_REPORT_EMPTY),
+        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mobsuite' in config['analyses'] else mobsuite.OUTPUT_REPORT_EMPTY,
+        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
         reports_straingst = straingst.get_reports(config),
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         report_mlst = sequence_typing.get_sequence_typing_report('mlst_subtilis', config),
-        report_citations = Path(config['working_dir'],core.OUTPUT_HTML_CITATIONS),
+        report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_create_commands_section.output.HTML
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'report_subtilis.html'
+        HTML = 'report/report_subtilis.html'
     params:
+        sample_name = config['sample_name'],
         output_dir = config['output_dir'],
         pipeline_info = config['pipeline'],
-        input_type = config['input_type']
+        species = config['species'],
+        input_dict = config['input'],
+        input_type = config['input_type'],
+        citation_keys = config['citations'],
+        detection_method = config['detection_method']
     run:
         # Init report
-        Path(params.output_dir).mkdir(exist_ok=True, parents=True)
+        import datetime
+        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+
+        # Add the header section
         report = SnakePipelineUtils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
-        report.add_html_object(SnakemakeUtils.load_object(Path(input.report_init))[0].value)
+        report.add_html_object(SnakePipelineUtils.create_input_section(
+            sample_name=params.sample_name,
+            date=datetime.datetime.now(),
+            pipeline_version=params.pipeline_info['version'],
+            input_files=ReportPipeline.format_input_string(params.input_dict),
+            input_type=params.input_type,
+            extra_data=[('Selected species', f'<i>{params.species}</i>')],
+            key_citation=params.citation_keys['main'],
+            detection_method=params.detection_method
+        ))
         report_structure = []
 
         # Core sections
@@ -312,14 +305,14 @@ rule report_select_by_species:
     Selects the report content based on the detected species.
     """
     input:
-        HTML = Path(config['working_dir']) / 'report' / f"report_{config['species']}.html"
+        HTML = f'report/report_{config["species"]}.html'
     output:
         HTML = config['output_report']
     params:
         output_dir = config['output_dir']
     shell:
         """
-        cp {input.HTML} {output.HTML};
+        cp {input.HTML} {output.HTML}
         """
 
 rule summary_combine_all:
@@ -327,35 +320,34 @@ rule summary_combine_all:
     In this rule all summary files are combined into a complete summary output file.
     """
     input:
-        Path(config['working_dir'],core.OUTPUT_TSV_SUMMARY_INIT),
-        human_read_scrubbing.get_summaries(config),
-        downsampling.get_summaries(config),
+        core.OUTPUT_SUMMARY_INIT,
+        lambda wildcards: human_read_scrubbing.get_summaries(config, wildcards.ext),
+        lambda wildcards: downsampling.get_summaries(config, wildcards.ext),
         trimming.get_summaries(config),
-        Path(config['working_dir']) / quast.OUTPUT_QUAST_SUMMARY,
-        Path(config['working_dir']) / quality_checks.OUTPUT_QUALITY_CHECKS_SUMMARY,
-        contamination_check_kraken.get_summaries(config),
+        quast.OUTPUT_SUMMARY,
+        quality_checks.OUTPUT_SUMMARY,
+        lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
         variant_calling.get_summaries(config) if 'variant_calling' in config['analyses'] else [],
-        straingst.get_summaries(config),
-        Path(config['working_dir']) / btyper.OUTPUT_BTYPER_SUMMARY if 'btyper' in config['analyses'] else [],
-        Path(config['working_dir']) / amrfinder.OUTPUT_AMRFINDER_SUMMARY if 'amrfinder' in config['analyses'] else [],
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='gmm_genes_vectors') if 'gmo' in config['analyses'] else [],
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='gmm_junctions') if 'gmo' in config['analyses'] else [],
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='plasmidfinder') if 'plasmidfinder' in config['analyses'] else [],
-        Path(config['working_dir']) / ani.OUTPUT_ANI_SUMMARY if 'fastani' in config['analyses'] else [],
-        Path(config['working_dir']) / mobsuite.OUTPUT_MOB_SUITE_SUMMARY if 'mobsuite' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='rmlst') if 'rmlst' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='mlst_cereus') if 'mlst_cereus' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='mlst_subtilis') if 'mlst_subtilis' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='cgmlst_cereus') if 'cgmlst_cereus' in config['analyses'] else []
+        lambda wildcards: straingst.get_summaries(config, ext=wildcards.ext),
+        btyper.OUTPUT_SUMMARY if 'btyper' in config['analyses'] else [],
+        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='gmm_genes_vectors', ext=wildcards.ext) if 'gmo' in config['analyses'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='gmm_junctions', ext=wildcards.ext) if 'gmo' in config['analyses'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='plasmidfinder', ext=wildcards.ext) if 'plasmidfinder' in config['analyses'] else [],
+        ani.OUTPUT_SUMMARY if 'fastani' in config['analyses'] else [],
+        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst_cereus', ext=wildcards.ext) if 'mlst_cereus' in config['analyses'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst_subtilis', ext=wildcards.ext) if 'mlst_subtilis' in config['analyses'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst_cereus', ext=wildcards.ext) if 'cgmlst_cereus' in config['analyses'] else []
     output:
-        TSV = config.get('output_tabular')
+        FILE = 'summary/output.{ext}'
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        with open(output.TSV, 'w') as handle_out:
-            for summary_input in input:
-                with open(summary_input) as handle_in:
-                    handle_out.write(handle_in.read())
+        SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))
 
 rule link_genomic_context:
     """
@@ -363,12 +355,12 @@ rule link_genomic_context:
     """
     input:
         # AMR
-        TSV_amrfinder = Path(config['working_dir']) / 'amrfinder' / 'tsv.io' if 'amrfinder' in config['analyses'] else [],
+        TSV_amrfinder = 'amrfinder/tsv.io' if 'amrfinder' in config['analyses'] else [],
         # Virulence
-        TSV_gd_vfdb = Path(config['working_dir']) / 'gene_detection' / 'vfdb_core' / 'metadata' / 'tsv.io' if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_gd_vfdb = Path(config['working_dir']) / 'gene_detection' / 'vfdb_core' / 'db_manager' / 'informs.io' if 'vfdb_core' in config['analyses'] else []
+        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses'] else [],
+        INFORMS_gd_vfdb = gene_detection.OUTPUT_DB_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else []
     output:
-        TSV = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'input' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'input' / 'informs.io'
+        TSV = 'mob_suite/genomic_context/input/tsv.io',
+        INFORMS = 'mob_suite/genomic_context/input/informs.io'
     run:
         mobsuite.collect_genomic_context_input(input, Path(output.TSV), Path(output.INFORMS))

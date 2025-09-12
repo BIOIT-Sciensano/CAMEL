@@ -2,10 +2,9 @@ import json
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -24,11 +23,11 @@ class CharacterizeNeisseriaCapsuleReporter(Tool):
         {'key': 'qend', 'name': 'End'}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the reporter.
         """
-        super().__init__('CharacterizeNeisseriaCapsule reporter', '0.1', camel)
+        super().__init__('CharacterizeNeisseriaCapsule reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -36,11 +35,11 @@ class CharacterizeNeisseriaCapsuleReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Serogrouping tool tabular output is required ('TSV')")
+            raise InvalidToolInputError("Serogrouping tool tabular output is required ('TSV')")
         if 'JSON' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Serogrouping tool JSON output is required ('JSON')")
+            raise InvalidToolInputError("Serogrouping tool JSON output is required ('JSON')")
         if 'detector' not in self._input_informs:
-            raise InvalidInputSpecificationError("Detector informs are required")
+            raise InvalidToolInputError("Detector informs are required")
         super()._check_input()
 
     def __add_overview_table(self, section: HtmlReportSection) -> None:

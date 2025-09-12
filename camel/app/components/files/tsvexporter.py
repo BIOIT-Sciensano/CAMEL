@@ -1,16 +1,17 @@
-from typing import List, Any, Optional
+from pathlib import Path
+from typing import Any, Optional
 
 from camel.app.components.html.htmlelement import HtmlElement
 
 
-class TsvExporter(object):
+class TsvExporter:
     """
     Exports data in tab separated values (TSV) format.
     """
 
     @staticmethod
-    def export(output_data: List[List[Any]], header: Optional[List[str]], filename: str,
-               drop_columns: List[int] = None) -> None:
+    def export(output_data: list[list[Any]], header: Optional[list[str]], filename: str | Path,
+               drop_columns: list[int] = None) -> None:
         """
         Exports output data in TSV format.
         :param output_data: Output data

@@ -2,11 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.html.htmltableformatter import HtmlTableFormatter
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.components.html.htmltableformatter import HtmlTableFormatter, FormatEntry
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -20,7 +19,7 @@ class PharokkaReporter(Tool):
     TITLE = 'Pharokka'
     SUB_DIR = 'pharokka'
 
-    COLS_HITS = [
+    COLS_HITS: list[FormatEntry] = [
         {'key': 'contig', 'title': 'Contig'},
         {'key': 'gene', 'title': 'Gene'},
         {'key': 'hit', 'title': 'Hit'},
@@ -31,7 +30,7 @@ class PharokkaReporter(Tool):
         {'key': 'frame', 'title': 'Frame'},
     ]
 
-    COLS_GENERAL = [
+    COLS_GENERAL: list[FormatEntry] = [
         {'key': 'contig', 'title': 'Contig'},
         {'key': 'Accession', 'title': 'Accession'},
         {'key': 'Description', 'title': 'Description'},
@@ -42,7 +41,7 @@ class PharokkaReporter(Tool):
         {'key': 'mash_matching_hashes', 'title': 'mash matching hashes'},
     ]
 
-    COLS_GENOMIC_PROPERTIES = [
+    COLS_GENOMIC_PROPERTIES: list[FormatEntry] = [
         {'key': 'contig', 'title': 'Contig'},
         {'key': 'Genome_Length_(bp)', 'title': 'Length', 'fmt': HtmlTableFormatter.INT_FMT},
         {'key': 'molGC_(%)', 'title': '%GC', 'fmt': HtmlTableFormatter.FLOAT_FMT},
@@ -56,13 +55,13 @@ class PharokkaReporter(Tool):
         {'key': 'Jumbophage', 'title': 'Low coding capacity warning', 'fmt': lambda x: 'Yes' if x is True else 'No'},
     ]
 
-    COLS_HOST = [
+    COLS_HOST: list[FormatEntry] = [
         {'key': 'contig', 'title': 'Contig'},
         {'key': 'Host', 'title': 'Host'},
         {'key': 'Isolation_Host_(beware_inconsistent_and_nonsense_values)', 'title': 'Isolation host*'}
     ]
 
-    COLS_TAXONOMY = [
+    COLS_TAXONOMY: list[FormatEntry] = [
         {'key': 'contig', 'title': 'Contig'},
         {'key': 'Lowest_Taxa', 'title': 'Lowest taxa'},
         {'key': 'Realm', 'title': 'Realm'},
@@ -76,12 +75,11 @@ class PharokkaReporter(Tool):
         {'key': 'Baltimore_Group', 'title': 'Baltimore group'},
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Pharokka Reporter', '0.1', camel)
+        super().__init__('Pharokka Reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -89,19 +87,19 @@ class PharokkaReporter(Tool):
         :return: None
         """
         if 'TSV_STATS' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Pharokka output is required ('pharokka_cds_functions.tsv')")
+            raise InvalidToolInputError("Pharokka output is required ('pharokka_cds_functions.tsv')")
         if 'TSV_CARD' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Pharokka output is required ('CARD hits')")
+            raise InvalidToolInputError("Pharokka output is required ('CARD hits')")
         if 'TSV_VFDB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Pharokka output is required ('VFDB hits')")
+            raise InvalidToolInputError("Pharokka output is required ('VFDB hits')")
         if 'TSV_INPHARED' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Pharokka output is required ('pharokka_top_hits_mash_inphared.tsv')")
+            raise InvalidToolInputError("Pharokka output is required ('pharokka_top_hits_mash_inphared.tsv')")
         if 'GBK' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Pharokka output is required ('Genbank file')")
+            raise InvalidToolInputError("Pharokka output is required ('Genbank file')")
         if 'PNG' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Pharokka Multiplotter output is required ('PNG')")
+            raise InvalidToolInputError("Pharokka Multiplotter output is required ('PNG')")
         if 'pharokka' not in self._input_informs:
-            raise InvalidInputSpecificationError("Pharokka informs are required")
+            raise InvalidToolInputError("Pharokka informs are required")
         super()._check_input()
 
     def _execute_tool(self) -> None:

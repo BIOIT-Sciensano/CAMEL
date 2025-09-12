@@ -1,10 +1,7 @@
-import os
-
-from camel.app.camel import Camel
+from camel.app.command.command import Command
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 
 
 class Vep(Tool):
@@ -35,13 +32,12 @@ class Vep(Tool):
     - output_in_vcf    output in vcf format instead of default text format
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize Mutect1 tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Vep', '93', camel)
+        super().__init__('Vep', '93')
         self._required_inputs = ['VCF']
 
     def _execute_tool(self) -> None:
@@ -58,12 +54,10 @@ class Vep(Tool):
         Check that input is valid (super method) and that required parameters are present.
         :return: None
         """
-        super(Vep, self)._check_input()
-
         for input_key in self._required_inputs:
             if input_key not in self._tool_inputs:
-                raise InvalidInputSpecificationError(
-                    'Vep required {} input is missing in tool inputs!'.format(input_key))
+                raise InvalidToolInputError(self.name, f'Vep required {input_key} input is missing in tool inputs!')
+        super()._check_input()
 
     def __build_command(self) -> None:
         """
@@ -86,15 +80,16 @@ class Vep(Tool):
         - vcf file
         :return: None
         """
-        self._tool_outputs['OUT'] = [ToolIOFile(os.path.join(self._folder, self._parameters['output_file'].value))]
+        self._tool_outputs['OUT'] = [ToolIOFile(self._folder / self.get_param_value('output_file'))]
 
-        html_file_name = "{}_summary.html".format(os.path.join(self._folder, self._parameters['output_file'].value))
+        html_file_name = self._folder / f"{self.get_param_value('output_file')}_summary.html"
         self._tool_outputs['HTML'] = [ToolIOFile(html_file_name)]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Check the result of Vep tool run
+        Check the result of Vep tool run.
+        :param command: Executed command
         :return: None
         """
-        if not self.stdout == "" and "ERROR" in self.stdout:
-            raise ToolExecutionError("Vep failed to run with message: \n{}".format(self.stdout))
+        if not command.stdout == "" and "ERROR" in command.stdout:
+            raise ToolExecutionError(self.name, f"Vep failed to run with message: \n{command.stdout}")

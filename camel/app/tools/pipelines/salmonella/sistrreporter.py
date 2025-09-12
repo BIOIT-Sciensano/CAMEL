@@ -1,8 +1,7 @@
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
@@ -16,12 +15,11 @@ class SistrReporter(Tool):
     """
     TITLE = 'SISTR'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Sistr Reporter', '0.1', camel)
+        super().__init__('Sistr Reporter', '0.1')
         self._section = None
 
     def _execute_tool(self) -> None:
@@ -118,7 +116,7 @@ class SistrReporter(Tool):
                 self._section.add_paragraph(f'{locus_full[0]} and {locus_full[1]}: No match found')
 
     @staticmethod
-    def _get_hit_color(hit: Dict[str, Any]) -> str:
+    def _get_hit_color(hit: dict[str, Any]) -> str:
         """
         Gets a hits color based on its percentage identity and coverage.
         :return: color as str

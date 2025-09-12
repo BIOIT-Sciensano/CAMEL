@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
@@ -13,7 +14,7 @@ from camel.app.tools.integronfinder.integronfinder import IntegronFinder
 from camel.app.tools.integronfinder.integronfinderreporter import IntegronFinderReporter
 
 
-class MainIntegronFinder(object):
+class MainIntegronFinder:
     """
     Main script for the IntegronFinder tool.
     """
@@ -56,7 +57,7 @@ class MainIntegronFinder(object):
         report.save()
 
         # Run IntegronFinder
-        integron_finder = IntegronFinder(Camel.get_instance())
+        integron_finder = IntegronFinder()
         integron_finder.add_input_files({'FASTA': [ToolIOFile(self._args.fasta)]})
         integron_finder.update_parameters(threads=self._args.threads)
         if self._args.local_max is True:
@@ -64,7 +65,7 @@ class MainIntegronFinder(object):
         integron_finder.run(self._args.working_dir)
 
         # Create output section
-        reporter = IntegronFinderReporter(Camel.get_instance())
+        reporter = IntegronFinderReporter()
         reporter.add_input_files({'TSV': integron_finder.tool_outputs['TSV']})
         reporter.add_input_informs({'integron_finder': integron_finder.informs})
         reporter.update_parameters(name=FileSystemHelper.make_valid(self._sample_name))

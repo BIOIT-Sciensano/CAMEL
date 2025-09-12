@@ -1,6 +1,23 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  intervals: {default: false, mandatory: false, option: --intervals, p_index: 0, value: null}
-  output: {default: true, mandatory: true, option: --output, p_index: 0, value: recalibrationData.tabl}
-  use_original_qualities: {default: false, mandatory: false, option: -OQ, p_index: 0, value: null}
+  intervals:
+    default: false
+    mandatory: false
+    option: '--intervals'
+    p_index: 0
+    value: null
+  output:
+    default: true
+    mandatory: true
+    option: '--output'
+    p_index: 0
+    value: recalibrationData.tabl
+  use_original_qualities:
+    default: false
+    mandatory: false
+    option: '-OQ'
+    p_index: 0
+    value: null
 tool_command: BaseRecalibrator

@@ -1,10 +1,8 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import variant_calling, variant_filtering
-from camel.scripts.mycobacteriumpipeline.snakefile import snplineage
 
 
 rule snp_lineage_detection:
@@ -12,22 +10,22 @@ rule snp_lineage_detection:
     Detects the SNP lineage based on the variants detected in the sample.
     """
     input:
-        VCF = Path(config['working_dir']) / variant_calling.get_vcf(config),
-        VCF_filt = Path(config['working_dir']) / variant_filtering.OUTPUT_VARIANT_FILTERING_VCF
+        VCF = variant_calling.get_vcf(config),
+        VCF_filt = variant_filtering.OUTPUT_VCF
     output:
-        INFORMS = Path(config['working_dir']) / snplineage.OUTPUT_SNP_LINEAGE_INFORMS
+        INFORMS = 'snp_lineage/tool/informs.iob' # snplineage.OUTPUT_INFORMS
     params:
-        dir_ = Path(config['working_dir'], 'snp_lineage'),
+        dir_ = 'snp_lineage/tool',
         lineage_snp_positions = config['snp_lineage']['bed']
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.mycobacterium.snplineagedetector import SNPLineageDetector
-        detector = SNPLineageDetector(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(detector, input)
+        detector = SNPLineageDetector()
+        snakemakeutils.add_pickle_inputs(detector, input)
         detector.add_input_files({'BED': [ToolIOFile(Path(params.lineage_snp_positions))]})
-        step = Step(str(rule), detector, Camel.get_instance(), Path(params.dir_))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(detector, output)
+        step = Step(rule_name=str(rule), tool=detector, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(detector, output)
 
 rule snp_lineage_report:
     """
@@ -36,24 +34,24 @@ rule snp_lineage_report:
     input:
         INFORMS_detection = rules.snp_lineage_detection.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / snplineage.OUTPUT_SNP_LINEAGE_REPORT
+        VAL_HTML = 'snp_lineage/report/html.iob' # snplineage.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir'],'snp_lineage'),
+        dir_ = 'snp_lineage/report',
         lineage_snp_positions = config['snp_lineage']['bed']
     run:
         from camel.app.tools.pipelines.mycobacterium.snplineagereporter import SNPLineageReporter
-        lineage_snp = SNPLineageReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(lineage_snp, input)
-        step = Step(str(rule), lineage_snp, Camel.get_instance(), Path(params.dir_))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(lineage_snp, output)
+        lineage_snp = SNPLineageReporter()
+        snakemakeutils.add_pickle_inputs(lineage_snp, input)
+        step = Step(rule_name=str(rule), tool=lineage_snp, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(lineage_snp, output)
 
 rule snp_lineage_report_empty:
     """
     Creates an empty report when the assay is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / snplineage.OUTPUT_SNP_LINEAGE_REPORT_EMPTY
+        VAL_HTML = 'snp_lineage/report/html-empty.io' # snplineage.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.tools.pipelines.mycobacterium.snplineagereporter import SNPLineageReporter
         from camel.app.snakemake.snakepipelineutils import  SnakePipelineUtils
@@ -66,11 +64,17 @@ rule snp_lineage_dump_summary_info:
     input:
         INFORMS = rules.snp_lineage_detection.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / snplineage.OUTPUT_SNP_LINEAGE_SUMMARY
+        FILE = 'snp_lineage/summary/summary_out.{ext}' # snplineage.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS))
+        informs = snakemakeutils.load_object(Path(input.INFORMS))
         all_lineages = ', '.join([
             d['lineage'].id_ for _, d in informs['detected_lineage_by_level'].items() if d is not None])
-        with open(output.TSV, 'w') as handle:
-            handle.write(f"snp_lineages\t{all_lineages}")
-            handle.write('\n')
+        data_summary = [('snp_lineages', all_lineages)]
+        if params.ext == 'json' and informs.get('detected_lineage_by_level'):
+            for key, value in informs['detected_lineage_by_level'].items():
+                if value is not None and value.get('lineage'):
+                    informs['detected_lineage_by_level'][key]['lineage'] = value['lineage'].__dict__
+            data_summary.append(('detected_lineage_by_level', informs['detected_lineage_by_level']))
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'snplineage')

@@ -1,8 +1,8 @@
-import os
 from Bio import SeqIO
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -14,13 +14,12 @@ class IdbaUd(Tool):
     to reduce errors in high-depth regions.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('idba_ud', '1.1.1', camel)
+        super().__init__('idba_ud', '1.1.1')
 
     def _execute_tool(self):
         """
@@ -38,22 +37,22 @@ class IdbaUd(Tool):
         - Up to 5 input files allowed (up to 5th level scaffolds)
         :return: None
         """
-        super(IdbaUd, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input key given for IDBA_UD, FASTA is required: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid input key given for IDBA_UD, FASTA is required: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Invalid number of input keys given for IDBA_UD, only FASTA is allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid number of input keys given for IDBA_UD, only FASTA is allowed: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs['FASTA']) > 5:
-            raise InvalidInputSpecificationError('Invalid number of files given for IDBA_UD, maximum is 5: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid number of files given for IDBA_UD, maximum is 5: {!r}'.format(self._tool_inputs))
 
     def __set_output(self):
         """
         Sets the name of the output files
         :return: None
         """
-        self._tool_outputs['FASTA_Contig'] = [ToolIOFile(os.path.join(self._folder, 'contig.fa'))]
-        self._tool_outputs['FASTA_Scaffold'] = [ToolIOFile(os.path.join(self._folder, 'scaffold.fa'))]
-        self._tool_outputs['LOG'] = [ToolIOFile(os.path.join(self._folder, 'log'))]
+        self._tool_outputs['FASTA_Contig'] = [ToolIOFile(self._folder / 'contig.fa')]
+        self._tool_outputs['FASTA_Scaffold'] = [ToolIOFile(self._folder / 'scaffold.fa')]
+        self._tool_outputs['LOG'] = [ToolIOFile(self._folder / 'log')]
 
     def __build_input_string(self):
         """
@@ -75,14 +74,14 @@ class IdbaUd(Tool):
         :return: None
         """
         input_string = self.__build_input_string()
-        out_string = '-o {}'.format(os.path.join(self._folder))
+        out_string = f'-o {self._folder}'
         options_string = ' '.join(self._build_options())
         self._command.command = ' '.join([self._tool_command, input_string, out_string, options_string])
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed for IDBA_UD (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

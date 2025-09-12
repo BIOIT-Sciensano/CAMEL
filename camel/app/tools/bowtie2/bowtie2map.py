@@ -1,17 +1,14 @@
 import re
 from pathlib import Path
 from typing import Optional
-from typing import Set, List
 
-from camel.app.camel import Camel
 from camel.app.command.command import Command
-from camel.app.error.invalidparametererror import InvalidParameterError
+from camel.app.error import InvalidToolInputError, InvalidParameterError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.bowtie2.bowtie2 import Bowtie2
 
 
 class Bowtie2Map(Bowtie2):
-
     """
     Reads mapping using Bowtie2. It does **not** support using both PE and SE reads. Does **not** support interleaved
     fastq format due to lack of use.
@@ -40,14 +37,12 @@ class Bowtie2Map(Bowtie2):
         'overall alignment rate': 'stats_map_rate'
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize Bowtie2
-        :param camel: Camel instance
         :return: None
         """
-        super(Bowtie2Map, self).__init__('bowtie2 map', '2.5.1', camel)
-
+        super().__init__('bowtie2 map', '2.5.1')
         self._mod = None
         self._fastq_inputs_str = ''
         self._refgenome_str = ''
@@ -95,16 +90,14 @@ class Bowtie2Map(Bowtie2):
         Check input for Bowtie2 mapping
         :return: None
         """
-        super(Bowtie2Map, self)._check_input()
-
         if 'FASTQ_PE' in self._tool_inputs:
             if len(self._tool_inputs['FASTQ_PE']) != 2:
-                raise ValueError("Paired end input requires exactly 2 files.")
+                raise InvalidToolInputError("Paired end input requires exactly 2 files.")
         elif 'FASTQ_SE' not in self._tool_inputs:
-            raise ValueError("No FASTQ_PE or FASTQ_SE input found")
-
+            raise InvalidToolInputError("No FASTQ_PE or FASTQ_SE input found")
         if 'INDEX_GENOME_PREFIX' not in self._tool_inputs:
-            raise ValueError('No genome index input (INDEX_GENOME_PREFIX) found.')
+            raise InvalidToolInputError('No genome index input (INDEX_GENOME_PREFIX) found.')
+        super()._check_input()
 
     def __set_output(self) -> None:
         """
@@ -114,7 +107,7 @@ class Bowtie2Map(Bowtie2):
         self._tool_outputs['SAM'] = [ToolIOFile(self.folder / Bowtie2Map.OUTPUT_NAME)]
 
     @staticmethod
-    def __check_mode_exclusiveness(options: Set[str]) -> None:
+    def __check_mode_exclusiveness(options: set[str]) -> None:
         """
         Alignment mode exclusiveness check
         :param options: names of commandline options set
@@ -125,7 +118,7 @@ class Bowtie2Map(Bowtie2):
             )
 
     @staticmethod
-    def __check_presets_exclusiveness(align_mode: str, presets: List[str], options: Set[str]) -> None:
+    def __check_presets_exclusiveness(align_mode: str, presets: list[str], options: set[str]) -> None:
         """
         Check whether more than one preset is specified for a given alignment mode
         :param align_mode: current alignment mode
@@ -143,7 +136,7 @@ class Bowtie2Map(Bowtie2):
             )
 
     @staticmethod
-    def __check_wrong_preset(align_mode: str, options: Set[str], wrong_presets: List[str]) -> None:
+    def __check_wrong_preset(align_mode: str, options: set[str], wrong_presets: list[str]) -> None:
         """
         Check whether wrong preset is specified for a given alignment mode
         :param align_mode: current alignment mode
@@ -160,7 +153,7 @@ class Bowtie2Map(Bowtie2):
                     f'Bowtie2 incompatible preset: reads mapping mode {align_mode}, preset {p}.')
 
     @staticmethod
-    def __check_mode_preset_conflicts(options: Set[str]) -> None:
+    def __check_mode_preset_conflicts(options: set[str]) -> None:
         """
         Alignment mode and preset conflicts check
         :param options: names of set options
@@ -190,8 +183,7 @@ class Bowtie2Map(Bowtie2):
         Check the exclusiveness of different mods of Bowtie2 and the exclusiveness of presets for each mod and between mods
         :return: None
         """
-        super(Bowtie2Map, self)._check_parameters()
-
+        super()._check_parameters()
         options = set(self._parameters.keys())
         Bowtie2Map.__check_mode_exclusiveness(options)
         Bowtie2Map.__check_mode_preset_conflicts(options)
@@ -248,7 +240,7 @@ class Bowtie2Map(Bowtie2):
             if line.find("pairs aligned 0 times concordantly or discordantly") > 0:
                 # NOTE: this one also matches "aligned 0 times", but this is more specific, hence
                 #       should be checked first
-                self.informs['stats_pair_map_single'] = "{}".format(res[0])
+                self.informs['stats_pair_map_single'] = str(res[0])
                 return
 
             for pattern, key in Bowtie2Map.ALIGN_INFORM_MAPPING.items():
@@ -271,7 +263,7 @@ class Bowtie2Map(Bowtie2):
         self.informs['mod'] = self._mod
 
         # parse output to extract information
-        for line in (self.stderr if stderr is None else stderr).splitlines():
+        for line in (self._command.stderr if stderr is None else stderr).splitlines():
             time_inform_set = self.__set_time_inform(line)
             if not time_inform_set:
                 self.__set_mapping_inform(line)

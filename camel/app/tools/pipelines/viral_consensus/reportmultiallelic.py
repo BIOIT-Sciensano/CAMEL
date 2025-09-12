@@ -2,10 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -15,23 +14,22 @@ class ReporterMultiAllelic(Tool):
     Creates an output report for the multi-allelic site calling.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Reporter: Multi-allelic site calling', '0.1', camel)
+        super().__init__('Reporter: Multi-allelic site calling', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Multi-allelic sites input file is required (TSV)')
+            raise InvalidToolInputError('Multi-allelic sites input file is required (TSV)')
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Updated consensus sequencing input is required (FASTA)')
+            raise InvalidToolInputError('Updated consensus sequencing input is required (FASTA)')
         if 'calling' not in self._input_informs:
-            raise InvalidInputSpecificationError('Calling informs are required')
+            raise InvalidToolInputError('Calling informs are required')
         super()._check_input()
 
     def _execute_tool(self) -> None:

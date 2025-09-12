@@ -4,7 +4,7 @@ from typing import Optional, Union, Any
 
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import trimming_ont
 from camel.resources.snakefile.trimming_ont import INPUT_ONT_FASTQ
@@ -46,7 +46,7 @@ class TrimmingONTWrapper:
         """
         path_io = self._working_dir / INPUT_ONT_FASTQ
         path_io.parent.mkdir(exist_ok=True, parents=True)
-        SnakemakeUtils.dump_object([ToolIOFile(se_reads)], path_io)
+        snakemakeutils.dump_object([ToolIOFile(se_reads)], path_io)
         config_data = {
             'working_dir': str(self._working_dir),
             'read_trimming': {
@@ -56,16 +56,15 @@ class TrimmingONTWrapper:
         }
         config_file = SnakePipelineUtils.generate_config_file(config_data, self._working_dir)
         output_files = {
-            'HTML': self._working_dir / trimming_ont.OUTPUT_TRIMMING_ONT_REPORT,
-            'TSV': self._working_dir / trimming_ont.OUTPUT_TRIMMING_ONT_SUMMARY,
-            'INFORMS': self._working_dir / trimming_ont.OUTPUT_TRIMMING_ONT_INFORMS,
+            'HTML': trimming_ont.OUTPUT_REPORT,
+            'TSV': str(trimming_ont.OUTPUT_SUMMARY).format(ext='tsv'),
+            'INFORMS': trimming_ont.OUTPUT_INFORMS,
         }
         SnakePipelineUtils.run_snakemake(
-            trimming_ont.SNAKEFILE_TRIMMING_ONT, config_file, list(output_files.values()),
-            self._working_dir, threads)
+            trimming_ont.SNAKEFILE, config_file, [Path(p) for p in output_files.values()], self._working_dir, threads)
         self.__set_output(output_files)
 
-    def __set_output(self, output_files: dict[str, Path]) -> None:
+    def __set_output(self, output_files: dict[str, str]) -> None:
         """
         Sets the output of this tool.
         :param output_files: Output files by key.
@@ -73,11 +72,11 @@ class TrimmingONTWrapper:
         """
         log_path = self._working_dir / 'camel.log'
         self._output = TrimmingONTWrapper.ReadTrimmingOutput(
-            report_section=SnakemakeUtils.load_object(output_files['HTML'])[0].value,
-            tsv_summary=output_files['TSV'],
-            trimmed_reads=SnakemakeUtils.load_object(
-                self._working_dir / trimming_ont.OUTPUT_TRIMMING_ONT_READS),
-            informs_trimming=SnakemakeUtils.load_object(output_files['INFORMS']),
+            report_section=snakemakeutils.load_object(self._working_dir / output_files['HTML'])[0].value,
+            tsv_summary=self._working_dir / output_files['TSV'],
+            trimmed_reads=snakemakeutils.load_object(
+                self._working_dir / trimming_ont.OUTPUT_READS),
+            informs_trimming=snakemakeutils.load_object(self._working_dir / output_files['INFORMS']),
             log_file=log_path if log_path.exists() else None
         )
 

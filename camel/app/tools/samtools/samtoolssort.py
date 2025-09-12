@@ -1,7 +1,5 @@
-from camel.app.camel import Camel
 from camel.app.command.command import Command
-from camel.app.error.invalidparametererror import InvalidParameterError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidParameterError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsbasepipeable import SamtoolsBasePipeable
 
@@ -11,12 +9,12 @@ class SamtoolsSort(SamtoolsBasePipeable):
     Sorts alignment files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('samtools sort', '1.17', camel)
+        super().__init__('samtools sort', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -78,12 +76,12 @@ class SamtoolsSort(SamtoolsBasePipeable):
         output_key = self._parameters['output_format'].value.upper()
         self._tool_outputs[output_key] = [ToolIOFile(output_path)]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully. Supersedes that of Tool class as samtools prints warnings to stderr.
         :return: None
         """
-        if self._command.returncode != 0:
+        if self._command.exit_code != 0:
             raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
 
     def _before_pipe(self, dir_, pipe_in: bool, pipe_out: bool) -> None:

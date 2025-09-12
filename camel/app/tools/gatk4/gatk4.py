@@ -3,35 +3,33 @@ import re
 import shutil
 import tempfile
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.config import config
+from camel.app.error import InvalidToolInputError, ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
 
 class GATK4(Tool, metaclass=abc.ABCMeta):
-
     """
     Super class for GATK4 tools
     """
 
-    def __init__(self, tool_name: str, version: str, camel: Camel) -> None:
+    def __init__(self, tool_name: str, version: str) -> None:
         """
         Initialize a GATK4 tool
         :param tool_name: Tool name
         :param version: Tool version
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(tool_name, version, camel)
+        super().__init__(tool_name, version)
         self._specific_parameters = []
         self._required_inputs = []
         self._input_string = ''
         self._option_string = ''
         self._output_type = ''
-        self._temp_dir = tempfile.mkdtemp(prefix='gatk4_', dir=camel.config['temp_dir'])
+        self._temp_dir = tempfile.mkdtemp(prefix='gatk4_', dir=config.dir_temp)
         self._java_options = f'"-mx8G -XX:+UseParallelGC -XX:ParallelGCThreads=1 -Djava.io.tmpdir={self._temp_dir}"'
 
     def update_java_options(self, java_options: str) -> None:
@@ -64,9 +62,8 @@ class GATK4(Tool, metaclass=abc.ABCMeta):
         """
         for input_file in self._required_inputs:
             if input_file not in self._tool_inputs:
-                raise InvalidInputSpecificationError(f'GATK {self._name} required {input_file} input is missing in _tool_inputs!')
-
-        super(GATK4, self)._check_input()
+                raise InvalidToolInputError(f'GATK {self._name} required {input_file} input is missing in _tool_inputs!')
+        super()._check_input()
 
     def _set_input(self) -> None:
         """
@@ -108,13 +105,14 @@ class GATK4(Tool, metaclass=abc.ABCMeta):
             'gatk --java-options', self._java_options, self._tool_command, self._input_string, self._option_string
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Check the result of the GATK run
+        Check the result of the GATK run.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f'GATK {self._name} fails to run, error msg: \n{self.stderr}')
+        if self._command.exit_code != 0:
+            raise ToolExecutionError(self.name, f'Error message:\n{command.stderr}')
 
     def _set_informs(self) -> None:
         """
@@ -122,7 +120,7 @@ class GATK4(Tool, metaclass=abc.ABCMeta):
         :return: None
         """
         # log WARNINGS in info.log
-        for line in self.stdout.split('\n'):
+        for line in self._command.stdout.split('\n'):
             if re.match('WARN', line):
                 logger.info(f" GATK - {line}")
 
@@ -138,7 +136,7 @@ class GATK4(Tool, metaclass=abc.ABCMeta):
             if match is not None:
                 self.informs['reads_total'] = match.group(2)
                 if match.group(1) != '0':
-                    self.informs['filtered_reads'] = "{}({})".format(match.group(1), match.group(3))
+                    self.informs['filtered_reads'] = f"{match.group(1)}({match.group(3)})"
             # per Filter statistics:
             #    0 reads (0.00% of total) failing BadCigarFilter
             match = re.search(r'(\d+) reads \((.+%) of total\) failing (.+)', line)

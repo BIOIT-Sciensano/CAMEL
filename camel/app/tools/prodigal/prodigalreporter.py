@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -12,12 +11,11 @@ class ProdigalReporter(Tool):
     Creates an HTML report for the Prodigal analysis.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Prodigal reporter', '0.1', camel)
+        super().__init__('Prodigal reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -25,9 +23,9 @@ class ProdigalReporter(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA input is required')
+            raise InvalidToolInputError('FASTA input is required')
         if 'prodigal' not in self._input_informs:
-            raise InvalidInputSpecificationError("prodigal informs are required")
+            raise InvalidToolInputError("prodigal informs are required")
         super()._check_input()
 
     def _execute_tool(self) -> None:

@@ -1,5 +1,17 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  intermediate-csv-file: {default: true, mandatory: false, option: --intermediate-csv-file, p_index: 0, value: recal_QC_data.csv}
-  plots-report-file: {default: true, mandatory: true, option: --plots-report-file, p_index: 0, value: recal_QC_plots.pdf}
+  intermediate-csv-file:
+    default: true
+    mandatory: false
+    option: '--intermediate-csv-file'
+    p_index: 0
+    value: recal_QC_data.csv
+  plots-report-file:
+    default: true
+    mandatory: true
+    option: '--plots-report-file'
+    p_index: 0
+    value: recal_QC_plots.pdf
 tool_command: AnalyzeCovariates

@@ -1,9 +1,38 @@
-dependencies: [seqkit/2.3.1]
+conda:
+  name: seqkit
+  packages:
+    seqkit=2.3.1
+dependencies:
+  - seqkit/2.3.1
 parameters:
-  output_filename: {default: true, mandatory: true, option: '--out-file', value: 'sequences.fastq'}
-  min_length: {default: false, mandatory: false, option: '--min-len', value: '100'}
-  max_length: {default: false, mandatory: false, option: '--max-len', value: '-1'}
-  min_qual: { default: false, mandatory: false, option: '--min-qual', value: '-1' }
-  max_qual: {default: false, mandatory: false, option: '--max-qual', value: '-1'}
-  threads: {default: true, mandatory: false, option: '--threads', value: '4'}
+  output_filename:
+    default: true
+    mandatory: true
+    option: '--out-file'
+    value: sequences.fastq
+  min_length:
+    default: false
+    mandatory: false
+    option: '--min-len'
+    value: '100'
+  max_length:
+    default: false
+    mandatory: false
+    option: '--max-len'
+    value: '-1'
+  min_qual:
+    default: false
+    mandatory: false
+    option: '--min-qual'
+    value: '-1'
+  max_qual:
+    default: false
+    mandatory: false
+    option: '--max-qual'
+    value: '-1'
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: '4'
 tool_command: seqkit seq

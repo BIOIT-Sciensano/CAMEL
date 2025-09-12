@@ -1,6 +1,5 @@
 from typing import Optional
 
-from camel.app.camel import Camel
 from camel.app.components.pubmlst.pubmlstparser import PubMLSTParser, PubMLSTParsingError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
@@ -12,13 +11,12 @@ class ResistanceMetadataExtractor(Tool):
     This tool is used to extract metadata for resistance genes in the Neisseria pipeline.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the metadata extractor.
-        :param camel: CAMEL instance.
-        :return: None
+                :return: None
         """
-        super().__init__('Neisseria: resistance metadata extractor', '0.1', camel)
+        super().__init__('Neisseria: resistance metadata extractor', '0.1')
 
     def _execute_tool(self) -> None:
         """

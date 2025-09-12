@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import gene_detection
-from camel.scripts.stecpipeline.snakefile import serotype_detection
 
 
 rule serotype_detection_run:
@@ -10,52 +9,51 @@ rule serotype_detection_run:
     Retrieves the serotype based on the H and O typing. 
     """
     input:
-        HITS_O = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_ALL_HITS).format(db='serotype_o'),
-        HITS_H = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_ALL_HITS).format(db='serotype_h')
+        HITS_O = str(gene_detection.OUTPUT_ALL_HITS).format(db='serotype_o'),
+        HITS_H = str(gene_detection.OUTPUT_ALL_HITS).format(db='serotype_h')
     output:
-        VAL_serotype = Path(config['working_dir']) / serotype_detection.OUTPUT_VAL_SEROTYPE
+        VAL_serotype = 'serotype_detection/tool/val-sero.io' # serotype_detection.OUTPUT_VAL
     params:
-        running_dir = Path(config['working_dir']) / 'serotype_detection'
+        dir_ =  'serotype_detection/tool'
     run:
-        from camel.app.snakemake.snakemakeutils import SnakemakeUtils
         from camel.app.tools.pipelines.stec.serotypedetector import SerotypeDetectorEcoli
         from camel.app.pipeline.step import Step
-        detector = SerotypeDetectorEcoli(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(detector, input)
-        step = Step(str(rule), detector, Camel.get_instance(), params.running_dir, config)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(detector, output)
+        detector = SerotypeDetectorEcoli()
+        snakemakeutils.add_pickle_inputs(detector, input)
+        step = Step(rule_name=str(rule), tool=detector, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(detector, output)
 
 rule serotype_detection_report:
     """
     Creates a simple report section for the detected serotype.
     """
     input:
-        VAL_serotype = Path(config['working_dir']) / serotype_detection.OUTPUT_VAL_SEROTYPE if 'serotype' in config['analyses'] else []
+        VAL_serotype = rules.serotype_detection_run.output.VAL_serotype if 'serotype' in config['analyses'] else []
     output:
-        HTML = Path(config['working_dir']) / serotype_detection.OUTPUT_SEROTYPE_REPORT
+        HTML = 'serotype_detection/report/html.iob' # serotype_detection.OUTPUT_REPORT
     run:
-        from camel.app.snakemake.snakemakeutils import SnakemakeUtils
         from camel.app.components.html.htmlreportsection import HtmlReportSection
         from camel.app.io.tooliovalue import ToolIOValue
         if len(input['VAL_serotype']) > 0:
-            serotype = SnakemakeUtils.load_object(Path(input.VAL_serotype))[0].value
+            serotype = snakemakeutils.load_object(Path(input.VAL_serotype))[0].value
         else:
             serotype = 'NA'
         section = HtmlReportSection(None)
         section.add_paragraph("Detected serotype: <b>{}</b>".format(serotype))
-        SnakemakeUtils.dump_object([ToolIOValue(section)], Path(output.HTML))
+        snakemakeutils.dump_object([ToolIOValue(section)], Path(output.HTML))
 
 rule serotype_detection_dump_summary_info:
     """
     Dumps the summary information from the serotype detection.
     """
     input:
-        VAL_serotype=Path(config['working_dir']) / serotype_detection.OUTPUT_VAL_SEROTYPE if 'serotype' in config['analyses'] else []
+        VAL_serotype = rules.serotype_detection_run.output.VAL_serotype if 'serotype' in config['analyses'] else []
     output:
-        Path(config['working_dir']) / serotype_detection.OUTPUT_SEROTYPE_SUMMARY
+         FILE = 'serotype_detection/summary/summary_out.{ext}' # serotype_detection.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        serotype = SnakemakeUtils.load_object(Path(input.VAL_serotype))[0].value
-        with open(output[0], 'w') as handle:
-            handle.write(f'serotype\t{serotype}')
-            handle.write('\n')
+        serotype = snakemakeutils.load_object(Path(input.VAL_serotype))[0].value
+        data_summary = [('serotype', str(serotype))]
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'serotype_determination')

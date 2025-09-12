@@ -2,7 +2,6 @@ import dataclasses
 import logging
 import tempfile
 from pathlib import Path
-from typing import List, Dict
 
 from Bio import SeqIO
 
@@ -16,10 +15,10 @@ class ApplyVariantsOutput:
     Holder for the output of the 'apply variants' script.
     """
     path_fasta: Path
-    informs: List[Dict]
+    informs: list[dict]
 
 
-class ApplyVariants(object):
+class ApplyVariants:
     """
     Wrapper that applies the variants from a VCF file to a FASTA file.
     """

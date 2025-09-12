@@ -1,5 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.gatk4.gatk4 import GATK4
 
@@ -21,14 +20,12 @@ class GATK4IndexFeatureFile(GATK4):
                         index file in the same directory as the input file.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATK4IndexFeatureFile tool.
-        :param camel: Camel instance
         :return: None
         """
-        super(GATK4IndexFeatureFile, self).__init__('gatk4 GATK4IndexFeatureFile', '4.1.9.0', camel)
-
+        super().__init__('gatk4 GATK4IndexFeatureFile', '4.1.9.0')
         self._required_inputs = ['VCF', 'VCF_gz', 'BED']
         self._input_format = []
         self._output_type = 'IDX'
@@ -41,9 +38,8 @@ class GATK4IndexFeatureFile(GATK4):
         for input_file in self._required_inputs:
             if input_file in self._tool_inputs:
                 self._input_format.append(input_file)
-
         if len(self._input_format) != 1:
-            raise InvalidInputSpecificationError(''.join(f'GATK {self._name} requires either one of: ', ' '.join(self._required_inputs)))
+            raise InvalidToolInputError(self.name, f"GATK {self._name} requires either one of: {' '.join(self._required_inputs)}")
 
         super(GATK4, self)._check_input()
 
@@ -59,8 +55,7 @@ class GATK4IndexFeatureFile(GATK4):
         Build the command to run tool
         :return: None
         """
-        super(GATK4IndexFeatureFile, self)._build_command()
-
+        super()._build_command()
         if 'output' in self._parameters:
             self._command.command += f"-o {self._parameters['output'].value}"
 

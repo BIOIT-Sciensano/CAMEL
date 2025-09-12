@@ -2,33 +2,32 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.scripts.bacilluspipeline.snakefile import ani
 
-camel = Camel.get_instance()
 
 rule fastani_run:
     """
     Runs fastani on assembled contigs.
     """
     input:
-        FASTA_Q = Path(config['working_dir']) / ani.INPUT_FASTA_ANI
+        FASTA_Q = ani.INPUT_FASTA
     output:
-        TSV = Path(config['working_dir']) / ani.OUTPUT_VAL_ANI,
-        INFORMS = Path(config['working_dir']) / ani.OUTPUT_INFORMS_ANI
+        TSV = 'ani/tool/val-ani.io',
+        INFORMS = 'ani/tool/informs.io'
     params:
-        running_dir = Path(config['working_dir']) / 'ani'
+        fastani_ref = config['fastani']['path'],
+        dir_ = 'ani/tool'
     run:
         from camel.app.tools.fastani.fastani import FastANI
-        fastani = FastANI(camel)
-        SnakemakeUtils.add_pickle_inputs(fastani, input)
-        fastani.add_input_files({'TSV_FASTA_R': [ToolIOFile(Path(config['fastani']['path']))]})
-        step = Step(str(rule), fastani, camel, params.running_dir)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(fastani, output)
+        fastani = FastANI()
+        snakemakeutils.add_pickle_inputs(fastani, input)
+        fastani.add_input_files({'TSV_FASTA_R': [ToolIOFile(Path(params.fastani_ref))]})
+        step = Step(rule_name=str(rule), tool=fastani, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(fastani, output)
 
 rule fastani_report:
     """
@@ -38,28 +37,28 @@ rule fastani_report:
         TSV = rules.fastani_run.output.TSV,
         INFORMS_fastani = rules.fastani_run.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / ani.OUTPUT_ANI_REPORT
+        HTML = 'ani/report/html.iob'
     params:
-        running_dir = Path(config['working_dir']) / 'ani',
+        dir_ = 'ani/report',
         sample_name = config['sample_name'],
         species = config['species']
     run:
         from camel.app.tools.fastani.fastanireporter import FastANIReporter
-        ani_report = FastANIReporter(camel)
-        SnakemakeUtils.add_pickle_inputs(ani_report, input)
+        ani_report = FastANIReporter()
+        snakemakeutils.add_pickle_inputs(ani_report, input)
         ani_report.update_parameters(sample_name=params.sample_name, species=params.species)
-        step = Step(str(rule), ani_report, camel, params.running_dir)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(ani_report, output)
+        step = Step(rule_name=str(rule), tool=ani_report, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(ani_report, output)
 
 rule fastani_report_empty:
     """
     Creates an empty HTML report for the FastANI analysis.
     """
     output:
-        HTML = Path(config['working_dir']) / ani.OUTPUT_ANI_REPORT_EMPTY
+        HTML = 'ani/report/html-empty.iob'
     params:
-        running_dir = Path(config['working_dir']) / 'ani'
+        dir_ = 'ani/report'
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         from camel.app.tools.fastani.fastanireporter import FastANIReporter
@@ -72,9 +71,10 @@ rule fastani_dump_summary_info:
     input:
         TSV = rules.fastani_run.output.TSV
     output:
-        TSV = Path(config['working_dir']) / ani.OUTPUT_ANI_SUMMARY
+        TSV = 'ani/summary/summary_out.{ext}'
     run:
-        tsv_fastani = SnakemakeUtils.load_object(Path(input.TSV))[0].path
+        # TODO: fix
+        tsv_fastani = snakemakeutils.load_object(Path(input.TSV))[0].path
         fastani_table = pd.read_table(tsv_fastani, header=None)
         pd.set_option('display.max_columns', None)
         with open(output.TSV, 'w') as handle:

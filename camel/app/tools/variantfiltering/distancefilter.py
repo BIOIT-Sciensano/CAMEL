@@ -5,7 +5,6 @@ import vcf
 # noinspection PyProtectedMember
 from vcf.model import _Record as Record
 
-from camel.app.camel import Camel
 from camel.app.loggers import logger
 from camel.app.tools.variantfiltering.basefilter import BaseFilter
 
@@ -19,12 +18,11 @@ class DistanceFilter(BaseFilter):
         in the VCF file.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Variant Filter: Distance', '0.1', camel)
+        super().__init__('Variant Filter: Distance', '0.1')
 
     @property
     def full_name(self) -> str:

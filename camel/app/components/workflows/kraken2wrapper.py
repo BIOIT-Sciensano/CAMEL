@@ -1,26 +1,29 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Union
+from typing import Optional, Any, Union
 
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.workflows.utils.fastqinput import FastqInput
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import contamination_check_kraken
 
 
 @dataclass
 class Kraken2Output:
+    """
+    Dataclass to store the Kraken2 output.
+    """
     report_section: HtmlReportSection
     tsv_summary: Path
-    informs: Dict[str, Any]
-    informs_commands: List[Dict[str, Any]]
+    informs: dict[str, Any]
+    informs_commands: list[dict[str, Any]]
     log_file: Optional[Path]
 
 
-class Kraken2Wrapper(object):
+class Kraken2Wrapper:
     """
     This class is used as a wrapper class around the Kraken2 contamination check workflow.
     """
@@ -48,7 +51,7 @@ class Kraken2Wrapper(object):
         :param threads: Number of threads
         :return: None
         """
-        SnakemakeUtils.dump_object(fastq_input.to_fq_dict(), self._working_dir / 'fq_dict.io')
+        snakemakeutils.dump_object(fastq_input.to_fq_dict(), self._working_dir / 'fq_dict.io')
         self.__run_workflow(read_type, sample_name, db, expected_species, level_of_depth, threads)
 
     def run_workflow_fasta(
@@ -66,7 +69,7 @@ class Kraken2Wrapper(object):
         """
         dir_fasta_in = self._working_dir / 'assembly' / 'filtering'
         dir_fasta_in.mkdir(parents=True, exist_ok=True)
-        SnakemakeUtils.dump_object([ToolIOFile(fasta_in)], dir_fasta_in / 'fasta.io')
+        snakemakeutils.dump_object([ToolIOFile(fasta_in)], dir_fasta_in / 'fasta.io')
         self.__run_workflow('fasta', sample_name, db, expected_species, level_of_depth, threads)
 
     def __run_workflow(
@@ -96,10 +99,10 @@ class Kraken2Wrapper(object):
 
         # Output files
         output_files = {
-            'HTML': self._working_dir / contamination_check_kraken.OUTPUT_CONTAMINATION_CHECK_REPORT,
-            'TSV': self._working_dir / contamination_check_kraken.OUTPUT_CONTAMINATION_SUMMARY,
-            'INFORMS': self._working_dir / contamination_check_kraken.OUTPUT_CONTAMINATION_CHECK_INFORMS,
-            'INFORMS_KRAKEN': self._working_dir / contamination_check_kraken.OUTPUT_CONTAMINATION_CHECK_KRAKEN_INFORMS,
+            'HTML': contamination_check_kraken.OUTPUT_REPORT,
+            'TSV': str(contamination_check_kraken.OUTPUT_SUMMARY).format(input_format='{input_format}', ext='tsv'),
+            'INFORMS': contamination_check_kraken.OUTPUT_INFORMS,
+            'INFORMS_KRAKEN': contamination_check_kraken.OUTPUT_INFORMS_KRAKEN2,
         }
         try:
             input_format = {'fasta': 'fasta', 'illumina': 'fastq_pe', 'ont': 'fastq_se'}[input_type]
@@ -113,11 +116,11 @@ class Kraken2Wrapper(object):
 
         # Run Snakemake
         SnakePipelineUtils.run_snakemake(
-            contamination_check_kraken.SNAKEFILE_CONTAMINATION_CHECK_KRAKEN, config_file, list(output_files.values()),
+            contamination_check_kraken.SNAKEFILE, config_file, [Path(x) for x in output_files.values()],
             self._working_dir, threads)
         self.__set_output(output_files)
 
-    def __set_output(self, output_files: Dict[str, Path]) -> None:
+    def __set_output(self, output_files: dict[str, str]) -> None:
         """
         Runs the Snakemake workflow.
         :param output_files: Output files dictionary
@@ -125,10 +128,10 @@ class Kraken2Wrapper(object):
         """
         log_file_path = self._working_dir / 'camel.log'
         self._output = Kraken2Output(
-            report_section=SnakemakeUtils.load_object(output_files['HTML'])[0].value,
-            tsv_summary=output_files['TSV'],
-            informs=SnakemakeUtils.load_object(output_files['INFORMS']),
-            informs_commands=[SnakemakeUtils.load_object(output_files['INFORMS_KRAKEN'])],
+            report_section=snakemakeutils.load_object(self._working_dir / output_files['HTML'])[0].value,
+            tsv_summary=self._working_dir / output_files['TSV'],
+            informs=snakemakeutils.load_object(self._working_dir / output_files['INFORMS']),
+            informs_commands=[snakemakeutils.load_object(self._working_dir / output_files['INFORMS_KRAKEN'])],
             log_file=log_file_path if log_file_path.exists() else None
         )
 

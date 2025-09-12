@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import abc
 from abc import ABCMeta
 # noinspection PyProtectedMember
@@ -40,7 +38,7 @@ class BaseMutation(metaclass=ABCMeta):
         pass
 
     @property
-    def key(self) -> Tuple:
+    def key(self) -> tuple:
         """
         Returns the key of the mutation, which can be used to compare against the database mutations.
         :return: Key

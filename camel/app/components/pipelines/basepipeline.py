@@ -1,15 +1,16 @@
 import abc
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Any, Sequence, Union
+from typing import Any, Optional, Union
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
 from camel.app.components.files.fastqutils import FastqUtils
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.pipelines import absolute_path_by_pathlib
-from camel.app.error.snakemakeexecutionerror import SnakemakeExecutionError
+from camel.app.error import SnakemakeExecutionError
 from camel.app.loggers import fileloggerutils, logger
 from camel.app.pipeline.pipeline import Pipeline
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
@@ -32,7 +33,7 @@ class BasePipeline(metaclass=abc.ABCMeta):
         self._args = self._parse_arguments(args)
         self._keep_logs = True if self._args.log else Camel.get_instance().config.get('logging', {}).get(
             'keep_logs', False)
-        self._pipeline = Pipeline(name, Camel.get_instance(), self._args.log, self._args.log)
+        self._pipeline = Pipeline(name, self._args.log, self._args.log)
         self._sample_name = BasePipeline.determine_sample_name(self._args)
 
     @staticmethod
@@ -236,9 +237,6 @@ class BasePipeline(metaclass=abc.ABCMeta):
 
         # Path to the logfile
         log_file = self._args.working_dir / 'camel.log'
-        if self._args.input_type == 'ont' and self._args.detection_method == 'srst2':
-            logger.error("SRST2-based detection is not available for ONT input")
-            raise RuntimeError("SRST2-based detection is not available for ONT input")
         try:
             # Run snakemake
             SnakePipelineUtils.run_snakemake(

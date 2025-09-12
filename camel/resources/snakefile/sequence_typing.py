@@ -1,19 +1,19 @@
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
-SNAKEFILE_SEQUENCE_TYPING = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
-_dir_typing = Path('typing', '{scheme}')
-INPUT_FASTA = _dir_typing / 'input' / 'fasta.io'
-OUTPUT_TYPING_REPORT = _dir_typing / 'html.io'
-OUTPUT_TYPING_REPORT_EMPTY = _dir_typing / 'html-empty.io'
-OUTPUT_TYPING_TSV = _dir_typing / '{locus_type}' / 'tabular' / 'tsv.io'
-OUTPUT_TYPING_HITS = _dir_typing / '{locus_type}' / '{detection_method}' / 'hits.io'
-OUTPUT_TYPING_SUMMARY = _dir_typing / 'summary_out.tsv'
-OUTPUT_TYPING_INFORMS = _dir_typing / 'informs.io'
-OUTPUT_TYPING_ALL_MATCHES = _dir_typing / 'tsv_profile_matches.io'
+INPUT_FASTA = 'typing/{scheme}/input/fasta.io'
+OUTPUT_REPORT = 'typing/{scheme}/html.iob'
+OUTPUT_REPORT_EMPTY = 'typing/{scheme}/html-empty.iob'
+OUTPUT_TSV = 'typing/{scheme}/{locus_type}/tabular/tsv.io'
+OUTPUT_HITS = 'typing/{scheme}/{locus_type}/{detection_method}/hits.iob'
+OUTPUT_SUMMARY = 'typing/{scheme}/summary_out.{ext}'
+OUTPUT_INFORMS = 'typing/{scheme}/informs.io'
+OUTPUT_ALL_MATCHES = 'typing/{scheme}/tsv_profile_matches.io'
 
-def get_sequence_typing_report(scheme_key: str, config: Dict[str, Any], analysis_name: Optional[str] = None) -> Path:
+
+def get_sequence_typing_report(scheme_key: str, config: dict[str, Any], analysis_name: Optional[str] = None) -> str:
     """
     Returns the report input for the given database key.
     :param scheme_key: Database key
@@ -23,5 +23,5 @@ def get_sequence_typing_report(scheme_key: str, config: Dict[str, Any], analysis
     """
     search_key = analysis_name if analysis_name is not None else scheme_key
     if search_key not in config['analyses']:
-        return Path(config['working_dir']) / str(OUTPUT_TYPING_REPORT_EMPTY).format(scheme=scheme_key)
-    return Path(config['working_dir']) / str(OUTPUT_TYPING_REPORT).format(scheme=scheme_key)
+        return OUTPUT_REPORT_EMPTY.format(scheme=scheme_key)
+    return OUTPUT_REPORT.format(scheme=scheme_key)

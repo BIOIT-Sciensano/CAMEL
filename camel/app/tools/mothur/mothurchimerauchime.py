@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -8,13 +8,12 @@ class MothurChimeraUchime(Mothur):
     The chimera.uchime command reads a fasta file and reference file and outputs potentially chimeric sequences.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_chimera_uchime', '1.39.1', camel)
+        super().__init__('mothur_chimera_uchime', '1.39.1')
 
     def _check_input(self):
         """
@@ -26,20 +25,16 @@ class MothurChimeraUchime(Mothur):
         - The use of TSV_Names is not yet implemented (lack of documentation)
         :return: None
         """
-        super(MothurChimeraUchime, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input files (keys) given for Mothur '
-                                                 'chimera.uchime: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input files (keys) given for {self._name}: {self._tool_inputs}')
         if 'TSV_Names' not in self._tool_inputs and 'TSV_Counts' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Missing input files (key) for Mothur '
-                                                 'chimera.uchime: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Missing input files (key) for {self._name}: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'TSV_Counts', 'TSV_Names', 'TSV_Groups', 'FASTA_Ref']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur '
-                                                     'chimera.uchime: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for {self._name}: {self._tool_inputs}')
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files in each key given for Mothur \
-                                                     chimera.uchime: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files in each key given for {self._name}: {self._tool_inputs}')
 
     def _build_input_string(self):
         """
@@ -63,7 +58,7 @@ class MothurChimeraUchime(Mothur):
         Sets the name of the output files, and fills the common stream object with them
         :return: None
         """
-        basename = super(MothurChimeraUchime, self)._get_basename()
+        basename = super()._get_basename()
         self._tool_outputs['TSV_Chimeras'] = [ToolIOFile(basename + '.denovo.uchime.chimeras')]
         self._tool_outputs['TSV_Accnos'] = [ToolIOFile(basename + '.denovo.uchime.accnos')]
         if 'TSV_Names' in self._tool_inputs:

@@ -1,6 +1,5 @@
 import json
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -24,13 +23,12 @@ class Cutadapt(Tool):
 
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('cutadapt', '3.5', camel)
+        super().__init__('cutadapt', '3.5')
         self._input_string = ''
 
     def _execute_tool(self) -> None:
@@ -49,8 +47,7 @@ class Cutadapt(Tool):
         Check input of cutadapt function. Overrides method in parent class
         :return: None
         """
-        super(Cutadapt, self)._check_input()
-
+        super()._check_input()
         if 'FASTQ_PE' in self._tool_inputs:
             if len(self._tool_inputs['FASTQ_PE']) != 2:
                 raise ValueError("Paired end input requires exactly 2 files.")
@@ -108,4 +105,3 @@ class Cutadapt(Tool):
         with open(self.folder / self._parameters["report_json"].value) as json_file:
             data = json.load(json_file)
             self._informs.update(data)
-        

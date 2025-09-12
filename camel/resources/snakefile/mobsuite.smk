@@ -2,10 +2,9 @@ from pathlib import Path
 
 from pandas.errors import EmptyDataError
 
-from camel.app.camel import Camel
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import mobsuite
 
 
@@ -14,25 +13,25 @@ rule mobsuite_mob_recon:
     Runs the MOB-recon tool.
     """
     input:
-        FASTA = Path(config['working_dir']) / mobsuite.INPUT_MOBSUITE_FASTA,
+        FASTA = mobsuite.INPUT_FASTA, # mobsuite.INPUT_FASTA
         DB = config['mob_suite']['db']
     output:
-        TSV = Path(config['working_dir']) / 'mob_suite' / 'tsv.io',
-        TSV_contigs = Path(config['working_dir']) / 'mob_suite' / 'tsv-contigs.io',
-        FASTA = Path(config['working_dir']) / 'mob_suite' / 'fasta.io',
-        INFORMS = Path(config['working_dir']) / 'mob_suite' / 'informs.io'
+        TSV = 'mob_suite/tool/tsv.io',
+        TSV_contigs = 'mob_suite/tool/tsv-contigs.io',
+        FASTA = 'mob_suite/tool/fasta.io',
+        INFORMS = 'mob_suite/tool/informs.io' # mobsuite.OUTPUT_INFORMS
     params:
-        dir_ = Path(config['working_dir']) / 'mob_suite'
+        dir_ = 'mob_suite/tool'
     threads: 4
     run:
         from camel.app.tools.mobsuite.mobrecon import MOBRecon
-        mob_recon = MOBRecon(Camel.get_instance())
-        SnakemakeUtils.add_pickle_input(mob_recon, 'FASTA', Path(input.FASTA))
+        mob_recon = MOBRecon()
+        snakemakeutils.add_pickle_input(mob_recon, 'FASTA', Path(input.FASTA))
         mob_recon.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
         mob_recon.update_parameters(num_threads=threads)
-        step = Step(str(rule), mob_recon, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(mob_recon, output)
+        step = Step(rule_name=str(rule), tool=mob_recon, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(mob_recon, output)
 
 rule mobsuite_mob_recon_reporter:
     """
@@ -44,25 +43,25 @@ rule mobsuite_mob_recon_reporter:
         FASTA = rules.mobsuite_mob_recon.output.FASTA,
         INFORMS_mob_recon = rules.mobsuite_mob_recon.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / 'mob_suite' / 'html.io'
+        HTML = 'mob_suite/report/html.iob' # mobsuite.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'mob_suite',
+        dir_ = 'mob_suite/report',
         contig_report = config.get('mob_suite', {}).get('contig_report', False)
     run:
         from camel.app.tools.mobsuite.mobreconreporter import MOBReconReporter
-        reporter = MOBReconReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
+        reporter = MOBReconReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
         reporter.update_parameters(contig_report=params.contig_report)
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule mobsuite_mob_recon_report_empty:
     """
     Creates an empty report when this analysis is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'mob_suite' / 'html-empty.io'
+        VAL_HTML = 'mob_suite/report/html-empty.iob' # mobsuite.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('MOB-recon', Path(output.VAL_HTML))
@@ -75,12 +74,16 @@ rule mobsuite_create_summary:
         TSV = rules.mobsuite_mob_recon.output.TSV,
         INFORMS = rules.mobsuite_mob_recon.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / 'mob_suite' / 'summary_mob_suite.tsv'
+        FILE = 'mob_suite/summary/summary_mob_suite.{ext}'
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
+        import re
         import pandas as pd
+        from camel.app.tools.mobsuite.mobreconreporter import MOBReconReporter
 
         # Parse TSV output
-        path_tsv = SnakemakeUtils.load_object(Path(input.TSV))[0].path
+        path_tsv = snakemakeutils.load_object(Path(input.TSV))[0].path
         try:
             data_mobsuite = pd.read_table(path_tsv)
             if 'primary_cluster_id' not in data_mobsuite.columns:
@@ -91,61 +94,56 @@ rule mobsuite_create_summary:
             primary_cluster_ids = []
 
         # Parse informs
-        informs_in = SnakemakeUtils.load_object(Path(input.INFORMS))
+        informs_in = snakemakeutils.load_object(Path(input.INFORMS))
 
         # Create summary output
-        with open(output.TSV, 'w') as handle:
-            # Cluster IDs
-            handle.write('\t'.join([
-                'mob_suite_primary_cluster_ids',
-                ', '.join(primary_cluster_ids) if len(primary_cluster_ids) > 0 else '-']))
-            handle.write('\n')
-
-            # Contigs classified as plasmids
-            handle.write('\t'.join([
-                'mob_suite_predicted_plasmid_contigs',
-                ', '.join(ctg for ctg, status in informs_in['contig_report'].items() if status is not None)]))
-            handle.write('\n')
-
-            # Tool info
-            handle.write('\t'.join(['mob_suite_tool_version', informs_in['_name']]))
-            handle.write('\n')
+        rows_out = [
+            ('mob_suite_primary_cluster_ids', ', '.join(primary_cluster_ids) if len(primary_cluster_ids) > 0 else '-' ),
+            ('mob_suite_predicted_plasmid_contigs', ', '.join(ctg for ctg, status in informs_in['contig_report'].items() if status is not None)),
+            ('mob_suite_tool_version', informs_in['_name'])
+        ]
+        if primary_cluster_ids and params.ext == 'json':
+            data_mobsuite['id'] = data_mobsuite['sample_id'].apply(lambda x: re.search('.*:(.*)',x).group(1))
+            data_mobsuite['id'] = data_mobsuite['id'].apply(lambda x: MOBReconReporter.format_plasmid_id(x))
+            cluster_info = [{col:d.get('fmt', lambda x: x)(row[col]) for col, d in MOBReconReporter.COLUMN_MAPPING.items()} for row in data_mobsuite.to_dict('records')]
+            rows_out.append(('mob_suite_overview', cluster_info))
+        snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), 'mob_suite')
 
 rule mobsuite_report_genomic_context:
     """
     Reports the genomic context for detected genes.
     """
     input:
-        TSV = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'input' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'input' / 'informs.io',
+        TSV = 'mob_suite/genomic_context/input/tsv.io',
+        INFORMS = 'mob_suite/genomic_context/input/informs.io',
         INFORMS_mob_recon = rules.mobsuite_mob_recon.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'html.io'
+        HTML = 'mob_suite/genomic_context/html.iob' # mobsuite.OUTPUT_CONTEXT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'mob_suite' / 'genomic_context',
+        dir_ = 'mob_suite/genomic_context',
         detection_method = config['detection_method'],
         input_type = config.get('input_type', 'illumina')
     run:
         from camel.app.tools.mobsuite.genomiccontext import GenomicContext
 
-        genomic_context = GenomicContext(Camel.get_instance())
-        genomic_context.add_input_files({'TSV': SnakemakeUtils.load_object(Path(input.TSV))})
+        genomic_context = GenomicContext()
+        genomic_context.add_input_files({'TSV': snakemakeutils.load_object(Path(input.TSV))})
         genomic_context.add_input_informs({
-            'mob_recon': SnakemakeUtils.load_object(Path(input.INFORMS_mob_recon)),
-            'dbs': SnakemakeUtils.load_object(Path(input.INFORMS))
+            'mob_recon': snakemakeutils.load_object(Path(input.INFORMS_mob_recon)),
+            'dbs': snakemakeutils.load_object(Path(input.INFORMS))
         })
         genomic_context.update_parameters(
             detection_method=str(params.detection_method), input_type=str(params.input_type))
-        step = Step(str(rule), genomic_context, Camel.get_instance(), params.dir_)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(genomic_context, output)
+        step = Step(rule_name=str(rule), tool=genomic_context, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(genomic_context, output)
 
 rule mobsuite_report_genomic_context_empty:
     """
     Creates an empty report when this analysis is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'html-empty.io'
+        VAL_HTML = 'mob_suite/genomic_context/html-empty.iob' # mobsuite.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('Genomic context', Path(output.VAL_HTML), 2)

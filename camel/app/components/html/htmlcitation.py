@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Any
+from typing import Any
 
 from camel.app.components.html.htmlbase import HtmlBase
 from camel.resources import DIR_CITATIONS
@@ -12,7 +12,7 @@ class HtmlCitation(HtmlBase):
     :return: None
     """
 
-    def __init__(self, citation_data: Dict[str, Any]) -> None:
+    def __init__(self, citation_data: dict[str, Any]) -> None:
         """
         Initializes the citation.
         :param citation_data: Citation data

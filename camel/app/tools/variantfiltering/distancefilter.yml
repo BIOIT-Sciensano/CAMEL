@@ -1,8 +1,29 @@
-dependencies: [bcftools/1.17]
+dependencies:
+  - bcftools/1.17
 parameters:
-  keep_best: {default: true, mandatory: false, option: null, value: null}
-  min_distance: {default: true, mandatory: true, option: null, value: '10'}
-  output_filename: {default: true, mandatory: true, option: null, value: variants_distance_filtered.vcf.gz}
-  seed: {default: false, mandatory: false, option: null, value: 0}
-  soft_filter: {default: false, mandatory: false, option: '--soft-filter', value: 'true'}
+  keep_best:
+    default: true
+    mandatory: false
+    option: null
+    value: null
+  min_distance:
+    default: true
+    mandatory: true
+    option: null
+    value: '10'
+  output_filename:
+    default: true
+    mandatory: true
+    option: null
+    value: variants_distance_filtered.vcf.gz
+  seed:
+    default: false
+    mandatory: false
+    option: null
+    value: 0
+  soft_filter:
+    default: false
+    mandatory: false
+    option: '--soft-filter'
+    flag: true
 tool_command: bcftools filter

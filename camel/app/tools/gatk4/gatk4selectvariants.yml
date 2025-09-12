@@ -1,21 +1,95 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  exclude-filtered: {default: false, mandatory: false, option: --exclude-filtered, p_index: 130, value: null}
-  exclude-non-variants: {default: false, mandatory: false, option: --exclude-non-variants,p_index: 120, value: null}
-  invertSelect: {default: false, mandatory: false, option: --invertSelect, p_index: 90, value: null}
-  max-fraction-filtered-genotypes: {default: false, mandatory: false, option: --max-fraction-filtered-genotypes,
-    p_index: 100, value: '1'}
-  max-indel-size: {default: false, mandatory: false, option: --max-indel-size, p_index: 30, value: '2147483647'}
-  max-nocall-fraction: {default: false, mandatory: false, option: --max-nocall-fraction, p_index: 50, value: '1'}
-  min-fraction-filtered-genotypes: {default: false, mandatory: false, option: --min-fraction-filtered-genotypes,
-    p_index: 110, value: '0'}
-  min-indel-size: {default: false, mandatory: false, option: --min-indel-size, p_index: 40, value: '0'}
-  output: {default: true, mandatory: false, option: --output, p_index: 0, value: selected_variants.vcf}
-  preserve-alleles: {default: false, mandatory: false, option: --preserve-alleles, p_index: 140, value: null}
-  remove-unused-alternates: {default: false, mandatory: false, option: --remove-unused-alternates,
-    p_index: 150, value: null}
-  restrict-alleles-to: {default: false, mandatory: false, option: --restrict-alleles-to, p_index: 60, value: ALL}
-  selectExpressions: {default: false, mandatory: false, option: --selectExpressions, p_index: 10, value: null}
-  select-type-to-exclude: {default: false, mandatory: false, option: --select-type-to-exclude, p_index: 80, value: null}
-  select-type-to-include: {default: false, mandatory: false, option: --select-type-to-include, p_index: 70, value: null}
+  exclude-filtered:
+    default: false
+    mandatory: false
+    option: '--exclude-filtered'
+    p_index: 130
+    value: null
+  exclude-non-variants:
+    default: false
+    mandatory: false
+    option: '--exclude-non-variants'
+    p_index: 120
+    value: null
+  invertSelect:
+    default: false
+    mandatory: false
+    option: '--invertSelect'
+    p_index: 90
+    value: null
+  max-fraction-filtered-genotypes:
+    default: false
+    mandatory: false
+    option: '--max-fraction-filtered-genotypes'
+    p_index: 100
+    value: '1'
+  max-indel-size:
+    default: false
+    mandatory: false
+    option: '--max-indel-size'
+    p_index: 30
+    value: '2147483647'
+  max-nocall-fraction:
+    default: false
+    mandatory: false
+    option: '--max-nocall-fraction'
+    p_index: 50
+    value: '1'
+  min-fraction-filtered-genotypes:
+    default: false
+    mandatory: false
+    option: '--min-fraction-filtered-genotypes'
+    p_index: 110
+    value: '0'
+  min-indel-size:
+    default: false
+    mandatory: false
+    option: '--min-indel-size'
+    p_index: 40
+    value: '0'
+  output:
+    default: true
+    mandatory: false
+    option: '--output'
+    p_index: 0
+    value: selected_variants.vcf
+  preserve-alleles:
+    default: false
+    mandatory: false
+    option: '--preserve-alleles'
+    p_index: 140
+    value: null
+  remove-unused-alternates:
+    default: false
+    mandatory: false
+    option: '--remove-unused-alternates'
+    p_index: 150
+    value: null
+  restrict-alleles-to:
+    default: false
+    mandatory: false
+    option: '--restrict-alleles-to'
+    p_index: 60
+    value: ALL
+  selectExpressions:
+    default: false
+    mandatory: false
+    option: '--selectExpressions'
+    p_index: 10
+    value: null
+  select-type-to-exclude:
+    default: false
+    mandatory: false
+    option: '--select-type-to-exclude'
+    p_index: 80
+    value: null
+  select-type-to-include:
+    default: false
+    mandatory: false
+    option: '--select-type-to-include'
+    p_index: 70
+    value: null
 tool_command: SelectVariants

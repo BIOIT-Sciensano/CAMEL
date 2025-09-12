@@ -1,14 +1,59 @@
-dependencies: [bcftools/1.17]
+dependencies:
+  - bcftools/1.17
 parameters:
-  calling_method: { default: true, mandatory: false, option: null, value: consensus }
-  compress_output: { default: false, mandatory: true, option: null, value: null }
-  keep_alts: { default: false, mandatory: false, option: --keep-alts, value: null }
-  mutation_rate: { default: false, mandatory: false, option: --prior, value: '1.1e-3' }
-  output_filename: { default: true, mandatory: false, option: --output, value: bcftools_snps.vcf }
-  output_type: { default: true, mandatory: true, option: --output-type, value: v }
-  ploidy: { default: false, mandatory: false, option: --ploidy, value: '1' }
-  pval_threshold: { default: false, mandatory: false, option: --pval-threshold, value: '0.5' }
-  skip_variants: { default: false, mandatory: false, option: --skip-variants, value: indels }
-  threads: { default: true, mandatory: false, option: --threads, value: '4' }
-  variants_only: { default: false, mandatory: false, option: --variants-only, value: null }
+  calling_method:
+    default: true
+    mandatory: false
+    option: null
+    value: consensus
+  compress_output:
+    default: false
+    mandatory: true
+    option: null
+    value: null
+  keep_alts:
+    default: false
+    mandatory: false
+    option: '--keep-alts'
+    value: null
+  mutation_rate:
+    default: false
+    mandatory: false
+    option: '--prior'
+    value: '1.1e-3'
+  output_filename:
+    default: true
+    mandatory: false
+    option: '--output'
+    value: bcftools_snps.vcf
+  output_type:
+    default: true
+    mandatory: true
+    option: '--output-type'
+    value: v
+  ploidy:
+    default: false
+    mandatory: false
+    option: '--ploidy'
+    value: '1'
+  pval_threshold:
+    default: false
+    mandatory: false
+    option: '--pval-threshold'
+    value: '0.5'
+  skip_variants:
+    default: false
+    mandatory: false
+    option: '--skip-variants'
+    value: indels
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: '4'
+  variants_only:
+    default: false
+    mandatory: false
+    option: '--variants-only'
+    value: null
 tool_command: bcftools call

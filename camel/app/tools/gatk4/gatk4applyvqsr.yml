@@ -1,6 +1,23 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  output: {default: true, mandatory: true, option: --output, p_index: 0, value: output.vcf.gz}
-  filter_level: {default: false, mandatory: false, option: --truth-sensitivity-filter-level, p_index: 0, value: 99.9}
-  mode: {default: false, mandatory: true, option: --mode, p_index: 0, value: SNP}
+  output:
+    default: true
+    mandatory: true
+    option: '--output'
+    p_index: 0
+    value: output.vcf.gz
+  filter_level:
+    default: false
+    mandatory: false
+    option: '--truth-sensitivity-filter-level'
+    p_index: 0
+    value: 99.9
+  mode:
+    default: false
+    mandatory: true
+    option: '--mode'
+    p_index: 0
+    value: SNP
 tool_command: ApplyVQSR

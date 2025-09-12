@@ -1,6 +1,5 @@
-from camel.app.camel import Camel
 from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.tool import Tool
 
 
@@ -9,12 +8,11 @@ class FastqStats(Tool):
     Calculates statistics for input FASTQ files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('FastqStats', '0.1', camel)
+        super().__init__('FastqStats', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -22,7 +20,7 @@ class FastqStats(Tool):
         :return: None
         """
         if 'FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTQ input is required")
+            raise InvalidToolInputError("FASTQ input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:

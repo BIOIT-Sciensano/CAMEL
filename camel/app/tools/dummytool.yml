@@ -1,0 +1,22 @@
+dependencies: []
+parameters:
+  param_a:
+    default: false
+    mandatory: false
+    option: --param-a
+    value: abc
+  param_b:
+      default: false
+      mandatory: false
+      option: --param-b
+      value: 123
+  mandatory:
+    default: false
+    mandatory: true
+    option: --mandatory
+    value: null
+  flag_a:
+    default: true
+    option: --flag
+    flag: true
+tool_command: dummy

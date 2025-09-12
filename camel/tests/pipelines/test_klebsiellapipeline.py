@@ -1,10 +1,10 @@
-import tempfile
 import unittest
 from pathlib import Path
 
 import yaml
 
-from camel.app.camel import Camel
+from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.config import config
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.tools.pipelines.sequence_typing.locussetmanager import LocusSetManager
 from camel.scripts.klebsiellapipeline import CONFIG_DATA
@@ -12,29 +12,20 @@ from camel.scripts.klebsiellapipeline.mainklebsiellapipeline import MainKlebsiel
 from camel.tests import longRunningTest
 
 
-class TestKlebsiellaPipeline(unittest.TestCase):
+class TestKlebsiellaPipeline(CamelTestSuite):
     """
     Tests for the Klebsiella pipeline.
     """
-
-    camel = Camel()
     running_dir = None
 
     # Input files
-    test_file_dir = Path(camel.config['testing']['testfiles_dir'])
+    test_file_dir = CamelTestSuite.get_test_file_dir('pipelines')
     input_fastq_pe = [
-        test_file_dir / 'pipelines' / 'Kpneumoniae-SRR4046826-ds_1.fastq.gz',
-        test_file_dir / 'pipelines' / 'Kpneumoniae-SRR4046826-ds_2.fastq.gz'
+        test_file_dir / 'Kpneumoniae-SRR4046826-ds_1.fastq.gz',
+        test_file_dir / 'Kpneumoniae-SRR4046826-ds_2.fastq.gz'
     ]
-    input_fastq_se = test_file_dir / 'pipelines' / 'Kpneumoniae-FAZ63816_ont-ds.fastq.gz'
-    input_fasta = test_file_dir / 'pipelines' / 'Kpneumoniae-SRR4046826-ds.fasta'
-
-    def setUp(self):
-        """
-        Sets up the resources before running the test.
-        :return: None
-        """
-        self.running_dir = Path(tempfile.mkdtemp(None, 'camel_', TestKlebsiellaPipeline.camel.config['temp_dir']))
+    input_fastq_se = test_file_dir / 'Kpneumoniae-FAZ63816_ont-ds.fastq.gz'
+    input_fasta = test_file_dir / 'Kpneumoniae-SRR4046826-ds.fasta'
 
     def test_klebsiella_pipeline_typing_db(self) -> None:
         """
@@ -49,7 +40,7 @@ class TestKlebsiellaPipeline(unittest.TestCase):
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
             # Check if metadata can be loaded
-            manager = LocusSetManager(Camel.get_instance())
+            manager = LocusSetManager()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.informs), 0)

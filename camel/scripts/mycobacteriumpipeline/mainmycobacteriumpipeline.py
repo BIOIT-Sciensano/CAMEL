@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 import argparse
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import yaml
 
 from camel.app.camel import Camel
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.app.tools.pipelines.mycobacterium.bamaddcustomtag import BAMAddCustomTag
 from camel.resources.snakefile import variant_calling
-from camel.scripts.mycobacteriumpipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.mycobacteriumpipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 class MainMycobacteriumPipeline(ReportPipeline):
@@ -58,14 +59,14 @@ class MainMycobacteriumPipeline(ReportPipeline):
         :return: None
         """
         if self._args.output_bam is None:
-            logger.debug(f'Not exporting BAM output')
+            logger.debug('Not exporting BAM output')
             return
         path_io = variant_calling.get_bam({'input_type': self._args.input_type, 'working_dir': self._args.working_dir})
-        bam_input = SnakemakeUtils.load_object(path_io)
+        bam_input = snakemakeutils.load_object(Path(self._args.working_dir, path_io))
 
         # Add custom tag with the sample name for PACU
         with tempfile.TemporaryDirectory(prefix='camel_', dir=Camel.get_instance().config['temp_dir']) as dir_:
-            add_tag = BAMAddCustomTag(Camel.get_instance())
+            add_tag = BAMAddCustomTag()
             add_tag.add_input_files({'BAM': bam_input})
             add_tag.update_parameters(output=str(self._args.output_bam), name='PACU_name', value=self.sample_name)
             add_tag.run(Path(str(dir_)))

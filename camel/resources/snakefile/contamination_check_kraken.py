@@ -1,30 +1,30 @@
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 
 from camel.resources.snakefile import assembly
 
-SNAKEFILE_CONTAMINATION_CHECK_KRAKEN = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_out = Path('contamination_check', '{input_format}')
-OUTPUT_CONTAMINATION_CHECK_REPORT = _dir_out / 'report' / 'html.io'
-OUTPUT_CONTAMINATION_CHECK_REPORT_EMPTY = _dir_out / 'report' / 'html-empty.io'
-OUTPUT_CONTAMINATION_CHECK_INFORMS = _dir_out / 'kraken2' / 'informs-contamination.io'
-OUTPUT_CONTAMINATION_CHECK_KRAKEN_INFORMS = _dir_out / 'kraken2' / 'informs.io'
-OUTPUT_CONTAMINATION_SUMMARY = _dir_out / 'summary' / 'summary_out.tsv'
+SNAKEFILE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+OUTPUT_REPORT = 'contamination_check/{input_format}/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'contamination_check/{input_format}/report/html-empty.iob'
+OUTPUT_INFORMS = 'contamination_check/{input_format}/kraken2/informs-contamination.io'
+OUTPUT_INFORMS_KRAKEN2 = 'contamination_check/{input_format}/kraken2/informs.io'
+OUTPUT_SUMMARY = 'contamination_check/{input_format}/summary/summary_out.{ext}'
 
 
-def get_input(config: Dict[str, Any]) -> Path:
+def get_input(config: dict[str, Any]) -> str:
     """
     Returns the input for the contamination check.
     :param config: Snakemake configuration
     :return: Path to the input file
     """
     if config['input_type'] in ('illumina', 'ont', 'hybrid'):
-        return Path(config['working_dir']) / 'fq_dict.io'
+        return 'fq_dict.io'
     if config['input_type'] in ('fasta', 'fasta_with_vcf'):
-        return Path(config['working_dir']) / assembly.OUTPUT_ASSEMBLY_FASTA
+        return assembly.OUTPUT_FASTA
+    raise ValueError(f'Invalid input type: {config["input_type"]}')
 
 
-def get_reports(config: Dict[str, Any]) -> List[Path]:
+def get_reports(config: dict[str, Any]) -> list[str]:
     """
     Returns the paths to the contamination check reports.
     :param config: Snakemake configuration
@@ -36,30 +36,31 @@ def get_reports(config: Dict[str, Any]) -> List[Path]:
     # PE reads
     if input_type in ('illumina', 'hybrid'):
         if 'kraken2' in config['analyses']:
-            paths.append(str(OUTPUT_CONTAMINATION_CHECK_REPORT).format(input_format='fastq_pe'))
+            paths.append(str(OUTPUT_REPORT).format(input_format='fastq_pe'))
         else:
-            paths.append(str(OUTPUT_CONTAMINATION_CHECK_REPORT_EMPTY).format(input_format='fastq_pe'))
+            paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fastq_pe'))
 
     # SE reads
     if input_type in ('ont', 'hybrid'):
         if 'kraken2' in config['analyses']:
-            paths.append(str(OUTPUT_CONTAMINATION_CHECK_REPORT).format(input_format='fastq_se'))
+            paths.append(str(OUTPUT_REPORT).format(input_format='fastq_se'))
         else:
-            paths.append(str(OUTPUT_CONTAMINATION_CHECK_REPORT_EMPTY).format(input_format='fastq_se'))
+            paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fastq_se'))
 
     # FASTA input
     if input_type in ('fasta', 'fasta_with_vcf'):
         if 'kraken2' in config['analyses']:
-            paths.append(str(OUTPUT_CONTAMINATION_CHECK_REPORT).format(input_format='fasta'))
+            paths.append(str(OUTPUT_REPORT).format(input_format='fasta'))
         else:
-            paths.append(str(OUTPUT_CONTAMINATION_CHECK_REPORT_EMPTY).format(input_format='fasta'))
-    return [Path(config['working_dir']) / p for p in paths]
+            paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fasta'))
+    return paths
 
 
-def get_summaries(config: Dict[str, Any]) -> List[Path]:
+def get_summaries(config: dict[str, Any], ext: str) -> list[Path]:
     """
     Returns the paths to the contamination check summary file(s).
     :param config: Snakemake configuration
+    :param ext: Summary format (TSV / JSON)
     :return: Report path(s)
     """
     input_type = config['input_type']
@@ -67,19 +68,19 @@ def get_summaries(config: Dict[str, Any]) -> List[Path]:
 
     # PE reads
     if (input_type in ('illumina', 'hybrid')) and ('kraken2' in config['analyses']):
-        paths.append(str(OUTPUT_CONTAMINATION_SUMMARY).format(input_format='fastq_pe'))
+        paths.append(str(OUTPUT_SUMMARY).format(input_format='fastq_pe', ext=ext))
 
     # SE reads
     if (input_type in ('ont', 'hybrid')) and ('kraken2' in config['analyses']):
-        paths.append(str(OUTPUT_CONTAMINATION_SUMMARY).format(input_format='fastq_se'))
+        paths.append(str(OUTPUT_SUMMARY).format(input_format='fastq_se', ext=ext))
 
     # FASTA input
     if (input_type in ('fasta', 'fasta_with_vcf')) and ('kraken2' in config['analyses']):
-        paths.append(str(OUTPUT_CONTAMINATION_SUMMARY).format(input_format='fasta'))
-    return [Path(config['working_dir']) / p for p in paths]
+        paths.append(str(OUTPUT_SUMMARY).format(input_format='fasta', ext=ext))
+    return paths
 
 
-def get_command_informs(config: Dict[str, Any]) -> List[Path]:
+def get_command_informs(config: dict[str, Any]) -> list[str]:
     """
     Returns the paths to the Kraken informs.
     :param config: config
@@ -94,12 +95,12 @@ def get_command_informs(config: Dict[str, Any]) -> List[Path]:
 
     # PE reads
     if input_type in ('illumina', 'hybrid'):
-        paths.append(str(OUTPUT_CONTAMINATION_CHECK_KRAKEN_INFORMS).format(input_format='fastq_pe'))
+        paths.append(str(OUTPUT_INFORMS_KRAKEN2).format(input_format='fastq_pe'))
 
     # SE reads
     if input_type in ('ont', 'hybrid'):
-        paths.append(str(OUTPUT_CONTAMINATION_CHECK_KRAKEN_INFORMS).format(input_format='fastq_se'))
+        paths.append(str(OUTPUT_INFORMS_KRAKEN2).format(input_format='fastq_se'))
 
     if input_type in ('fasta', 'fasta_with_vcf'):
-        paths.append(str(OUTPUT_CONTAMINATION_CHECK_KRAKEN_INFORMS).format(input_format='fasta'))
-    return [Path(config['working_dir']) / p for p in paths]
+        paths.append(str(OUTPUT_INFORMS_KRAKEN2).format(input_format='fasta'))
+    return paths

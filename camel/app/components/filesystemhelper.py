@@ -2,13 +2,12 @@ import binascii
 import datetime
 import re
 from pathlib import Path
-from typing import List
 
 from camel.app.command.command import Command
 from camel.app.loggers import logger
 
 
-class FileSystemHelper(object):
+class FileSystemHelper:
     """
     This class contains utility functions to work with the file system.
     """
@@ -35,13 +34,13 @@ class FileSystemHelper(object):
         """
         all_files = FileSystemHelper.get_files_with_extension(input_folder, extension)
         if len(all_files) == 0:
-            raise IOError(f"No {extension} file found in '{input_folder}'")
+            raise FileNotFoundError(f"No {extension} file found in '{input_folder}'")
         elif len(all_files) > 1:
-            raise IOError(f"Multiple {extension} files found in '{input_folder}'")
+            raise FileNotFoundError(f"Multiple {extension} files found in '{input_folder}'")
         return all_files[0]
 
     @staticmethod
-    def get_files_with_extension(folder: Path, extension: str) -> List[Path]:
+    def get_files_with_extension(folder: Path, extension: str) -> list[Path]:
         """
         Returns the files with the given extension from the folder.
         :param folder: Input folder

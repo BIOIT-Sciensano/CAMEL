@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import yaml
 
@@ -9,7 +10,7 @@ from camel.app.components import mainscriptutils
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.loggers import logger
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.bacilluspipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.bacilluspipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 class MainBacillusPipeline(ReportPipeline):

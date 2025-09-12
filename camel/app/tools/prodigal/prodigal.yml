@@ -1,3 +1,4 @@
-dependencies: [prodigal/2.6.3]
+dependencies:
+  - prodigal/2.6.3
 parameters: {}
 tool_command: prodigal

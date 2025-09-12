@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from camel.app.camel import Camel
+
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.scripts.enterococcuspipeline import CONFIG_DATA
@@ -51,7 +51,7 @@ class TestEnterococcusPipeline(CamelTestSuite):
             self.assertGreater(Path(db_data['path']).stat().st_size, 0)
 
             # Check if metadata and FASTA files can be loaded
-            manager = DBManager(Camel.get_instance())
+            manager = DBManager()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(db_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.tool_outputs), 0)
@@ -73,28 +73,6 @@ class TestEnterococcusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainEnterococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainEnterococcusPipeline(args)
-        main.run()
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    @longRunningTest()
-    def test_enterococcus_pipeline_faecalis_srst2(self) -> None:
-        """
-        Tests the Enterococcus pipeline with all assays except for cgMLST.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestEnterococcusPipeline.input_faecalis_fastq_pe[0]),
-            str(TestEnterococcusPipeline.input_faecalis_fastq_pe[1]),
-            '--species', 'faecalis',
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir),
-            '--detection-method', 'srst2'
         ] + [f"--{a.replace('_', '-')}" for a in MainEnterococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
         main = MainEnterococcusPipeline(args)
         main.run()
@@ -138,28 +116,6 @@ class TestEnterococcusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainEnterococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainEnterococcusPipeline(args)
-        main.run()
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    @longRunningTest()
-    def test_enterococcus_pipeline_faecium_srst2(self) -> None:
-        """
-        Tests the Enterococcus pipeline with all assays except for cgMLST.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestEnterococcusPipeline.input_faecium_fastq_pe[0]),
-            str(TestEnterococcusPipeline.input_faecium_fastq_pe[1]),
-            '--species', 'faecium',
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir),
-            '--detection-method', 'srst2'
         ] + [f"--{a.replace('_', '-')}" for a in MainEnterococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
         main = MainEnterococcusPipeline(args)
         main.run()

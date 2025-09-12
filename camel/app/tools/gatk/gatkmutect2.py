@@ -34,13 +34,12 @@ class GATKMuTect2(GATK):
     - output_vcf_file           default value:  variant_call.vcf
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize GATKMuTect2 tool.
-        :param camel: Camel instance
         :return: None
         """
-        super(GATKMuTect2, self).__init__('gatk MuTect2', '3.7', camel)
+        super(GATKMuTect2, self).__init__('gatk MuTect2', '3.7')
 
         self._required_inputs = ['BAM_TUMOR', 'FASTA_REF']
         self._specific_parameters.extend(["output_bam", "output_active_region_igv"])
@@ -84,13 +83,13 @@ class GATKMuTect2(GATK):
         :return: None
         """
         self._tool_outputs['VCF'] = [
-            ToolIOFile(os.path.join(self._folder, self._parameters['output_vcf_file'].value))]
+            ToolIOFile(self._folder / self.get_param_value('output_vcf_file'))]
         if 'output_bam' in self._parameters:
-            if 'output_bam_file' not in self._parameters:
-                self.update_parameters(output_bam_file=self._tool_service.get_parameter("output_bam_file").value)
-            self._tool_outputs['BAM'] = [ToolIOFile(os.path.join(self._folder, self._parameters['output_bam_file'].value))]
+            if 'output_bam_file' not in self._params:
+                self.update_parameters(output_bam_file=self.get_param('output_bam_file').value)
+            self._tool_outputs['BAM'] = [ToolIOFile(self._folder / self.get_param_value('output_bam_file'))]
             self._tool_outputs['BAI'] = [
-                ToolIOFile(os.path.join(self._folder, os.path.splitext(self._parameters['output_bam_file'].value)[0] + ".bai"))]
+                ToolIOFile(self._folder / os.path.splitext(self.get_param_value('output_bam_file'))[0] + ".bai")]
 
     def _build_command(self):
         """
@@ -99,7 +98,7 @@ class GATKMuTect2(GATK):
         """
         if "output_active_region_igv" in self._parameters:
             if "active_region_igv_file" not in self._parameters:
-                self.update_parameters(active_region_igv_file=self._tool_service.get_parameter("active_region_igv_file").value)
+                self.update_parameters(active_region_igv_file=self.get_param("active_region_igv_file").value)
 
         self._option_string += " ".join(self._build_options(excluded_parameters=self._specific_parameters))
 

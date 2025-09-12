@@ -1,9 +1,6 @@
-from typing import Tuple, List, Dict
-
 from PIL import Image, ImageDraw, ImageFont
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,12 +12,11 @@ class AMRAddText(Tool):
     Adds text to the visualization of the resistance characterization.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """"
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: visualization add text', '0.1', camel)
+        super().__init__('Mycobacterium: visualization add text', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -28,13 +24,13 @@ class AMRAddText(Tool):
         :return: None
         """
         if 'PNG' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Input image (PNG) is required")
+            raise InvalidToolInputError("Input image (PNG) is required")
         if 'VAL_sample' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Sample name input is required")
+            raise InvalidToolInputError("Sample name input is required")
         if 'coverage' not in self._input_informs:
-            raise InvalidInputSpecificationError("Coverage informs are required")
+            raise InvalidToolInputError("Coverage informs are required")
         if 'lineage' not in self._input_informs:
-            raise InvalidInputSpecificationError("Lineage informs are required")
+            raise InvalidToolInputError("Lineage informs are required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -70,8 +66,8 @@ class AMRAddText(Tool):
         img.save(str(output_path))
         self._tool_outputs['PNG'] = [ToolIOFile(output_path)]
 
-    def calculate_positions(self, messages: List[Tuple[str, 'ImageFont', int]], img_width: int, img_height: int) \
-            -> Tuple[Dict[str, int], Dict[str, int]]:
+    def calculate_positions(self, messages: list[tuple[str, 'ImageFont', int]], img_width: int, img_height: int) \
+            -> tuple[dict[str, int], dict[str, int]]:
         """
         This function calculates the position to align the added text horizontally and vertically.
         :param messages: Messages to add (Message str, font, spacing below)

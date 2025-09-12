@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence, Dict, Any, Tuple
+from typing import Any, Optional
 
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
@@ -12,7 +13,7 @@ from camel.app.tools.checkv.checkv import CheckV
 from camel.app.tools.checkv.checkvreporter import CheckVReporter
 
 
-class MainCheckV(object):
+class MainCheckV:
     """
     This class contains the main script for the CheckV tool.
     """
@@ -50,13 +51,13 @@ class MainCheckV(object):
         report.save()
 
         # Run CheckV
-        checkv = CheckV(Camel.get_instance())
+        checkv = CheckV()
         checkv.add_input_files(input_dict)
         checkv.update_parameters(threads=self._args.threads)
         checkv.run(self._args.working_dir)
 
         # Create output report
-        checkv_reporter = CheckVReporter(Camel.get_instance())
+        checkv_reporter = CheckVReporter()
         checkv_reporter.add_input_files({key: checkv.tool_outputs[key] for key in checkv.tool_outputs.keys()})
         checkv_reporter.run(self._args.working_dir)
         section = checkv_reporter.tool_outputs['HTML'][0].value
@@ -68,7 +69,7 @@ class MainCheckV(object):
         # report.add_html_object(SnakePipelineUtils.create_citations_section(['Parks_2015-checkm']))
         report.save()
 
-    def __prepare_input(self) -> Tuple[Dict[str, Any], str]:
+    def __prepare_input(self) -> tuple[dict[str, Any], str]:
         """
         Prepares the input for the CheckM tool.
         :return: Input dictionary

@@ -1,13 +1,11 @@
 from pathlib import Path
-from typing import List
 
 import pydotplus
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -26,12 +24,11 @@ class RdCsbReporter(Tool):
         'shape_height': 0.5
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: RD / csb reporter', '0.1', camel)
+        super().__init__('Mycobacterium: RD / csb reporter', '0.1')
         self._sub_directory = Path('rd_csb')
 
     def _check_input(self) -> None:
@@ -40,9 +37,9 @@ class RdCsbReporter(Tool):
         :return: None
         """
         if 'HITS' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Gene detection hits input (HITS) is required")
+            raise InvalidToolInputError("Gene detection hits input (HITS) is required")
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required")
+            raise InvalidToolInputError("FASTA input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -58,7 +55,7 @@ class RdCsbReporter(Tool):
         self.__add_database(self._tool_inputs['FASTA'][0].path)
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._report_section)]
 
-    def __set_informs(self, hits: List) -> None:
+    def __set_informs(self, hits: list) -> None:
         """
         Sets the informs for this tool.
         :param hits: Gene detection hits
@@ -146,7 +143,7 @@ class RdCsbReporter(Tool):
             'class', 'bordered'), ('src', str(relative_path)), ('alt', 'visualization')])
         self._report_section.add_html_object(img)
 
-    def __add_output_tables(self, hits: List) -> None:
+    def __add_output_tables(self, hits: list) -> None:
         """
         Adds the output table which shows the presence/absence of RD1 and csb.
         :param hits: Gene detection hits

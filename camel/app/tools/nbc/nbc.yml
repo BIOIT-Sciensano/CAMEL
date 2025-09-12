@@ -1,4 +1,10 @@
-dependencies: [nbc/1.1]
+dependencies:
+  - nbc/1.1
 parameters:
-  word_size: {default: true, mandatory: false, option: -r, p_index: 0, value: '15'}
+  word_size:
+    default: true
+    mandatory: false
+    option: '-r'
+    p_index: 0
+    value: '15'
 tool_command: score

@@ -1,5 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -9,12 +8,11 @@ class SerotypeDetectorEcoli(Tool):
     This tool detects the E. coli serotype based on gene hits.
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Serotype Detector', '0.1', camel)
+        super().__init__('Serotype Detector', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -23,7 +21,7 @@ class SerotypeDetectorEcoli(Tool):
         """
         for char in ('H', 'O'):
             if 'HITS_{}'.format(char) not in self._tool_inputs:
-                raise InvalidInputSpecificationError("{}-type hits are required".format(char))
+                raise InvalidToolInputError("{}-type hits are required".format(char))
         super()._check_input()
 
     def _execute_tool(self) -> None:

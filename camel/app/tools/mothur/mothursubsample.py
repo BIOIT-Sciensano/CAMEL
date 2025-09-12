@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -8,13 +8,12 @@ class MothurSubSample(Mothur):
     The sub.sample command can be used as a way to normalize your data, or create a smaller set from your original set.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_sub_sample', '1.39.1', camel)
+        super().__init__('mothur_sub_sample', '1.39.1')
 
     def _check_input(self):
         """
@@ -22,17 +21,17 @@ class MothurSubSample(Mothur):
         Some keys are considered primary input and cannot be combined with other primary input keys.
         :return: None
         """
-        super(MothurSubSample, self)._check_input()
+        super()._check_input()
         allowed_primary_input = ['FASTA', 'TSV_List', 'TSV_Shared', 'TSV_Rabund', 'TSV_Sabund']
         for key, input_files in self._tool_inputs.items():
             if key not in allowed_primary_input and key not in ['TSV_Groups', 'TSV_Counts', 'TSV_Names']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur sub.sample: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input key given for Mothur sub.sample: {!r}'.format(self._tool_inputs))
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
+                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
                                                      sub.sample: {!r}'.format(self._tool_inputs))
         # Check if more than one of the primary input keys is present
         if len(set(allowed_primary_input).intersection(self._tool_inputs.keys())) > 1:
-            raise InvalidInputSpecificationError('Too many primary input keys given for '
+            raise InvalidToolInputError('Too many primary input keys given for '
                                                  'Mothur sub.sample: {!r}'.format(self._tool_inputs))
 
     def _build_input_string(self):
@@ -72,7 +71,7 @@ class MothurSubSample(Mothur):
                              'TSV_Sabund': ['.', '.subsample.sabund']}
         for key, input_files in self._tool_inputs.items():
             if key in output_extensions:
-                basename = super(MothurSubSample, self)._get_basename(key, output_extensions[key][0])
+                basename = super()._get_basename(key, output_extensions[key][0])
                 self._tool_outputs[key] = []
                 if self.__get_labels() is not None:
                     for label in self.__get_labels():

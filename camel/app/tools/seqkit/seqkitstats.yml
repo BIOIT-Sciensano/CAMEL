@@ -1,4 +1,9 @@
-dependencies: [seqkit/2.3.1]
+dependencies:
+  - seqkit/2.3.1
 parameters:
-  output_filename: {default: true, mandatory: true, option: '--out-file', value: 'seqkit_stats.tsv'}
+  output_filename:
+    default: true
+    mandatory: true
+    option: '--out-file'
+    value: seqkit_stats.tsv
 tool_command: seqkit stats

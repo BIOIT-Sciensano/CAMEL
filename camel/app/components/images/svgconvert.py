@@ -1,7 +1,9 @@
+from pathlib import Path
+
 from camel.app.command.command import Command
 
 
-class SVGConvert(object):
+class SVGConvert:
     """
     Converts SVG images to other formats.
     """
@@ -15,7 +17,7 @@ class SVGConvert(object):
         :param size: Image size
         :return: None
         """
-        convert_command = Command('convert {} {}'.format(svg_file, output))
+        convert_command = Command(f'convert {svg_file} {output}')
         if size:
-            convert_command.command += ' -resize {}'.format(size)
-        convert_command.run_command('.')
+            convert_command.command += f' -resize {size}'
+        convert_command.run(Path('.'))

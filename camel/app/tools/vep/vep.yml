@@ -1,8 +1,34 @@
-dependencies: [vep/93]
+dependencies:
+  - vep/93
 parameters:
-  db_loc: {default: false, mandatory: true, option: --dir_cache, p_index: 0, value: null}
-  output_file: {default: true, mandatory: false, option: -o, p_index: 0, value: vep_annotated.tsv}
-  output_in_vcf: {default: false, mandatory: false, option: --vcf, p_index: 0, value: null}
-  species: {default: false, mandatory: false, option: --species, p_index: 0, value: human}
-  threads: {default: false, mandatory: false, option: fork, p_index: 0, value: '1'}
+  db_loc:
+    default: false
+    mandatory: true
+    option: '--dir_cache'
+    p_index: 0
+    value: null
+  output_file:
+    default: true
+    mandatory: false
+    option: '-o'
+    p_index: 0
+    value: vep_annotated.tsv
+  output_in_vcf:
+    default: false
+    mandatory: false
+    option: '--vcf'
+    p_index: 0
+    value: null
+  species:
+    default: false
+    mandatory: false
+    option: '--species'
+    p_index: 0
+    value: human
+  threads:
+    default: false
+    mandatory: false
+    option: fork
+    p_index: 0
+    value: '1'
 tool_command: vep

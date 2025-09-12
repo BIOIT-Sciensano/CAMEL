@@ -1,7 +1,6 @@
 from pathlib import Path
-from typing import Dict, List
 
-from camel.app.camel import Camel
+from camel.app.components import toolutils
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -12,21 +11,19 @@ class FastQCDataFileParser(Tool):
     Class that performs various quality checks based on FastQC output.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: Camel instance
         """
-        super().__init__('FastQC additional checks', '0.1', camel)
+        super().__init__('FastQC additional checks', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks whether all the required input files are in the inputs.
         :return: None
         """
-        if 'TXT' not in self._tool_inputs:
-            raise ValueError("No TXT input found.")
-        super(FastQCDataFileParser, self)._check_input()
+        toolutils.check_input(self, keys_required=['TXT'])
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
@@ -79,7 +76,7 @@ class FastQCDataFileParser(Tool):
                 module_by_name['Sequence Length Distribution'], total_nb_reads))
 
     @staticmethod
-    def __split_modules(input_file: ToolIOFile) -> Dict[str, List[str]]:
+    def __split_modules(input_file: ToolIOFile) -> dict[str, list[str]]:
         """
         Get the content of the different modules of the fastqc data file.
         :param input_file: Name of the fastqc data file
@@ -100,7 +97,7 @@ class FastQCDataFileParser(Tool):
         return modules
 
     @staticmethod
-    def __get_total_reads(data: List[str]) -> int:
+    def __get_total_reads(data: list[str]) -> int:
         """
         Returns the total number of reads.
         :param data: Module data
@@ -113,7 +110,7 @@ class FastQCDataFileParser(Tool):
         raise ValueError("Cannot find total number of reads in FastQC data file")
 
     @staticmethod
-    def __get_average_read_quality(data: List[str]) -> float:
+    def __get_average_read_quality(data: list[str]) -> float:
         """
         Returns the average read quality.
         :param data: Per sequence quality scores data
@@ -128,7 +125,7 @@ class FastQCDataFileParser(Tool):
         return total_quality / total_count
 
     @staticmethod
-    def __get_max_n_fraction(data: List[str]) -> float:
+    def __get_max_n_fraction(data: list[str]) -> float:
         """
         Returns the maximum N fraction.
         Note: FastQC reports in % per position so to obtain fraction it is divided by 100.
@@ -143,7 +140,7 @@ class FastQCDataFileParser(Tool):
         return max_percentage / 100
 
     @staticmethod
-    def __get_gc_content(data: List[str]) -> float:
+    def __get_gc_content(data: list[str]) -> float:
         """
         Returns the GC content.
         :param data: Basic statistics data
@@ -197,7 +194,7 @@ class FastQCDataFileParser(Tool):
             return int(interval_str)
 
     @staticmethod
-    def __get_median_read_length(data: List[str], total_nb_reads: int) -> int:
+    def __get_median_read_length(data: list[str], total_nb_reads: int) -> int:
         """
         Returns the (estimated) median read length.
         :param data: Data
@@ -212,7 +209,7 @@ class FastQCDataFileParser(Tool):
         raise ValueError("Invalid total number of reads")
 
     @staticmethod
-    def __get_mean_qscore_drop(data: List[str], threshold: float) -> float:
+    def __get_mean_qscore_drop(data: list[str], threshold: float) -> float:
         """
         Returns the base where the mean qscore drops below the threshold.
         :param data: Per base sequence quality data
@@ -227,7 +224,7 @@ class FastQCDataFileParser(Tool):
         return float('inf')
 
     @staticmethod
-    def __get_max_seq_content_diff(data: List[str], nb_of_skipped_bases: int, nb_of_skipped_bases_end: int) -> float:
+    def __get_max_seq_content_diff(data: list[str], nb_of_skipped_bases: int, nb_of_skipped_bases_end: int) -> float:
         """
         Returns the maximal difference between A-T and C-G.
         :param data: Per base sequence content data
@@ -237,16 +234,14 @@ class FastQCDataFileParser(Tool):
         """
         max_difference = 0.0
         last_base = int(data[-1].split('\t')[0].split('-')[-1])
-        logger.debug("Checking A-T, G-C difference between base {} and {}".format(
-            nb_of_skipped_bases, last_base - nb_of_skipped_bases_end))
+        logger.debug(
+            f"Checking A-T, G-C difference between base {nb_of_skipped_bases} and {last_base - nb_of_skipped_bases_end}")
         for row in data[1:]:
             base, freq_g, freq_a, freq_t, freq_c = row.split('\t')
             interval_upper = int(base.split('-')[-1])
             if nb_of_skipped_bases < interval_upper <= (last_base - nb_of_skipped_bases_end):
                 at_difference = abs(float(freq_a) - float(freq_t))
-                if at_difference > max_difference:
-                    max_difference = at_difference
+                max_difference = max(at_difference, max_difference)
                 gc_difference = abs(float(freq_c) - float(freq_g))
-                if gc_difference > max_difference:
-                    max_difference = gc_difference
+                max_difference = max(gc_difference, max_difference)
         return max_difference

@@ -1,26 +1,27 @@
 from pathlib import Path
 
-FOLDER_TRIMMING_ILLUMINA = Path('trimming_illumina')
-SNAKEFILE_TRIMMING_ILLUMINA = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+_dir = Path('trimming_illumina')
+SNAKEFILE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
 
-INPUT_TRIMMING_FASTQ = FOLDER_TRIMMING_ILLUMINA / 'input' / 'fastq.io'
+# Input
+INPUT_FASTQ = 'trimming_illumina/input/fastq.io'
 
 # Report and summary
-OUTPUT_TRIMMING_ILLUMINA_REPORT = FOLDER_TRIMMING_ILLUMINA / 'report' / 'html.io'
-OUTPUT_TRIMMING_ILLUMINA_SUMMARY = FOLDER_TRIMMING_ILLUMINA / 'summary' / 'summary_trim.tsv'
+OUTPUT_REPORT = 'trimming_illumina/report/html.iob'
+OUTPUT_SUMMARY = 'trimming_illumina/summary/summary_trim.{ext}'
 
 # Trimming
-OUTPUT_TRIMMING_ILLUMINA_READS_PE = FOLDER_TRIMMING_ILLUMINA / 'reads' / 'fastq-pe.io'
-OUTPUT_TRIMMING_ILLUMINA_READS_SE_FWD = FOLDER_TRIMMING_ILLUMINA / 'reads' / 'fastq-se-fwd.io'
-OUTPUT_TRIMMING_ILLUMINA_READS_SE_REV = FOLDER_TRIMMING_ILLUMINA / 'reads' / 'fastq-se-rev.io'
-OUTPUT_TRIMMING_ILLUMINA_DICT = FOLDER_TRIMMING_ILLUMINA / 'reads' / 'fq_dict.io'
-OUTPUT_TRIMMING_ILLUMINA_INFORMS = FOLDER_TRIMMING_ILLUMINA / 'report' / 'informs.io'
+OUTPUT_READS_PE = 'trimming_illumina/reads/fastq-pe.io'
+OUTPUT_READS_SE_FWD = 'trimming_illumina/reads/fastq-se-fwd.io'
+OUTPUT_READS_SE_REV = 'trimming_illumina/reads/fastq-se-rev.io'
+OUTPUT_DICT = 'trimming_illumina/reads/fq_dict.io'
+OUTPUT_INFORMS = 'trimming_illumina/report/informs.io'
 
 # FastQC
-OUTPUT_TRIMMING_ILLUMINA_FASTQC_TXT_PRE = FOLDER_TRIMMING_ILLUMINA / 'fastqc-pre' / 'txt.io'
-OUTPUT_TRIMMING_ILLUMINA_FASTQC_HTML_PRE = FOLDER_TRIMMING_ILLUMINA / 'fastqc-pre' / 'html.io'
-OUTPUT_TRIMMING_ILLUMINA_FASTQC_TXT_POST = FOLDER_TRIMMING_ILLUMINA / 'fastqc-post' / 'txt.io'
-OUTPUT_TRIMMING_ILLUMINA_FASTQC_HTML_POST = FOLDER_TRIMMING_ILLUMINA / 'fastqc-post' / 'html.io'
+OUTPUT_FASTQC_TXT_PRE = 'trimming_illumina/fastqc-pre/txt.io'
+OUTPUT_FASTQC_HTML_PRE = 'trimming_illumina/fastqc-pre/html.io'
+OUTPUT_FASTQC_TXT_POST = 'trimming_illumina/fastqc-post/txt.io'
+OUTPUT_FASTQC_HTML_POST = 'trimming_illumina/fastqc-post/html.io'
 
 
 def select_fastq_output(config: dict) -> Path:

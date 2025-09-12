@@ -1,10 +1,9 @@
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
 from camel.app.components.html.htmltableformatter import HtmlTableFormatter
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -24,11 +23,11 @@ class ShigaTyperReporter(Tool):
         {'key': '% accuracy', 'title': '% accuracy', 'fmt': HtmlTableFormatter.FLOAT_FMT}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the reporter.
         """
-        super().__init__('ShigaTyper reporter', '0.1', camel)
+        super().__init__('ShigaTyper reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -36,9 +35,9 @@ class ShigaTyperReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("ShigaTyper tabular output is required ('TSV')")
+            raise InvalidToolInputError("ShigaTyper tabular output is required ('TSV')")
         if 'shigatyper' not in self._input_informs:
-            raise InvalidInputSpecificationError("ShigaTyper informs are required")
+            raise InvalidToolInputError("ShigaTyper informs are required")
         super()._check_input()
 
     def __add_main_output(self, section: HtmlReportSection) -> None:

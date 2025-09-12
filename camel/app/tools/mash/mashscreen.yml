@@ -1,7 +1,24 @@
-dependencies: [ mash/2.3 ]
+dependencies:
+  - mash/2.3
 parameters:
-  max_p_value: { default: false, mandatory: false, option: -v, value: 1.0 }
-  min_identity: { default: false, mandatory: false, option: -i, value: 0 }
-  threads: { default: true, mandatory: false, option: -p, value: 4 }
-  winner_takes_all: { default: false, mandatory: false, option: -w, value: null }
+  max_p_value:
+    default: false
+    mandatory: false
+    option: -v
+    value: 1
+  min_identity:
+    default: false
+    mandatory: false
+    option: -i
+    value: 0
+  threads:
+    default: true
+    mandatory: false
+    option: -p
+    value: 4
+  winner_takes_all:
+    default: false
+    mandatory: false
+    option: -w
+    flag: true
 tool_command: mash screen

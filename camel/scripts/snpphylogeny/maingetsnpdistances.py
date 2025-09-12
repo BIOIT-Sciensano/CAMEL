@@ -1,5 +1,6 @@
 import argparse
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import pandas as pd
 from Bio import SeqIO
@@ -8,7 +9,7 @@ from camel.app.camel import Camel
 from camel.app.loggers import logger
 
 
-class MainSnpDistances(object):
+class MainSnpDistances:
     """
     Script to determine SNP distances from a SNP matrix.
     """

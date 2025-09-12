@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import yaml
 
@@ -9,7 +10,7 @@ from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.mockpipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.mockpipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 class MainMockPipeline(ReportPipeline):

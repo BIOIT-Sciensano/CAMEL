@@ -1,8 +1,34 @@
-dependencies: [seqtk/1.4]
+dependencies:
+  - seqtk/1.4
 parameters:
-  mask_higher_qual: {default: false, mandatory: false, option: '-q', p_index: 0, value: '255'}
-  mask_lower_qual: {default: false, mandatory: false, option: '-X', p_index: 0, value: '0'}
-  min_length: {default: false, mandatory: false, option: '-L', p_index: 0, value: '100'}
-  output_filename: {default: true, mandatory: true, option: null, p_index: 0, value: 'sequences.fastq'}
-  sample_fraction: {default: false, mandatory: false, option: '-f', p_index: 0, value: '0.10'}
+  mask_higher_qual:
+    default: false
+    mandatory: false
+    option: '-q'
+    p_index: 0
+    value: '255'
+  mask_lower_qual:
+    default: false
+    mandatory: false
+    option: '-X'
+    p_index: 0
+    value: '0'
+  min_length:
+    default: false
+    mandatory: false
+    option: '-L'
+    p_index: 0
+    value: '100'
+  output_filename:
+    default: true
+    mandatory: true
+    option: null
+    p_index: 0
+    value: sequences.fastq
+  sample_fraction:
+    default: false
+    mandatory: false
+    option: '-f'
+    p_index: 0
+    value: '0.10'
 tool_command: seqtk seq

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
 
@@ -10,12 +10,12 @@ class SamtoolsIndexCram(SamtoolsBase):
     Indexes sorted CRAM files.
     """
 
-    def __init__(self, camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('samtools index', '1.17', camel)
+        super().__init__('samtools index', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -78,6 +78,6 @@ class SamtoolsIndexCram(SamtoolsBase):
         Validates the stderr.
         :return: None
         """
-        if 'unsorted positions' in self.stderr:
-            raise ToolExecutionError('CRAM file is not sorted.')
-        super(SamtoolsIndexCram, self)._check_stderr()
+        if 'unsorted positions' in self._command.stderr:
+            raise ToolExecutionError(self.name, 'CRAM file is not sorted.')
+        super()._check_stderr()

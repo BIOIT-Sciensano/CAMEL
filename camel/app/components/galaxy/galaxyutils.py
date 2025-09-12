@@ -1,18 +1,18 @@
 import re
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from camel.app.components.files.fastqutils import FastqUtils
 from camel.app.loggers import logger
 
 
-class GalaxyUtils(object):
+class GalaxyUtils:
     """
     This class contains utility functions to work with Galaxy data sets.
     """
 
     @staticmethod
-    def determine_sample_name_from_fq(fastq_names: List[Path], is_pe: bool = True, default: Optional[str] = None) -> \
+    def determine_sample_name_from_fq(fastq_names: list[Path], is_pe: bool = True, default: Optional[str] = None) -> \
             str:
         """
         Determines the sample name from the given command line arguments.
@@ -29,7 +29,7 @@ class GalaxyUtils(object):
             logger.debug("Filename does not match any standard FASTQ format")
 
         # Trimmomatic output files
-        m = re.search(r'.+ on {}'.format(pattern), fastq_names[0].name)
+        m = re.search(fr'.+ on {pattern}', fastq_names[0].name)
         if m:
             return m.group(1)
 

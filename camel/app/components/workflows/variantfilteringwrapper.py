@@ -3,9 +3,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
 from camel.resources.snakefile import variant_filtering, variant_calling
@@ -49,7 +48,7 @@ class VariantFilteringWrapper:
         :param vcf_file: Input VCF file
         :return: Indexed VCF_GZ file
         """
-        bcftools_view = BcftoolsView(Camel.get_instance())
+        bcftools_view = BcftoolsView()
         bcftools_view.add_input_files({'VCF': [ToolIOFile(vcf_file)]})
         input_dir = Path(self._working_dir, 'input')
         if not input_dir.is_dir():
@@ -67,12 +66,12 @@ class VariantFilteringWrapper:
         :return: None
         """
         for path, destination in [
-            (vcf_gz_file, variant_calling.OUTPUT_VARIANT_CALLING_UNFILTERED_VCF_GZ),
+            (vcf_gz_file, variant_calling.OUTPUT_UNFILTERED_VCF_GZ),
             (bam_file, variant_calling.get_bam({'working_dir': self._working_dir, 'input_type': input_type}))]:
             target_file = Path(self._working_dir, destination)
             if not target_file.parent.exists():
                 target_file.parent.mkdir(parents=True)
-            SnakemakeUtils.dump_object([ToolIOFile(path)] if path is not None else [], target_file)
+            snakemakeutils.dump_object([ToolIOFile(path)] if path is not None else [], target_file)
 
     def run_workflow(
             self, sample_name: str, vcf_file: Path, bam_file: Path, input_type: str = 'illumina',
@@ -102,13 +101,12 @@ class VariantFilteringWrapper:
 
         # Execute Snakemake
         output_files = {
-            'VCF': self._working_dir / variant_filtering.OUTPUT_VARIANT_FILTERING_VCF,
-            'STATS': self._working_dir / variant_filtering.OUTPUT_VARIANT_FILTERING_STATS,
-            'INFORMS': self._working_dir / variant_filtering.OUTPUT_VARIANT_FILTERING_INFORMS_ALL
+            'VCF': variant_filtering.OUTPUT_VCF,
+            'STATS': variant_filtering.OUTPUT_STATS,
+            'INFORMS': variant_filtering.OUTPUT_INFORMS_ALL
         }
         SnakePipelineUtils.run_snakemake(
-            variant_filtering.SNAKEFILE_VARIANT_FILTERING, config_path, list(output_files.values()), self._working_dir,
-            cores)
+            variant_filtering.SNAKEFILE, config_path, [Path(x) for x in output_files.values()], self._working_dir, cores)
         self.__set_output(output_files)
 
     def __set_output(self, output_files: dict[str, Path]) -> None:
@@ -117,12 +115,12 @@ class VariantFilteringWrapper:
         :param output_files: Output files
         :return: None
         """
-        json_file = SnakemakeUtils.load_object(output_files['STATS'])[0].path
+        json_file = snakemakeutils.load_object(self._working_dir / output_files['STATS'])[0].path
         with open(json_file) as handle:
             stats = json.load(handle)
         self._output = VariantFilteringOutput(
-            vcf_filtered=SnakemakeUtils.load_object(output_files['VCF'])[0],
+            vcf_filtered=snakemakeutils.load_object(self._working_dir / output_files['VCF'])[0],
             stats=stats,
             nb_of_variants=stats['zscore']['variants_out'],
-            informs=SnakemakeUtils.load_object(output_files['INFORMS'])
+            informs=snakemakeutils.load_object(self._working_dir / output_files['INFORMS'])
         )

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
+from typing import Optional
 
 import pandas as pd
 
@@ -27,14 +27,6 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
         if not len_hsp == len_locus:
             return False
         return True
-    elif detection_method == 'srst2':
-        if str(record['Allele']) == '-':
-            return False
-        if str(record['Mismatches']) != '0':
-            return False
-        if str(record['Uncertainty']) != '-':
-            return False
-        return True
     elif detection_method == 'kma':
         if str(record['Allele']) == '-':
             return False
@@ -51,7 +43,7 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
         raise ValueError(f"Invalid detection method: {detection_method}")
 
 
-def parse_tsv_typing(tsv_path: Path, detection_method: str, use_temp: bool = True) -> Dict[str, str]:
+def parse_tsv_typing(tsv_path: Path, detection_method: str, use_temp: bool = True) -> dict[str, str]:
     """
     Parses a tabular output file for the sequence typing assay.
     :param tsv_path: Typing output file
@@ -70,7 +62,7 @@ def parse_tsv_typing(tsv_path: Path, detection_method: str, use_temp: bool = Tru
     return {r['Locus']: r[col_allele] if r['is_perfect_hit'] else '-' for _, r in allele_data.iterrows()}
 
 
-def parse_tsv_typing_list(tsv_in: List[Tuple[Path, str]], detection_method: Optional[str] = 'blast',
+def parse_tsv_typing_list(tsv_in: list[tuple[Path, str]], detection_method: Optional[str] = 'blast',
                           use_temp: bool = True) -> pd.DataFrame:
     """
     Parses a list of tabular input files.
@@ -117,7 +109,7 @@ def __get_typing_output_dir(dir_report: Path, html_key: str) -> Path:
             f"Scheme with key '{html_key}' not found in: {dir_report} (available schemes: {', '.join(dir_names)})")
 
 
-def parse_html_typing_list(dirs_in: List[Path], html_key: str, detection_method: Optional[str] = 'blast',
+def parse_html_typing_list(dirs_in: list[Path], html_key: str, detection_method: Optional[str] = 'blast',
                            use_temp: bool = True) -> pd.DataFrame:
     """
     Parses a list of HTML output directories.

@@ -1,7 +1,6 @@
 import re
 from typing import Optional
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.picard.picard import Picard
 
@@ -21,13 +20,12 @@ class MarkDuplicates(Picard):
     'METRICS':          ToolIOFile object. Output txt file containing metrics.
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('Picard MarkDuplicates', '2.23.3', camel)
+        super().__init__('Picard MarkDuplicates', '2.23.3')
 
     def _set_input(self) -> None:
         """
@@ -52,7 +50,7 @@ class MarkDuplicates(Picard):
         Optical duplicate cluster count: Total no. of optical duplicate clusters
         :return: None
         """
-        for line in (self.stderr if stderr is None else stderr).splitlines():
+        for line in (self._command.stderr if stderr is None else stderr).splitlines():
             m = re.search(r'Read (\d+) records. (\d+) pairs never matched', line)
             if m:
                 self.informs['reads_total'] = m.group(1)

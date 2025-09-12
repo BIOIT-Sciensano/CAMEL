@@ -1,5 +1,4 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
@@ -22,14 +21,12 @@ class GATK4ApplyVQSR(GATK4):
 
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATKApplyVQSR tool.
-        :param camel: Camel instance
         :return: None
         """
-        super(GATK4ApplyVQSR, self).__init__('gatk4 ApplyVQSR', '4.1.9.0', camel)
-
+        super().__init__('gatk4 ApplyVQSR', '4.1.9.0')
         self._required_inputs = ['VCF', 'TXT_RecalibrationTable']
         self._output_type = 'VCF'
 
@@ -38,8 +35,7 @@ class GATK4ApplyVQSR(GATK4):
         Set GATKApplyVQSR input. Adds recalibration table to parent class input
         :return: None
         """
-        super(GATK4ApplyVQSR, self)._set_input()
-
+        super()._set_input()
         if 'TXT_RecalibrationTable' in self._tool_inputs:
             self._input_string += f"--recal-file {self._tool_inputs['TXT_RecalibrationTable'][0].path} "
 
@@ -47,5 +43,4 @@ class GATK4ApplyVQSR(GATK4):
             if 'TXT_tranches' in self._tool_inputs:
                 self._input_string += f"--tranches-file {self._tool_inputs['TXT_tranches'][0].path} "
             else:
-                raise InvalidInputSpecificationError("Filter level parameter requires a tranches file.")
-
+                raise InvalidToolInputError("Filter level parameter requires a tranches file.")

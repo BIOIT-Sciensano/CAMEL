@@ -1,31 +1,29 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import sequence_typing
-from camel.scripts.neisseriapipeline.snakefile import mendevar
+
 
 rule mendevar_run:
     """
     Runs the MenDeVAR stand-alone tool.
     """
     input:
-        TSV = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_TSV).format(
-            scheme='bast', locus_type='peptide')
+        TSV = sequence_typing.OUTPUT_TSV.format(scheme='bast', locus_type='peptide')
     output:
-        TSV = Path(config['working_dir']) / 'mendevar' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'mendevar' / 'informs.io'
+        TSV = 'mendevar/tsv.io',
+        INFORMS = 'mendevar/informs.io'
     params:
-        dir_ = Path(config['working_dir']) / 'mendevar',
+        dir_ = 'mendevar',
         db = config.get('mendevar', {}).get('db')
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.neisseria.mendevar import MenDeVAR
 
-        mendevar_ = MenDeVAR(Camel.get_instance())
-        step = Step(str(rule), mendevar_, Camel.get_instance(), params.dir_)
-        SnakemakeUtils.add_pickle_inputs(mendevar_,input)
+        mendevar_ = MenDeVAR()
+        step = Step(rule_name=str(rule), tool=mendevar_, dir_=Path(str(params.dir_)))
+        snakemakeutils.add_pickle_inputs(mendevar_,input)
 
         # Add database
         if params.db is None:
@@ -36,8 +34,8 @@ rule mendevar_run:
         mendevar_.add_input_files({'DB': [ToolIOFile(path_db)]})
 
         # Run tool
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(mendevar_, output)
+        step.run()
+        snakemakeutils.dump_tool_outputs(mendevar_, output)
 
 rule mendevar_report:
     """
@@ -47,23 +45,23 @@ rule mendevar_report:
         TSV = rules.mendevar_run.output.TSV,
         INFORMS_mendevar = rules.mendevar_run.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / mendevar.OUTPUT_MENDEVAR_REPORT
+        HTML = 'mendevar/report/html.iob' # mendevar.OUTPUT_REPORT
     params:
-        dir_ = Path(config['working_dir']) / 'mendevar' / 'report'
+        dir_ = 'mendevar/report'
     run:
         from camel.app.tools.pipelines.neisseria.mendevarreporter import MenDeVARReporter
-        reporter = MenDeVARReporter(Camel.get_instance())
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = MenDeVARReporter()
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule mendevar_report_empty:
     """
     Creates an empty MenDeVAR report when the analysis is disabled.
     """
     output:
-        HTML = Path(config['working_dir']) / mendevar.OUTPUT_MENDEVAR_REPORT_EMPTY
+        HTML = 'mendevar/report/html-empty.iob' # mendevar.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('MenDeVAR', Path(output.HTML), 3)
@@ -75,14 +73,16 @@ rule mendevar_create_summary:
     input:
         INFORMS_mendevar = rules.mendevar_run.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / mendevar.OUTPUT_MENDEVAR_SUMMARY
+        TSV = 'mendevar/summary/summary_mendevar.{ext}' # mendevar.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
         # Collect informs
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS_mendevar))
+        informs = snakemakeutils.load_object(Path(input.INFORMS_mendevar))
 
-        # Create TSV output
-        with open(output.TSV, 'w') as handle:
-            handle.write(f"mendevar_bexsero_status\t{informs['bexsero_status']}")
-            handle.write('\n')
-            handle.write(f"mendevar_trumenba_status\t{informs['trumenba_status']}")
-            handle.write('\n')
+        # Create output files
+        rows_out = [
+            ('mendevar_bexsero_status', informs['bexsero_status']),
+            ('mendevar_trumenba_status', informs['trumenba_status'])
+        ]
+        snakemakeutils.export_summary(rows_out, Path(output.TSV), str(params.ext), 'mendevar')

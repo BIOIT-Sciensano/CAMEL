@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import yaml
 
-from camel.app.camel import Camel
+from camel.app.config import config
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.scripts.yersiniapipeline import CONFIG_DATA
 from camel.scripts.yersiniapipeline.mainyersiniapipeline import MainYersiniaPipeline
@@ -16,11 +16,10 @@ class TestYersiniaPipeline(unittest.TestCase):
     Tests for the Yersinia pipeline.
     """
 
-    camel = Camel.get_instance()
     running_dir = None
 
     # Input files
-    test_file_dir = Path(camel.config['testing']['testfiles_dir'], 'pipelines')
+    test_file_dir = Path(config.dir_testdata, 'pipelines')
     input_enterocolitica_fastq_pe = [
         test_file_dir / 'Yersinia-enterocolitica-S23BD07911_NG_A0183-ds_1.fastq.gz',
         test_file_dir / 'Yersinia-enterocolitica-S23BD07911_NG_A0183-ds_2.fastq.gz'
@@ -39,7 +38,7 @@ class TestYersiniaPipeline(unittest.TestCase):
         Sets up the resources before running the test.
         :return: None
         """
-        self.running_dir = Path(tempfile.mkdtemp(None, 'camel_', TestYersiniaPipeline.camel.config['temp_dir']))
+        self.running_dir = Path(tempfile.mkdtemp(None, 'camel_', config.dir_temp))
 
     def test_yersinia_pipeline_typing_db(self) -> None:
         """
@@ -55,7 +54,7 @@ class TestYersiniaPipeline(unittest.TestCase):
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
             # Check if metadata can be loaded
-            manager = LocusSetManager(Camel.get_instance())
+            manager = LocusSetManager()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.informs), 0)
@@ -100,26 +99,6 @@ class TestYersiniaPipeline(unittest.TestCase):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_srst2(self) -> None:
-        """
-        Tests the Yersinia pipeline with all assays, except for cgMLST, with the detection method srst2.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]), str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir),
-            '--detection-method', 'srst2'
-        ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    @longRunningTest()
     def test_yersinia_pipeline_enterocolitica_kma(self) -> None:
         """
         Tests the Neisseria pipeline with all assays, except for cgMLST,
@@ -156,27 +135,6 @@ class TestYersiniaPipeline(unittest.TestCase):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_srst2(self) -> None:
-        """
-        Tests the Yersinia pipeline with all assays, except for cgMLST,
-        with the detection method srst2.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[0]), str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[1]),
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir),
-            '--detection-method', 'srst2'
         ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
         main = MainYersiniaPipeline(args)
         main.run()

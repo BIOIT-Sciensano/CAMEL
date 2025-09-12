@@ -1,4 +1,3 @@
-from camel.app.camel import Camel
 from camel.app.tools.gatk4.gatk4 import GATK4
 from camel.app.io.tooliofile import ToolIOFile
 
@@ -32,13 +31,12 @@ class GATK4VariantRecalibrator(GATK4):
 
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATK4VariantRecalibrator tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk4 VariantRecalibrator', '4.1.9.0', camel)
+        super().__init__('gatk4 VariantRecalibrator', '4.1.9.0')
 
         self._required_inputs = ['VCF', 'FASTA_REF']
         self._output_type = 'TXT_RecalibrationTable'

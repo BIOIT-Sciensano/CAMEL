@@ -1,23 +1,22 @@
 from pathlib import Path
 
-DIRECTORY_TRIMMING_ONT = Path('trimming_ont')
-SNAKEFILE_TRIMMING_ONT = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
-INPUT_ONT_FASTQ = DIRECTORY_TRIMMING_ONT / 'input' / 'fastq.io'
+INPUT_ONT_FASTQ = 'trimming_ont/input/fastq.io'
 
 # Report and summary
-OUTPUT_TRIMMING_ONT_REPORT = DIRECTORY_TRIMMING_ONT / 'report' / 'html.io'
-OUTPUT_TRIMMING_ONT_SUMMARY = DIRECTORY_TRIMMING_ONT / 'summary' / 'summary_out.tsv'
+OUTPUT_REPORT = 'trimming_ont/report/html.iob'
+OUTPUT_SUMMARY = 'trimming_ont/summary/summary_out.{ext}'
 
 # Trimming
-OUTPUT_TRIMMING_ONT_READS = DIRECTORY_TRIMMING_ONT / 'seqkit' / 'fastq.io'
-OUTPUT_TRIMMING_ONT_INFORMS = DIRECTORY_TRIMMING_ONT / 'seqkit' / 'informs.io'
-OUTPUT_TRIMMING_ONT_DICT = DIRECTORY_TRIMMING_ONT / 'fastq_all.io'
+OUTPUT_READS = 'trimming_ont/seqkit/fastq.io'
+OUTPUT_INFORMS = 'trimming_ont/seqkit/informs.io'
+OUTPUT_DICT = 'trimming_ont/fastq_all.io'
 
 # NanoPlot
-OUTPUT_TRIMMING_ONT_NANOPLOT_TXT_PRE = DIRECTORY_TRIMMING_ONT / 'nanoplot-pre' / 'txt.io'
-OUTPUT_TRIMMING_ONT_NANOPLOT_HTML_PRE = DIRECTORY_TRIMMING_ONT / 'nanoplot-pre' / 'html.io'
-OUTPUT_TRIMMING_ONT_NANOPLOT_INFORMS_PRE = DIRECTORY_TRIMMING_ONT / 'nanoplot-pre' / 'informs.io'
-OUTPUT_TRIMMING_ONT_NANOPLOT_TXT_POST = DIRECTORY_TRIMMING_ONT / 'nanoplot-post' / 'txt.io'
-OUTPUT_TRIMMING_ONT_NANOPLOT_HTML_POST = DIRECTORY_TRIMMING_ONT / 'nanoplot-post' / 'html.io'
-OUTPUT_TRIMMING_ONT_NANOPLOT_INFORMS_POST = DIRECTORY_TRIMMING_ONT / 'nanoplot-post' / 'informs.io'
+OUTPUT_NANOPLOT_TXT_PRE = 'trimming_ont/nanoplot-pre/txt.io'
+OUTPUT_NANOPLOT_HTML_PRE = 'trimming_ont/nanoplot-pre/html.io'
+OUTPUT_NANOPLOT_INFORMS_PRE = 'trimming_ont/nanoplot-pre/informs.io'
+OUTPUT_NANOPLOT_TXT_POST = 'trimming_ont/nanoplot-post/txt.io'
+OUTPUT_NANOPLOT_HTML_POST = 'trimming_ont/nanoplot-post/html.io'
+OUTPUT_NANOPLOT_INFORMS_POST = 'trimming_ont/nanoplot-post/informs.io'

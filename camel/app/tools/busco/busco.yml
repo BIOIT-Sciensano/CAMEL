@@ -1,7 +1,31 @@
-dependencies: [busco/5.5.0, bbmap/39.15, prodigal/2.6.3, metaeuk/6-a5d39d9, java/9.0.4, hmmer/3.4, sepp/4.5.2, blast/2.14.0]
+dependencies:
+  - busco/5.5.0
+  - bbmap/39.15
+  - prodigal/2.6.3
+  - metaeuk/6-a5d39d9
+  - java/9.0.4
+  - hmmer/3.4
+  - sepp/4.5.2
+  - blast/2.14.0
 parameters:
-  lineage_dataset: {default: false, mandatory: true, option: --lineage_dataset, value: null}
-  download_path: {default: true, mandatory: true, option: --download_path, value: '/db/busco/odb10'}
-  offline: {default: true, mandatory: false, option: --offline, value: null}
-  threads: {default: true, mandatory: false, option: --cpu, value: '8'}
+  lineage_dataset:
+    default: false
+    mandatory: true
+    option: --lineage_dataset
+    value: null
+  download_path:
+    default: true
+    mandatory: true
+    option: --download_path
+    value: '/db/busco/odb10'
+  offline:
+    default: true
+    mandatory: false
+    option: --offline
+    flag: true
+  threads:
+    default: true
+    mandatory: false
+    option: --cpu
+    value: '8'
 tool_command: busco

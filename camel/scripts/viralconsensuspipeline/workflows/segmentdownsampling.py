@@ -1,10 +1,9 @@
 import dataclasses
 import json
 import logging
+from importlib.resources import files
 from pathlib import Path
-from typing import Union, Dict, List, Optional
-
-import pkg_resources
+from typing import Union, Optional
 
 from camel.app.camel import Camel
 from camel.app.components.workflows.utils.fastqinput import FastqInput
@@ -17,10 +16,10 @@ class SegmentDownsamplingOutput:
     Holder for the output of the variant filtering output.
     """
     fq_out: FastqInput
-    informs: List[Dict]
+    informs: list[dict]
 
 
-class SegmentDownsamplingWorkflow(object):
+class SegmentDownsamplingWorkflow:
     """
     Down samples the input dataset to a maximum coverage for each input segment.
     """
@@ -72,8 +71,8 @@ class SegmentDownsamplingWorkflow(object):
                 for seq_id, d in data_mapping['by_chr'].items()},
             'bed_primers': str(bed_primers) if bed_primers is not None else None
         }, self._dir)
-        path_snakefile = pkg_resources.resource_filename(
-            'camel', 'scripts/viralconsensuspipeline/workflows/segmentdownsampling.smk')
+        path_snakefile = str(files('camel').joinpath(
+            'scripts/viralconsensuspipeline/workflows/segmentdownsampling.smk'))
 
         # Run snakemake
         targets = {'fq': Path(f'merged/{input_type}/fq_dict.io'), 'informs': 'informs_all.json'}

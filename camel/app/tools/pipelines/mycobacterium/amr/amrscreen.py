@@ -1,12 +1,11 @@
 import json
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Union
 
 import pandas as pd
 import vcf
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -19,12 +18,11 @@ class AMRScreen(Tool):
     Screens the mutations from a VCF file against a database with mutations.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('AMR mutation screen', '0.1', camel)
+        super().__init__('AMR mutation screen', '0.1')
         self._variant_by_key = None
         self._data_regions = None
         self._ab_short_by_name = None
@@ -35,20 +33,20 @@ class AMRScreen(Tool):
         :return: None
         """
         if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Mutation input is required (VCF)")
+            raise InvalidToolInputError("Mutation input is required (VCF)")
         if 'VCF_filt' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Filtered mutation input is required (VCF_filt)")
+            raise InvalidToolInputError("Filtered mutation input is required (VCF_filt)")
         if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database input is required (DB)")
+            raise InvalidToolInputError("Database input is required (DB)")
         if 'BED' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("AMR region input is required (BED)")
+            raise InvalidToolInputError("AMR region input is required (BED)")
         if 'VCF_lofreq' not in self._tool_inputs:
             logger.info("Lofreq mutation input ('VCF_lofreq') was not supplied. "
                         "Low-frequency mutations will not be reported.")
         super()._check_input()
 
     @staticmethod
-    def __get_matching_region(position: int, regions: pd.DataFrame) -> Union[Dict, None]:
+    def __get_matching_region(position: int, regions: pd.DataFrame) -> Union[dict, None]:
         """
         Returns the region matching that covers the input position (if available).
         :param position: Genome position
@@ -61,7 +59,7 @@ class AMRScreen(Tool):
         raise ValueError(f"Position '{position}' does not fall in AMR regions")
 
     @staticmethod
-    def __extracts_mutation_name(row: Dict, full: bool = False) -> str:
+    def __extracts_mutation_name(row: dict, full: bool = False) -> str:
         """
         Extracts the mutation name.
         :param row: Input row
@@ -127,15 +125,15 @@ class AMRScreen(Tool):
         # Check if BCSQ annotation is present
         if 'BCSQ' not in vcf_record.INFO:
             logger.warning(f'BCSQ info missing for: {vcf_record.CHROM}:{vcf_record.POS}')
-            return
+            return None
 
         # Parse annotation
         parts = vcf_record.INFO['BCSQ'][0].split('|')
         if parts[0].startswith('&'):
-            return
+            return None
         return parts[0]
 
-    def __cross_check_muts_to_db(self, vcf_input: Path, is_lofreq: bool = False) -> List[Dict]:
+    def __cross_check_muts_to_db(self, vcf_input: Path, is_lofreq: bool = False) -> list[dict]:
         """
         Cross-checks the detected mutations to the database.
         :param vcf_input: Input VCF
@@ -189,7 +187,7 @@ class AMRScreen(Tool):
         return mutations_out
 
     @staticmethod
-    def __remove_bcftools_mutations_from_lofreq(input_lofreq: List[Dict], input_bcftools: List[Dict]) -> List[Dict]:
+    def __remove_bcftools_mutations_from_lofreq(input_lofreq: list[dict], input_bcftools: list[dict]) -> list[dict]:
         """
         :param input_lofreq: List of mutations identified by LoFreq
         :param input_bcftools: List of mutations identified by BCFtools

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
 
 from Bio.Seq import Seq
 
@@ -25,7 +25,7 @@ class BlastHitStatistics:
     strand: str
 
     @staticmethod
-    def parse_blast_output(output_path: Path) -> List['BlastHitStatistics']:
+    def parse_blast_output(output_path: Path) -> list['BlastHitStatistics']:
         """
         Parses a BLAST output file generated with the output format defined above.
         :return: List of parsed BLAST statistics
@@ -33,7 +33,7 @@ class BlastHitStatistics:
         return [BlastHitStatistics.create_from_dict(d) for d in BlastFormat7Parser.parse_output_file(output_path)]
 
     @staticmethod
-    def create_from_dict(info: Dict[str, Any]) -> 'BlastHitStatistics':
+    def create_from_dict(info: dict[str, Any]) -> 'BlastHitStatistics':
         """
         Creates a BLAST hit statistic from a parsed BLAST output dictionary.
         :param info: Info dictionary

@@ -2,9 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -15,12 +14,11 @@ class NextcladeReporter(Tool):
     Creates an HTML report for the Nextclade analysis.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Nextclade reporter', '0.1', camel)
+        super().__init__('Nextclade reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -28,11 +26,11 @@ class NextcladeReporter(Tool):
         :return: None
         """
         if 'CSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Nextclade CSV input is required')
+            raise InvalidToolInputError('Nextclade CSV input is required')
         if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Nextclade DB input is required')
+            raise InvalidToolInputError('Nextclade DB input is required')
         if 'nextclade' not in self._input_informs:
-            raise InvalidInputSpecificationError('Nextclade informs are required')
+            raise InvalidToolInputError('Nextclade informs are required')
         if len(self._input_informs['nextclade']['results']) != 1:
             logger.warning(f'{self.name} only supports a single nextclade result')
         super()._check_input()

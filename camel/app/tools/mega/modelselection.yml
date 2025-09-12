@@ -1,8 +1,24 @@
-dependencies: [MEGA/10.0.4]
+dependencies:
+  - MEGA/10.0.4
 parameters:
-  branch_swap_filter: {default: true, mandatory: true, option: null, value: None}
-  missing_data_treatment: {default: true, mandatory: true, option: null, value: Complete
-      deletion}
-  site_coverage_cutoff: {default: false, mandatory: false, option: null, value: '50'}
-  threads: {default: true, mandatory: true, option: null, value: '4'}
+  branch_swap_filter:
+    default: true
+    mandatory: true
+    option: null
+    value: None
+  missing_data_treatment:
+    default: true
+    mandatory: true
+    option: null
+    value: Complete deletion
+  site_coverage_cutoff:
+    default: false
+    mandatory: false
+    option: null
+    value: '50'
+  threads:
+    default: true
+    mandatory: true
+    option: null
+    value: 4
 tool_command: megacc

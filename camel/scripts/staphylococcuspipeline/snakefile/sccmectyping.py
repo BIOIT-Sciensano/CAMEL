@@ -1,7 +1,6 @@
 from pathlib import Path
 
-SNAKEFILE_SCCMEC_TYPING = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_scc_mec_typing = Path('sccmec_typing')
-OUTPUT_SCCMEC_TYPING_REPORT = _dir_scc_mec_typing / 'report' / 'html.io'
-OUTPUT_SCCMEC_TYPING_REPORT_EMPTY = _dir_scc_mec_typing / 'report' / 'html-empty.io'
-OUTPUT_SCCMEC_TYPING_SUMMARY = _dir_scc_mec_typing / 'summary_sccmec.tsv'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+OUTPUT_REPORT = 'sccmec_typing/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'sccmec_typing/report/html-empty.iob'
+OUTPUT_SUMMARY = 'sccmec_typing/summary_sccmec.{ext}'

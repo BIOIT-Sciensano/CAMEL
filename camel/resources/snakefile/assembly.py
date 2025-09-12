@@ -4,34 +4,34 @@ from typing import Any
 from camel.resources.snakefile import assembly_spades, assembly_flye, polish_assembly_short, polish_assembly_long, \
     human_read_scrubbing
 
-SNAKEFILE_ASSEMBLY = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-OUTPUT_ASSEMBLY_FASTA = Path('assembly', 'filtering', 'fasta.io')
-OUTPUT_ASSEMBLY_FILTERING_INFORMS = Path('assembly', 'filtering', 'informs.io')
-OUTPUT_ASSEMBLY_REPORT = Path('assembly', 'report', 'html.io')
-OUTPUT_ASSEMBLY_SUMMARY = Path('assembly', 'summary', 'summary_out.tsv')
-OUTPUT_ASSEMBLY_MAPPING_INFORMS = Path('assembly', '{mapper}', 'informs.io')
-OUTPUT_ASSEMBLY_DEPTH_INFORMS = Path('assembly', 'samtools_depth', '{mapper}', 'informs.io')
-OUTPUT_ASSEMBLY_MAPPING_RATE_INFORMS = Path('assembly', 'samtools_flagstat', '{mapper}', 'informs.io')
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+OUTPUT_FASTA = 'assembly/filtering/fasta.io'
+OUTPUT_INFORMS_FILTERING = 'assembly/filtering/informs.io'
+OUTPUT_REPORT = 'assembly/report/html.iob'
+OUTPUT_SUMMARY = 'assembly/summary/summary_out.tsv'
+OUTPUT_INFORMS_MAPPING = 'assembly/{mapper}/informs.io'
+OUTPUT_INFORMS_DEPTH = 'assembly/samtools_depth/{mapper}/informs.io'
+OUTPUT_INFORMS_MAPPING_RATE = 'assembly/samtools_flagstat/{mapper}/informs.io'
 
 
-def get_fasta_raw(config: dict[str, Any]) -> Path:
+def get_fasta_raw(config: dict[str, Any]) -> str:
     """
     Returns the assembly FASTA output IO object path (before filtering).
     """
     if (config['input_type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' not in config['analyses']):
-        return Path(str(human_read_scrubbing.INPUT_SCRUBBING_FASTA).format(input_format='fasta'))
+        return human_read_scrubbing.INPUT_FASTA.format(input_format='fasta')
     if (config['input_type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses']):
-        return Path(str(human_read_scrubbing.OUTPUT_SCRUBBING_FASTA).format(input_format='fasta'))
+        return human_read_scrubbing.OUTPUT_FASTA.format(input_format='fasta')
     if config['input_type'] == 'illumina':
-        return assembly_spades.OUTPUT_ASSEMBLY_FASTA
+        return assembly_spades.OUTPUT_FASTA
     if config['input_type'] == 'ont':
-        return assembly_flye.OUTPUT_ASSEMBLY_FASTA
+        return assembly_flye.OUTPUT_FASTA
     if config['input_type'] == 'hybrid':
-        return Path(str(polish_assembly_short.OUTPUT_POLISHING_FASTA).format(assembly_type='flye'))
+        return polish_assembly_short.OUTPUT_POLISHING_FASTA.format(assembly_type='flye')
     raise ValueError(f"Invalid input type: {config['input_type']}")
 
 
-def get_command_informs(config: dict[str, Any]) -> list[Path]:
+def get_command_informs(config: dict[str, Any]) -> list[str]:
     """
     Returns the assembly informs output IO object paths.
     :return: Assembly informs path
@@ -39,18 +39,15 @@ def get_command_informs(config: dict[str, Any]) -> list[Path]:
     if config['input_type'] in ('fasta', 'fasta_with_vcf'):
         return []
     if config['input_type'] == 'illumina':
-        return [Path(config['working_dir'], assembly_spades.OUTPUT_ASSEMBLY_INFORMS)]
+        return [assembly_spades.OUTPUT_INFORMS]
     if config['input_type'] == 'ont':
-        return [Path(config['working_dir'], assembly_flye.OUTPUT_ASSEMBLY_INFORMS)]
+        return [assembly_flye.OUTPUT_INFORMS]
     if config['input_type'] == 'hybrid':
         return [
-            Path(config['working_dir'], assembly_flye.OUTPUT_ASSEMBLY_INFORMS),
-            Path(config['working_dir'],
-                 str(polish_assembly_long.OUTPUT_POLISH_MEDAKA_INFORMS).format(assembly_type='flye')),
-            Path(config['working_dir'],
-                 str(polish_assembly_short.OUTPUT_POLYPOLISH_INFORMS).format(assembly_type='flye')),
-            Path(config['working_dir'],
-                 str(polish_assembly_short.OUTPUT_POLCA_INFORMS).format(assembly_type='flye'))
+            assembly_flye.OUTPUT_INFORMS,
+            polish_assembly_long.OUTPUT_POLISH_MEDAKA_INFORMS.format(assembly_type='flye'),
+            polish_assembly_short.OUTPUT_POLYPOLISH_INFORMS.format(assembly_type='flye'),
+            polish_assembly_short.OUTPUT_POLCA_INFORMS.format(assembly_type='flye')
         ]
     raise ValueError(f"Invalid input type: {config['input_type']}")
 
@@ -62,9 +59,9 @@ def get_mapping_inform(read_key: str) -> Path:
     :return: Path to mapping informs
     """
     if read_key == 'fastq_pe':
-        return Path(str(OUTPUT_ASSEMBLY_MAPPING_INFORMS).format(mapper='bowtie2'))
+        return Path(str(OUTPUT_INFORMS_MAPPING).format(mapper='bowtie2'))
     elif read_key == 'fastq_se':
-        return Path(str(OUTPUT_ASSEMBLY_MAPPING_INFORMS).format(mapper='minimap2'))
+        return Path(str(OUTPUT_INFORMS_MAPPING).format(mapper='minimap2'))
     raise ValueError(f'Invalid read key: {read_key}')
 
 
@@ -72,13 +69,12 @@ def get_depth_inform(read_key: str) -> Path:
     """
     Returns the depth informs.
     :param read_key: Read key
-    :param mode: Reference mode ('assembly' or 'ref')
     :return: Path to depth informs
     """
     if read_key == 'fastq_pe':
-            return Path(str(OUTPUT_ASSEMBLY_DEPTH_INFORMS).format(mapper='bowtie2'))
+        return Path(str(OUTPUT_INFORMS_DEPTH).format(mapper='bowtie2'))
     elif read_key == 'fastq_se':
-        return Path(str(OUTPUT_ASSEMBLY_DEPTH_INFORMS).format(mapper='minimap2'))
+        return Path(str(OUTPUT_INFORMS_DEPTH).format(mapper='minimap2'))
     raise ValueError(f'Invalid read key: {read_key}')
 
 
@@ -89,16 +85,15 @@ def get_mapping_rate_inform(read_key: str) -> Path:
     :return: Path to depth informs
     """
     if read_key == 'fastq_pe':
-        return Path(str(OUTPUT_ASSEMBLY_MAPPING_RATE_INFORMS).format(mapper='bowtie2'))
+        return Path(str(OUTPUT_INFORMS_MAPPING_RATE).format(mapper='bowtie2'))
     elif read_key == 'fastq_se':
-        return Path(str(OUTPUT_ASSEMBLY_MAPPING_RATE_INFORMS).format(mapper='minimap2'))
+        return Path(str(OUTPUT_INFORMS_MAPPING_RATE).format(mapper='minimap2'))
     raise ValueError(f'Invalid read key: {read_key}')
 
 
-def get_qc_informs(config: dict[str, Any], input_type: str, mode: str = 'assembly') -> list[Path]:
+def get_qc_informs(input_type: str, mode: str = 'assembly') -> list[Path]:
     """
     Returns the QC informs based on the input type.
-    :param config: Snakemake configuration
     :param input_type: Input type
     :param mode: Reference mode (assembly or ref)
     :return: List of paths to QC informs
@@ -112,4 +107,4 @@ def get_qc_informs(config: dict[str, Any], input_type: str, mode: str = 'assembl
         informs.append(get_mapping_inform('fastq_se'))
         if mode == 'assembly':
             informs.append(get_depth_inform('fastq_se'))
-    return [Path(config['working_dir'], p) for p in informs]
+    return informs

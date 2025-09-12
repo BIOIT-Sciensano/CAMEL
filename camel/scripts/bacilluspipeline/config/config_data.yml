@@ -18,7 +18,6 @@ citations:
     - Li_2009-samtools
     - Camacho_2009-blast
     - Clausen_2018-kma
-    - Inouye_2014-srst2
     - Wick_2022-polypolish
     - Zimin_2020-polca
     - Feldgarden_2019-ndaro
@@ -124,9 +123,6 @@ gene_detection:
     params:
       blastn:
         min_percent_identity: 95
-        min_coverage: 60
-      srst2:
-        max_divergence: 5
         min_coverage: 60
     metadata:
       name: Notes

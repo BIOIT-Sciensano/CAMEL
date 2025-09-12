@@ -2,10 +2,9 @@ import ast
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -18,13 +17,12 @@ class UpdateGMMReport(Tool):
                   'TSV_GMM_DB']
     COLOR_CODE = {'STRAIN_MATCH': 'green', 'GMM_MATCH': 'yellow', 'BOTH_MATCH': 'red', 'UNKNOWN_MATCH': 'grey'}
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('UpdateGMMReport', '0.1', camel)
+        super().__init__('UpdateGMMReport', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -32,7 +30,7 @@ class UpdateGMMReport(Tool):
         :return: None
         """
         if any(key not in self._tool_inputs for key in self.INPUT_KEYS):
-            raise InvalidInputSpecificationError(
+            raise InvalidToolInputError(
                 "Tool requires {} inputs".format(', '.join(UpdateGMMReport.INPUT_KEYS)))
         super()._check_input()
 

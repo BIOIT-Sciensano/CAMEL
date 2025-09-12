@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Callable, Optional
 
-from camel.app.camel import Camel
+from camel.app.components import toolutils
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -24,18 +24,23 @@ class FastpReporter(Tool):
         {'key': 'total_reads', 'name': 'Total reads', 'fmt': lambda x: f'{x:,}'}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('fastp reporter', '0.1', camel)
+        super().__init__('fastp reporter', '0.1')
         self.__sub_folder = Path('read_trimming')
         self._report_section = None
 
     @staticmethod
     def _format_value(str_in: str, fmt: Optional[Callable] = None) -> str:
+        """
+        Formats the input value.
+        :param str_in: input string
+        :param fmt: formatting function
+        :return: formatted string
+        """
         if fmt is not None:
             return fmt(str_in)
         return str_in
@@ -58,16 +63,11 @@ class FastpReporter(Tool):
         Checks if the input is valid.
         :return: None
         """
+        toolutils.check_input(self, keys_required=['HTML_pre', 'HTML_post', 'HTML'])
         if 'FASTQ_PE' not in self._tool_inputs and 'FASTQ_SE' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTQ input is required ('FASTQ_PE')")
-        if 'HTML_pre' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Pre-trimming reports are required ('HTML_pre')")
-        if 'HTML_post' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Post-trimming reports are required ('HTML_post')")
-        if 'HTML' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("fastp report is required ('HTML')")
+            raise InvalidToolInputError("FASTQ input is required ('FASTQ_PE')")
         if 'fastp' not in self._input_informs:
-            raise InvalidInputSpecificationError("fastp inform are required ('fastp')")
+            raise InvalidToolInputError("fastp inform are required ('fastp')")
         super()._check_input()
 
     def __add_fastqc_reports(self, header: str, dir_name: str, key: str) -> None:
@@ -138,10 +138,10 @@ class FastpReporter(Tool):
         """
         parts = input_str.split(' ')
         if len(parts) == 1:
-            return '{:,}'.format(int(parts[0]))
+            return f'{int(parts[0]):,}'
         elif len(parts) == 2:
-            return '{:,} {}'.format(int(parts[0]), parts[1])
-        raise ValueError("Cannot parse: {}".format(input_str))
+            return f'{int(parts[0]):,} {parts[1]}'
+        raise ValueError(f"Cannot parse: {input_str}")
 
     def __add_trimmed_read_files(self) -> None:
         """

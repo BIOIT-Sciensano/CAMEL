@@ -1,10 +1,8 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.tool import Tool
 
 
 class QuastInformExtractor(Tool):
-
     """
     Customized tool to parse QUAST TXT output to gather assembly QC information
     """
@@ -42,13 +40,12 @@ class QuastInformExtractor(Tool):
             '# unaligned contigs')
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Quast InformExtractor', '4.4', camel)
+        super().__init__('Quast InformExtractor', '4.4')
 
     def _execute_tool(self) -> None:
         """
@@ -62,9 +59,9 @@ class QuastInformExtractor(Tool):
         Checks whether required quast TSV input is available
         :return: None
         """
-        super(QuastInformExtractor, self)._check_input()
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input file is required.")
+            raise InvalidToolInputError("TSV input file is required.")
+        super()._check_input()
 
     def __set_informs(self) -> None:
         """

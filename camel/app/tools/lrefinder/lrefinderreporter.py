@@ -2,9 +2,8 @@ from typing import Union
 
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -14,12 +13,11 @@ class LREFinderReporter(Tool):
     Tool to generate HTML output for the LRE-Finder tool.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('LRE-Finder reporter', '1.0', camel)
+        super().__init__('LRE-Finder reporter', '1.0')
 
     def _check_input(self) -> None:
         """
@@ -27,7 +25,7 @@ class LREFinderReporter(Tool):
         :return: None
         """
         if 'lrefinder' not in self._input_informs:
-            raise InvalidInputSpecificationError('LRE-Finder informs are required')
+            raise InvalidToolInputError('LRE-Finder informs are required')
         super()._check_input()
 
     @staticmethod

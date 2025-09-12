@@ -1,11 +1,10 @@
 import pandas as pd
 
-from camel.app.camel import Camel
 from camel.app.components.html.htmlelement import HtmlElement
 from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.mobsuite.mobreconreporter import MOBReconReporter
@@ -17,12 +16,11 @@ class GenomicContext(Tool):
     Tool to link detected genes to their genomic context (e.g. plasmid / chromosome).
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Genomic context', '0.1', camel)
+        super().__init__('Genomic context', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -30,7 +28,7 @@ class GenomicContext(Tool):
         :return: None
         """
         if 'dbs' not in self._input_informs:
-            raise InvalidInputSpecificationError('Database informs input is required')
+            raise InvalidToolInputError('Database informs input is required')
         super()._check_input()
 
     def _get_plasmid_status(self, contig_name: str, plasmids: list[str]) -> list[HtmlTableCell]:

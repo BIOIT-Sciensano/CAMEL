@@ -10,14 +10,13 @@ from camel.app.components.files.fastautils import FastaUtils
 from camel.app.components.files.fastqutils import FastqUtils
 from camel.app.components.files.fileutils import FileUtils
 from camel.app.components.galaxy.galaxyutils import GalaxyUtils
+from camel.app.components.html import PATH_JQUERY, PATH_CSS
 from camel.app.components.html.htmlreport import HtmlReport
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.pipelines import absolute_path_by_pathlib
-from camel.app.error.invalidinputerror import InvalidInputError
+from camel.app.config import config
+from camel.app.error import InvalidToolInputError
 from camel.app.loggers import logger
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources import CSS_STYLE
-from camel.resources.javascript import JQUERY_SRC
 
 
 def add_common_arguments(argument_parser: argparse.ArgumentParser) -> None:
@@ -119,7 +118,7 @@ def generate_analysis_info_section(
     section = HtmlReportSection('Analysis info')
     input_files = determine_input_file_str(args) if input_file_str is None else input_file_str
     data = [
-        ('Analysis date:', datetime.datetime.now().strftime(SnakePipelineUtils.DATE_FORMAT)),
+        ('Analysis date:', datetime.datetime.now().strftime(config.date_fmt)),
         ('Input file(s):', input_files),
     ]
     if ('input_type' in args) and (args.input_type is not None):
@@ -165,10 +164,10 @@ def init_report(output_path: Path, output_dir: Path, title: str, header: str) ->
     :param header: Report header
     :return: Report
     """
-    report = HtmlReport(output_path, output_dir, [JQUERY_SRC])
+    report = HtmlReport(output_path, output_dir, [PATH_JQUERY])
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
-    report.initialize(title, CSS_STYLE)
+    report.initialize(title, PATH_CSS)
     report.add_pipeline_header(header)
     report.save()
     return report
@@ -221,13 +220,13 @@ def validate_input_files(args: argparse.Namespace, input_type: Optional[str] = N
             try:
                 seqs = list(SeqIO.parse(handle, 'fasta'))
             except BaseException as err:
-                raise InvalidInputError(f'Invalid FASTA input: {err}')
+                raise InvalidToolInputError(f'Invalid FASTA input: {err}')
         if FastqUtils.is_fastq(args.fasta):
-            raise InvalidInputError('Expected a FASTA file, but a FASTQ file was detected')
+            raise InvalidToolInputError('Expected a FASTA file, but a FASTQ file was detected')
         if FastaUtils.has_duplicates(args.fasta):
-            raise InvalidInputError('The input FASTA file contains duplicate sequence IDs.')
+            raise InvalidToolInputError('The input FASTA file contains duplicate sequence IDs.')
         if args.detection_method != 'blast':
-            raise InvalidInputError('For FASTA input, only BLAST-based detection is available.')
+            raise InvalidToolInputError('For FASTA input, only BLAST-based detection is available.')
         logger.info(f'Valid FASTA file ({len(seqs):,} sequences)')
 
     # FASTQ PE inputs
@@ -235,7 +234,7 @@ def validate_input_files(args: argparse.Namespace, input_type: Optional[str] = N
         nb_reads_fwd = FastqUtils.count_reads(args.fastq_pe[0])
         nb_reads_rev = FastqUtils.count_reads(args.fastq_pe[1])
         if not nb_reads_fwd == nb_reads_rev:
-            raise InvalidInputError(
+            raise InvalidToolInputError(
                 f'The number of forward ({nb_reads_fwd:,}) and reverse ({nb_reads_rev:,}) reads should be equal, '
                 'check that the input files provided are complete and correctly paired.')
         logger.info('FASTQ input is valid')

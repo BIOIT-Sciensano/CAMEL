@@ -1,12 +1,49 @@
-dependencies: [sniffles/2.2]
+dependencies:
+  - sniffles/2.2
 parameters:
-  allow_overwrite: {default: false, mandatory: false, option: --allow-overwrite, value: None}
-  mapq: {default: false, mandatory: false, option: --mapq, value: '25'}
-  min_support: {default: false, mandatory: false, option: --minsupport, value: 'auto'}
-  min_svlen: {default: false, mandatory: false, option: --minsvlen, value: '35'}
-  no_consensus: {default: false, mandatory: false, option: --no-consensus, value: None}
-  non_germline: {default: false, mandatory: false, option: --non-germline, value: None}
-  phase: {default: false, mandatory: false, option: --phase, value: None}
-  threads: {default: true, mandatory: true, option: --threads, value: '8'}
-  vcf: {default: true, mandatory: true, option: --vcf, value: 'variants.vcf'}
+  allow_overwrite:
+    default: false
+    mandatory: false
+    option: '--allow-overwrite'
+    value: None
+  mapq:
+    default: false
+    mandatory: false
+    option: '--mapq'
+    value: '25'
+  min_support:
+    default: false
+    mandatory: false
+    option: '--minsupport'
+    value: auto
+  min_svlen:
+    default: false
+    mandatory: false
+    option: '--minsvlen'
+    value: '35'
+  no_consensus:
+    default: false
+    mandatory: false
+    option: '--no-consensus'
+    value: None
+  non_germline:
+    default: false
+    mandatory: false
+    option: '--non-germline'
+    value: None
+  phase:
+    default: false
+    mandatory: false
+    option: '--phase'
+    value: None
+  threads:
+    default: true
+    mandatory: true
+    option: '--threads'
+    value: '8'
+  vcf:
+    default: true
+    mandatory: true
+    option: '--vcf'
+    value: variants.vcf
 tool_command: sniffles

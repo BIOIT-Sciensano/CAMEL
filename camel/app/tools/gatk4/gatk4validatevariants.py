@@ -1,8 +1,8 @@
 import shutil
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.gatk4.gatk4 import GATK4
@@ -19,13 +19,12 @@ class GATK4ValidateVariants(GATK4):
 
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize GATK4 ValidateVariants
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk4 ValidateVariants', '4.1.9.0', camel)
+        super().__init__('gatk4 ValidateVariants', '4.1.9.0')
 
         self._required_inputs = ["VCF", "FASTA_REF"]
         self._specific_parameters = ["output"]
@@ -35,8 +34,7 @@ class GATK4ValidateVariants(GATK4):
         Set the input specification. Overrules method in parent class
         :return: None
         """
-        super(GATK4ValidateVariants, self)._set_input()
-
+        super()._set_input()
         if 'VCF_dbsnp' in self._tool_inputs:
             self._input_string += f"--dbsnp {self._tool_inputs['VCF_dbsnp'][0].path} "
 
@@ -54,17 +52,17 @@ class GATK4ValidateVariants(GATK4):
         :return: None
         """
         with open(self._tool_outputs['TXT_metrics'][0].path, 'w') as output_file:
-            output_file.write(self.stderr)
+            output_file.write(self._command.stderr)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Check the result. Error in the VCF file should not automatically cause the pipeline to terminate.
         :return: None
         """
         try:
-            super(GATK4ValidateVariants, self)._check_command_output()
+            super()._check_command_output(command)
         except ToolExecutionError:
-            logger.warning(f"GATK tool {self._name} failed to run, message: \n{self.stderr}")
+            logger.warning(f"GATK tool {self._name} failed to run, message: \n{command.stderr}")
 
     def _execute_tool(self) -> None:
         """

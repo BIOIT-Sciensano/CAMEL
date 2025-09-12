@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -13,13 +13,12 @@ class MothurAlignSeqs(Mothur):
     is compatible with the original template alignment.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('mothur_align_seqs', '1.39.1', camel)
+        super().__init__('mothur_align_seqs', '1.39.1')
 
     def _check_input(self):
         """
@@ -29,24 +28,22 @@ class MothurAlignSeqs(Mothur):
         - No other input keys are allowed
         :return: None
         """
-        super(MothurAlignSeqs, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs or 'FASTA_Ref' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Not enough valid input files given for Mothur '
-                                                 'align.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Not enough valid input files given for {self.name}: {self._tool_inputs}')
         if len(self._tool_inputs['FASTA']) != 1 or len(self._tool_inputs['FASTA_Ref']) != 1:
-            raise InvalidInputSpecificationError('Invalid number (max = 1) of files per key given for Mothur \
-                                                 align.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (max = 1) of files per key given for {self.name}: {self._tool_inputs}')
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidInputSpecificationError('Too many input keys given for Mothur align.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for {self.name}: {self._tool_inputs}')
 
     def _build_input_string(self):
         """
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        items = ['fasta={}'.format(self._tool_inputs['FASTA'][0]),
-                 'reference={}'.format(self._tool_inputs['FASTA_Ref'][0]),
-                 'outputdir={}'.format(self._folder)]
+        items = [f'fasta={self._tool_inputs["FASTA"][0]}',
+                 f'reference={self._tool_inputs["FASTA_Ref"][0]}',
+                 f'outputdir={self._folder}']
         return ', '.join(items)
 
     def _set_output(self):
@@ -54,6 +51,6 @@ class MothurAlignSeqs(Mothur):
         Sets the name of the output files, and fills the output file object with them
         :return: None
         """
-        basename = super(MothurAlignSeqs, self)._get_basename()
+        basename = super()._get_basename()
         self._tool_outputs['FASTA'] = [ToolIOFile(basename + '.align')]
         self._tool_outputs['TSV_Report'] = [ToolIOFile(basename + '.align.report')]

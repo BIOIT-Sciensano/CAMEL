@@ -1,22 +1,77 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  activity_profile_out: {default: false, mandatory: false, option: --activity-profile-out,
-    p_index: 99, value: HaplotypeCaller_activeProfile.igv}
-  annotation_group: {default: false, mandatory: false, option: -G, p_index: 10, value: ""}
-  bam_output: {default: false, mandatory: false, option: --bam-output, p_index: 99,
-    value: HaplotypeCaller_bamOutput.bam}
-  bam_writer_type: {default: false, mandatory: false, option: --bam-writer-type, p_index: 99,
-    value: CALLED_HAPLOTYPES}
-  contamination: {default: false, mandatory: false, option: -contamination, p_index: 10, value: "0.0"}
-  emit_ref_confidence: {default: false, mandatory: false, option: -ERC, p_index: 10,
-    value: NONE}
-  graph_output: {default: false, mandatory: false, option: --graph-output, p_index: 99,
-    value: HaplotypeCaller_graphOutput.txt}
-  gqb: {default: false, mandatory: false, option: -GQB, p_index: 10, value: "10,20,30,40"}
-  min_base_quality_score: {default: false, mandatory: false, option: -mbq, p_index: 99,
-    value: '10'}
-  output: {default: true, mandatory: false, option: --output, p_index: 0, value: raw.snps.indels.vcf}
-  sample_ploidy: {default: true, mandatory: false, option: --sample-ploidy, p_index: 10, value: '2'}
-  standard_min_confidence_threshold_for_calling: {default: true, mandatory: false,
-    option: --standard-min-confidence-threshold-for-calling, p_index: 20, value: '30.0'}
+  activity_profile_out:
+    default: false
+    mandatory: false
+    option: '--activity-profile-out'
+    p_index: 99
+    value: HaplotypeCaller_activeProfile.igv
+  annotation_group:
+    default: false
+    mandatory: false
+    option: '-G'
+    p_index: 10
+    value: ''
+  bam_output:
+    default: false
+    mandatory: false
+    option: '--bam-output'
+    p_index: 99
+    value: HaplotypeCaller_bamOutput.bam
+  bam_writer_type:
+    default: false
+    mandatory: false
+    option: '--bam-writer-type'
+    p_index: 99
+    value: CALLED_HAPLOTYPES
+  contamination:
+    default: false
+    mandatory: false
+    option: '-contamination'
+    p_index: 10
+    value: '0.0'
+  emit_ref_confidence:
+    default: false
+    mandatory: false
+    option: '-ERC'
+    p_index: 10
+    value: NONE
+  graph_output:
+    default: false
+    mandatory: false
+    option: '--graph-output'
+    p_index: 99
+    value: HaplotypeCaller_graphOutput.txt
+  gqb:
+    default: false
+    mandatory: false
+    option: '-GQB'
+    p_index: 10
+    value: '10,20,30,40'
+  min_base_quality_score:
+    default: false
+    mandatory: false
+    option: '-mbq'
+    p_index: 99
+    value: '10'
+  output:
+    default: true
+    mandatory: false
+    option: '--output'
+    p_index: 0
+    value: raw.snps.indels.vcf
+  sample_ploidy:
+    default: true
+    mandatory: false
+    option: '--sample-ploidy'
+    p_index: 10
+    value: '2'
+  standard_min_confidence_threshold_for_calling:
+    default: true
+    mandatory: false
+    option: '--standard-min-confidence-threshold-for-calling'
+    p_index: 20
+    value: '30.0'
 tool_command: HaplotypeCaller

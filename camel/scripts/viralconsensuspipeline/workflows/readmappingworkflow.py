@@ -1,14 +1,13 @@
 import dataclasses
 import json
 import logging
+from importlib.resources import files
 from pathlib import Path
-from typing import Optional, Any, Dict, List
-
-import pkg_resources
+from typing import Any, Optional
 
 from camel.app.camel import Camel
 from camel.app.components.workflows.utils.fastqinput import FastqInput
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 
 
@@ -19,11 +18,11 @@ class ReadMappingOutput:
     """
     path_bam: Path
     path_bed_low_cov: Path
-    stats: Dict[str, Any]
-    informs: List[Dict[str, Any]]
+    stats: dict[str, Any]
+    informs: list[dict[str, Any]]
 
 
-class ReadMappingWorkflow(object):
+class ReadMappingWorkflow:
     """
     Maps reads to an input FASTA file.
     """
@@ -62,14 +61,14 @@ class ReadMappingWorkflow(object):
         }, self._dir)
         dir_input = self._dir / 'input'
         dir_input.mkdir(exist_ok=True)
-        SnakemakeUtils.dump_object(fastq_in.to_fq_dict(), dir_input / 'fq_dict.io')
-        path_snakefile = pkg_resources.resource_filename(
-            'camel', 'scripts/viralconsensuspipeline/workflows/readmappingworkflow.smk')
+        snakemakeutils.dump_object(fastq_in.to_fq_dict(), dir_input / 'fq_dict.io')
+        path_snakefile = str(
+            files('camel').joinpath('scripts/viralconsensuspipeline/workflows/readmappingworkflow.smk'))
         SnakePipelineUtils.run_snakemake(path_snakefile, str(path_config), [], working_dir=self._dir, threads=threads)
 
         # Collect output
-        path_bam = SnakemakeUtils.load_object(self._dir / 'sam_to_bam' / 'bam.io')[0].path
-        path_bed = SnakemakeUtils.load_object(self._dir / 'low_depth' / 'bed.io')[0].path
+        path_bam = snakemakeutils.load_object(self._dir / 'sam_to_bam' / 'bam.io')[0].path
+        path_bed = snakemakeutils.load_object(self._dir / 'low_depth' / 'bed.io')[0].path
         with (self._dir / 'stats_mapping.json').open() as handle:
             stats = json.load(handle)
         with (self._dir / 'informs_all.json').open() as handle:

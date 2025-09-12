@@ -1,4 +1,4 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
 
@@ -8,12 +8,11 @@ class QualityCriteriaChecker(Tool):
     Tools that checks if the quality of the data is sufficient to proceed.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Advanced QC: quality checker', '0.1', camel)
+        super().__init__('Advanced QC: quality checker', '0.1')
 
     def _check_input(self):
         """
@@ -21,13 +20,13 @@ class QualityCriteriaChecker(Tool):
         :return: None
         """
         if 'cgmlst' not in self._input_informs:
-            raise InvalidInputSpecificationError("No cgMLST information found")
+            raise InvalidToolInputError("No cgMLST information found")
         if 'coverage' not in self._input_informs:
-            raise InvalidInputSpecificationError("No coverage information found")
+            raise InvalidToolInputError("No coverage information found")
         if 'mapping' not in self._input_informs:
-            raise InvalidInputSpecificationError("No mapping information found")
+            raise InvalidToolInputError("No mapping information found")
         if 'fastqc_checks' not in self._input_informs:
-            raise InvalidInputSpecificationError("No FASTQC checks information found")
+            raise InvalidToolInputError("No FASTQC checks information found")
         super(QualityCriteriaChecker, self)._check_input()
 
     def _execute_tool(self):

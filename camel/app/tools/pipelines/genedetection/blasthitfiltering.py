@@ -1,12 +1,11 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.components.blast.blasthitstatistics import BlastHitStatistics
 from camel.app.components.blasttyping import blasthitclustering
 from camel.app.components.blasttyping.blasthitfilteringhelper import BlastHitFilteringHelper
 from camel.app.components.genedetection.genedetectionblasthit import GeneDetectionBlastHit
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -31,12 +30,11 @@ class BlastHitFiltering(Tool):
         * 'score': The n best hits according to hit score are reported (controlled by the 'score_limit' parameter).
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Gene Detection: Hit Filtering', '0.1', camel)
+        super().__init__('Gene Detection: Hit Filtering', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -56,7 +54,7 @@ class BlastHitFiltering(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No 'TSV' input found.")
+            raise InvalidToolInputError("No 'TSV' input found.")
         super()._check_input()
 
     def __parse_tabular_blast_output(self, tsv_file: Path) -> list[GeneDetectionBlastHit]:
@@ -90,7 +88,7 @@ class BlastHitFiltering(Tool):
         # Report best N hits based on BLAST score
         elif self._parameters['filtering_method'].value == 'score':
             if 'score_nb_of_hits' not in self._parameters:
-                raise ToolExecutionError("'score_nb_of_hits' needs to be set when the filtering method is 'score'")
+                raise ToolExecutionError(self.name, "'score_nb_of_hits' needs to be set when the filtering method is 'score'")
             hits.sort(key=lambda h: (h.blast_stats.percent_identity, h.locus), reverse=True)
             hits = hits[:int(self._parameters['score_nb_of_hits'].value)]
         # Return best hit(s) for each cluster over overlapping loci

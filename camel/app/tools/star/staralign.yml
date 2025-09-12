@@ -1,15 +1,64 @@
-dependencies: [star/2.7.11b]
+dependencies:
+  - star/2.7.11b
 parameters:
-  command_input: {default: true, mandatory: false, option: --readFilesCommand, value: 'zcat'}
-  del_penalty: {default: false, mandatory: false, option: --scoreDelOpen, value: '-2'}
-  ends_align: {default: false, mandatory: false, option: --alignEndsType, value: 'Local'}
-  filename_output: {default: true, mandatory: true, option: null, value: 'reads.sorted.sam'}
-  genome_load: {default: false, mandatory: false, option: --genomeLoad, value: 'LoadAndKeep'}
-  ins_penalty: {default: false, mandatory: false, option: --scoreInsOpen, value: '-2'}
-  n_max_mismatch: {default: false, mandatory: false, option: --outFilterMismatchNmax, value: '10'}
-  n_max_multi_map: {default: false, mandatory: false, option: --outFilterMultimapNmax, value: '10'}
-  quant_mode: {default: false, mandatory: false, option: --quantMode, value: 'TranscriptomeSAM'}
-  std_out: {default: true, mandatory: true, option: --outStd, value: 'SAM'}
-  threads: {default: true, mandatory: true, option: --runThreadN, value: '8'}
-  type_output: {default: true, mandatory: true, option: --outSAMtype, value: 'SAM'}
+  command_input:
+    default: true
+    mandatory: false
+    option: '--readFilesCommand'
+    value: zcat
+  del_penalty:
+    default: false
+    mandatory: false
+    option: '--scoreDelOpen'
+    value: '-2'
+  ends_align:
+    default: false
+    mandatory: false
+    option: '--alignEndsType'
+    value: Local
+  filename_output:
+    default: true
+    mandatory: true
+    option: null
+    value: reads.sorted.sam
+  genome_load:
+    default: false
+    mandatory: false
+    option: '--genomeLoad'
+    value: LoadAndKeep
+  ins_penalty:
+    default: false
+    mandatory: false
+    option: '--scoreInsOpen'
+    value: '-2'
+  n_max_mismatch:
+    default: false
+    mandatory: false
+    option: '--outFilterMismatchNmax'
+    value: '10'
+  n_max_multi_map:
+    default: false
+    mandatory: false
+    option: '--outFilterMultimapNmax'
+    value: '10'
+  quant_mode:
+    default: false
+    mandatory: false
+    option: '--quantMode'
+    value: TranscriptomeSAM
+  std_out:
+    default: true
+    mandatory: true
+    option: '--outStd'
+    value: SAM
+  threads:
+    default: true
+    mandatory: true
+    option: '--runThreadN'
+    value: '8'
+  type_output:
+    default: true
+    mandatory: true
+    option: '--outSAMtype'
+    value: SAM
 tool_command: STAR

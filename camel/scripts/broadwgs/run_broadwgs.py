@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import yaml
 
@@ -13,10 +14,16 @@ from camel.app.loggers import logger
 from camel.app.pipeline.pipeline import Pipeline
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.broadwgs import SNAKEFILE_MAIN, CONFIG_DATA, REFERENCES, SLURM_SUBMIT, TOOL_DATA
+from camel.scripts.broadwgs import (
+    CONFIG_DATA,
+    REFERENCES,
+    SLURM_SUBMIT,
+    SNAKEFILE_MAIN,
+    TOOL_DATA,
+)
 
 
-class MainBroadWGSPipeline(object):
+class MainBroadWGSPipeline:
     """
     Main class to run the GATK best practices workflow
     """
@@ -61,7 +68,7 @@ class MainBroadWGSPipeline(object):
             config_file = self._args.config
         else:
             config_file = self.__construct_config_file()
-        with open(config_file, 'r') as handle_in:
+        with open(config_file) as handle_in:
             config_data = yaml.load(handle_in.read(), Loader=yaml.SafeLoader)
 
         try:

@@ -4,8 +4,8 @@ import os
 import re
 
 from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -16,13 +16,12 @@ class Orphelia(Tool):
     sequences with unknown phylogenetic origin
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('orphelia', '74', camel)
+        super().__init__('orphelia', '74')
 
     def _execute_tool(self):
         """
@@ -33,7 +32,7 @@ class Orphelia(Tool):
         self.__create_orphelia_copy()
         self._command.command = self.__remove_lmod(self._build_dependencies()) + self._command.command
         self._command.run_command(self.__get_working_folder())
-        self._check_command_output()
+        self._check_command_output(self._command)
         self.__clean_temp_directory()
         self.__set_output()
 
@@ -46,9 +45,9 @@ class Orphelia(Tool):
         """
         super(Orphelia, self)._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input key given for Orphelia, only FASTA allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid input key given for Orphelia, only FASTA allowed: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Invalid number of input keys given for Orphelia, only FASTA allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid number of input keys given for Orphelia, only FASTA allowed: {!r}'.format(self._tool_inputs))
         if len(self._tool_inputs['FASTA']) > 1:
             raise ValueError('Invalid number (max = 1) of files per key given for Orphelia: {!r}'.format(self._tool_inputs))
 
@@ -57,11 +56,11 @@ class Orphelia(Tool):
         Sets the name of the output files
         :return: None
         """
-        self._tool_outputs['COORD'] = [ToolIOFile(os.path.join(self._folder, 'gene.pred'))]
-        self._tool_outputs['TEXT_Header'] = [ToolIOFile(os.path.join(self._folder, 'frags.header'))]
-        self._tool_outputs['TEXT_Seq'] = [ToolIOFile(os.path.join(self._folder, 'orf.seq'))]
-        self._tool_outputs['TEXT_Coords'] = [ToolIOFile(os.path.join(self._folder, 'orf.coords'))]
-        self._tool_outputs['TEXT_Tis'] = [ToolIOFile(os.path.join(self._folder, 'tis.seq'))]
+        self._tool_outputs['COORD'] = [ToolIOFile(self._folder / 'gene.pred')]
+        self._tool_outputs['TEXT_Header'] = [ToolIOFile(self._folder / 'frags.header')]
+        self._tool_outputs['TEXT_Seq'] = [ToolIOFile(self._folder / 'orf.seq')]
+        self._tool_outputs['TEXT_Coords'] = [ToolIOFile(self._folder / 'orf.coords')]
+        self._tool_outputs['TEXT_Tis'] = [ToolIOFile(self._folder / 'tis.seq')]
 
     def __create_orphelia_copy(self):
         """
@@ -78,7 +77,7 @@ class Orphelia(Tool):
         """
         orphelia_cmd = Command()
         orphelia_cmd.command = self._build_dependencies() + ' echo $PATH'
-        orphelia_cmd.run_command(self._folder)
+        orphelia_cmd.run(self._folder)
         for item in orphelia_cmd.stdout.split(':'):
             if '/orphelia/' in item:
                 return item
@@ -119,10 +118,10 @@ class Orphelia(Tool):
         """
         return os.path.join(self._folder, 'orphelia')
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

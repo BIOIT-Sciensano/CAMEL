@@ -1,29 +1,25 @@
-import os
-from Bio import SeqIO
+from Bio import SeqIO, Alphabet
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from camel.app.components.files.fastautils import FastaUtils
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
+from camel.app.tools.gatk import MASK_NT
 from camel.app.tools.gatk.gatk import GATK
-from camel.app.components.sequence_extraction import Alphabet
-from camel.app.components.sequence_extraction import MASK_NT
 
 
 class GATKFastaAlternateReferenceMaker(GATK):
-
     """
     Class for GATK FastaAlternateReferenceMaker function
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk FastaAlternateReferenceMaker', '3.7', camel)
+        super().__init__('gatk FastaAlternateReferenceMaker', '3.7')
         self._required_inputs = ['VCF']
         self._output_type = 'FASTA'
         self._specific_parameters = ['concatenate_sequence_segments']
@@ -86,7 +82,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         if self._concatenate_sequence:
             # when 'concatenate_sequence_segments' set, final FASTA output will be
             # generated from FastaAlternateReferenceMaker output
-            self._fasta_concatenated = os.path.join(self._folder, self._fasta_concatenated)
+            self._fasta_concatenated = self._folder / self._fasta_concatenated
             self._tool_outputs['FASTA_concatenated'] = [ToolIOFile(self._fasta_concatenated)]
         else:
             self._tool_outputs['FASTA_concatenated'] = []

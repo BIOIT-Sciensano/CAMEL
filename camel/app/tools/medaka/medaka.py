@@ -1,28 +1,26 @@
 import abc
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
 
 class Medaka(Tool, metaclass=abc.ABCMeta):
-
     """
     Base class for Medaka tools.
     """
 
-    def __init__(self, tool_name: str, version: str, camel: Camel) -> None:
+    def __init__(self, tool_name: str, version: str) -> None:
         """
         Initializes a Medaka tool.
         :param tool_name: Tool name
         :param version: Tool version
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(tool_name, version, camel)
+        super().__init__(tool_name, version)
         self._specific_parameters = []
         self._required_inputs = []
         self._input_string = ''
@@ -49,7 +47,7 @@ class Medaka(Tool, metaclass=abc.ABCMeta):
         """
         for key in self._required_inputs:
             if key not in self._tool_inputs:
-                raise InvalidInputSpecificationError(f"Input '{key}' is required")
+                raise InvalidToolInputError(f"Input '{key}' is required")
         super()._check_input()
 
     def _set_input(self) -> None:
@@ -84,13 +82,13 @@ class Medaka(Tool, metaclass=abc.ABCMeta):
             self._tool_command, self._option_string, self._input_string, self._output_string
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_informs(self) -> None:
         """

@@ -1,6 +1,5 @@
 import math
 from pathlib import Path
-from typing import List, Tuple, Dict
 
 import vcf
 # noinspection PyProtectedMember
@@ -8,9 +7,8 @@ from vcf.model import _Record as Record
 # noinspection PyProtectedMember
 from vcf.parser import _Filter as Filter
 
-from camel.app.camel import Camel
 from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.tools.variantfiltering.basefilter import BaseFilter
 
 
@@ -26,12 +24,11 @@ class ZScoreFilter(BaseFilter):
     X = Y * {y_multiplier}
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Variant Filter: Z-score', '0.1', camel)
+        super().__init__('Variant Filter: Z-score', '0.1')
 
     @property
     def full_name(self) -> str:
@@ -56,8 +53,8 @@ class ZScoreFilter(BaseFilter):
         :return: None
         """
         if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No BAM input found")
-        super(ZScoreFilter, self)._check_input()
+            raise InvalidToolInputError("No BAM input found")
+        super()._check_input()
 
     @staticmethod
     def calculate_zscore(x: int, y: int) -> float:
@@ -70,7 +67,7 @@ class ZScoreFilter(BaseFilter):
         return float(x - y) / math.sqrt(x + y)
 
     @staticmethod
-    def get_actg_counts(pileup_line: str) -> List[int]:
+    def get_actg_counts(pileup_line: str) -> list[int]:
         """
         Get the count for each base
         :param pileup_line: Line of the pileup output.
@@ -78,7 +75,7 @@ class ZScoreFilter(BaseFilter):
         """
         return [pileup_line.upper().count(base) for base in ('A', 'C', 'T', 'G')]
 
-    def __get_actg_counts_by_position(self) -> Dict[Tuple[str, int], List[int]]:
+    def __get_actg_counts_by_position(self) -> dict[tuple[str, int], list[int]]:
         """
         Creates a pileup file with every position that covers a variant.
         :return: Path to pileup file
@@ -87,7 +84,7 @@ class ZScoreFilter(BaseFilter):
         with open(self._tool_inputs['VCF_GZ'][0].path, 'rb') as handle_in:
             with open(positions_file, 'w') as handle_out:
                 for variant in vcf.Reader(handle_in):
-                    handle_out.write('{}\t{}\n'.format(variant.CHROM, variant.POS))
+                    handle_out.write(f'{variant.CHROM}\t{variant.POS}\n')
 
         path = Path(self._folder) / 'positions.pileup'
         pileup_command = Command('{}samtools mpileup --count-orphans --positions {} {} > {}'.format(
@@ -101,8 +98,8 @@ class ZScoreFilter(BaseFilter):
                 actg_by_pos[(parts[0], int(parts[1]))] = ZScoreFilter.get_actg_counts(parts[4])
         return actg_by_pos
 
-    def __get_filtered_positions(self, actg_by_pos: Dict[Tuple[str, int], List[int]],
-                                 all_variants: List[Record]) -> List[Tuple[str, int]]:
+    def __get_filtered_positions(self, actg_by_pos: dict[tuple[str, int], list[int]],
+                                 all_variants: list[Record]) -> list[tuple[str, int]]:
         """
         Filters all variant positions based on the Z-score.
         :param actg_by_pos: ACTG counts by position
@@ -143,8 +140,8 @@ class ZScoreFilter(BaseFilter):
         self._command = Command(f'bgzip {output_uncompressed}')
         self._execute_command()
 
-    def __create_output_file(self, vcf_reader: vcf.Reader, all_variants: List[Record],
-                             filtered_positions: List[Tuple[str, int]]) -> Path:
+    def __create_output_file(self, vcf_reader: vcf.Reader, all_variants: list[Record],
+                             filtered_positions: list[tuple[str, int]]) -> Path:
         """
         Creates the output file.
         :return: Output file (uncompressed VCF)

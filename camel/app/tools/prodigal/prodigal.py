@@ -3,9 +3,9 @@ from statistics import stdev
 
 from Bio import SeqIO
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -15,12 +15,11 @@ class Prodigal(Tool):
     Fast, reliable protein-coding gene prediction for prokaryotic genomes.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Prodigal', '2.6.3', camel)
+        super().__init__('Prodigal', '2.6.3')
 
     def _execute_tool(self) -> None:
         """
@@ -47,16 +46,16 @@ class Prodigal(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required")
+            raise InvalidToolInputError("FASTA input is required")
         super()._check_input()
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks the command output to see if the program ran correctly.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f'Error executing {self.name}: {self.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _extract_fasta_stats(self, path_fasta: Path) -> None:
         """

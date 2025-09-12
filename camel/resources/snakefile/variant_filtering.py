@@ -1,16 +1,15 @@
 from pathlib import Path
 from typing import Dict, Any
 
-SNAKEFILE_VARIANT_FILTERING = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_variant_filtering = Path('variant_filtering')
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
-OUTPUT_VARIANT_FILTERING_STATS = _dir_variant_filtering / 'stats' / 'json.io'
-OUTPUT_VARIANT_FILTERING_INFORMS_ALL = _dir_variant_filtering / 'informs_all.io'
-OUTPUT_VARIANT_FILTERING_SUMMARY = _dir_variant_filtering / 'summary.tsv'
-OUTPUT_VARIANT_FILTERING_VCF = _dir_variant_filtering / '06-regions' / 'vcf.io'
+OUTPUT_STATS = 'variant_filtering/stats/json.io'
+OUTPUT_INFORMS_ALL = 'variant_filtering/informs_all.io'
+OUTPUT_SUMMARY = 'variant_filtering/summary.{ext}'
+OUTPUT_VCF = 'variant_filtering/06-regions/vcf.io'
 
 
-def get_filtering_param(config: Dict[str, Any], filter_key: str, param_name: str) -> Any:
+def get_filtering_param(config: dict[str, Any], filter_key: str, param_name: str) -> Any:
     """
     Returns the value of the given filtering parameter, returns 'None' when the parameter is not set.
     :param config: Snakemake configuration

@@ -1,38 +1,36 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.resources.snakefile import assembly
-from camel.scripts.staphylococcuspipeline.snakefile import spatyping as spatyping_workflow
 
 rule spa_typing_blastn:
     """
     Runs BLASTN to align the sequences against the spa typing database.
     """
     input:
-        FASTA = Path(config['working_dir']) / assembly.OUTPUT_ASSEMBLY_FASTA,
+        FASTA = assembly.OUTPUT_FASTA,
         DB_BLAST = config['spa_typing']['db']
     output:
-        TSV = Path(config['working_dir']) / 'spa_typing' / 'blastn' / 'blast_hits.tsv',
-        INFORMS = Path(config['working_dir']) / 'spa_typing' / 'blastn' / 'informs.io'
+        TSV = 'spa_typing/blastn/tsv.io',
+        INFORMS = 'spa_typing/blastn/informs.io' # 'spatyping_workflow.OUTPUT_INFORMS
     params:
-        running_dir = Path(config['working_dir']) / 'spa_typing' / 'blastn'
+        dir_ = 'spa_typing/blastn'
     run:
         from camel.app.tools.blast.blastn import Blastn
         from camel.app.tools.spatyping.spatyping import SpaTyping
         from camel.app.io.tooliofile import ToolIOFile
-        blastn = Blastn(Camel.get_instance())
-        SnakemakeUtils.add_pickle_input(blastn, 'FASTA', Path(input.FASTA))
+        blastn = Blastn()
+        snakemakeutils.add_pickle_input(blastn, 'FASTA', Path(input.FASTA))
         blastn.add_input_files({'DB_BLAST': [ToolIOFile(Path(input.DB_BLAST))]})
         blastn.update_parameters(
             output_format=SpaTyping.BLASTN_OUTPUT_FORMAT,
             num_alignments=100_000,
             dust='no',
             task='blastn')
-        step = Step(str(rule), blastn, Camel.get_instance(), params.running_dir, config)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(blastn, output)
+        step = Step(rule_name=str(rule), tool=blastn, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(blastn, output)
 
 rule spa_typing_run:
     """
@@ -42,19 +40,19 @@ rule spa_typing_run:
         TSV = rules.spa_typing_blastn.output.TSV,
         CSV_profiles = config['spa_typing']['profiles']
     output:
-        VAL_hits = Path(config['working_dir']) / 'spa_typing' / 'detection' / 'hits.io',
-        INFORMS = Path(config['working_dir']) / 'spa_typing' / 'detection' / 'informs.io'
+        VAL_hits = 'spa_typing/detection/hits.iob',
+        INFORMS = 'spa_typing/detection/informs.io'
     params:
-        running_dir = Path(config['working_dir']) / 'spa_typing' / 'detection'
+        dir_ = 'spa_typing/detection'
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.app.tools.spatyping.spatyping import SpaTyping
-        spatyping = SpaTyping(Camel.get_instance())
-        SnakemakeUtils.add_pickle_input(spatyping, 'TSV', Path(input.TSV))
+        spatyping = SpaTyping()
+        snakemakeutils.add_pickle_input(spatyping, 'TSV', Path(input.TSV))
         spatyping.add_input_files({'CSV_profiles': [ToolIOFile(Path(input.CSV_profiles))]})
-        step = Step(str(rule), spatyping, Camel.get_instance(), params.running_dir, config)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(spatyping, output)
+        step = Step(rule_name=str(rule), tool=spatyping, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(spatyping, output)
 
 rule spa_typing_report:
     """
@@ -64,23 +62,23 @@ rule spa_typing_report:
         VAL_hits = rules.spa_typing_run.output.VAL_hits,
         INFORMS_spa_typing = rules.spa_typing_run.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / spatyping_workflow.OUTPUT_SPATYPING_REPORT
+        VAL_HTML = 'spa_typing/report/html.iob' # spatyping_workflow.OUTPUT_REPORT
     params:
-        running_dir = Path(config['working_dir']) / 'spa_typing' / 'report'
+        dir_ = 'spa_typing/report'
     run:
         from camel.app.tools.spatyping.spatypingreporter import SpaTypingReporter
-        reporter = SpaTypingReporter(Camel.get_instance())
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, Camel.get_instance(), params.running_dir, config)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = SpaTypingReporter()
+        snakemakeutils.add_pickle_inputs(reporter, input)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule spa_typing_report_empty:
     """
     Creates an empty report when spatyping is disabled.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / spatyping_workflow.OUTPUT_SPATYPING_REPORT_EMPTY
+        VAL_HTML = 'spa_typing/report/html-empty.iob' # spatyping_workflow.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.create_empty_report_section('<i>spa</i> typing', Path(output.VAL_HTML))
@@ -92,10 +90,13 @@ rule spa_typing_summary:
     input:
         INFORMS = rules.spa_typing_run.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / spatyping_workflow.OUTPUT_SPATYPING_SUMMARY
+        FILE = 'spa_typing/summary_spatyping.{ext}' # spatyping_workflow.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS))
-        with open(output.TSV, 'w') as handle:
-            for key in ('spa_type', 'spa_type_repeats'):
-                handle.write('\t'.join([key, str(informs[key]) if informs[key] is not None else 'NA']))
-                handle.write('\n')
+        informs = snakemakeutils.load_object(Path(input.INFORMS))
+        data_summary = [
+            ('spa_type', informs['spa_type'] if informs['spa_type'] is not None else '-'),
+            ('spa_type_repeats', informs['spa_type_repeats'] if informs['spa_type'] is not None else '-'),
+        ]
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'spatyping')

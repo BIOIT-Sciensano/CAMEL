@@ -1,15 +1,76 @@
-dependencies: [vcftools/0.1.16]
+dependencies:
+  - vcftools/0.1.16
 parameters:
-  output: {default: true, mandatory: false, option: --output, p_index: 0, value: output.vcf.gz}
-  annotations: {default: false, mandatory: false, option: --annotations, p_index: 0, value: file.gz}
-  columns: {default: false, mandatory: false, option: --columns, p_index: 0, value: 'CHROM,FROM,TO,-,QUAL,INFO/STR,INFO/GN'}
-  description: {default: false, mandatory: false, option: --description, p_index: 0, value: file.gz}
-  fill_ac_an: {default: false, mandatory: false, option: --fill-AC-AN, p_index: 0, value: ''}
-  fill_hwe: {default: false, mandatory: false, option: --fill-HWE, p_index: 0, value: ''}
-  fill_icf: {default: false, mandatory: false, option: --fill-ICF, p_index: 0, value: ''}
-  fill_type: {default: false, mandatory: false, option: --fill-type, p_index: 0, value: ''}
-  filter: {default: false, mandatory: false, option: --filter, p_index: 0, value: file.gz}
-  filter_hard: {default: false, mandatory: false, option: --hard-filter, p_index: 0, value: ''}
-  normalize_alleles: {default: false, mandatory: false, option: --normalize-alleles, p_index: 0, value: ''}
-  remove: {default: false, mandatory: false, option: --remove, p_index: 0, value: 'ID,INFO/DP,FORMAT/DP,FILTER'}
+  output:
+    default: true
+    mandatory: false
+    option: '--output'
+    p_index: 0
+    value: output.vcf.gz
+  annotations:
+    default: false
+    mandatory: false
+    option: '--annotations'
+    p_index: 0
+    value: file.gz
+  columns:
+    default: false
+    mandatory: false
+    option: '--columns'
+    p_index: 0
+    value: 'CHROM,FROM,TO,-,QUAL,INFO/STR,INFO/GN'
+  description:
+    default: false
+    mandatory: false
+    option: '--description'
+    p_index: 0
+    value: file.gz
+  fill_ac_an:
+    default: false
+    mandatory: false
+    option: '--fill-AC-AN'
+    p_index: 0
+    value: ''
+  fill_hwe:
+    default: false
+    mandatory: false
+    option: '--fill-HWE'
+    p_index: 0
+    value: ''
+  fill_icf:
+    default: false
+    mandatory: false
+    option: '--fill-ICF'
+    p_index: 0
+    value: ''
+  fill_type:
+    default: false
+    mandatory: false
+    option: '--fill-type'
+    p_index: 0
+    value: ''
+  filter:
+    default: false
+    mandatory: false
+    option: '--filter'
+    p_index: 0
+    value: file.gz
+  filter_hard:
+    default: false
+    mandatory: false
+    option: '--hard-filter'
+    p_index: 0
+    value: ''
+  normalize_alleles:
+    default: false
+    mandatory: false
+    option: '--normalize-alleles'
+    p_index: 0
+    value: ''
+  remove:
+    default: false
+    mandatory: false
+    option: '--remove'
+    p_index: 0
+    value: 'ID,INFO/DP,FORMAT/DP,FILTER'
 tool_command: vcf-annotate

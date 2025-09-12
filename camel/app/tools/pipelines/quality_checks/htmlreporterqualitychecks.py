@@ -1,9 +1,6 @@
-from typing import List, Tuple
-
-from camel.app.camel import Camel
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.tools.tool import Tool
 
@@ -20,13 +17,12 @@ class HtmlReporterQualityChecks(Tool):
         'Failed': 'red'
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: CAMEL instance
-        :return: None
+                :return: None
         """
-        super().__init__('Quality checks reporter', '0.1', camel)
+        super().__init__('Quality checks reporter', '0.1')
         self._sub_folder = 'quality_control'
         self._section = HtmlReportSection('Quality checks')
 
@@ -65,10 +61,10 @@ class HtmlReporterQualityChecks(Tool):
         :return: None
         """
         if 'qc_checks' not in self._input_informs:
-            raise InvalidInputSpecificationError("No QC checks informs found")
+            raise InvalidToolInputError("No QC checks informs found")
         super(HtmlReporterQualityChecks, self)._check_input()
 
-    def __add_explanation_metrics(self, explanations: List[Tuple[str, str]]) -> None:
+    def __add_explanation_metrics(self, explanations: list[tuple[str, str]]) -> None:
         """
         Adds an explanation of the quality checks.
         :param explanations: List of explanations

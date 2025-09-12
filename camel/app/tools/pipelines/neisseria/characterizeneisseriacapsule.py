@@ -2,9 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.command.command import Command
+from camel.app.components import toolutils
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
@@ -15,12 +16,11 @@ class CharacterizeNeisseriaCapsule(Tool):
     serogroup predictions by identifying capsule genes and genetic variations that might impact their expression.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the characterize_neisseria_capsule tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('characterize_neisseria_capsule', 'a75a009', camel)
+        super().__init__('characterize_neisseria_capsule', 'a75a009')
 
     def _check_input(self) -> None:
         """
@@ -29,9 +29,9 @@ class CharacterizeNeisseriaCapsule(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA input is required')
+            raise InvalidToolInputError('FASTA input is required')
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError('Only a single FASTA file can be analyzed at a time')
+            raise InvalidToolInputError('Only a single FASTA file can be analyzed at a time')
         super()._check_input()
 
     def __build_command(self, dir_path: Path, dir_out: Path) -> None:
@@ -46,13 +46,13 @@ class CharacterizeNeisseriaCapsule(Tool):
             *self._build_options()
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(f'Error executing {self.name}: {self.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _execute_tool(self) -> None:
         """
@@ -73,7 +73,7 @@ class CharacterizeNeisseriaCapsule(Tool):
         try:
             self._tool_outputs['TSV'] = [ToolIOFile(next((dir_out / 'serogroup').glob('serogroup_predictions_*.tab')))]
         except StopIteration:
-            raise ToolExecutionError(f"TSV file not found in output folder: {dir_out / 'serogroup'}")
+            raise ToolExecutionError(self.name, f"TSV file not found in output folder: {dir_out / 'serogroup'}")
         self._tool_outputs['JSON'] = [ToolIOFile(dir_out / 'serogroup' / 'serogroup_results.json')]
         self._parse_tsv(self._tool_outputs['TSV'][0].path)
 

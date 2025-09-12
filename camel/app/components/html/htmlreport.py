@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 
 import shutil
 
@@ -14,17 +14,17 @@ class HtmlReport(HtmlBase):
     This class represents an HTML report.
     """
 
-    def __init__(self, filename: Path, output_dir: Path = None, include_js: Optional[List[Path]] = None):
+    def __init__(self, filename: Path, output_dir: Path = None, include_js: Optional[list[Path]] = None):
         """
         Initializes the report.
         :param filename: Filename
         :param output_dir: Output directory
         :param include_js: (Optional) List of Javascript files that are included in the report
         """
-        super(HtmlReport, self).__init__()
         self._filename = filename
         self._output_dir = output_dir
         self._include_js = include_js
+        super().__init__()
 
     @property
     def output_dir(self) -> Path:

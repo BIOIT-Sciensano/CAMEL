@@ -1,7 +1,5 @@
 from pathlib import Path
-from typing import Dict
 
-from camel.app.camel import Camel
 from camel.app.components.files.tsvexporter import TsvExporter
 from camel.app.components.filesystemhelper import FileSystemHelper
 from camel.app.components.html.htmlelement import HtmlElement
@@ -23,12 +21,11 @@ class Assay51SnpReporter(Tool):
 
     TITLE = '51 SNP-based'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: 51SNP reporter', '0.1', camel)
+        super().__init__('Mycobacterium: 51SNP reporter', '0.1')
         self._section = HtmlReportSection(Assay51SnpReporter.TITLE)
         self._sub_folder = Path('51snp')
 
@@ -63,7 +60,7 @@ class Assay51SnpReporter(Tool):
         ]
         self._section.add_table(table_data, table_attributes=[('class', 'information')])
 
-    def __add_gyrb_table(self, snp_positions_by_name: Dict[str, SNPPosition]) -> None:
+    def __add_gyrb_table(self, snp_positions_by_name: dict[str, SNPPosition]) -> None:
         """
         Adds the table with the result of the gyrB assay.
         :param snp_positions_by_name: SNP positions by name
@@ -81,7 +78,7 @@ class Assay51SnpReporter(Tool):
         self._section.add_header('<i>gyrB</i> species differentiation', 3)
         self._section.add_table(table_data, header, [('class', 'data')])
 
-    def __add_genetic_group_table(self, snp_positions_by_name: Dict[str, SNPPosition]) -> None:
+    def __add_genetic_group_table(self, snp_positions_by_name: dict[str, SNPPosition]) -> None:
         """
         Adds the table with the result of the genetic group assay.
         :param snp_positions_by_name: SNP positions by name
@@ -99,7 +96,7 @@ class Assay51SnpReporter(Tool):
         self._section.add_header('Genetic group', 3)
         self._section.add_table(table_data, header, [('class', 'data')])
 
-    def __add_scg_table(self, snp_positions_by_name: Dict[str, SNPPosition], nb_columns: int = 6) -> None:
+    def __add_scg_table(self, snp_positions_by_name: dict[str, SNPPosition], nb_columns: int = 6) -> None:
         """
         Adds a table with the SNPs supporting the detected SCG.
         :param snp_positions_by_name: SNP positions by name
@@ -118,7 +115,7 @@ class Assay51SnpReporter(Tool):
         self._section.add_header('Best matching SNP cluster group (SCG)', 3)
         self._section.add_table(table_data, table_attributes=[('class', 'data')])
 
-    def __add_snps_table(self, snp_positions_by_name: Dict[str, SNPPosition]) -> None:
+    def __add_snps_table(self, snp_positions_by_name: dict[str, SNPPosition]) -> None:
         """
         Adds a table with an overview of all SNPs.
         :param snp_positions_by_name: SNP positions by name

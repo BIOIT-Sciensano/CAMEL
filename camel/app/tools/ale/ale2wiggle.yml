@@ -1,3 +1,4 @@
-dependencies: [ale/2022.05.03]
+dependencies:
+  - ale/2022.05.03
 parameters: {}
 tool_command: ale2wiggle.py

@@ -13,12 +13,11 @@ class PubmlstMetadataExtractor(Tool):
     The genes that have to be processed can be given as parameter 'loci'.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Sequence Typing: PubMLST Metadata Extractor', '0.1', camel)
+        super().__init__('Sequence Typing: PubMLST Metadata Extractor', '0.1')
 
     def _execute_tool(self) -> None:
         """

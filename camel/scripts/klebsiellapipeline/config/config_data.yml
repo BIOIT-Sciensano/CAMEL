@@ -17,7 +17,6 @@ citations:
     - Li_2009-samtools
     - Camacho_2009-blast
     - Clausen_2018-kma
-    - Inouye_2014-srst2
     - Bortolaia_2020-resfinder_4.0
     - Feldgarden_2019-ndaro
     - Chen_2016-vfdb
@@ -54,9 +53,6 @@ quality_checks:
 
 confindr:
   db: /db/confindr/0.8.1
-
-srst2:
-  max_unaligned_overlap: 141
 
 assembly:
   spades:
@@ -96,9 +92,6 @@ gene_detection:
     params:
       blastn:
         min_percent_identity: 95
-        min_coverage: 60
-      srst2:
-        max_divergence: 5
         min_coverage: 60
     message:
       content: The presence of a replicon does not mean that the corresponding plasmid is present.

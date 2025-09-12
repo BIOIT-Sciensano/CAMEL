@@ -1,6 +1,6 @@
 import os.path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
@@ -11,13 +11,12 @@ class QiimePickRepSet(Qiime):
     sequence that can be used in subsequent analyses.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('qiime_pick_rep_set', '1.9.1', camel)
+        super().__init__('qiime_pick_rep_set', '1.9.1')
 
     def _check_input(self):
         """
@@ -28,12 +27,12 @@ class QiimePickRepSet(Qiime):
         :return: None
         """
         if 'TSV_Otu' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input files (keys) given for pick_rep_set: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid input files (keys) given for pick_rep_set: {!r}'.format(self._tool_inputs))
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'TSV_Otu']:
-                raise InvalidInputSpecificationError('Invalid input key given for pick_rep_set: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Invalid input key given for pick_rep_set: {!r}'.format(self._tool_inputs))
             if len(self._tool_inputs[key]) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files in each key given for \
+                raise InvalidToolInputError('Invalid number (max = 1) of files in each key given for \
                                                      pick_rep_set: {!r}'.format(self._tool_inputs))
 
     def _set_output(self):
@@ -42,7 +41,7 @@ class QiimePickRepSet(Qiime):
         :return: None
         """
         basename = super(QiimePickRepSet, self)._get_basename('TSV_Otu')
-        self._tool_outputs['FASTA'] = [ToolIOFile(os.path.join(self._folder, basename + '_rep_set.fasta'))]
+        self._tool_outputs['FASTA'] = [ToolIOFile(self._folder / f'{basename}_rep_set.fasta')]
 
     def _build_input_string(self):
         """

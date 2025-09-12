@@ -1,9 +1,34 @@
-dependencies: [ale/2022.05.03]
+dependencies:
+  - ale/2022.05.03
 parameters:
-  kmer: {default: false, mandatory: false, option: --kmer, value: '4'}
-  metagenome: {default: false, mandatory: false, option: --metagenome, value: None}
-  min_qual: {default: false, mandatory: false, option: --minQual, value: '3'}
-  n_out: {default: false, mandatory: false, option: --nout, value: None}
-  q_off: {default: false, mandatory: false, option: --qOff, value: '33'}
-  snp_report: {default: false, mandatory: false, option: --SNPreport, value: ''}
+  kmer:
+    default: false
+    mandatory: false
+    option: '--kmer'
+    value: '4'
+  metagenome:
+    default: false
+    mandatory: false
+    option: '--metagenome'
+    value: None
+  min_qual:
+    default: false
+    mandatory: false
+    option: '--minQual'
+    value: '3'
+  n_out:
+    default: false
+    mandatory: false
+    option: '--nout'
+    value: None
+  q_off:
+    default: false
+    mandatory: false
+    option: '--qOff'
+    value: '33'
+  snp_report:
+    default: false
+    mandatory: false
+    option: '--SNPreport'
+    value: ''
 tool_command: ALE

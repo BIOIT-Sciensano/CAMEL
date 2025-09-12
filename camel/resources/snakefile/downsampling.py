@@ -1,17 +1,16 @@
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
-SNAKEFILE_DOWNSAMPLING = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
-_dir_downsampling = Path('downsampling', '{read_key}')
-INPUT_DOWNSAMPLING_FASTQ = _dir_downsampling / 'input' / 'fastq.io'
-OUTPUT_DOWNSAMPLING_REPORT = _dir_downsampling / 'html.io'
-OUTPUT_DOWNSAMPLING_SUMMARY = _dir_downsampling / 'summary_downsampling.tsv'
-OUTPUT_DOWNSAMPLING_FASTQ = _dir_downsampling / 'seqtk' / 'fastq.io'
-OUTPUT_DOWNSAMPLING_INFORMS = _dir_downsampling / 'seqtk' / 'informs.io'
+INPUT_FASTQ = 'downsampling/{read_key}/input/fastq.io'
+OUTPUT_REPORT = 'downsampling/{read_key}/report/html.iob'
+OUTPUT_SUMMARY = 'downsampling/{read_key}/summary/summary_downsampling.{ext}'
+OUTPUT_FASTQ = 'downsampling/{read_key}/seqtk/fastq.io'
+OUTPUT_INFORMS = 'downsampling/{read_key}/seqtk/informs.io'
 
 
-def get_reports(config: Dict[str, Any], input_type: str = None) -> List[Path]:
+def get_reports(config: dict[str, Any], input_type: str = None) -> list[Path]:
     """
     Returns the paths to the downsampling reports.
     :param input_type: input type
@@ -28,18 +27,18 @@ def get_reports(config: Dict[str, Any], input_type: str = None) -> List[Path]:
     # FASTQ input
     paths = []
     if input_type in ('illumina', 'hybrid'):
-        paths.append(str(OUTPUT_DOWNSAMPLING_REPORT).format(read_key='fastq_pe'))
+        paths.append(str(OUTPUT_REPORT).format(read_key='fastq_pe'))
     if input_type in ('ont', 'hybrid', 'iontorrent'):
-        paths.append(str(OUTPUT_DOWNSAMPLING_REPORT).format(read_key='fastq_se'))
+        paths.append(str(OUTPUT_REPORT).format(read_key='fastq_se'))
 
     # Check if at least one path was added
     if len(paths) == 0:
         raise ValueError(f'No downsampling report(s) for input type: {input_type}')
 
-    return [Path(config['working_dir']) / p for p in paths]
+    return paths
 
 
-def get_command_informs(config: Dict[str, Any], input_type: str = None) -> List[Path]:
+def get_command_informs(config: dict[str, Any], input_type: str = None) -> list[Path]:
     """
     Returns a list of informs IO files for the downsampling steps.
     :param config: Snakemake configuration
@@ -56,20 +55,21 @@ def get_command_informs(config: Dict[str, Any], input_type: str = None) -> List[
     # FASTQ input
     paths = []
     if input_type in ('hybrid', 'illumina'):
-        paths.append(str(OUTPUT_DOWNSAMPLING_INFORMS).format(read_key='fastq_pe'))
+        paths.append(str(OUTPUT_INFORMS).format(read_key='fastq_pe'))
     if input_type in ('iontorrent', 'hybrid', 'ont'):
-        paths.append(str(OUTPUT_DOWNSAMPLING_INFORMS).format(read_key='fastq_se'))
+        paths.append(str(OUTPUT_INFORMS).format(read_key='fastq_se'))
 
     # Check if at least one path was added
     if len(paths) == 0:
         raise ValueError(f'No downsampling informs for input type: {input_type}')
 
-    return [Path(config['working_dir']) / p for p in paths]
+    return paths
 
 
-def get_summaries(config: Dict[str, Any], input_type: str = None) -> List[Path]:
+def get_summaries(config: dict[str, Any], ext: str, input_type: str = None) -> list[Path]:
     """
     Returns the paths to the downsampling summary file(s).
+    :param ext: Summary format (TSV / JSON)
     :param input_type: input type
     :param config: Snakemake configuration
     :return: Summary file path(s)
@@ -84,12 +84,12 @@ def get_summaries(config: Dict[str, Any], input_type: str = None) -> List[Path]:
     # FASTQ input
     paths = []
     if input_type in ('hybrid', 'illumina'):
-        paths.append(str(OUTPUT_DOWNSAMPLING_SUMMARY).format(read_key='fastq_pe'))
+        paths.append(str(OUTPUT_SUMMARY).format(read_key='fastq_pe', ext=ext))
     if input_type in ('iontorrent', 'hybrid', 'ont'):
-        paths.append(str(OUTPUT_DOWNSAMPLING_SUMMARY).format(read_key='fastq_se'))
+        paths.append(str(OUTPUT_SUMMARY).format(read_key='fastq_se', ext=ext))
 
     # Check if at least one path was added
     if len(paths) == 0:
         raise ValueError(f'No downsampling summary output for input type: {input_type}')
 
-    return [Path(config['working_dir']) / p for p in paths]
+    return paths

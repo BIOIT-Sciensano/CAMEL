@@ -1,11 +1,45 @@
-dependencies: [quast/5.2.0, bedtools/2.31.0]
+dependencies:
+  - quast/5.2.0
+  - bedtools/2.31.0
 parameters:
-  conserved_genes_finding: { default: false, mandatory: false, option: --conserved-genes-finding, value: null }
-  contig_thresholds: { default: false, mandatory: false, option: --contig-thresholds, value: '0,1000' }
-  est_ref_size: { default: false, mandatory: false, option: --est-ref-size, value: '100000' }
-  glimmer: { default: false, mandatory: false, option: --glimmer, value: null }
-  labels: { default: false, mandatory: false, option: --labels, value: '"label, label,..."' }
-  min_contig: { default: false, mandatory: false, option: --min-contig, value: '500' }
-  scaffolds: { default: false, mandatory: false, option: --scaffolds, value: null }
-  threads: { default: true, mandatory: false, option: --threads, value: '8' }
+  conserved_genes_finding:
+    default: false
+    mandatory: false
+    option: '--conserved-genes-finding'
+    flag: true
+  contig_thresholds:
+    default: false
+    mandatory: false
+    option: '--contig-thresholds'
+    value: '0,1000'
+  est_ref_size:
+    default: false
+    mandatory: false
+    option: '--est-ref-size'
+    value: '100000'
+  glimmer:
+    default: false
+    mandatory: false
+    option: '--glimmer'
+    flag: true
+  labels:
+    default: false
+    mandatory: false
+    option: '--labels'
+    value: '"label, label,..."'
+  min_contig:
+    default: false
+    mandatory: false
+    option: '--min-contig'
+    value: '500'
+  scaffolds:
+    default: false
+    mandatory: false
+    option: '--scaffolds'
+    value: null
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: '8'
 tool_command: quast.py

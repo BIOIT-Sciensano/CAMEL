@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, Optional, Sequence
+from typing import Optional
 
 from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import variant_calling_clair3
 
 
-class MainCalling(object):
+class MainCalling:
     """
     Class to run clair3 variant calling using CAMEL.
     """
@@ -61,20 +62,20 @@ class MainCalling(object):
         target_dir = self._args.working_dir / 'variant_calling' / 'read_mapping'
         if not target_dir.exists():
             target_dir.mkdir(parents=True)
-        SnakemakeUtils.dump_object([ToolIOFile(self._args.bam)], target_dir / 'bam.io')
+        snakemakeutils.dump_object([ToolIOFile(self._args.bam)], target_dir / 'bam.io')
 
         # Run Snakemake to generate output file
-        path_vcf = self._args.working_dir / variant_calling_clair3.OUTPUT_VARIANT_CALLING_UNFILTERED_VCF
+        path_vcf = variant_calling_clair3.OUTPUT_UNFILTERED_VCF
         SnakePipelineUtils.run_snakemake(
-            variant_calling_clair3.SNAKEFILE_VARIANT_CALLING, config_file, [path_vcf], self._args.working_dir,
+            variant_calling_clair3.SNAKEFILE, config_file, [path_vcf], self._args.working_dir,
             self._args.threads)
 
         # Copy output
         logger.info("Collecting Snakemake output file")
-        output_vcf_path = SnakemakeUtils.load_object(path_vcf)[0].path
+        output_vcf_path = snakemakeutils.load_object(self._args.working_dir / path_vcf)[0].path
         shutil.copyfile(output_vcf_path, self._args.output)
 
-    def __create_snakemake_config_data(self) -> Dict:
+    def __create_snakemake_config_data(self) -> dict:
         """
         Creates a Snakemake configuration file.
         :return: Config file data

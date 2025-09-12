@@ -3,10 +3,9 @@ from pathlib import Path
 import pandas as pd
 from Bio import SeqIO
 
-from camel.app.camel import Camel
 from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+from camel.app.error import InvalidToolInputError
+from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.tool import Tool
@@ -19,20 +18,20 @@ class CollectLowDepthRegions(Tool):
     Then it uses bedtools complement to determine low-depth regions.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
         """
-        super().__init__('Collect low depth regions', '0.1', camel)
+        super().__init__('Collect low depth regions', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA input is required')
+            raise InvalidToolInputError('FASTA input is required')
         if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BAM input is required')
+            raise InvalidToolInputError('BAM input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:

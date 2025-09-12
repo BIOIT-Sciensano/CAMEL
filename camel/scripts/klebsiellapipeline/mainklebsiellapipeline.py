@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import yaml
 
@@ -8,7 +9,7 @@ from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.klebsiellapipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.klebsiellapipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 class MainKlebsiellaPipeline(ReportPipeline):
@@ -60,10 +61,6 @@ class MainKlebsiellaPipeline(ReportPipeline):
                 export_bam='true' if self._args.report_include_bam else 'false',
                 qc_typing_scheme='cgmlst' if self._args.cgmlst else 'mlst'
             ), Loader=yaml.SafeLoader))
-
-            # Set the detection method for cgMLST
-            config_data['sequence_typing']['cgmlst']['detection_method'] = {
-                'blast': 'blast', 'srst2': 'blast', 'kma': 'kma'}.get(self._args.detection_method)
         return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
 
     @staticmethod

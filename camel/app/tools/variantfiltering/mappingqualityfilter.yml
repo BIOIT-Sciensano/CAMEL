@@ -1,6 +1,19 @@
-dependencies: [bcftools/1.17]
+dependencies:
+  - bcftools/1.17
 parameters:
-  min_mapping_quality: {default: true, mandatory: true, option: null, value: '30'}
-  output_filename: {default: true, mandatory: true, option: null, value: variants_mapping_quality_filtered.vcf.gz}
-  soft_filter: {default: false, mandatory: false, option: '--soft-filter', value: 'true'}
+  min_mapping_quality:
+    default: true
+    mandatory: true
+    option: null
+    value: '30'
+  output_filename:
+    default: true
+    mandatory: true
+    option: null
+    value: variants_mapping_quality_filtered.vcf.gz
+  soft_filter:
+    default: false
+    mandatory: false
+    option: '--soft-filter'
+    flag: true
 tool_command: bcftools filter

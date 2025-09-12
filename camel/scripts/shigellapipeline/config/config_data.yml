@@ -19,7 +19,6 @@ citations:
     - Kaas_2014-csi_phylogeny
     - Camacho_2009-blast
     - Clausen_2018-kma
-    - Inouye_2014-srst2
     - Feldgarden_2019-ndaro
     - Bortolaia_2020-resfinder_4.0
     - Joensen_2014-virulencefinder
@@ -109,9 +108,6 @@ gene_detection:
     params:
       blastn:
         min_percent_identity: 85
-        min_coverage: 60
-      srst2:
-        max_divergence: 15
         min_coverage: 60
     metadata:
       name: Predicted serotype

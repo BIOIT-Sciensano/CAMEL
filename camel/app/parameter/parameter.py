@@ -1,75 +1,20 @@
-from typing import Any
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
 
 
-class Parameter:
+class Parameter(BaseModel):
     """
     Represents a tool parameter.
     """
-
-    def __init__(self, name: str, option: str, value: Any, p_index: int = 0) -> None:
-        """
-        Initializes a parameter.
-        :param name: Parameter name
-        :param option: Parameter option (e.g., --option)
-        :param value: Parameter value
-        :param p_index: Used for sorting the parameter
-        :return: None
-        """
-        self._name = name
-        self._option = option
-        self._value = value
-        self._p_index = p_index
-
-    @property
-    def name(self):
-        """
-        Returns the parameter name.
-        :return: Parameter name
-        """
-        return self._name
-
-    @property
-    def option(self):
-        """
-        Returns the parameter option.
-        :return: Option
-        """
-        return self._option
-
-    @property
-    def value(self):
-        """
-        Returns the parameter value.
-        :return: parameter value
-        """
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        """
-        Changes the value of this parameter.
-        :param value: New value
-        :return: None
-        """
-        self._value = value
-
-    @property
-    def p_index(self) -> int:
-        """
-        Returns the parameter index (used for ordering).
-        :return: P-index
-        """
-        return self._p_index
-
-    def __str__(self) -> str:
-        """
-        Returns the parameter in string format.
-        :return: Parameter string
-        """
-        if self._value is not None:
-            return f'{self._option} {self._value}'
-        else:
-            return self._option
+    model_config = ConfigDict(extra='forbid')
+    name: str
+    option: Optional[str] = None
+    flag: bool = False
+    default: bool = False
+    mandatory: bool = False
+    value: Optional[str | int | float] = None
+    p_index: Optional[int] = 0
 
     def __repr__(self) -> str:
         """
@@ -78,14 +23,10 @@ class Parameter:
         """
         return f"Parameter(name='{self.name}', val='{self.value}')"
 
-    def as_boolean(self) -> bool:
+    def __str__(self) -> str:
         """
-        Returns the parameter value as a boolean.
-        Raises and error when the string cannot be converted.
-        :return: Boolean value
+        Returns the parameter as a string (for the command line).
         """
-        if str(self._value).lower() in ('yes', 'true', 't', '1'):
-            return True
-        if str(self._value).lower() in ('no', 'false', 'f', '0'):
-            return False
-        raise ValueError(f'Invalid boolean value: {self.value}')
+        if self.flag:
+            return self.option
+        return f'{self.option} {self.value}'
