@@ -1,6 +1,8 @@
 dependencies:
   - integronfinder/2.0.2
   - prodigal/2.6.3
+  - hmmer/3.4
+  # - cmsearch (installed globally in tasks/main.yml with apt 'infernal' package)
 parameters:
   local_max:
     default: false
