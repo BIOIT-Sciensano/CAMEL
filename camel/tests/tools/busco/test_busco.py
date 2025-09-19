@@ -15,6 +15,7 @@ class TestBusco(CamelTestSuite):
     # Input files
     test_file_dir = CamelTestSuite.get_test_file_dir('checkm')
     input_fasta = test_file_dir / 'contigs_neisseria.fasta'
+    input_fasta_2 = test_file_dir / 'busco_failure_noble.fasta'
 
     def test_dependencies(self) -> None:
         """
@@ -34,6 +35,20 @@ class TestBusco(CamelTestSuite):
         """
         busco = Busco()
         busco.add_input_files({'FASTA': [ToolIOFile(TestBusco.input_fasta)]})
+        busco.update_parameters(lineage_dataset='bacteria_odb10')
+        busco.run(self.running_dir)
+        self.verify_output_files(busco, 'TXT')
+        self.assertIn('results', busco.informs)
+
+    def test_busco_failure_noble(self) -> None:
+        """
+        Tests the busco tool on a fasta file that initially failed in noble and was not caught by the previous
+        'test_busco' unittest. The issue was resolved on noble by replacing the jammy tarball with the prebuilt binary
+        (https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux).
+        :return: None
+        """
+        busco = Busco()
+        busco.add_input_files({'FASTA': [ToolIOFile(TestBusco.input_fasta_2)]})
         busco.update_parameters(lineage_dataset='bacteria_odb10')
         busco.run(self.running_dir)
         self.verify_output_files(busco, 'TXT')
