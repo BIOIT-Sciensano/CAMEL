@@ -1,6 +1,8 @@
 dependencies:
-  - masurca/4.1.0
+  - pypolca/0.4.0
   - bwa/0.7.17
+  - samtools/1.21
+  - freebayes/1.36
 parameters:
   threads:
     default: true
@@ -17,4 +19,4 @@ parameters:
     mandatory: false
     option: '-m'
     value: null
-tool_command: polca.sh
+tool_command: pypolca run
