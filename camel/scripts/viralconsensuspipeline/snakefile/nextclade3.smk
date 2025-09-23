@@ -62,7 +62,7 @@ checkpoint nextclade3_detect_subtype_report:
         db = config['nextclade'].get('db_mash')
     run:
         from camel.app.io.tooliodirectory import ToolIODirectory
-        from camel.app.tools.nextclade.nextcladesubtypereporter import NextcladeSubTypeReporter
+        from camel.app.tools.nextclade3.nextcladesubtypereporter import NextcladeSubTypeReporter
         from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 
         if params.db is not None:
