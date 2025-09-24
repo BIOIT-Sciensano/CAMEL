@@ -107,7 +107,7 @@ rule scrubbing_run_scrubber:
     params:
         running_dir = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/scrubbing',
         input_format = lambda wildcards: wildcards.input_format,
-        export_removed_reads = config['read_scrubbing'].get('export_removed_reads'),
+        export_removed_reads = config.get('read_scrubbing', {}).get('export_removed_reads'),
         is_interleaved = lambda wildcards: True if wildcards.input_format == 'fastq_pe' else False,
         input_type = config['input_type']
     threads: max(16, workflow.cores * 0.75)
@@ -266,7 +266,7 @@ rule scrubbing_report:
     params:
         running_dir = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/output',
         input_format = lambda wildcards: wildcards.input_format,
-        export_removed_reads = config['read_scrubbing'].get('export_removed_reads')
+        export_removed_reads = config.get('read_scrubbing', {}).get('export_removed_reads')
     run:
         from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubberreporter import NcbiHumanReadScrubberReporter
 

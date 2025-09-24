@@ -11,6 +11,7 @@ import yaml
 from camel.app.camel import Camel
 from camel.app.components import mainscriptutils
 from camel.app.components.galaxy.galaxyutils import GalaxyUtils
+from camel.app.components.pipelines import absolute_path_by_pathlib
 from camel.app.components.pipelines.basepipeline import BasePipeline
 from camel.app.loggers import logger
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
@@ -62,8 +63,8 @@ class MainHybridAssemblyPipeline(BasePipeline):
         BasePipeline.add_common_arguments(argument_parser)
 
         # Output
-        argument_parser.add_argument('--output-html', type=Path, required=True)
-        argument_parser.add_argument('--output-dir', type=Path)
+        argument_parser.add_argument('--output-html', type=absolute_path_by_pathlib, required=True)
+        argument_parser.add_argument('--output-dir', type=absolute_path_by_pathlib)
 
         # Parameters
         argument_parser.add_argument('--ploidy', type=int, choices=[1, 2], default=1)

@@ -235,8 +235,8 @@ rule quality_checks_fqc_gc_content:
         JSON = 'quality_checks/fqc_gc_{ori}.json'
     params:
         qc_check = quality_checks.QC_CHECKS_BY_KEY['fqc_gc_{ori}'],
-        fasta_ref = config['reference'].get('fasta'),
-        expected_gc = config['reference'].get('expected_gc'),
+        fasta_ref = config.get('reference', {}).get('fasta'),
+        expected_gc = config.get('reference', {}).get('expected_gc'),
         index = lambda wildcards: 0 if (wildcards.ori == 'fwd') else 1
     run:
         import json
@@ -429,8 +429,8 @@ rule quality_checks_seqkit_gc:
         JSON = 'quality_checks/seqkit_gc.json'
     params:
         qc_check = quality_checks.QC_CHECKS_BY_KEY['seqkit_gc'],
-        fasta_ref = config['reference'].get('fasta'),
-        expected_gc = config['reference'].get('expected_gc')
+        fasta_ref=config.get('reference',{}).get('fasta'),
+        expected_gc=config.get('reference',{}).get('expected_gc')
     run:
         import json
         import dataclasses
