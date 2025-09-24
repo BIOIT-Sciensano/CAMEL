@@ -6,17 +6,17 @@ from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
 
-class Polca(Tool):
+class Pypolca(Tool):
     """
-    Polishing assembly with short reads using polca.
+    Polishing assembly with short reads using pypolca.
     """
 
     def __init__(self) -> None:
         """
-        Initializes Polca.
+        Initializes Pypolca.
         :return: None
         """
-        super().__init__('POLCA', '4.1.0')
+        super().__init__('Pypolca', '0.4.0')
 
     def _execute_tool(self) -> None:
         """
@@ -43,7 +43,7 @@ class Polca(Tool):
 
     def _build_command(self) -> None:
         """
-        Builds the command to run polca.
+        Builds the command to run pypolca.
         :return: None
         """
         self._command.command = ' '.join([
@@ -74,5 +74,6 @@ class Polca(Tool):
         """
         fasta_output = self.folder / 'output_pypolca/pypolca_corrected.fasta'
         if self._output_is_empty():
+            fasta_output.unlink()
             fasta_output.symlink_to(self._tool_inputs['FASTA'][0].path)
         self._tool_outputs['FASTA'] = [ToolIOFile(fasta_output)]

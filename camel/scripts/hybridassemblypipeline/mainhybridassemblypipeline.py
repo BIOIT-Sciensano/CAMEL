@@ -121,10 +121,10 @@ class MainHybridAssemblyPipeline(BasePipeline):
         })
 
         # Assembly steps
-        config_data['assembly_steps'] = ['Flye', 'Medaka', 'Polypolish', 'POLCA']
+        config_data['assembly_steps'] = ['Flye', 'Medaka', 'Polypolish', 'Pypolca']
         config_data['base_assemblies'] = ['flye']
         if self._args.unicycler:
-            config_data['assembly_steps'].extend(['Unicycler', 'Medaka-Unicycler', 'Polypolish-Unicycler', 'POLCA-Unicycler'])
+            config_data['assembly_steps'].extend(['Unicycler', 'Medaka-Unicycler', 'Polypolish-Unicycler', 'Pypolca-Unicycler'])
             config_data['base_assemblies'].extend(['unicycler'])
 
         with open(CONFIG_DATA) as handle_in:

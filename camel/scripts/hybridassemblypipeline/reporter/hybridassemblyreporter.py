@@ -139,7 +139,7 @@ class HybridAssemblyReporter(Tool):
         section.add_paragraph(
             "The hybrid assembly pipeline performs long-read first <i>de novo</i> assembly, according to the following" 
             " steps: (1) Quality control and pre-processing of the long and short reads; (2) Long-reads assembly using "
-            "Flye; (3) polishing using Medaka (long-reads), followed by Polypolish and POLCA (short-reads); (4) "
+            "Flye; (3) polishing using Medaka (long-reads), followed by Polypolish and Pypolca (short-reads); (4) "
             "Quality assessment using QUAST and several variant callers. An additional short-read first assembly is "
             "created using Unicycler (optional).")
         section.copy_files(self.report.output_dir)

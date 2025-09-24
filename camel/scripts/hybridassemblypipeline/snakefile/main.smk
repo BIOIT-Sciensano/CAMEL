@@ -196,7 +196,7 @@ rule report_command_section:
         medaka_inference_commands = [f'polish/long_reads/{name}/inference/commands-inference.io' for name in config['base_assemblies']],
         medaka_sequence_commands = [f'polish/long_reads/{name}/sequence/commands-sequence.io' for name in config['base_assemblies']],
         polypolish_commands = [f'polish/short_reads/{name}/polypolish/informs.io' for name in config['base_assemblies']],
-        polca_commands = [f'polish/short_reads/{name}/polca/informs.io' for name in config['base_assemblies']],
+        pypolca_commands = [f'polish/short_reads/{name}/pypolca/informs.io' for name in config['base_assemblies']],
         quast_commands = [f'qc_hybrid/{name}/quast/tool/commands.io' for name in config['assembly_steps']],
         quast_combined_commands = 'qc_hybrid/quast_combined/tool/commands.io',
         bwa_commands = [f'qc_hybrid/{name}/read_mapping/illumina/commands.io' for name in config['assembly_steps']],

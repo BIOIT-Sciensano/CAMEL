@@ -138,16 +138,16 @@ rule polishing_polypolish:
         step.run()
         snakemakeutils.dump_tool_outputs(polypolish, output)
 
-rule polishing_samtools_index_polca:
+rule polishing_samtools_index_pypolca:
     """
     Creates a samtools index for the polypolish assembly.
     """
     input:
         FASTA = rules.polishing_polypolish.output.FASTA
     output:
-        FASTA = 'polish/short_reads/{assembly_type}/polca/fasta-index.io'
+        FASTA = 'polish/short_reads/{assembly_type}/pypolca/fasta-index.io'
     params:
-        dir_ = lambda wildcards: f'polish/short_reads/{wildcards.assembly_type}/polca'
+        dir_ = lambda wildcards: f'polish/short_reads/{wildcards.assembly_type}/pypolca'
     run:
         from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
         samtools = SamtoolsFastaIndex()
@@ -156,28 +156,28 @@ rule polishing_samtools_index_polca:
         step.run()
         snakemakeutils.dump_tool_outputs(samtools, output)
 
-rule polishing_polca:
+rule polishing_pypolca:
     """
-    Then polishing with Polca.
+    Then polishing with Pypolca.
     """
     input:
         FQ_dict = 'fq_dict.io',
-        FASTA = rules.polishing_samtools_index_polca.output.FASTA
+        FASTA = rules.polishing_samtools_index_pypolca.output.FASTA
     output:
-        FASTA = 'polish/short_reads/{assembly_type}/polca/fasta.io',
-        INFORMS = 'polish/short_reads/{assembly_type}/polca/informs.io'
+        FASTA = 'polish/short_reads/{assembly_type}/pypolca/fasta.io',
+        INFORMS = 'polish/short_reads/{assembly_type}/pypolca/informs.io'
     params:
-        dir_ = lambda wildcards: f'polish/short_reads/{wildcards.assembly_type}/polca',
-        polca_options = config.get('polishing', {}).get('polca', {})
+        dir_ = lambda wildcards: f'polish/short_reads/{wildcards.assembly_type}/pypolca',
+        pypolca_options = config.get('polishing', {}).get('pypolca', {})
     threads: 8
     run:
-        from camel.app.tools.polca.polca import Polca
-        polca = Polca()
+        from camel.app.tools.pypolca.pypolca import Pypolca
+        pypolca = Pypolca()
         from camel.app.components.workflows.utils.fastqinput import FastqInput
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict),'illumina')
-        polca.add_input_files({'FASTQ_PE': fq_in.pe})
-        snakemakeutils.add_pickle_input(polca, 'FASTA', Path(input.FASTA))
-        polca.update_parameters(**params.polca_options, threads=threads)
-        step = Step(rule_name=str(rule), tool=polca, dir_=Path(str(params.dir_)))
+        pypolca.add_input_files({'FASTQ_PE': fq_in.pe})
+        snakemakeutils.add_pickle_input(pypolca, 'FASTA', Path(input.FASTA))
+        pypolca.update_parameters(**params.pypolca_options, threads=threads)
+        step = Step(rule_name=str(rule), tool=pypolca, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(polca, output)
+        snakemakeutils.dump_tool_outputs(pypolca, output)

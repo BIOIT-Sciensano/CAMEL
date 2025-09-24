@@ -47,7 +47,7 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
             assembly_flye.OUTPUT_INFORMS,
             polish_assembly_long.OUTPUT_POLISH_MEDAKA_INFORMS.format(assembly_type='flye'),
             polish_assembly_short.OUTPUT_POLYPOLISH_INFORMS.format(assembly_type='flye'),
-            polish_assembly_short.OUTPUT_POLCA_INFORMS.format(assembly_type='flye')
+            polish_assembly_short.OUTPUT_PYPOLCA_INFORMS.format(assembly_type='flye')
         ]
     raise ValueError(f"Invalid input type: {config['input_type']}")
 

@@ -83,7 +83,7 @@ Filtered reads are assembled using `Flye 2.9.4` with default options providing t
 ### Hybrid
 
 Filtered ONT reads are assembled using `Flye 2.9.4` with default options providing the filtered reads using the 
-`--nano-corr` option. `Medaka 1.12.0` polishes the resulting assembly with the filtered ONT reads and default options. Then, `Polypolish 0.6.0` and `POLCA 4.1.0` are used sequentially to polish the ONT-polished assembly with the filtered Illumina reads and both with default options.
+`--nano-corr` option. `Medaka 1.12.0` polishes the resulting assembly with the filtered ONT reads and default options. Then, `Polypolish 0.6.0` and `Pypolca 0.4.0` are used sequentially to polish the ONT-polished assembly with the filtered Illumina reads and both with default options.
 
 ### QUAST
 `QUAST 5.2.0` is then used to check the quality of the resulting assembly with the following options:
