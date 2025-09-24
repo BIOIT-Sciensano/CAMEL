@@ -1,8 +1,8 @@
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from camel.app.io.tooliofile import ToolIOFile
 from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import polish_assembly_short
@@ -30,7 +30,7 @@ class ShortReadPolishingWrapper:
         self._working_dir = Path(working_dir)
         self._output = None
 
-    def run_workflow(self, pe_reads: Path, reference: Path, threads: int = 8) -> None:
+    def run_workflow(self, pe_reads: list[Path], reference: Path, threads: int = 8) -> None:
         """
         Runs the read polishing workflow.
         :param pe_reads: Path to the PE FASTQ reads io file
@@ -40,27 +40,31 @@ class ShortReadPolishingWrapper:
         """
         # Create config file
         config_data = {
-            'working_dir': str(self._working_dir)
+            'working_dir': str(self._working_dir),
         }
         config_file = SnakePipelineUtils.generate_config_file(config_data, Path(self._working_dir, 'polishing'))
 
         # Dump the input files in an IO file
-        io_pickle_in = Path(self._working_dir / polish_assembly_short.INPUT_READS_FASTQ)
+        io_pickle_in = Path(self._working_dir / 'fq_dict.io')
         io_pickle_in.parent.mkdir(exist_ok=True, parents=True)
-        shutil.copyfile(pe_reads, io_pickle_in)
+        fq_dict = {'PE': [ToolIOFile(x) for x in pe_reads]}
+        snakemakeutils.dump_object(fq_dict, io_pickle_in)
 
         # Dump the reference file in an IO file
-        io_pickle_fasta_in = Path(self._working_dir / polish_assembly_short.INPUT_ASSEMBLY_FASTA)
+        io_pickle_fasta_in = Path(self._working_dir / polish_assembly_short.INPUT_ASSEMBLY_FASTA.format(assembly_type='flye'))
         io_pickle_fasta_in.parent.mkdir(exist_ok=True, parents=True)
-        shutil.copyfile(reference, io_pickle_fasta_in)
+        snakemakeutils.dump_object([ToolIOFile(reference)], io_pickle_fasta_in)
 
         # Output files
         output_files = {
-            'FASTA': self._working_dir / polish_assembly_short.OUTPUT_POLISHING_FASTA
+            'FASTA': Path(polish_assembly_short.OUTPUT_POLISHING_FASTA.format(assembly_type='flye'))
         }
         SnakePipelineUtils.run_snakemake(
-            polish_assembly_short.SNAKEFILE_POLISHING, config_file, list(output_files.values()), self._working_dir,
-            threads)
+            snakefile=polish_assembly_short.SNAKEFILE,
+            config_path=config_file,
+            targets=[Path(p) for p in output_files.values()],
+            working_dir=self._working_dir,
+            threads=threads)
         self.__set_output(output_files)
 
     def __set_output(self, output_files: dict[str, Path]) -> None:
