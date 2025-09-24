@@ -32,7 +32,7 @@ rule all:
     This rules ensures that the required output files are generated.
     """
     input:
-        HTML = config['output_html']
+        HTML = config['output_report']
 
 rule unicycler:
     """
@@ -237,7 +237,7 @@ rule report_create_sections:
         VCF_sniffles = [f'qc_hybrid/{key}/sniffles/vcf.io' for key in config['assembly_steps']],
         WIGGLE_ale = [f'qc_hybrid/{key}/ale_illumina/wiggle.io' for key in config['assembly_steps']]
     output:
-        HTML = Path(config['output_html'])
+        HTML = Path(config['output_report'])
     params:
         sample_name = config['sample_name'],
         input = config['input'],

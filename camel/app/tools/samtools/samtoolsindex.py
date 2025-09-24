@@ -54,7 +54,7 @@ class SamtoolsIndex(SamtoolsBase):
             new_path.symlink_to(self._tool_inputs['BAM'][0].path)
         return new_path
 
-    def __build_command(self, input_file_path) -> None:
+    def __build_command(self, input_file_path: Path) -> None:
         """
         Builds the command for this tool.
         :param input_file_path: Path to the input file

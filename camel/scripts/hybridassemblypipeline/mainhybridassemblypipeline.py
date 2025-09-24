@@ -65,7 +65,8 @@ class MainHybridAssemblyPipeline(BasePipeline):
         # Output
         argument_parser.add_argument('--output-html', type=absolute_path_by_pathlib, required=True)
         argument_parser.add_argument('--output-dir', type=absolute_path_by_pathlib)
-
+        argument_parser.add_argument('--output-tsv', help='Output file for the summary in TSV format',
+                                     type=absolute_path_by_pathlib, default=Path(Path.cwd(), 'out', 'summary.tsv'))
         # Parameters
         argument_parser.add_argument('--ploidy', type=int, choices=[1, 2], default=1)
         argument_parser.add_argument('--ont-qual', type=str, required=True,
@@ -114,8 +115,9 @@ class MainHybridAssemblyPipeline(BasePipeline):
 
         # Add report-specific entries
         mainscriptutils.dict_merge(config_data, {
-            'output_dir': str(self._args.output_dir.absolute()),
-            'output_html': str(self._args.output_html.absolute())
+            'output_dir': str(self._args.output_dir),
+            'output_report': str(self._args.output_html),
+            'output_tabular': str(self._args.output_tsv)
         })
 
         # Assembly steps
