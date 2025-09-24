@@ -16,6 +16,7 @@ class TestPolca(CamelTestSuite):
     FILE_FASTQ_1 = ToolIOFile(test_file_dir / 'reads_trimmed_1.fastq.gz')
     FILE_FASTQ_2 = ToolIOFile(test_file_dir / 'reads_trimmed_2.fastq.gz')
     FILE_FASTA_REF = ToolIOFile(test_file_dir / 'consensus.fasta')
+    FILE_FASTA_REF_NO_VARIANTS = ToolIOFile(test_file_dir / 'pypolca_corrected.fasta')
 
     def test_polca(self) -> None:
         """
@@ -26,6 +27,18 @@ class TestPolca(CamelTestSuite):
         polca.add_input_files({
             'FASTQ_PE': [TestPolca.FILE_FASTQ_1, TestPolca.FILE_FASTQ_2],
             'FASTA': [TestPolca.FILE_FASTA_REF]})
+        polca.run(self.running_dir)
+        self.verify_output_files(polca, 'FASTA')
+
+    def test_polca_no_variants(self) -> None:
+        """
+        Tests the Polca tool with 0 variants.
+        :return: None
+        """
+        polca = Polca()
+        polca.add_input_files({
+            'FASTQ_PE': [TestPolca.FILE_FASTQ_1, TestPolca.FILE_FASTQ_2],
+            'FASTA': [TestPolca.FILE_FASTA_REF_NO_VARIANTS]})
         polca.run(self.running_dir)
         self.verify_output_files(polca, 'FASTA')
 

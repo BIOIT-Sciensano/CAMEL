@@ -58,7 +58,7 @@ class Polca(Tool):
         Function to check if the VCF output is empty (no variants detected).
         :return: True if output is empty
         """
-        return 'pypolca.vcf: No such file or directory' in self._command.stderr
+        return 'POLCA has found 0 variants' in self._command.stderr
 
     def _check_command_output(self, command: Command) -> None:
         """
