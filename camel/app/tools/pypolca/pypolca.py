@@ -72,7 +72,7 @@ class Pypolca(Tool):
         """
         Collects the tool output.
         """
-        fasta_output = self.folder / 'output_pypolca/pypolca_corrected.fasta'
+        fasta_output = self.folder / 'output_pypolca' / 'pypolca_corrected.fasta'
         if self._output_is_empty():
             fasta_output.unlink()
             fasta_output.symlink_to(self._tool_inputs['FASTA'][0].path)
