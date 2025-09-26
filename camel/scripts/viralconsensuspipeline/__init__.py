@@ -1,5 +1,4 @@
+from importlib.resources import files
 from pathlib import Path
 
-import pkg_resources
-
-SNAKEFILE_MAIN = Path(pkg_resources.resource_filename('camel', 'scripts/viralconsensuspipeline/snakefile/main.smk'))
+SNAKEFILE_MAIN = Path(str(files('camel').joinpath('scripts/viralconsensuspipeline/snakefile/main.smk')))

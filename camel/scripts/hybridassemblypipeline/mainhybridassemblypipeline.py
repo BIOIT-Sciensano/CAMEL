@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import argparse
 from collections.abc import Sequence
+from importlib.resources import files
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
-import pkg_resources
 import yaml
 
 from camel.app.camel import Camel
@@ -29,10 +29,9 @@ class MainHybridAssemblyPipeline(BasePipeline):
         :param args: arguments to be parsed
         :return: None
         """
-        self._data_models = pd.read_table(pkg_resources.resource_filename(
-            'camel', 'scripts/hybridassemblypipeline/basecalling_models.tsv'))
+        self._data_models = pd.read_table(str(files('camel').joinpath('scripts/hybridassemblypipeline/basecalling_models.tsv')))
         self._args = MainHybridAssemblyPipeline._parse_arguments(args)
-        _path_snakefile = pkg_resources.resource_filename('camel', 'scripts/hybridassemblypipeline/snakefile/main.smk')
+        _path_snakefile = str(files('camel').joinpath('scripts/hybridassemblypipeline/snakefile/main.smk'))
         super().__init__(
             'Hybrid assembly pipeline', '0.1', _path_snakefile, args)
         if self._args.output_dir is None:

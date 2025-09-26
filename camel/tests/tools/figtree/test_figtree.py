@@ -1,7 +1,7 @@
 import unittest
+from importlib.resources import files
 from pathlib import Path
 
-import pkg_resources
 
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.app.io.tooliofile import ToolIOFile
@@ -35,7 +35,7 @@ class TestFigTree(CamelTestSuite):
         :return: None
         """
         path_png_out = self.running_dir / 'tree.png'
-        path_template = Path(pkg_resources.resource_filename('camel', 'resources/figtree/template_cgmlst_tree.txt'))
+        path_template = Path(str(files('camel').joinpath('resources/figtree/template_cgmlst_tree.txt')))
         figtree = FigTree()
         figtree.add_input_files({'NWK': [ToolIOFile(TestFigTree.input_nwk)], 'TXT': [ToolIOFile(path_template)]})
         figtree.update_parameters(output_path=str(path_png_out))
