@@ -114,6 +114,7 @@ class CallVariants:
 
         # Run Clair3
         clair3.run(self._dir)
+        self._informs.append(clair3.informs)
         return clair3.tool_outputs['VCF'][0].path
 
     def _extract_stats(self, path_vcf: Path) -> dict[str, Any]:
