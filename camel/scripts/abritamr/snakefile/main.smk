@@ -26,7 +26,7 @@ rule report_pickle_citations:
     This rule creates a pickle with a report section containing the citations.
     """
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-citations.io'
+        HTML = Path(config['working_dir']) / 'report' / 'html-citations.iob'
     params:
         citation_keys = config['citations']
     run:
@@ -95,7 +95,7 @@ rule summary_combine_all:
     This rule copies the resources output summary to the config output summary.
     """
     input:
-        TSV = abritamr.OUTPUT_SUMMARY
+        TSV = str(abritamr.OUTPUT_SUMMARY).format(ext='tsv')
     output:
         TSV = config['output_tabular']
     shell:
