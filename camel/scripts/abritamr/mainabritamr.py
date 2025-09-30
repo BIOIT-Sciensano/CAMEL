@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import argparse
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import yaml
 
 from camel.app.camel import Camel
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.error import InvalidToolInputError
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.scripts.abritamr import CONFIG_DATA, SNAKEFILE_MAIN
 
@@ -38,7 +39,7 @@ class MainAbriTAMR(ReportPipeline):
         :return: None
         """
         if self._args.input_type != 'fasta':
-            raise InvalidInputSpecificationError('The input type for this tool has to be fasta')
+            raise InvalidToolInputError('The input type for this tool has to be fasta')
         input_files = self._symlink_input()
         config_file = self.__construct_config_file(input_files)
         self._run_snakemake_main(config_file)

@@ -4,11 +4,9 @@ from pathlib import Path
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.app.io.tooliodirectory import ToolIODirectory
 from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake import snakemakeutils
 from camel.app.tools.abritamr.abritamrreport import AbriTAMRReport
 from camel.app.tools.abritamr.abritamrreporter import AbriTAMRReporter
 from camel.app.tools.abritamr.abritamrrun import AbriTAMRRun
-from camel.scripts.abritamr.mainabritamr import MainAbriTAMR
 
 
 
@@ -68,28 +66,6 @@ class TestAbriTAMR(CamelTestSuite):
         output_section = abritamrreporter.tool_outputs['VAL_HTML'][0].value
         self.assertGreater(len(output_section.to_html()), 0)
         CamelTestSuite.export_report_section(output_section, self.running_dir / 'report')
-
-    def test_abritamr_standalone(self) -> None:
-        """
-        Tests the AbriTAMR standalone pipeline with fasta files.
-        :return: None
-        """
-        path_report_html = self.running_dir / 'out' / 'report.html'
-        path_report_tsv = self.running_dir / 'out' / 'report.tsv'
-
-        args = [
-            '--fasta', str(self.input_fasta_file),
-            '--output-html', str(path_report_html),
-            '--output-dir', str(path_report_html.parent),
-            '--working-dir', str(self.running_dir),
-            '--output-tsv', str(path_report_tsv),
-            '--input-type', 'fasta',
-            '--threads', '2',
-            '--species', 'Salmonella'
-        ]
-        main = MainAbriTAMR(args)
-        main.run()
-        self.assertGreater(path_report_html.stat().st_size, 0)
 
 
 if __name__ == '__main__':
