@@ -36,6 +36,7 @@ def select_fastq_output(config: dict) -> Path:
     else:
         return Path('trimming_illumina') / 'fastp' / 'fastq-pe.io'
 
+
 def select_informs(config: dict) -> Path:
     """
     Selects the trimming informs based on the Snakemake configuration.
@@ -48,6 +49,7 @@ def select_informs(config: dict) -> Path:
     else:
         return Path('trimming_illumina') / 'fastp' / 'informs.io'
 
+
 def select_report_output(config: dict) -> Path:
     """
     Selects the trimming report based on the Snakemake configuration.
@@ -56,6 +58,6 @@ def select_report_output(config: dict) -> Path:
     """
     method = config['read_trimming'].get('method', 'trimmomatic')
     if method == 'trimmomatic':
-        return Path('trimming_illumina') / 'report' / 'trimmomatic' / 'html.io'
+        return Path('trimming_illumina') / 'report' / 'trimmomatic' / 'html.iob'
     else:
-        return Path('trimming_illumina') / 'report' / 'fastp' / 'html.io'
+        return Path('trimming_illumina') / 'report' / 'fastp' / 'html.iob'

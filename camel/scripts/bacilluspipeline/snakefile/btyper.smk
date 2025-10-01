@@ -52,7 +52,7 @@ rule btyper_report_empty:
     Creates an empty HTML report for the BTyper analysis.
     """
     output:
-        HTML = 'btyper/report/html-empty.io'
+        HTML = 'btyper/report/html-empty.iob'
     params:
         dir_ = 'btyper/report'
     run:

@@ -51,7 +51,7 @@ rule snp_lineage_report_empty:
     Creates an empty report when the assay is disabled.
     """
     output:
-        VAL_HTML = 'snp_lineage/report/html-empty.io' # snplineage.OUTPUT_REPORT_EMPTY
+        VAL_HTML = 'snp_lineage/report/html-empty.iob' # snplineage.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.tools.pipelines.mycobacterium.snplineagereporter import SNPLineageReporter
         from camel.app.snakemake.snakepipelineutils import  SnakePipelineUtils
