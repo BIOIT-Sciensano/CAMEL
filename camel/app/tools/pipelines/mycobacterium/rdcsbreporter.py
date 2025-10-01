@@ -173,7 +173,7 @@ class RdCsbReporter(Tool):
 
         self._report_section.add_table(table_data, header, [('class', 'data')])
         self._report_section.add_alert(
-            f"Detection for this DB is always done using 'SRST2' regardless of pipeline setting.", 'info')
+            f"Detection for this DB is always done using 'KMA' regardless of pipeline setting.", 'info')
 
     def __add_database(self, fasta_path: Path) -> None:
         """

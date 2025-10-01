@@ -25,6 +25,7 @@ class TestMycobacteriumPipeline(CamelTestSuite):
         test_file_dir / 'pipelines' / 'Myco-DRR041783-ds_2.fastq.gz'
     ]
     input_fasta = test_file_dir / 'pipelines' / 'Myco-DRR041783-ds.fasta'
+    input_fasta_csbrd = test_file_dir / 'pipelines' / 'Myco-S25BD09545.fasta'
     input_fastq_se = test_file_dir / 'pipelines' / 'Myco-SRR8948399_ont-ds.fastq.gz'
     input_vcf = test_file_dir / 'pipelines' / 'variants-Myco-DRR041783-ds-all.vcf'
 
@@ -87,6 +88,28 @@ class TestMycobacteriumPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--detection-method', 'kma'
         ] + [f"--{a.replace('_', '-')}" for a in MainMycobacteriumPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
+        main = MainMycobacteriumPipeline(args)
+        main.run()
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    def test_mycobacterium_pipeline_fasta_csbrd(self) -> None:
+        """
+        Tests the Mycobacterium pipeline using FASTA as input with only the rdcsb assay as a short running test.
+        The rdcsb reporter relies on an external apt package and the error of the missing package was initially not
+        caught upon migration to noble.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        args = [
+                   '--fasta', str(TestMycobacteriumPipeline.input_fasta_csbrd),
+                   '--input-type', 'fasta',
+                   '--output-html', str(path_report_out),
+                   '--output-dir', str(path_report_out.parent),
+                   '--output-tsv', str(path_summary_out),
+                   '--working-dir', str(self.running_dir),
+                   '--csb-rd'
+                ]
         main = MainMycobacteriumPipeline(args)
         main.run()
         self.assertGreater(path_report_out.stat().st_size, 0)
