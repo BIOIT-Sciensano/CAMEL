@@ -19,4 +19,9 @@ parameters:
     mandatory: false
     option: '-m'
     value: null
+  careful:
+    default: true
+    mandatory: false
+    option: '--careful'
+    value: null
 tool_command: pypolca run
