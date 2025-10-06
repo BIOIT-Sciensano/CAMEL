@@ -23,5 +23,5 @@ parameters:
     default: true
     mandatory: false
     option: '--careful'
-    value: null
+    flag: true
 tool_command: pypolca run
