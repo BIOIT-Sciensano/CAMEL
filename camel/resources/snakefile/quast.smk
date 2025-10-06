@@ -133,6 +133,10 @@ rule quast_create_summary_out:
             {'key': 'N50', 'name': 'n50'},
             {'key': 'Genome fraction (%)', 'name': 'genome_fraction'},
             {'key': 'Duplication ratio', 'name': 'dupl_ratio'},
+            {'key': 'Avg. coverage depth', 'name': 'avg_coverage'},
+            {'key': 'Reference avg. coverage depth', 'name': 'avg_coverage_ref'},
+            {'key': 'Coverage >= 1x (%)', 'name': 'positions_covered_1x'},
+            {'key': 'Reference coverage >= 1x (%)', 'name': 'positions_covered_1x_ref'},
             {'key': 'tool_versions', 'name': 'tool_versions'},
             {'key': 'filtering_tool_version', 'name': 'filtering_tool_version'}
         ]
