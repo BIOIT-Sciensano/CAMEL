@@ -45,9 +45,6 @@ class HtmlReporterTyping(Tool):
         Executes this tool.
         :return: None
         """
-        import pprint
-        pprint.pprint(self._input_informs)
-
         self.__initialize_report()
         if 'ST' in self._input_informs:
             self.__add_sequence_type()
