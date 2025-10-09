@@ -90,44 +90,46 @@ mob_suite:
   db: /db/mob_suite/latest
 
 gene_detection:
-  virulencefinder:
-    path: /db/gene_detection/VirulenceFinder-Ecoli
-    metadata:
-      name: Protein function
-      key: protein_function
-    hidden: true
+  dbs:
+    virulencefinder:
+      path: /db/gene_detection/VirulenceFinder-Ecoli
+      metadata:
+        name: Protein function
+        key: protein_function
+      hidden: true
 
-  virulencefinder_shiga:
-    path: /db/gene_detection/VirulenceFinder-Shiga
-    metadata:
-      name: stx variant
-      key: stx_variant
+    virulencefinder_shiga:
+      path: /db/gene_detection/VirulenceFinder-Shiga
+      metadata:
+        name: stx variant
+        key: stx_variant
 
-  serotype_o:
-    path: /db/gene_detection/SerotypeFinder-O_type
-    params:
-      blastn:
-        min_percent_identity: 85
-        min_coverage: 60
-    metadata:
-      name: Predicted serotype
-      key: predicted_serotype
+    serotype_o:
+      path: /db/gene_detection/SerotypeFinder-O_type
+      params:
+        blastn:
+          min_percent_identity: 85
+          min_coverage: 60
+      metadata:
+        name: Predicted serotype
+        key: predicted_serotype
 
 ###################
 # Sequence typing #
 ###################
 sequence_typing:
-  mlst_pasteur:
-    path: /db/sequence_typing/ecoli/mlst_pasteur
-    hidden: true
-  mlst_warwick:
-    path: /db/sequence_typing/ecoli/mlst_warwick
-  cgmlst:
-    path: /db/sequence_typing/ecoli/cgmlst
-    detection_method: blast
-    blast_task: blastn
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
+  dbs:
+    mlst_pasteur:
+      path: /db/sequence_typing/ecoli/mlst_pasteur
+      hidden: true
+    mlst_warwick:
+      path: /db/sequence_typing/ecoli/mlst_warwick
+    cgmlst:
+      path: /db/sequence_typing/ecoli/cgmlst
+      detection_method: blast
+      blast_task: blastn
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

@@ -64,7 +64,7 @@ class SequenceTypingWrapper:
             self._working_dir.mkdir(parents=True)
         if workflow_input.fasta is None:
             raise ValueError("FASTA input is required to run the blast analysis")
-        self.__create_blast_input(workflow_input.fasta.path, workflow_input.db_key)
+        self.__create_fasta_input(workflow_input.fasta.path, workflow_input.db_key)
         options = {'blastn_task': blast_task} if blast_task is not None else None
         config_path = self.__create_config_file(
             sample_name=workflow_input.sample_name,
@@ -76,9 +76,31 @@ class SequenceTypingWrapper:
         )
         self.__run_snakefile(config_path, workflow_input, threads)
 
+    def run_workflow_mist(self, workflow_input: SequenceTypingInput, threads: Optional[int] = 8) -> None:
+        """
+        Runs the MiST-based sequence typing workflow.
+        :param workflow_input: Workflow input
+        :param threads: Number of threads to use
+        :return: None
+        """
+        if not self._working_dir.exists():
+            self._working_dir.mkdir(parents=True)
+        if workflow_input.fasta is None:
+            raise ValueError("FASTA input is required to run the blast analysis")
+        self.__create_fasta_input(workflow_input.fasta.path, workflow_input.db_key)
+        config_path = self.__create_config_file(
+            sample_name=workflow_input.sample_name,
+            detection_method='mist',
+            input_type=workflow_input.input_type,
+            db_key=workflow_input.db_key,
+            db_path=workflow_input.db_path,
+            additional_options={},
+        )
+        self.__run_snakefile(config_path, workflow_input, threads)
+
     def run_workflow_kma(self, workflow_input: SequenceTypingInput, threads: Optional[int] = 8) -> None:
         """
-        Runs the KMA based sequence typing workflow.
+        Runs the KMA-based sequence typing workflow.
         :param workflow_input: Input for the workflow
         :param threads: Number of threads to use
         :return: None
@@ -92,7 +114,7 @@ class SequenceTypingWrapper:
             if workflow_input.fasta is None:
                 raise ValueError('FASTA input is required when there are protein loci in the scheme')
             else:
-                self.__create_blast_input(workflow_input.fasta.path, workflow_input.db_key)
+                self.__create_fasta_input(workflow_input.fasta.path, workflow_input.db_key)
         snakemakeutils.dump_object(workflow_input.fastq.to_fq_dict(), self._working_dir / 'fq_dict.io')
         config_path=self.__create_config_file(
             sample_name=workflow_input.sample_name,
@@ -120,20 +142,23 @@ class SequenceTypingWrapper:
         data = {
             'working_dir': str(self._working_dir),
             'sample_name': sample_name,
-            'detection_method': detection_method,
             'input_type': input_type,
             'sequence_typing': {
-                db_key: {
-                    'path': str(db_path),
-                    **additional_options
+                'dbs': {
+                    db_key: {
+                        'path': str(db_path),
+                        **additional_options
+                    }},
+                'options': {
+                    'method': detection_method
                 }
             }
         }
         return SnakePipelineUtils.generate_config_file(data, self._working_dir)
 
-    def __create_blast_input(self, fasta_path: Path, scheme_key: str) -> None:
+    def __create_fasta_input(self, fasta_path: Path, scheme_key: str) -> None:
         """
-        Creates the input for the workflow.
+        Creates the FASTA input for the workflow.
         :param scheme_key: Scheme key
         :param fasta_path: FASTA file path
         :return: None

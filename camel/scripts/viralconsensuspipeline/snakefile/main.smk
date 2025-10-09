@@ -181,4 +181,5 @@ rule summary_combine_all:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
+        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))

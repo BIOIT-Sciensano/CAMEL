@@ -2,7 +2,7 @@ from pathlib import Path
 
 from camel.app.components.blast.alignmentextraction import AlignmentExtraction
 from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.sequencetyping.sequencetypingblasthit import SequenceTypingBlastHit
+from camel.app.components.sequencetyping.typingblasthit import TypingBlastHit
 from camel.app.error import InvalidToolInputError
 from camel.app.error import ToolExecutionError
 from camel.app.io.tooliofile import ToolIOFile
@@ -33,7 +33,7 @@ class AlignmentExtractor(Tool):
         :return: None
         """
         hit = self._tool_inputs['VAL_Hits'][0].value
-        if hit.allele_id in (SequenceTypingBlastHit.SYMBOL_MULTI_HIT, SequenceTypingBlastHit.SYMBOL_NO_HIT):
+        if hit.allele_id in (TypingBlastHit.SYMBOL_MULTI_HIT, TypingBlastHit.SYMBOL_NO_HIT):
             self._tool_outputs['TXT'] = []
             return
         alignments_file = self._tool_inputs['TXT'][0].path

@@ -85,41 +85,43 @@ mykrobe:
 # Gene detection databases #
 ############################
 gene_detection:
-  resfinder:
-    path: /db/gene_detection/ResFinder
-    metadata:
-      name: Antibiotic(s)
-      key: antibiotics
+  dbs:
+    resfinder:
+      path: /db/gene_detection/ResFinder
+      metadata:
+        name: Antibiotic(s)
+        key: antibiotics
 
-  ncbi_amr:
-    path: /db/gene_detection/NCBI_AMR
-    perc_identity_cutoff: 90
-    metadata:
-      name: Antibiotic(s)
-      key: subclass
+    ncbi_amr:
+      path: /db/gene_detection/NCBI_AMR
+      perc_identity_cutoff: 90
+      metadata:
+        name: Antibiotic(s)
+        key: subclass
 
-  vfdb_core:
-    path: /db/gene_detection/VFDB_core
-    perc_identity_cutoff: 90
-    metadata:
-      name: Gene
-      key: gene
-    hidden: true
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
 
 ###################
 # Sequence typing #
 ###################
 sequence_typing:
-  mlst:
-    path: /db/sequence_typing/salmonella/mlst
-  cgmlst:
-    path: /db/sequence_typing/salmonella/cgmlst
-    blastn_task: blastn
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
+  dbs:
+    mlst:
+      path: /db/sequence_typing/salmonella/mlst
+    cgmlst:
+      path: /db/sequence_typing/salmonella/cgmlst
+      blastn_task: blastn
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
 
 ##############
 # Serotyping #
@@ -143,4 +145,4 @@ spifinder:
 abritamr:
   species: Salmonella
   amrfinderplus:
-    path: /db/amrfinder/v4/latest
+    path: /db/abritamr/amrfinderplus_data

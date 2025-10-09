@@ -4,10 +4,10 @@ from typing import Optional, Any
 from camel.app.components.blast.blasthitstatistics import BlastHitStatistics
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.sequencetyping.sequencetypinghitbase import SequenceTypingHitBase
+from camel.app.components.sequencetyping.typinghitbase import TypingHitBase
 
 
-class SequenceTypingBlastHit(SequenceTypingHitBase):
+class TypingBlastHit(TypingHitBase):
     """
     Sequence tying hit detected by blast.
     """
@@ -87,7 +87,7 @@ class SequenceTypingBlastHit(SequenceTypingHitBase):
         Returns the HTML column names.
         :return: HTML column names
         """
-        return SequenceTypingBlastHit.table_column_names() + ['Alignment']
+        return TypingBlastHit.table_column_names() + ['Alignment']
 
     def to_html_row(self, report_section: HtmlReportSection, sub_dir: Path = None) -> list[Any]:
         """
@@ -113,17 +113,17 @@ class SequenceTypingBlastHit(SequenceTypingHitBase):
         ]
 
     @staticmethod
-    def create_empty_hit(locus: str, type_: str) -> 'SequenceTypingBlastHit':
+    def create_empty_hit(locus: str, type_: str) -> 'TypingBlastHit':
         """
         Returns an empty hit.
         :param locus: Locus
         :param type_: Locus type
         :return: None
         """
-        return SequenceTypingBlastHit(locus, SequenceTypingHitBase.SYMBOL_NO_HIT, type_, None)
+        return TypingBlastHit(locus, TypingHitBase.SYMBOL_NO_HIT, type_, None)
 
     @staticmethod
-    def create_multi_hit(locus: str, type_: str, blast_stats: BlastHitStatistics) -> 'SequenceTypingBlastHit':
+    def create_multi_hit(locus: str, type_: str, blast_stats: BlastHitStatistics) -> 'TypingBlastHit':
         """
         Returns a multi hit.
         :param locus: Locus
@@ -131,7 +131,7 @@ class SequenceTypingBlastHit(SequenceTypingHitBase):
         :param blast_stats: BLAST hit statistics
         :return: None
         """
-        return SequenceTypingBlastHit(locus, SequenceTypingBlastHit.SYMBOL_MULTI_HIT, type_, blast_stats)
+        return TypingBlastHit(locus, TypingBlastHit.SYMBOL_MULTI_HIT, type_, blast_stats)
 
     @property
     def blast_stats(self) -> BlastHitStatistics:
@@ -168,9 +168,9 @@ class SequenceTypingBlastHit(SequenceTypingHitBase):
         Red: No-hit
         :return: Color
         """
-        if self.allele_id == SequenceTypingBlastHit.SYMBOL_MULTI_HIT:
+        if self.allele_id == TypingBlastHit.SYMBOL_MULTI_HIT:
             return 'yellow'
-        elif self.allele_id == SequenceTypingBlastHit.SYMBOL_NO_HIT:
+        elif self.allele_id == TypingBlastHit.SYMBOL_NO_HIT:
             return 'red'
         elif self.is_perfect_hit():
             return 'green'

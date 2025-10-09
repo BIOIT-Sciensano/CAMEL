@@ -196,7 +196,7 @@ rule core_init_summary:
             ('sample', config['sample_name']),
             ('input_files', ReportPipeline.format_input_string(config['input'])),
             ('analysis_date', analysis_date),
-            ('detection_method', config['detection_method'])
+            ('detection_method', config['gene_detection']['options']['method'])
         ]
         snakemakeutils.export_summary(content, Path(output.OUT), str(params.ext))
 

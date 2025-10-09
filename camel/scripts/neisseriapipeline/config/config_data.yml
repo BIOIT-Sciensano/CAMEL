@@ -35,7 +35,7 @@ reference:
   expected_gc: 51.5
 
 #########################
-# Tool specific options #
+# Tool-specific options #
 #########################
 downsampling:
   coverage_max: {coverage_max}
@@ -77,49 +77,49 @@ resfinder4:
 # Sequence typing #
 ###################
 sequence_typing:
-  bast:
-    path: /db/sequence_typing/neisseria/bast
-  cgmlst:
-    path: /db/sequence_typing/neisseria/cgmlst
-    detection_method: blast
-  feta:
-    path: /db/sequence_typing/neisseria/feta
-  fhbp:
-    path: /db/sequence_typing/neisseria/fhbp
-  mlst:
-    path: /db/sequence_typing/neisseria/mlst
-  pora:
-    path: /db/sequence_typing/neisseria/pora
-  porb:
-    path: /db/sequence_typing/neisseria/porb
-  resistance_genes:
-    path: /db/sequence_typing/neisseria/resistance_genes
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
-  rplf:
-    path: /db/sequence_typing/neisseria/rplf
-  serogroup_a:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_a
-  serogroup_b:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_b
-  serogroup_c:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_c
-  serogroup_e:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_e
-  serogroup_h:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_h
-  serogroup_l:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_l
-  serogroup_w:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_w
-  serogroup_x:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_x
-  serogroup_y:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_y
-  serogroup_z:
-    path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_z
-  vaccine_targets:
-    path: /db/sequence_typing/neisseria/vaccine_targets
+  dbs:
+    bast:
+      path: /db/sequence_typing/neisseria/bast
+    cgmlst:
+      path: /db/sequence_typing/neisseria/cgmlst
+    feta:
+      path: /db/sequence_typing/neisseria/feta
+    fhbp:
+      path: /db/sequence_typing/neisseria/fhbp
+    mlst:
+      path: /db/sequence_typing/neisseria/mlst
+    pora:
+      path: /db/sequence_typing/neisseria/pora
+    porb:
+      path: /db/sequence_typing/neisseria/porb
+    resistance_genes:
+      path: /db/sequence_typing/neisseria/resistance_genes
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+    rplf:
+      path: /db/sequence_typing/neisseria/rplf
+    serogroup_a:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_a
+    serogroup_b:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_b
+    serogroup_c:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_c
+    serogroup_e:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_e
+    serogroup_h:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_h
+    serogroup_l:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_l
+    serogroup_w:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_w
+    serogroup_x:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_x
+    serogroup_y:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_y
+    serogroup_z:
+      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_z
+    vaccine_targets:
+      path: /db/sequence_typing/neisseria/vaccine_targets

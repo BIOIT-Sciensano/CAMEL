@@ -7,6 +7,7 @@ from typing import Optional
 import yaml
 
 from camel.app.camel import Camel
+from camel.app.components import mainscriptutils
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.scripts.stecpipeline import CONFIG_DATA, SNAKEFILE_MAIN
@@ -48,10 +49,11 @@ class MainSTECPipeline(ReportPipeline):
         config_data = self.get_template_data(input_files)
         config_data['analyses'] = [key for key in MainSTECPipeline.CUSTOM_ANALYSES if vars(self._args)[key]]
         with open(CONFIG_DATA) as handle_in:
-            config_data.update(yaml.safe_load(handle_in.read().format(
-                coverage_max=self._args.cov_max,
-                qc_typing_scheme='cgmlst' if self._args.cgmlst else 'mlst_warwick',
-                export_bam='true' if self._args.report_include_bam else 'false',
+            mainscriptutils.dict_merge(
+                config_data, yaml.safe_load(handle_in.read().format(
+                    coverage_max=self._args.cov_max,
+                    qc_typing_scheme='cgmlst' if self._args.cgmlst else 'mlst_warwick',
+                    export_bam='true' if self._args.report_include_bam else 'false',
             )))
 
         # Read trimming

@@ -87,52 +87,54 @@ amr:
   mutation_db: /db/pipelines/mycobacterium/amr/who_2023.6
 
 sequence_typing:
-  mlst:
-    path: /db/sequence_typing/mycobacterium/mlst
-  cgmlst:
-    path: /db/sequence_typing/mycobacterium/cgmlst
-    detection_method: blast
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
+  dbs:
+    mlst:
+      path: /db/sequence_typing/mycobacterium/mlst
+    cgmlst:
+      path: /db/sequence_typing/mycobacterium/cgmlst
+      detection_method: blast
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
 
 51snp:
   bed: /db/pipelines/mycobacterium/51snp/51snp_locations.bed
   profiles: /db/pipelines/mycobacterium/51snp/profiles.tsv
 
 gene_detection:
-  amr_cds:
-    path: /db/pipelines/mycobacterium/amr/gene_detection/myco_amr_cds
-    force_detection_method: kma
-    params:
-      min_coverage: 20
-    metadata:
-      name: Antibiotics
-      key: antibiotics
+  dbs:
+    amr_cds:
+      path: /db/pipelines/mycobacterium/amr/gene_detection/myco_amr_cds
+      force_method: kma
+      params:
+        min_coverage: 20
+      metadata:
+        name: Antibiotics
+        key: antibiotics
 
-  csb_rd:
-    path: /db/pipelines/mycobacterium/csb_rd
-    force_detection_method: kma
+    csb_rd:
+      path: /db/pipelines/mycobacterium/csb_rd
+      force_method: kma
 
-  ncbi_16s:
-    path: /db/gene_detection/NCBI_16S
-    params:
-      blastn:
-        min_percent_identity: 95
-        min_coverage: 90
-    filtering_method: score
-    force_detection_method: blast
-    metadata:
-      name: Species
-      key: species
+    ncbi_16s:
+      path: /db/gene_detection/NCBI_16S
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 90
+      filtering_method: score
+      force_method: blast
+      metadata:
+        name: Species
+        key: species
 
-  hsp65:
-    path: /db/pipelines/mycobacterium/hsp65
-    metadata:
-      name: Species
-      key: species_name
+    hsp65:
+      path: /db/pipelines/mycobacterium/hsp65
+      metadata:
+        name: Species
+        key: species_name
 
 pointfinder:
   db: mycobacterium_tuberculosis

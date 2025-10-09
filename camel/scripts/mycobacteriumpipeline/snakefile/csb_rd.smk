@@ -18,7 +18,7 @@ rule rd_csb_report:
         INFORMS = 'csb_rd/report/informs.io'
     params:
         dir_ = 'csb_rd/report',
-        detection_method = config['detection_method'],
+        detection_method = config['gene_detection']['options']['method'],
         input_type = config['input_type']
     run:
         from camel.app.tools.pipelines.mycobacterium.rdcsbreporter import RdCsbReporter

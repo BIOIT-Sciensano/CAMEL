@@ -20,7 +20,7 @@ rule gene_detection_db_manager:
         FASTA_clustered = 'gene_detection/{db}/db_manager/fasta-clust.io',
         INFORMS = 'gene_detection/{db}/db_manager/informs.iob' # gene_detection.OUTPUT_DB_INFORMS
     params:
-        db_path = lambda wildcards: config['gene_detection'][wildcards.db]['path'],
+        db_path = lambda wildcards: config['gene_detection']['dbs'][wildcards.db]['path'],
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}'
     run:
         from camel.app.io.tooliodirectory import ToolIODirectory
@@ -68,7 +68,7 @@ rule gene_detection_map_names:
     params:
         dir_working = lambda wildcards: f'gene_detection/{wildcards.db}/metadata',
         sample_name = config['sample_name'],
-        db_config = lambda wildcards: config['gene_detection'][wildcards.db]
+        db_config = lambda wildcards: config['gene_detection']['dbs'][wildcards.db]
     run:
         from camel.app.io.tooliofile import ToolIOFile
         from camel.app.io.tooliovalue import ToolIOValue
@@ -111,7 +111,7 @@ rule gene_detection_get_column_names:
         INFORMS_columns = 'gene_detection/{db}/report/informs-columns.io' # gene_detection.OUTPUT_COLUMNS
     params:
         detection_method = lambda wildcards: GeneDetectionUtils.get_detection_method_key(config, wildcards.db),
-        db_config = lambda wildcards: config['gene_detection'][wildcards.db]
+        db_config = lambda wildcards: config['gene_detection']['dbs'][wildcards.db]
     run:
         from camel.app.components.blast.blasthitstatistics import BlastHitStatistics
         from camel.app.components.genedetection.genedetectionblasthit import GeneDetectionBlastHit
@@ -147,7 +147,7 @@ rule gene_detection_report:
         VAL_HTML = 'gene_detection/{db}/report/html.iob' # gene_detection.OUTPUT_REPORT
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/report',
-        config_data = lambda wildcards: config['gene_detection'][wildcards.db],
+        config_data = lambda wildcards: config['gene_detection']['dbs'][wildcards.db],
         input_type = config['input_type'],
         detection_method = lambda wildcards: GeneDetectionUtils.get_detection_method_key(config, wildcards.db)
     run:

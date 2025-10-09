@@ -6,6 +6,7 @@ from typing import Optional
 import yaml
 
 from camel.app.camel import Camel
+from camel.app.components import mainscriptutils
 from camel.app.components.pipelines.reportpipeline import ReportPipeline
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.scripts.salmonellapipeline import CONFIG_DATA, SNAKEFILE_MAIN
@@ -55,11 +56,12 @@ class MainSalmonellaPipeline(ReportPipeline):
         config_data = self.get_template_data(input_files)
         config_data['analyses'] = [key for key in MainSalmonellaPipeline.CUSTOM_ANALYSES if vars(self._args)[key]]
         with CONFIG_DATA.open() as handle_in:
-            config_data.update(yaml.load(handle_in.read().format(
+            mainscriptutils.dict_merge(
+                config_data, yaml.safe_load(handle_in.read().format(
                 qc_typing_scheme='cgmlst' if self._args.cgmlst else 'mlst',
                 export_bam='true' if self._args.report_include_bam else 'false',
                 coverage_max=self._args.cov_max
-            ), Loader=yaml.SafeLoader))
+            )))
         return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
 
     @staticmethod

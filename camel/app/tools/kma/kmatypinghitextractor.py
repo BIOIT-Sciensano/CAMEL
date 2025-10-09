@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from camel.app.components.sequencetyping.sequencetypingkmahit import SequenceTypingKMAHit
+from camel.app.components.sequencetyping.typingkmahit import TypingKMAHit
 from camel.app.components.sequencetyping.sequencetypingutils import SequenceTypingUtils
 from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliovalue import ToolIOValue
@@ -42,11 +42,11 @@ class KMATypingHitExtractor(Tool):
         if len(hits_filtered_cov) > 0:
             best_hit = sorted(hits_filtered_cov, key=lambda x: -x.score)[0]
         else:
-            best_hit = SequenceTypingKMAHit.create_empty_hit(metadata_locus['name'])
+            best_hit = TypingKMAHit.create_empty_hit(metadata_locus['name'])
         self._tool_outputs['VAL_hit'] = [ToolIOValue(best_hit)]
 
     @staticmethod
-    def __parse_kma_output(path_kma_out: Path, metadata_locus: dict[str, Any]) -> list[SequenceTypingKMAHit]:
+    def __parse_kma_output(path_kma_out: Path, metadata_locus: dict[str, Any]) -> list[TypingKMAHit]:
         """
         Parses the hits from the KMA output file.
         :param path_kma_out: KMA output file path
@@ -61,7 +61,7 @@ class KMATypingHitExtractor(Tool):
             for line in lines[1:]:
                 parts = [x.strip() for x in line.split('\t')]
                 allele_name = parts[header_indices['#Template']]
-                hits.append(SequenceTypingKMAHit(
+                hits.append(TypingKMAHit(
                     metadata_locus['name'],
                     SequenceTypingUtils.get_allele_id(allele_name, metadata_locus['allele_id_regex']),
                     int(parts[header_indices['Template_length']]),

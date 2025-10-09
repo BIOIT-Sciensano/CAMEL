@@ -7,7 +7,7 @@ from Bio.Seq import Seq
 from camel.app.components.html.htmlreportsection import HtmlReportSection
 
 
-class SequenceTypingHitBase(metaclass=abc.ABCMeta):
+class TypingHitBase(metaclass=abc.ABCMeta):
     """
     This class represents is the base class for sequence typing hits. All hits should define the locus to which they
     belong and the allele that was detected. Abstract methods should be implemented by sub-classes so other classes

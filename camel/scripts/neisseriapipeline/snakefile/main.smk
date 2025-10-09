@@ -86,9 +86,12 @@ rule neisseria_additional_resistance_gene_metadata:
     The data is parsed from the PubMLST webpage.
     """
     input:
-        hits = sequence_typing.OUTPUT_HITS.format(scheme='resistance_genes', locus_type='DNA', detection_method=config['detection_method']),
+        hits = sequence_typing.OUTPUT_HITS.format(
+            scheme='resistance_genes',
+            locus_type='DNA',
+            detection_method=config['sequence_typing']['options']['method']),
         VAL_HTML = sequence_typing.get_sequence_typing_report('resistance_genes', config),
-        INFORMS_scheme = 'typing/resistance_genes/informs-locus_set.iob'
+        INFORMS_scheme = sequence_typing.OUTPUT_DB_INFORMS.format(scheme='resistance_genes')
     output:
         VAL_HTML = 'typing/resistance_genes/metadata/html.iob'
     params:
@@ -146,7 +149,7 @@ rule combine_reports:
         pipeline_info = config['pipeline'],
         input_dict = config['input'],
         input_type = config['input_type'],
-        detection_method = config['detection_method'],
+        detection_method = config['gene_detection']['options']['method'],
         citation_keys = config['citations']
     run:
         import datetime
@@ -228,4 +231,5 @@ rule combine_summary_files:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
+        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))

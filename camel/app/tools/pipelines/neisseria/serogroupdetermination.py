@@ -1,7 +1,7 @@
 
 from enum import Enum
 
-from camel.app.components.sequencetyping.sequencetypingblasthit import SequenceTypingBlastHit
+from camel.app.components.sequencetyping.typingblasthit import TypingBlastHit
 from camel.app.tools.tool import Tool
 
 
@@ -55,7 +55,7 @@ class SerogroupDetermination(Tool):
         self._informs['detected_serogroup'] = serogroup_stats[0]['name'] if \
             serogroup_stats[0]['fraction_detected'] >= 0.6 else 'NA'
 
-    def __get_detection_category(self, hits: list[SequenceTypingBlastHit]) -> DetectionCategory:
+    def __get_detection_category(self, hits: list[TypingBlastHit]) -> DetectionCategory:
         """
         Returns the category of hits for the given list of hits.
         :param hits: Hits

@@ -3,10 +3,11 @@ import json
 from camel.app.components.sequencetyping.sequencetypingutils import LocusMetadataHolder
 from camel.app.error import InvalidToolInputError
 from camel.app.error import ToolExecutionError
+from camel.app.io.tooliofile import ToolIOFile
 from camel.app.tools.tool import Tool
 
 
-class LocusSetManager(Tool):
+class TypingDBLoader(Tool):
     """
     This tool extracts the metadata from a scheme / locus set directory.
 
@@ -54,3 +55,8 @@ class LocusSetManager(Tool):
             raise FileNotFoundError(f'No database update JSON file found: {path_json_update}')
         with path_json_update.open() as handle:
             self._informs['update'] = json.load(handle)
+
+        # Add the profiles (if they exist)
+        path_profiles = path_dir_scheme / 'profiles.tsv'
+        if path_profiles.exists():
+            self._tool_outputs['TSV'] = [ToolIOFile(path_profiles)]

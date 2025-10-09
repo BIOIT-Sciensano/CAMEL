@@ -71,46 +71,48 @@ species_determination:
 # Gene detection databases #
 ############################
 gene_detection:
-  vfdb_core:
-    path: /db/gene_detection/VFDB_core
-    metadata:
-      name: Gene
-      key: gene
-    hidden: true
-  ampc:
-    path: /db/pipelines/yersinia/gene_detection-ampc
-    params:
-      blastn:
-        min_percent_identity: 95
-        min_coverage: 60
-      kma:
-        min_percent_identity: 95
-        min_coverage: 60
-    metadata:
-      name: Antibiotics
-      key: antibiotics
+  dbs:
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
+    ampc:
+      path: /db/pipelines/yersinia/gene_detection-ampc
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+        kma:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Antibiotics
+        key: antibiotics
 
 ###################
 # Sequence typing #
 ###################
 sequence_typing:
-  cgmlst:
-    path: '/db/sequence_typing/yersinia/cgmlst_yersinia_spp'
-    detection_method: blast
-    write_all_matches: True
-  mlst:
-    path: '/db/sequence_typing/yersinia/mlst_achtman'
-  mlst_mcnally:
-    path: '/db/sequence_typing/yersinia/mlst_mcnally'
-  cgmlst_ye:
-    path: '/db/sequence_typing/yersinia/cgmlst_yersinia_enterocolitica'
-    detection_method: blast
-  cgmlst_yp:
-    path: '/db/sequence_typing/yersinia/cgmlst_yersinia_pseudotuberculosis'
-  cgmlst_enterobase:
-    path: '/db/sequence_typing/yersinia/cgmlst_enterobase'
-  rmlst:
-    path: '/db/sequence_typing/various/rmlst'
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
+  dbs:
+    cgmlst:
+      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_spp'
+      detection_method: blast
+      write_all_matches: True
+    mlst:
+      path: '/db/sequence_typing/yersinia/mlst_achtman'
+    mlst_mcnally:
+      path: '/db/sequence_typing/yersinia/mlst_mcnally'
+    cgmlst_ye:
+      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_enterocolitica'
+      detection_method: blast
+    cgmlst_yp:
+      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_pseudotuberculosis'
+    cgmlst_enterobase:
+      path: '/db/sequence_typing/yersinia/cgmlst_enterobase'
+    rmlst:
+      path: '/db/sequence_typing/various/rmlst'
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

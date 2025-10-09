@@ -17,8 +17,8 @@ rule gene_detection_blast_blastn:
         INFORMS = 'gene_detection/{db}/blastn/informs.io'
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/blastn',
-        task = lambda wildcards: config['gene_detection'][wildcards.db].get('params', {}).get('blastn', {}).get('task', 'megablast'),
-        blast_reads = lambda wildcards: config['gene_detection'][wildcards.db].get('params', {}).get('blastn', {}).get('blast_reads', False)
+        task = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('task', 'megablast'),
+        blast_reads = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('blast_reads', False)
     run:
         from camel.app.tools.blast.blastn import Blastn
         blastn = Blastn()
@@ -61,10 +61,10 @@ rule gene_detection_blast_hit_filtering:
         INFORMS = 'gene_detection/{db}/blast/informs.io' # gene_detection.OUTPUT_INFORMS_METHOD
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/hit_filtering',
-        min_percent_identity = lambda wildcards: config['gene_detection'][wildcards.db].get('params', {}).get('blastn', {}).get('min_percent_identity', 90),
-        min_coverage = lambda wildcards: config['gene_detection'][wildcards.db].get('params', {}).get('blastn', {}).get('min_coverage', 60),
-        filtering_method = lambda wildcards: config['gene_detection'][wildcards.db].get('params',{}).get('blastn',{}).get('filtering_method', 'cluster'),
-        score_nb_of_hits = lambda wildcards: config['gene_detection'][wildcards.db].get('params', {}).get('blastn', {}).get('score_nb_of_hits', 5)
+        min_percent_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('min_percent_identity', 90),
+        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('min_coverage', 60),
+        filtering_method = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params',{}).get('blastn',{}).get('filtering_method', 'cluster'),
+        score_nb_of_hits = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('score_nb_of_hits', 5)
     run:
         from camel.app.tools.pipelines.genedetection.blasthitfiltering import BlastHitFiltering
         hit_filtering = BlastHitFiltering()

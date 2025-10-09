@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-from camel.app.components.sequencetyping.sequencetypinghitbase import SequenceTypingHitBase
+from camel.app.components.sequencetyping.typinghitbase import TypingHitBase
 from camel.app.error import InvalidToolInputError
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
@@ -108,7 +108,7 @@ class SequenceTypeDetector(Tool):
         logger.info(f'Parsed {len(profiles):,} profiles')
         return profiles
 
-    def __alleles_match(self, detected_hit: SequenceTypingHitBase, profile_allele: str) -> bool:
+    def __alleles_match(self, detected_hit: TypingHitBase, profile_allele: str) -> bool:
         """
         Checks whether two alleles match.
         :param detected_hit: Detected allele
@@ -122,7 +122,7 @@ class SequenceTypeDetector(Tool):
         return (detected_hit.is_perfect_hit()) and (detected_hit.allele_id == profile_allele)
 
     def __get_nb_matches_by_profile(
-            self, profiles: list[STProfile], hit_by_locus: dict[str, SequenceTypingHitBase]) -> dict:
+            self, profiles: list[STProfile], hit_by_locus: dict[str, TypingHitBase]) -> dict:
         """
         Returns the number of matches per profile.
         :param profiles: Sequence type profiles

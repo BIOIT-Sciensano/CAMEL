@@ -53,7 +53,7 @@ class MainKlebsiellaPipeline(ReportPipeline):
         :param input_files: Dictionary with the input files (keys can be FASTQ_PE, FASTQ_SE).
         :return: Configuration file
         """
-        config_data = self.get_template_data( input_files)
+        config_data = self.get_template_data(input_files)
         config_data['analyses'] = [key for key in MainKlebsiellaPipeline.CUSTOM_ANALYSES if vars(self._args)[key]]
         with CONFIG_DATA.open() as handle_in:
             mainscriptutils.dict_merge(config_data, yaml.load(handle_in.read().format(

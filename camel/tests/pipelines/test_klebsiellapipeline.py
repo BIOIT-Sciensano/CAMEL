@@ -6,7 +6,7 @@ import yaml
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.app.config import config
 from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.tools.pipelines.sequence_typing.locussetmanager import LocusSetManager
+from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 from camel.scripts.klebsiellapipeline import CONFIG_DATA
 from camel.scripts.klebsiellapipeline.mainklebsiellapipeline import MainKlebsiellaPipeline
 from camel.tests import longRunningTest
@@ -35,12 +35,12 @@ class TestKlebsiellaPipeline(CamelTestSuite):
         with open(CONFIG_DATA) as handle_in:
             config_data = yaml.safe_load(handle_in)
 
-        for key, scheme_data in config_data['sequence_typing'].items():
+        for key, scheme_data in config_data['sequence_typing']['dbs'].items():
             # Check if scheme exists
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
             # Check if metadata can be loaded
-            manager = LocusSetManager()
+            manager = TypingDBLoader()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.informs), 0)

@@ -121,7 +121,7 @@ rule mobsuite_report_genomic_context:
         HTML = 'mob_suite/genomic_context/html.iob' # mobsuite.OUTPUT_CONTEXT_REPORT
     params:
         dir_ = 'mob_suite/genomic_context',
-        detection_method = config['detection_method'],
+        detection_method = config['gene_detection']['options']['method'],
         input_type = config.get('input_type', 'illumina')
     run:
         from camel.app.tools.mobsuite.genomiccontext import GenomicContext

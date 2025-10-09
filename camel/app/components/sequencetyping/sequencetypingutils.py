@@ -127,12 +127,3 @@ class SequenceTypingUtils:
         """
         folder = Path(scheme_data[scheme_key]['path'])
         return (folder / 'profiles.tsv').is_file()
-
-    @staticmethod
-    def get_detection_method(config_data: dict[str, Any], scheme_key: str) -> str:
-        """
-        Returns the detection method for the given scheme.
-        :return: Detection method
-        """
-        pipeline_setting = config_data['detection_method']
-        return config_data['sequence_typing'][scheme_key].get('detection_method', pipeline_setting)

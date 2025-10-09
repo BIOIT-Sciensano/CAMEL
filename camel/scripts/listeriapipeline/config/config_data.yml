@@ -74,64 +74,66 @@ mob_suite:
 # Gene detection databases #
 ############################
 gene_detection:
-  # AMR
-  ncbi_amr:
-    path: /db/gene_detection/NCBI_AMR/
-    perc_identity_cutoff: 90
-    metadata:
-      name: Antibiotic(s)
-      key: subclass
+  dbs:
+    # AMR
+    ncbi_amr:
+      path: /db/gene_detection/NCBI_AMR/
+      perc_identity_cutoff: 90
+      metadata:
+        name: Antibiotic(s)
+        key: subclass
 
-  # Virulence
-  virulencefinder:
-    path: /db/gene_detection/VirulenceFinder-Listeria
-    perc_identity_cutoff: 90
-    extra_column:
-      name: Protein function
-      key: protein_function
-    hidden: true
+    # Virulence
+    virulencefinder:
+      path: /db/gene_detection/VirulenceFinder-Listeria
+      perc_identity_cutoff: 90
+      extra_column:
+        name: Protein function
+        key: protein_function
+      hidden: true
 
-  vfdb_core:
-    path: /db/gene_detection/VFDB_core
-    perc_identity_cutoff: 90
-    metadata:
-      name: Gene
-      key: gene
-    hidden: true
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
 
-  # Plasmid replicons
-  plasmidfinder:
-    path: /db/gene_detection/PlasmidFinder-gram_positive
-    params:
-      blastn:
-        min_percent_identity: 95
-        min_coverage: 60
-    metadata:
-      name: Notes
-      key: notes
-    message:
-      content: The presence of a replicon does not mean that the corresponding plasmid is present.
-      category: warning
+    # Plasmid replicons
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-gram_positive
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
 
 ###################
 # Sequence typing #
 ###################
 sequence_typing:
-  cgmlst:
-    path: /db/sequence_typing/listeria/cgmlst
-    detection_method: blast
-  mlst:
-    path: /db/sequence_typing/listeria/mlst
-  pcr_serogroup:
-    path: /db/sequence_typing/listeria/serogroup
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
-  species_confirmation:
-    path: /db/sequence_typing/listeria/species_confirmation
-  typing_amr:
-    path: /db/sequence_typing/listeria/antibiotic_resistance
-  typing_virulence:
-    path: /db/sequence_typing/listeria/virulence
+  dbs:
+    cgmlst:
+      path: /db/sequence_typing/listeria/cgmlst
+      detection_method: blast
+    mlst:
+      path: /db/sequence_typing/listeria/mlst
+    pcr_serogroup:
+      path: /db/sequence_typing/listeria/serogroup
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+    species_confirmation:
+      path: /db/sequence_typing/listeria/species_confirmation
+    typing_amr:
+      path: /db/sequence_typing/listeria/antibiotic_resistance
+    typing_virulence:
+      path: /db/sequence_typing/listeria/virulence

@@ -1,0 +1,19 @@
+dependencies:
+  - mist/0.0.3
+  - minimap2/2.26
+parameters:
+  threads:
+    default: true
+    mandatory: false
+    option: --threads
+    value: 4
+  multi:
+    default: false
+    mandatory: false
+    option: --multi
+  debug:
+    default: false
+    mandatory: false
+    option: --debug
+    flag: true
+tool_command: mist call

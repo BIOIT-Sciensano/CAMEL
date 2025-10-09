@@ -1,6 +1,6 @@
 import unittest
 from pathlib import Path
-from camel.app.tools.pipelines.sequence_typing.locussetmanager import LocusSetManager
+from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 import yaml
 
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
@@ -33,12 +33,12 @@ class TestNeisseriaPipeline(CamelTestSuite):
         with open(CONFIG_DATA) as handle_in:
             config_data = yaml.safe_load(handle_in)
 
-        for key, scheme_data in config_data['sequence_typing'].items():
+        for key, scheme_data in config_data['sequence_typing']['dbs'].items():
             # Check if scheme exists
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
             # Check if metadata can be loaded
-            manager = LocusSetManager()
+            manager = TypingDBLoader()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.informs), 0)

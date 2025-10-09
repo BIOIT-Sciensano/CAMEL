@@ -80,46 +80,48 @@ bacmet:
 # Gene detection databases #
 ############################
 gene_detection:
-  vfdb_core:
-    path: /db/gene_detection/VFDB_core
-    perc_identity_cutoff: 90
-    metadata:
-      name: Gene
-      key: gene
-    hidden: true
+  dbs:
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
 
-  virulencefinder:
-    path: /db/gene_detection/VirulenceFinder-Enterococcus
-    metadata:
-      name: Protein function
-      key: protein_function
+    virulencefinder:
+      path: /db/gene_detection/VirulenceFinder-Enterococcus
+      metadata:
+        name: Protein function
+        key: protein_function
 
-  plasmidfinder:
-    path: /db/gene_detection/PlasmidFinder-gram_positive
-    params:
-      blastn:
-        min_percent_identity: 95
-        min_coverage: 60
-    metadata:
-      name: Notes
-      key: notes
-    message:
-      content: The presence of a replicon does not mean that the corresponding plasmid is present.
-      category: warning
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-gram_positive
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
 
 ###################
 # Sequence typing #
 ###################
 sequence_typing:
-  mlst:
-    path: {mlst_db}
-  mlst_bezdicek:
-    path: '/db/sequence_typing/enterococcus_faecium/mlst_bezdicek'
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
-  cgmlst:
-    path: {cgmlst_db}
-    detection_method: blast
+  dbs:
+    mlst:
+      path: {mlst_db}
+    mlst_bezdicek:
+      path: '/db/sequence_typing/enterococcus_faecium/mlst_bezdicek'
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+    cgmlst:
+      path: {cgmlst_db}
+      detection_method: blast

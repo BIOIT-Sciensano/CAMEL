@@ -84,7 +84,7 @@ rule report_create:
         pipeline_info = config['pipeline'],
         input_dict = config['input'],
         input_type = config['input_type'],
-        detection_method = config['detection_method']
+        detection_method = config['gene_detection']['options']['method']
     run:
         import datetime
         from camel.app.components.pipelines.reportpipeline import ReportPipeline
@@ -137,4 +137,5 @@ rule summary_combine:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
+        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))

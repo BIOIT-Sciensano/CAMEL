@@ -225,8 +225,8 @@ def validate_input_files(args: argparse.Namespace, input_type: Optional[str] = N
             raise InvalidToolInputError('Expected a FASTA file, but a FASTQ file was detected')
         if FastaUtils.has_duplicates(args.fasta):
             raise InvalidToolInputError('The input FASTA file contains duplicate sequence IDs.')
-        if args.detection_method != 'blast':
-            raise InvalidToolInputError('For FASTA input, only BLAST-based detection is available.')
+        if args.detection_method not in ('blast', 'mist'):
+            raise InvalidToolInputError('For FASTA input, only BLAST- or MiST-based detection is available.')
         logger.info(f'Valid FASTA file ({len(seqs):,} sequences)')
 
     # FASTQ PE inputs

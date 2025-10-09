@@ -88,66 +88,68 @@ bacmet:
 # Gene detection databases #
 ############################
 gene_detection:
-  vfdb_core:
-    path: /db/gene_detection/VFDB_core
-    perc_identity_cutoff: 90
-    metadata:
-      name: Gene
-      key: gene
-    hidden: true
+  dbs:
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
 
-  vf_exoenzyme:
-    path: /db/gene_detection/VirulenceFinder-Saureus-exoenzyme
-    metadata:
-      name: Protein function
-      key: protein_function
+    vf_exoenzyme:
+      path: /db/gene_detection/VirulenceFinder-Saureus-exoenzyme
+      metadata:
+        name: Protein function
+        key: protein_function
 
-  vf_hostimm:
-    path: /db/gene_detection/VirulenceFinder-Saureus-hostimm
-    metadata:
-      name: Protein function
-      key: protein_function
+    vf_hostimm:
+      path: /db/gene_detection/VirulenceFinder-Saureus-hostimm
+      metadata:
+        name: Protein function
+        key: protein_function
 
-  vf_toxin:
-    path: /db/gene_detection/VirulenceFinder-Saureus-toxin
-    metadata:
-      name: Protein function
-      key: protein_function
+    vf_toxin:
+      path: /db/gene_detection/VirulenceFinder-Saureus-toxin
+      metadata:
+        name: Protein function
+        key: protein_function
 
-  sccmec_genes:
-    path: /db/gene_detection/SCCmec_genes
+    sccmec_genes:
+      path: /db/gene_detection/SCCmec_genes
 
-  sccmec_cassette:
-    path: /db/gene_detection/SCCmec_cassette
-    force_detection_method: kma
+    sccmec_cassette:
+      path: /db/gene_detection/SCCmec_cassette
+      force_method: kma
 
-  plasmidfinder:
-    path: /db/gene_detection/PlasmidFinder-gram_positive
-    params:
-      blastn:
-        min_percent_identity: 95
-        min_coverage: 60
-    metadata:
-      name: Notes
-      key: notes
-    message:
-      content: The presence of a replicon does not mean that the corresponding plasmid is present.
-      category: warning
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-gram_positive
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
 
-  se_toxins:
-    path: /db/gene_detection/saureus_se_toxins
+    se_toxins:
+      path: /db/gene_detection/saureus_se_toxins
 
 ###################
 # Sequence typing #
 ###################
 sequence_typing:
-  mlst:
-    path: /db/sequence_typing/staphylococcus/mlst
-  cgmlst:
-    path: /db/sequence_typing/staphylococcus/cgmlst
-    detection_method: blast
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
+  dbs:
+    mlst:
+      path: /db/sequence_typing/staphylococcus/mlst
+    cgmlst:
+      path: /db/sequence_typing/staphylococcus/cgmlst
+      detection_method: blast
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

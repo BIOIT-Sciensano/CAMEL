@@ -77,62 +77,64 @@ mob_suite:
 # Gene detection databases #
 ############################
 gene_detection:
-  plasmidfinder:
-    path: /db/gene_detection/PlasmidFinder-entero
-    params:
-      blastn:
-        min_percent_identity: 95
-        min_coverage: 60
-    message:
-      content: The presence of a replicon does not mean that the corresponding plasmid is present.
-      category: warning
-  ncbi_stress:
-    path: /db/gene_detection/NCBI_STRESS
-  serotype_o:
-    path: /db/gene_detection/SerotypeFinder-O_type
-    params:
-      blastn:
-        min_percent_identity: 85
-        min_coverage: 60
-    metadata:
-      name: Predicted serotype
-      key: predicted_serotype
-  serotype_h:
-    path: /db/gene_detection/SerotypeFinder-H_type
-    params:
-      blastn:
-        min_percent_identity: 85
-        min_coverage: 60
-    metadata:
-      name: Predicted serotype
-      key: predicted_serotype
-  virulencefinder:
-    path: /db/gene_detection/VirulenceFinder-Ecoli
-    metadata:
-      name: Protein function
-      key: protein_function
-    hidden: true
-  virulencefinder_shiga:
-    path: /db/gene_detection/VirulenceFinder-Shiga
-    metadata:
-      name: stx variant
-      key: stx_variant
+  dbs:
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-entero
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
+    ncbi_stress:
+      path: /db/gene_detection/NCBI_STRESS
+    serotype_o:
+      path: /db/gene_detection/SerotypeFinder-O_type
+      params:
+        blastn:
+          min_percent_identity: 85
+          min_coverage: 60
+      metadata:
+        name: Predicted serotype
+        key: predicted_serotype
+    serotype_h:
+      path: /db/gene_detection/SerotypeFinder-H_type
+      params:
+        blastn:
+          min_percent_identity: 85
+          min_coverage: 60
+      metadata:
+        name: Predicted serotype
+        key: predicted_serotype
+    virulencefinder:
+      path: /db/gene_detection/VirulenceFinder-Ecoli
+      metadata:
+        name: Protein function
+        key: protein_function
+      hidden: true
+    virulencefinder_shiga:
+      path: /db/gene_detection/VirulenceFinder-Shiga
+      metadata:
+        name: stx variant
+        key: stx_variant
 
 ###################
 # Sequence typing #
 ###################
 sequence_typing:
-  cgmlst:
-    path: /db/sequence_typing/ecoli/cgmlst
-    blastn_task: blastn
-  innuendo_cgmlst:
-    path: /db/sequence_typing/ecoli/innuendo_cgmlst
-  mlst_pasteur:
-    path: /db/sequence_typing/ecoli/mlst_pasteur
-  mlst_warwick:
-    path: /db/sequence_typing/ecoli/mlst_warwick
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
+  dbs:
+    cgmlst:
+      path: /db/sequence_typing/ecoli/cgmlst
+      blastn_task: blastn
+    innuendo_cgmlst:
+      path: /db/sequence_typing/ecoli/innuendo_cgmlst
+    mlst_pasteur:
+      path: /db/sequence_typing/ecoli/mlst_pasteur
+    mlst_warwick:
+      path: /db/sequence_typing/ecoli/mlst_warwick
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

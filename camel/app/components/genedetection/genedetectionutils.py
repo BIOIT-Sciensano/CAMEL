@@ -65,10 +65,10 @@ class GeneDetectionUtils:
         :return: Detection method key
         """
         try:
-            db_config = config['gene_detection'][db_key]
+            db_config = config['gene_detection']['dbs'][db_key]
         except KeyError:
             raise ValueError(f"Database '{db_key}' not found in Snakemake config")
-        return db_config.get('force_detection_method', config['detection_method'])
+        return db_config.get('force_method', config['gene_detection']['options']['method'])
 
     @staticmethod
     def parse_extra_column_param(value: str) -> tuple[str, str]:

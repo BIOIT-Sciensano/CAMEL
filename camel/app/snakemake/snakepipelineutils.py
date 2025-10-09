@@ -19,7 +19,6 @@ from camel.app.io.tooliofile import ToolIOFile
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
 
 
 class SnakePipelineUtils:
@@ -122,7 +121,7 @@ class SnakePipelineUtils:
         """
         section = HtmlReportSection(title, header_level)
         section.add_paragraph('Analysis disabled')
-        SnakemakeUtils.dump_object([ToolIOValue(section)], output_file)
+        snakemakeutils.dump_object([ToolIOValue(section)], output_file)
 
     @staticmethod
     def symlink_input_files(output_dir: Path, file_paths: list[str], file_names: list[str], sanitize: bool = False) ->\

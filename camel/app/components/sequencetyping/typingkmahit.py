@@ -1,9 +1,8 @@
-
 from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.sequencetyping.sequencetypinghitbase import SequenceTypingHitBase
+from camel.app.components.sequencetyping.typinghitbase import TypingHitBase
 
 
-class SequenceTypingKMAHit(SequenceTypingHitBase):
+class TypingKMAHit(TypingHitBase):
     """
     Sequence tying hit detected by KMA.
     """
@@ -28,13 +27,13 @@ class SequenceTypingKMAHit(SequenceTypingHitBase):
         self._score = score
 
     @staticmethod
-    def create_empty_hit(locus: str) -> 'SequenceTypingKMAHit':
+    def create_empty_hit(locus: str) -> 'TypingKMAHit':
         """
         Creates an empty KMA hit.
         :param locus: Locus
         :return: KMA hit
         """
-        return SequenceTypingKMAHit(locus, '-', 0, 0, 0, 0, 0)
+        return TypingKMAHit(locus, '-', 0, 0, 0, 0, 0)
 
     @staticmethod
     def table_column_names() -> list[str]:
@@ -65,7 +64,7 @@ class SequenceTypingKMAHit(SequenceTypingHitBase):
         Returns the HTML column names.
         :return: HTML column names
         """
-        return SequenceTypingKMAHit.table_column_names()
+        return TypingKMAHit.table_column_names()
 
     def to_html_row(self, base_dir=None, sub_dir=None):
         """

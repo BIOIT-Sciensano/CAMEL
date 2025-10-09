@@ -105,24 +105,38 @@ class MainGeneDetection:
 
         # Add specific options
         if self._args.detection_method == 'blast':
-            config_data.update({'params': {'blastn': {
-                'blast_reads': True if self._args.blast_reads else False,
-                'filtering_method': self._args.blast_filtering_method,
-                'min_coverage': self._args.blast_min_percent_coverage,
-                'min_percent_identity': self._args.blast_min_percent_identity,
-                'score_nb_of_hits': self._args.blast_score_nb_of_hits,
-                'task': self._args.blast_task,
-            }}})
+            mainscriptutils.dict_merge(
+                config_data,
+                {
+                    'params': {
+                        'blastn': {
+                            'blast_reads': True if self._args.blast_reads else False,
+                            'filtering_method': self._args.blast_filtering_method,
+                            'min_coverage': self._args.blast_min_percent_coverage,
+                            'min_percent_identity': self._args.blast_min_percent_identity,
+                            'score_nb_of_hits': self._args.blast_score_nb_of_hits,
+                            'task': self._args.blast_task
+                        }
+                    }
+                }
+            )
         elif self._args.detection_method == 'kma':
-            config_data.update({'params': {'kma': {
-                'min_percent_identity': self._args.kma_min_percent_identity,
-                'min_coverage': self._args.kma_min_percent_coverage,
-                'ont': self._args.kma_ont,
-                'cge': self._args.kma_cge,
-                'apm': self._args.kma_apm
-            }}})
+            mainscriptutils.dict_merge(
+                config_data,
+                {
+                    'params': {
+                        'kma': {
+                            'min_percent_identity': self._args.kma_min_percent_identity,
+                            'min_coverage': self._args.kma_min_percent_coverage,
+                            'ont': self._args.kma_ont,
+                            'cge': self._args.kma_cge,
+                            'apm': self._args.kma_apm
+                        }
+                    }
+                }
+            )
 
-        # Add extra column
+        # Add the extra metadata column
         with (self._args.database_dir / 'db_metadata.txt').open() as handle:
             db_metadata = json.load(handle)
             if 'extra_column' in db_metadata:

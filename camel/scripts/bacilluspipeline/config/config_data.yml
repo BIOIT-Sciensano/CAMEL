@@ -75,18 +75,19 @@ straingst:
   db: /db/pipelines/bacillus/bacillus_straingst/bacillus_database.hdf5
 
 sequence_typing:
-  mlst_cereus:
-    path: /db/sequence_typing/bacillus_cereus/mlst
-  mlst_subtilis:
-    path: /db/sequence_typing/bacillus_subtilis/mlst
-  cgmlst_cereus:
-    path: /db/sequence_typing/bacillus_cereus/cgmlst
-    detection_method: blast
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
+  dbs:
+    mlst_cereus:
+      path: /db/sequence_typing/bacillus_cereus/mlst
+    mlst_subtilis:
+      path: /db/sequence_typing/bacillus_subtilis/mlst
+    cgmlst_cereus:
+      path: /db/sequence_typing/bacillus_cereus/cgmlst
+      detection_method: blast
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
 
 amrfinder:
   db: /db/amrfinder/v4/latest
@@ -99,35 +100,36 @@ fastani:
   path: /db/pipelines/bacillus/ref_list_complete.txt
 
 gene_detection:
-  gmm_genes_vectors:
-    known_gmm_constructs: /db/pipelines/bacillus/list_of_constructs.csv
-    path: /db/gene_detection/GMM/V6/genes-vectors/
-    force_detection_method: kma
-    metadata:
-      name: Additional data
-      key: allele
-  gmm_junctions:
-    path: /db/gene_detection/GMM/V6/junctions/
-    force_detection_method: kma
-    metadata:
-      name: Additional data
-      key: allele
-  vfdb_core:
-      path: /db/gene_detection/VFDB_core
-      perc_identity_cutoff: 90
-      min_coverage: 90
+  dbs:
+    gmm_genes_vectors:
+      known_gmm_constructs: /db/pipelines/bacillus/list_of_constructs.csv
+      path: /db/gene_detection/GMM/V6/genes-vectors/
+      force__method: kma
       metadata:
-        name: Gene
-        key: gene
-  plasmidfinder:
-    path: /db/gene_detection/PlasmidFinder-gram_positive
-    params:
-      blastn:
-        min_percent_identity: 95
-        min_coverage: 60
-    metadata:
-      name: Notes
-      key: notes
-    message:
-      content: Additional experimental validation should be required to confirm the presence of plasmids.
-      category: warning
+        name: Additional data
+        key: allele
+    gmm_junctions:
+      path: /db/gene_detection/GMM/V6/junctions/
+      force__method: kma
+      metadata:
+        name: Additional data
+        key: allele
+    vfdb_core:
+        path: /db/gene_detection/VFDB_core
+        perc_identity_cutoff: 90
+        min_coverage: 90
+        metadata:
+          name: Gene
+          key: gene
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-gram_positive
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: Additional experimental validation should be required to confirm the presence of plasmids.
+        category: warning

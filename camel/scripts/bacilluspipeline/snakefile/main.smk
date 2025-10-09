@@ -76,7 +76,7 @@ rule main_update_gmm_report:
         TSV_STRAINS = straingst.get_summaries(config, ext='tsv'),
         TSV_GMM_VECTORS = gene_detection.OUTPUT_SUMMARY.format(db='gmm_genes_vectors', ext='tsv') if 'gmo' in config['analyses'] else [],
         TSV_GMM_JUNCTIONS = gene_detection.OUTPUT_SUMMARY.format(db='gmm_junctions', ext='tsv') if 'gmo' in config['analyses'] else [],
-        TSV_GMM_DB = config['gene_detection']['gmm_genes_vectors']['known_gmm_constructs']
+        TSV_GMM_DB = config['gene_detection']['dbs']['gmm_genes_vectors']['known_gmm_constructs']
     output:
         VAL_HTML = 'gene_detection/gmo/updated_html_report.iob'
     params:
@@ -167,7 +167,7 @@ rule report_content_cereus:
         input_dict = config['input'],
         input_type = config['input_type'],
         citation_keys = config['citations'],
-        detection_method = config['detection_method']
+        detection_method = config['gene_detection']['options']['method']
     run:
         import datetime
         from camel.app.components.pipelines.reportpipeline import ReportPipeline
@@ -250,7 +250,7 @@ rule report_content_subtilis:
         input_dict = config['input'],
         input_type = config['input_type'],
         citation_keys = config['citations'],
-        detection_method = config['detection_method']
+        detection_method = config['gene_detection']['options']['method']
     run:
         # Init report
         import datetime
@@ -347,6 +347,7 @@ rule summary_combine_all:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
+        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))
 
 rule link_genomic_context:

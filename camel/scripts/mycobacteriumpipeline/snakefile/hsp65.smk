@@ -17,7 +17,7 @@ rule hps65_report:
         INFORMS = 'hsp65/report/informs.io'
     params:
         dir_ = 'hsp65/report',
-        hit_type = config['detection_method']
+        hit_type = config['gene_detection']['options']['method']
     run:
         from camel.app.tools.pipelines.mycobacterium.hsp65reporter import Hsp65Reporter
         reporter = Hsp65Reporter()

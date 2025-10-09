@@ -37,11 +37,12 @@ quality_checks:
   typing_scheme: null
 
 gene_detection:
-  ncbi_amr:
-    path: /db/gene_detection/NCBI_AMR/
-    metadata:
-      name: Antibiotic(s)
-      key: subclass
+  dbs:
+    ncbi_amr:
+      path: /db/gene_detection/NCBI_AMR/
+      metadata:
+        name: Antibiotic(s)
+        key: subclass
 
 variant_calling:
   ploidy: 1

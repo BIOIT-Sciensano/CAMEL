@@ -39,13 +39,13 @@ class TypeAsync(Tool):
         Returns the parameters to pass to the typing jobs.
         """
         # General options
-        dict_params = {
+        dict_params: dict[str, Any] = {
             'dir_working': self.folder / locus_info['name_sanitized'],
             'dir_scheme': self._tool_inputs['DIR'][0].path,
             'locus_metadata': locus_info,
             'threads_per_job': 1
         }
-        # Add tool specific options
+        # Add tool-specific options
         if self._parameters['detection_method'].value == 'blast':
             dict_params['fasta_in'] = self._tool_inputs['FASTA'][0].path
             dict_params['blastn_task'] = self._parameters['blastn_task'].value
@@ -65,6 +65,9 @@ class TypeAsync(Tool):
         # Determine which loci need to be typed
         loci_target = [
             info['name_sanitized'] for info in metadata['loci'] if info['type'] == self._parameters['locus_type'].value]
+        if len(loci_target) == 0:
+            self._tool_outputs['VAL_hits'] = []
+            return
 
         # Execute jobs in a thread pool
         output_by_locus = {}
@@ -81,7 +84,7 @@ class TypeAsync(Tool):
                     data = future.result()
                 except Exception as err:
                     logger.error(f"Locus '{locus}' generated exception: {err}")
-                    raise ToolExecutionError(self.name, err)
+                    raise ToolExecutionError(self.name, str(err))
                 else:
                     output_by_locus[locus] = data
 

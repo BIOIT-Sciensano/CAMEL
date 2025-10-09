@@ -46,11 +46,14 @@ class MainSequenceTyping:
         mainscriptutils.add_assembly_arguments(argument_parser)
         mainscriptutils.add_input_files_arguments(argument_parser)
         argument_parser.add_argument('--scheme-dir', required=True, type=absolute_path_by_pathlib)
-        argument_parser.add_argument('--detection-method', type=str, choices=['blast', 'kma'], default='blast')
-        argument_parser.add_argument('--output-fasta', type=absolute_path_by_pathlib,
-                                     help='output path for assembled contigs (only used for BLAST-based detection)')
-        argument_parser.add_argument('--output-tsv', type=absolute_path_by_pathlib,
-                                     help='Output path for the tabular output file (does not work with mixed schemes)')
+        argument_parser.add_argument(
+            '--detection-method', type=str, choices=['blast', 'kma', 'mist'], default='blast')
+        argument_parser.add_argument(
+            '--output-fasta', type=absolute_path_by_pathlib,
+            help='output path for assembled contigs (only used for BLAST-based detection)')
+        argument_parser.add_argument(
+            '--output-tsv', type=absolute_path_by_pathlib,
+            help='Output path for the tabular output file (does not work with mixed schemes)')
         argument_parser.add_argument('--blastn-task', type=str, choices=['blastn', 'megablast'], default='megablast')
         return argument_parser.parse_args(args)
 
@@ -62,19 +65,22 @@ class MainSequenceTyping:
         mainscriptutils.validate_input_files(self._args)
 
         # Initialize report
-        report = mainscriptutils.init_report(self._args.output_html, self._args.output_dir, 'Sequence typing report',
-                                             f'Sequence typing {self._args.detection_method}')
+        report = mainscriptutils.init_report(
+            self._args.output_html, self._args.output_dir, 'Sequence typing report',f'Sequence typing {self._args.detection_method}')
         report.add_html_object(mainscriptutils.generate_analysis_info_section(self._args))
         report.save()
 
         # Run script with wrapper
         db_data = SequenceTypingUtils.parse_scheme_metadata(self._args.scheme_dir)
-        if self._args.detection_method == 'blast':
+        if self._args.detection_method in ('blast', 'mist'):
             fasta_file = self._helper.prepare_fasta_input(report, self._args)
             # Save assembly if specified
             if self._args.output_fasta is not None:
                 shutil.copyfile(str(fasta_file), self._args.output_fasta)
-            output = self.__run_sequence_typing_blast(fasta_file, db_data['name'], self._args.scheme_dir)
+            if self._args.detection_method == 'blast':
+                output = self.__run_sequence_typing_blast(fasta_file, db_data['name'], self._args.scheme_dir)
+            else:
+                output = self.__run_sequence_typing_mist(fasta_file, db_data['name'], self._args.scheme_dir)
         elif self._args.detection_method == 'kma':
             fastq_input = self._helper.prepare_fastq_input(report, self._args)
             output = self.__run_sequence_typing_kma(fastq_input, db_data['name'], self._args.scheme_dir)
@@ -99,6 +105,25 @@ class MainSequenceTyping:
             db_key=db_key
         )
         wrapper.run_workflow_blast(workflow_input, self._args.blastn_task, self._args.threads)
+        return wrapper.output
+
+    def __run_sequence_typing_mist(self, fasta_file: Path, db_key: str, db_path: Path) -> SequenceTypingOutput:
+        """
+        Runs the sequence typing workflow using MiST.
+        :param fasta_file: Input FASTA file
+        :param db_key: Database key
+        :param db_path: Database directory path
+        :return: None
+        """
+        wrapper = SequenceTypingWrapper(self._args.working_dir)
+        workflow_input = SequenceTypingInput(
+            sample_name=self._sample_name,
+            fasta=ToolIOFile(fasta_file),
+            input_type='fasta',
+            db_path=db_path,
+            db_key=db_key
+        )
+        wrapper.run_workflow_mist(workflow_input, threads=self._args.threads)
         return wrapper.output
 
     def __run_sequence_typing_kma(self, fastq_input: FastqInput, db_key: str, db_path: Path) -> \

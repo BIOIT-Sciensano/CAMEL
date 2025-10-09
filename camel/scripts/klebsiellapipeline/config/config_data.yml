@@ -76,40 +76,41 @@ bacmet:
 mob_suite:
   db: /db/mob_suite/latest
 
-############################
-# Gene detection databases #
-############################
+##################
+# Gene detection #
+##################
 gene_detection:
-  vfdb_core:
-    path: /db/gene_detection/VFDB_core
-    perc_identity_cutoff: 90
-    metadata:
-      name: Gene
-      key: gene
-
-  plasmidfinder:
-    path: /db/gene_detection/PlasmidFinder-entero
-    params:
-      blastn:
-        min_percent_identity: 95
-        min_coverage: 60
-    message:
-      content: The presence of a replicon does not mean that the corresponding plasmid is present.
-      category: warning
+  dbs:
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-entero
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
 
 ###################
 # Sequence typing #
 ###################
 sequence_typing:
-  mlst:
-    path: /db/sequence_typing/klebsiella/mlst/
-  scgmlst:
-    path: /db/sequence_typing/klebsiella/scgmlst629_s/
-  cgmlst:
-    path: /db/sequence_typing/klebsiella/cgmlst/
-    detection_method: blast
-  rmlst:
-    path: /db/sequence_typing/various/rmlst
-    message:
-      content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-      category: info
+  dbs:
+    mlst:
+      path: /db/sequence_typing/klebsiella/mlst/
+    scgmlst:
+      path: /db/sequence_typing/klebsiella/scgmlst629_s/
+    cgmlst:
+      path: /db/sequence_typing/klebsiella/cgmlst/
+      detection_method: blast
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

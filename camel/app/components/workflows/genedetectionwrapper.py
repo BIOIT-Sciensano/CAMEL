@@ -117,8 +117,10 @@ class GeneDetectionWrapper:
         return {
             'working_dir': str(self._working_dir),
             'sample_name': sample_name,
-            'detection_method': detection_method,
-            'gene_detection': {'db': db_data},
+            'gene_detection': {
+                'dbs': {'db': db_data},
+                'options': {'method': detection_method}
+            },
             'input_type': input_type
         }
 

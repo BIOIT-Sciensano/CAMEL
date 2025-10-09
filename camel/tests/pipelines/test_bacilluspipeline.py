@@ -4,7 +4,7 @@ from pathlib import Path
 
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
 from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.tools.pipelines.sequence_typing.locussetmanager import LocusSetManager
+from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 from camel.scripts.bacilluspipeline.mainbacilluspipeline import MainBacillusPipeline
 from camel.tests import longRunningTest
 
@@ -41,7 +41,7 @@ class TestBacillusPipeline(CamelTestSuite):
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
             # Check if metadata can be loaded
-            manager = LocusSetManager()
+            manager = TypingDBLoader()
             manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
             manager.run(self.running_dir)
             self.assertGreater(len(manager.informs), 0)

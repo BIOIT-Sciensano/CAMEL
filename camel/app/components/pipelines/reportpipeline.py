@@ -11,7 +11,7 @@ from camel.app.components.pipelines.basepipeline import BasePipeline
 from camel.app.components.workflows.utils.fastqinput import FastqInput
 from camel.app.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.snakemake import snakemakeutils
 from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
 from camel.resources.snakefile import assembly
 
@@ -56,7 +56,7 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
 
         # Options
         argument_parser.add_argument(
-            '--detection-method', help="Method for allele / gene detection", choices=['blast', 'kma'], default='blast')
+            '--detection-method', help="Method for allele / gene detection", choices=['blast', 'kma', 'mist'], default='blast')
         argument_parser.add_argument(
             '--report-include-fastq', help="Include the FASTQ files in the report", action='store_true')
         argument_parser.add_argument(
@@ -82,7 +82,8 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
             'output_report': str(self._args.output_html),
             'output_tabular': str(self._args.output_tsv),
             'output_json': str(self._args.output_json) if self._args.output_json is not None else None,
-            'detection_method': self._args.detection_method,
+            'sequence_typing': {'options': {'method': self._args.detection_method}},
+            'gene_detection': {'options': {'method': self._args.detection_method}},
         })
 
         # FASTQ export
@@ -118,7 +119,7 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
             logger.debug('Not exporting assembly')
             return
         path_io = self._args.working_dir / assembly.OUTPUT_FASTA
-        path_fasta = SnakemakeUtils.load_object(path_io)[0].path
+        path_fasta = snakemakeutils.load_object(path_io)[0].path
         fastautils.FastaUtils.rename_sequences_regex(
             path_fasta, self._args.output_fasta, '', '', description=self.sample_name)
         logger.info(f'Output FASTA file exported to: {self._args.output_fasta}')
@@ -143,8 +144,8 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
         """
         # FASTA input
         if input_type in ('fasta', 'fasta_with_vcf'):
-            fq_pe = SnakemakeUtils.load_object(Path(snake_in.FASTQ_PE))
-            SnakemakeUtils.dump_object(FastqInput('illumina', fq_pe, is_pe=True).to_fq_dict(), path_out)
+            fq_pe = snakemakeutils.load_object(Path(snake_in.FASTQ_PE))
+            snakemakeutils.dump_object(FastqInput('illumina', fq_pe, is_pe=True).to_fq_dict(), path_out)
 
         # PE reads (illumina)
         elif input_type == 'illumina':
@@ -158,7 +159,7 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
         elif input_type == 'hybrid':
             fq_pe = FastqInput.from_fq_dict(Path(snake_in.FASTQ_PE), 'illumina')
             fq_se = FastqInput.from_fq_dict(Path(snake_in.FASTQ_SE), 'ont')
-            SnakemakeUtils.dump_object(FastqInput(
+            snakemakeutils.dump_object(FastqInput(
                 'hybrid', pe=fq_pe.pe, se_fwd=fq_pe.se_fwd, se_rev=fq_pe.se_rev, se=fq_se.se, is_pe=True,
                 is_trimmed=True).to_fq_dict(), path_out)
         else:
@@ -175,13 +176,13 @@ class ReportPipeline(BasePipeline, metaclass=abc.ABCMeta):
         :return :None
         """
         informs = []
-        for content in [SnakemakeUtils.load_object(Path(io)) for io in snake_in]:
+        for content in [snakemakeutils.load_object(Path(io)) for io in snake_in]:
             if type(content) is dict:
                 informs.append(content)
             elif type(content) is list:
                 informs.extend(content)
         section = SnakePipelineUtils.create_commands_section(informs, dir_)
-        SnakemakeUtils.dump_object([ToolIOValue(section)], path_out)
+        snakemakeutils.dump_object([ToolIOValue(section)], path_out)
         logger.info(f'Command exported to: {path_out}')
 
     @staticmethod

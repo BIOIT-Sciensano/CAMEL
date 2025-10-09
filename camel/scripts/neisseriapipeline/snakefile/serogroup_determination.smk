@@ -12,12 +12,12 @@ rule serogroup_determination_analysis:
     input:
         hits = expand(sequence_typing.OUTPUT_HITS,
             locus_type='DNA',
-            detection_method = config['detection_method'],
-            scheme = sorted([k for k in config['sequence_typing'].keys() if k.startswith('serogroup')]))
+            detection_method = config['sequence_typing']['options']['method'],
+            scheme = sorted([k for k in config['sequence_typing']['dbs'].keys() if k.startswith('serogroup')]))
     output:
         INFORMS = 'serogroup_determination/legacy/tool/informs.io'
     params:
-        serogroups = sorted([k for k in config['sequence_typing'].keys() if k.startswith('serogroup')]),
+        serogroups = sorted([k for k in config['sequence_typing']['dbs'].keys() if k.startswith('serogroup')]),
         dir_ = 'serogroup_determination/legacy/tool'
     run:
         from camel.app.tools.pipelines.neisseria.serogroupdetermination import SerogroupDetermination

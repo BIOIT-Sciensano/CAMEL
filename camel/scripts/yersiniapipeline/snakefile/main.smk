@@ -116,7 +116,7 @@ rule combine_reports:
         input_dict = config['input'],
         input_type = config['input_type'],
         citation_keys = config['citations'],
-        detection_method = config['detection_method']
+        detection_method = config['gene_detection']['options']['method']
     run:
         import datetime
         from camel.app.components.pipelines.reportpipeline import ReportPipeline
@@ -195,6 +195,7 @@ rule combine_summary_files:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
+        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
         SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))
 
 rule link_genomic_context:

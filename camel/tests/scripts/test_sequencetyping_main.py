@@ -23,7 +23,7 @@ class TestSequenceTyping(CamelTestSuite):
         'ont': [test_file_dir / 'Z1269_RPB-subset.fastq.gz']
     }
 
-    def test_typing_illumina_blast_nucl(self) -> None:
+    def test_typing_fasta_blast_nucl(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
         :return: None
@@ -43,7 +43,7 @@ class TestSequenceTyping(CamelTestSuite):
         main.run()
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_illumina_blast_nucl_tsv_out(self) -> None:
+    def test_typing_fasta_blast_nucl_tsv_out(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions) and the tabular output
         option.
@@ -67,7 +67,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertGreater(output_file_report.stat().st_size, 0)
         self.assertGreater(output_file_tsv.stat().st_size, 0)
 
-    def test_typing_illumina_blast_nucl_new_allele(self) -> None:
+    def test_typing_fasta_blast_nucl_new_allele(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
         The input file was modified to include:
@@ -91,7 +91,7 @@ class TestSequenceTyping(CamelTestSuite):
         main.run()
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_illumina_blast_nucl_multi_perfect_hit(self) -> None:
+    def test_typing_fasta_blast_nucl_multi_perfect_hit(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
         The input file was modified to include:
@@ -115,7 +115,7 @@ class TestSequenceTyping(CamelTestSuite):
         main.run()
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_illumina_blast_peptide(self) -> None:
+    def test_typing_fasta_blast_peptide(self) -> None:
         """
         Tests sequence typing using BLAST with a peptide scheme.
         :return: None
@@ -135,7 +135,7 @@ class TestSequenceTyping(CamelTestSuite):
         main.run()
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_illumina_blast_mixed(self) -> None:
+    def test_typing_fasta_blast_mixed(self) -> None:
         """
         Tests sequence typing using BLAST with a mixed scheme (DNA & peptide loci).
         :return: None
@@ -253,6 +253,26 @@ class TestSequenceTyping(CamelTestSuite):
             '--detection-method', 'kma',
             '--threads', '8',
             '--trim-reads'
+        ]
+        main = MainSequenceTyping(args)
+        main.run()
+        self.assertGreater(output_file_report.stat().st_size, 0)
+
+    def test_typing_fasta_mist_nucl(self) -> None:
+        """
+        Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
+        :return: None
+        """
+        output_file_report = Path(self.running_dir) / 'report' / 'report.html'
+        args = [
+            '--fasta', str(self.input_fasta),
+            '--input-type', 'fasta',
+            '--scheme-dir', str(self.input_db_nucl),
+            '--output-html', str(output_file_report),
+            '--output-dir', str(output_file_report.parent),
+            '--working-dir', str(self.running_dir),
+            '--detection-method', 'mist',
+            '--threads', '8'
         ]
         main = MainSequenceTyping(args)
         main.run()

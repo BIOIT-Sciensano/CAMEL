@@ -1,0 +1,8 @@
+dependencies: []
+parameters:
+  output_filename:
+    default: true
+    mandatory: true
+    option: null
+    value: 'typing_out.tsv'
+tool_command: null
