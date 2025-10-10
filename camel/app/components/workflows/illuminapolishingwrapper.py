@@ -75,7 +75,7 @@ class ShortReadPolishingWrapper:
         """
         log_path = self._working_dir / 'camel.log'
         self._output = ShortReadPolishingWrapper.PolishingOutput(
-            fasta_contigs=snakemakeutils.load_object(output_files['FASTA']).path,
+            fasta_contigs=snakemakeutils.load_object(self._working_dir / output_files['FASTA'])[0].path,
             log_file=log_path if log_path.exists() else None
         )
 
