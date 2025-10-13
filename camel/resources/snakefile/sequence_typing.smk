@@ -388,18 +388,18 @@ rule typing_dump_summary_info:
         # Loci #
         ########
         hits = snakemakeutils.load_object(Path(str(input.HITS_NUCL))) + snakemakeutils.load_object(Path(str(input.HITS_PEPT)))
-        for io in hits:
-            if params.ext == 'tsv':
-                # TSV format: Each line represents a locus, with table values separated by commas
-                for hit in [io.value for io in hits]:
-                    key = f'{params.scheme_name}-{hit.locus}'
-                    data_hit = ','.join(hit.to_table_row())
-                    summary_data.append((key, data_hit))
-            elif params.ext == 'json':
-                # JSON format: A list of loci with corresponding information as a dictionary
-                summary_data.append(('loci', [hit.to_dict(params.include_hashing) for hit in [io.value for io in hits]]))
-            else:
-                raise ValueError(f'Invalid extension: {params.ext}')
+
+        if params.ext == 'tsv':
+            # TSV format: Each line represents a locus, with table values separated by commas
+            for hit in [io.value for io in hits]:
+                key = f'{params.scheme_name}-{hit.locus}'
+                data_hit = ','.join(hit.to_table_row())
+                summary_data.append((key, data_hit))
+        elif params.ext == 'json':
+            # JSON format: A list of loci with corresponding information as a dictionary
+            summary_data.append(('loci', [hit.to_dict(params.include_hashing) for hit in [io.value for io in hits]]))
+        else:
+            raise ValueError(f'Invalid extension: {params.ext}')
 
         # Create output
         snakemakeutils.export_summary(summary_data, Path(output.FILE), str(params.ext), str(params.scheme_name))
