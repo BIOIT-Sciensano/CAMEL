@@ -1,5 +1,5 @@
 dependencies:
-  - mist/0.0.3
+  - mist/0.0.4
   - minimap2/2.26
 parameters:
   threads:
