@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.scripts.sequencetyping.main import MainSequenceTyping
+from camel.scripts.sequencetyping.mainsequencetyping import MainSequenceTyping
 
 
 class TestSequenceTyping(CamelTestSuite):
