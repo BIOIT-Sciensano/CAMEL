@@ -88,6 +88,6 @@ rule shigatyper_create_summary:
         informs = snakemakeutils.load_object(Path(input.INFORMS_shigatyper))
         data_summary = [
             ('shigatyper_prediction', str(informs['species'])),
-            ('shigatyper_tool_version', informs['_name']),
+            ('shigatyper_tool_version', informs['_name_full']),
         ]
         snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'shigatyper')

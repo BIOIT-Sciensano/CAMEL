@@ -115,7 +115,7 @@ rule resfinder4_create_summary:
         summary_data = [
             ('resfinder4_genes', ', '.join(list(data_genes['Resistance gene'])) if not data_genes.empty else '-'),
             ('resfinder4_genes_hits', hits_data),
-            ('resfinder4_tool_version', informs['_name']),
+            ('resfinder4_tool_version', informs['_name_full']),
             ('resfinder4_db_version_date', informs['db_version_resfinder']),
             ('resfinder4_db_version_name', informs['db_version_name'])
         ]

@@ -150,9 +150,9 @@ rule quast_create_summary_out:
                 data_quast[key] = value
 
         # Add assembler version
-        tool_names = [snakemakeutils.load_object(Path(x))['_name'] for x in input.INFORMS] if input.INFORMS else ['n/a']
+        tool_names = [snakemakeutils.load_object(Path(x))['_name_full'] for x in input.INFORMS] if input.INFORMS else ['n/a']
         data_quast['tool_version'] = ', '.join(tool_names)
-        data_quast['filtering_tool_version'] = snakemakeutils.load_object(Path(input.INFORMS_filtering))['_name']
+        data_quast['filtering_tool_version'] = snakemakeutils.load_object(Path(input.INFORMS_filtering))['_name_full']
 
         # Create output
         data_out = [(f"assembly_{row['name']}", data_quast.get(row['key'], '-')) for row in keys_kept]

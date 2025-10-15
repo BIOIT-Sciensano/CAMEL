@@ -204,7 +204,7 @@ rule trimming_illumina_summary_trimmomatic:
             ('trim_ilmn_fwd_only_surviving', informs_trimmomatic['forward_only_reads'].split(' ')[0]),
             ('trim_ilmn_rev_only_surviving', informs_trimmomatic['reverse_only_reads'].split(' ')[0]),
             ('trim_ilmn_pairs_both_dropped', informs_trimmomatic['reads_drop'].split(' ')[0]),
-            ('trim_ilmn_tool_version', informs_trimmomatic['_name'])
+            ('trim_ilmn_tool_version', informs_trimmomatic['_name_full'])
         ]
         snakemakeutils.export_summary(summary_data, Path(output.FILE), str(params.ext), 'trimming_illumina')
 
@@ -228,7 +228,7 @@ rule trimming_illumina_summary_fastp:
             ('trim_ilmn_q30_rate_in', informs_fastp['summary']['before_filtering']['q30_rate']),
             ('trim_ilmn_q30_rate_out', informs_fastp['summary']['after_filtering']['q30_rate']),
             ('trim_ilmn_duplication_rate', informs_fastp['duplication']['rate']),
-            ('trim_ilmn_tool_version', informs_fastp['_name']),
+            ('trim_ilmn_tool_version', informs_fastp['_name_full']),
         ]
         snakemakeutils.export_summary(summary_data, Path(output.FILE), str(params.ext), 'trimming_illumina')
 

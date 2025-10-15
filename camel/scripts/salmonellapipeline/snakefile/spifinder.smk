@@ -72,7 +72,7 @@ rule spifinder_create_summary:
     run:
         informs_fasta = snakemakeutils.load_object(Path(input.INFORMS_spifinder_fasta))
         data_summary = [
-            ('spifinder_tool_version', informs_fasta['_name']),
+            ('spifinder_tool_version', informs_fasta['_name_full']),
             ('spifinder_db_version', informs_fasta['last_update_date']),
         ]
 

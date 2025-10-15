@@ -72,7 +72,7 @@ rule serotyping_sistr_dump_summary_info:
         informs_sistr = snakemakeutils.load_object(Path(str(input.INFORMS)))
         rows_out = [(f'sistr_{key}', value) for key, value in hits_dict_tsv.items()]
         rows_out.extend([
-            (f'sistr_tool_version', informs_sistr['_name']),
+            (f'sistr_tool_version', informs_sistr['_name_full']),
             (f'sistr_db_version', informs_sistr['last_update_date'])
         ])
 

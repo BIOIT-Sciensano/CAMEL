@@ -103,7 +103,7 @@ rule amrfinder_dump_summary_info:
             ('amr_hits_perfect', ', '.join(hits_perfect) if len(hits_perfect) > 0 else '-'),
             ('amr_hits_other', ', '.join(hits_other) if len(hits_other) > 0 else '-'),
             ('amr_genes_hits', data_hits),
-            ('amr_tool_version', informs['_name']),
+            ('amr_tool_version', informs['_name_full']),
             ('amr_db_version', informs['db_version'])
         ]
         snakemakeutils.export_summary(data, Path(output.FILE), str(params.ext), 'amrfinder')

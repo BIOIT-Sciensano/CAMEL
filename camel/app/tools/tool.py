@@ -51,7 +51,11 @@ class Tool(metaclass=abc.ABCMeta):
         logger.debug(f"Initializing tool: {self._name} {self._version}")
         self._tool_inputs: dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
         self._tool_outputs: dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
-        self._informs: dict[str, Any] = {'_name': self.name, '_version': self._version}
+        self._informs: dict[str, Any] = {
+            '_name': self.name,
+            '_version': self._version,
+            '_name_full': f'{self.name} {self.version}'
+        }
         self._input_informs = {}
 
         # Parameters

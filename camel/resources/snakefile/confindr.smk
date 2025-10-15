@@ -93,7 +93,7 @@ rule confindr_create_summary:
             ('genus', informs['Genus']),
             ('nb_contam_snvs', informs['NumContamSNVs']),
             ('contam_status', informs['ContamStatus']),
-            ('tool_version', informs['_name']),
+            ('tool_version', informs['_name_full']),
             ('db_version', informs['DatabaseDownloadDate'])
         ]
         rows_out = [(f'confindr_{k}', v) for k, v in rows_out]

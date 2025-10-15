@@ -50,7 +50,7 @@ rule samtools_ampliconclip:
         # Save the informs
         with open(output.INFORMS, 'w') as handle:
             json.dump({
-                '_name': 'samtools ampliconclip 1.17',
+                '_name_full': 'samtools ampliconclip 1.17',
                 '_version': '1.17',
                 '_command': command.command,
                 'stats': stats_out
@@ -84,7 +84,7 @@ rule create_bam_for_seq_id:
             raise RuntimeError(f'Error extracting BAM file: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
             json.dump({
-                '_name': 'samtools view 1.17;', '_version': '1.17', '_command': command.command}, handle, indent=2)
+                '_name_full': 'samtools view 1.17;', '_version': '1.17', '_command': command.command}, handle, indent=2)
 
 rule downsample_bam:
     """
@@ -133,7 +133,7 @@ rule extract_fq_ont:
         if not command.returncode == 0:
             raise RuntimeError(f'Error extracting FASTQ files: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
-            json.dump({'_name': 'samtools fastq 1.17;', '_version': '1.17', '_command': command.command},
+            json.dump({'_name_full': 'samtools fastq 1.17;', '_version': '1.17', '_command': command.command},
                 handle, indent=2)
 
 rule extract_fq_ont_merge:
@@ -194,7 +194,7 @@ rule extract_fq_illumina:
         if not command.returncode == 0:
             raise RuntimeError(f'Error extracting FASTQ files: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
-            json.dump({'_name': 'samtools fastq 1.17;', '_version': '1.17', '_command': command.command},
+            json.dump({'_name_full': 'samtools fastq 1.17;', '_version': '1.17', '_command': command.command},
                 handle, indent=2)
 
         # Split singleton reads

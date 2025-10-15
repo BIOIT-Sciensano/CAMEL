@@ -97,7 +97,7 @@ rule serotyping_seqsero2_dump_summary_info:
         items = [tuple(item.split('\t')) for item in tsv_results_full]
         rows_out = [
             *items,
-            ('seqsero2_tool_version', informs_seqsero2_kmer['_name']),
+            ('seqsero2_tool_version', informs_seqsero2_kmer['_name_full']),
             ('seqsero2_db_version', informs_seqsero2_kmer['last_update_date'])
         ]
         snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), 'seqsero2')

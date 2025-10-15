@@ -128,7 +128,7 @@ rule trimming_ont_dump_summary_info:
             ('trim_ont_median_read_length', informs_nanoplot['median_read_length']),
             ('trim_ont_mean_qual', informs_nanoplot['mean_qual']),
             ('trim_ont_median_qual', informs_nanoplot['median_qual']),
-            ('trim_ont_tool_version', informs_filtering['_name'])
+            ('trim_ont_tool_version', informs_filtering['_name_full'])
         ]
         if params.ext == 'json':
             # informs_duplicates = snakemakeutils.load_object(Path(input.INFORMS_duplicates))

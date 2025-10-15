@@ -133,7 +133,7 @@ rule spoligotyping_dump_summary_info:
         data_summary = [
             ('spoligotype_binary', snakemakeutils.load_object(Path(input.VAL_type_binary))[0].value),
             ('spoligotype_octal', snakemakeutils.load_object(Path(input.VAL_type_octal))[0].value),
-            ('spoligotyping_tool_version', informs['_name']),
+            ('spoligotyping_tool_version', informs['_name_full']),
             ('sit_number', informs.get('metadata', {}).get('SIT', 'NA'))
         ]
         snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'spoligotyping')

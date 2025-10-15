@@ -100,7 +100,7 @@ rule mobsuite_create_summary:
         rows_out = [
             ('mob_suite_primary_cluster_ids', ', '.join(primary_cluster_ids) if len(primary_cluster_ids) > 0 else '-' ),
             ('mob_suite_predicted_plasmid_contigs', ', '.join(ctg for ctg, status in informs_in['contig_report'].items() if status is not None)),
-            ('mob_suite_tool_version', informs_in['_name'])
+            ('mob_suite_tool_version', informs_in['_name_full'])
         ]
         if primary_cluster_ids and params.ext == 'json':
             data_mobsuite['id'] = data_mobsuite['sample_id'].apply(lambda x: re.search('.*:(.*)',x).group(1))

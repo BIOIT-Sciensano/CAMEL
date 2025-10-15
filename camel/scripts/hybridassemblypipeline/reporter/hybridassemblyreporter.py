@@ -167,7 +167,7 @@ class HybridAssemblyReporter(Tool):
         :param quast_informs: QUAST informs
         :return: None
         """
-        section = HtmlReportSection('QUAST statistics', subtitle=quast_informs['_name'])
+        section = HtmlReportSection('QUAST statistics', subtitle=quast_informs['_name_full'])
         data_quast = pd.read_table(path_tsv)
         section.add_table(
             list(data_quast.itertuples(index=False, name=None)),
@@ -185,7 +185,7 @@ class HybridAssemblyReporter(Tool):
         :path: Path to the tsv containing variant calling statistics
         :return: None
         """
-        subtitle = ', '.join([self._input_informs[x]['_name'] for x in ('freebayes', 'clair3')])
+        subtitle = ', '.join([self._input_informs[x]['_name_full'] for x in ('freebayes', 'clair3')])
         section = HtmlReportSection('Variant calling', subtitle=subtitle)
         data_vc = pd.read_table(path_tsv)
         section.add_table(
@@ -202,7 +202,7 @@ class HybridAssemblyReporter(Tool):
         :path: Path to the tsv containing variant calling from sniffles
         :return: None
         """
-        section = HtmlReportSection('Sniffles statistics', subtitle=self._input_informs['sniffles'][0]['_name'])
+        section = HtmlReportSection('Sniffles statistics', subtitle=self._input_informs['sniffles'][0]['_name_full'])
         data_sniffles = pd.read_table(path_tsv)
         vcf_files = []
         for io_vcf in self._tool_inputs['VCF_sniffles']:
@@ -228,7 +228,7 @@ class HybridAssemblyReporter(Tool):
         :path_tsv: Path to the tsv containing mapping statistics
         :return: None
         """
-        section = HtmlReportSection('Mapping statistics', subtitle=self._input_informs['mapping']['_name'])
+        section = HtmlReportSection('Mapping statistics', subtitle=self._input_informs['mapping']['_name_full'])
         data_mapping = pd.read_table(path_tsv)
         section.add_table(
             list(data_mapping.itertuples(index=False, name=None)),
@@ -242,7 +242,7 @@ class HybridAssemblyReporter(Tool):
         Adds the ALE score table, as well as downloadable Wiggle files to the report.
         :return: None
         """
-        section = HtmlReportSection('ALE scores', subtitle=self._input_informs['ale'][0]['_name'])
+        section = HtmlReportSection('ALE scores', subtitle=self._input_informs['ale'][0]['_name_full'])
         output_rows = []
 
         # Group input files

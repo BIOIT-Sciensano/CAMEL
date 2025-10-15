@@ -303,7 +303,7 @@ rule scrubbing_create_summary:
         count_removed = informs['statistics']['count_removed']
 
         data_summary = [
-            ('scrubbing_tool_version', informs['_name']),
+            ('scrubbing_tool_version', informs['_name_full']),
             (f'scrubbing_{subject}_in', count_total),
             (f'scrubbing_{subject}_removed', count_removed)
         ]

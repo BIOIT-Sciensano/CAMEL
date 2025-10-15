@@ -110,7 +110,7 @@ rule mykrobe_create_summary:
         if params.show_amr is True:
             data_summary.append(('mykrobe_drug_susceptibility', informs['drug_susceptibility']))
         data_summary.extend([
-            ('mykrobe_tool_version', informs['_name']),
+            ('mykrobe_tool_version', informs['_name_full']),
             ('mykrobe_db_version', informs['db_version']),
         ])
         snakemakeutils.export_summary(data_summary, Path(output.TSV), str(params.ext), 'mykrobe')
