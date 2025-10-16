@@ -1,6 +1,6 @@
 dependencies:
   - busco/5.5.0
-  - bbmap/39.15
+  - bbtools/39.15
   - prodigal/2.6.3
   - metaeuk/6-a5d39d9
   - java/9.0.4

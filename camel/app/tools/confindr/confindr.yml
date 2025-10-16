@@ -2,7 +2,7 @@ dependencies:
   - confindr/0.8.2
   - kma/1.4.12a
   - mash/2.3
-  - bbmap/39.15
+  - bbtools/39.15
   - java/9.0.4
   - minimap2/2.26
   - samtools/1.17
