@@ -1,5 +1,5 @@
-from camel.app.command.command import Command
-from camel.app.error import InvalidToolInputError, ToolExecutionError
+from camel.app.core.command import Command
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 
 
 def check_input(tool: 'Tool', keys_required: list[str], keys_allowed: list[str] = None) -> None:  # noqa: F821
@@ -21,7 +21,7 @@ def check_input(tool: 'Tool', keys_required: list[str], keys_allowed: list[str] 
             raise InvalidToolInputError(f"'{key}' input is not allowed")
 
 
-def check_tool_execution(tool: 'Tool', command: Command, exit_code: int=0):
+def check_tool_execution(tool: 'Tool', command: Command, exit_code: int=0):  # noqa: F821
     """
     Checks if the tool executed successfully.
     :param tool: Tool instance
