@@ -3,7 +3,7 @@ from typing import Optional
 
 import random
 
-from camel.app.components.html.htmlbase import HtmlBase
+from camel.app.core.reports.htmlbase import HtmlBase
 
 
 class HtmlExpandableTable(HtmlBase):

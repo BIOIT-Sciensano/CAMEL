@@ -2,8 +2,8 @@ from typing import Optional
 
 import shutil
 
-from camel.app.components.html.htmlbase import HtmlBase
-from camel.app.components.html.htmlelement import HtmlElement
+from camel.app.core.reports.htmlbase import HtmlBase
+from camel.app.core.reports.htmlelement import HtmlElement
 from camel.app.loggers import logger
 from camel.resources import LOGO_SCIENSANO
 from pathlib import Path

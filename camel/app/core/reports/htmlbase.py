@@ -181,6 +181,7 @@ class HtmlBase:
         :return: None
         """
         if not isinstance(input_object, HtmlBase):
+            # noinspection PyUnreachableCode
             raise ValueError(f"{input_object} is not an HTML object")
         self._doc.asis(input_object.to_html())
 

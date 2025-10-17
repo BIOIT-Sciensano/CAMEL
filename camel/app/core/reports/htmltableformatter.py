@@ -2,7 +2,7 @@ from typing import Union, TypedDict, Callable, Optional
 
 import pandas as pd
 
-from camel.app.components.html.htmltablecell import HtmlTableCell
+from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.loggers import logger
 
 

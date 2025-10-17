@@ -1,6 +1,6 @@
 from yattag import Doc
 
-from camel.app.components.html.htmlelement import HtmlElement
+from camel.app.core.reports.htmlelement import HtmlElement
 
 
 class HtmlExpandableDiv(HtmlElement):

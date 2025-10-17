@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from camel.app.components.html.htmlbase import HtmlBase
+from camel.app.core.reports.htmlbase import HtmlBase
 from camel.resources import DIR_CITATIONS
 
 

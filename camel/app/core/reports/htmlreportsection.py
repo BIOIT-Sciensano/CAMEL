@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import Union, Optional
 from collections.abc import Sequence
 
-from camel.app.components.html.htmlbase import HtmlBase
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmltablecell import HtmlTableCell
+from camel.app.core.reports.htmlbase import HtmlBase
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.loggers import logger
 
 

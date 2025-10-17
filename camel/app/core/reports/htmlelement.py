@@ -2,7 +2,7 @@ import bs4
 from bs4 import BeautifulSoup
 from yattag import Doc
 
-from camel.app.components.html.htmlbase import HtmlBase
+from camel.app.core.reports.htmlbase import HtmlBase
 
 
 class HtmlElement(HtmlBase):

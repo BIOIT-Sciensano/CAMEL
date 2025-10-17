@@ -1,4 +1,4 @@
-from camel.app.components.html.htmlelement import HtmlElement
+from camel.app.core.reports.htmlelement import HtmlElement
 
 
 class HtmlTableCell(HtmlElement):
@@ -28,7 +28,7 @@ class HtmlTableCell(HtmlElement):
             super().__init__('td', text, attributes)
 
     @property
-    def text(self):
+    def text(self) -> str:
         """
         Returns the text belonging to this tag.
         :return: Text
