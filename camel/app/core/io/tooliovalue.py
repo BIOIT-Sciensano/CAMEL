@@ -1,7 +1,7 @@
 from typing import Any
 
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.io.toolio import ToolIO
+from camel.app.core.utils import fileutils
+from camel.app.core.io.toolio import ToolIO
 
 
 class ToolIOValue(ToolIO):
@@ -32,7 +32,7 @@ class ToolIOValue(ToolIO):
         Returns the hash value.
         :return: Hash value
         """
-        return FileUtils.hash_value(self.value)
+        return fileutils.hash_value(self.value)
 
     @property
     def type_name(self) -> str:

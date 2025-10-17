@@ -2,8 +2,8 @@ from pathlib import Path
 
 import humanize
 
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.io.toolio import ToolIO
+from camel.app.core.utils import fileutils
+from camel.app.core.io.toolio import ToolIO
 
 
 class ToolIOFile(ToolIO):
@@ -87,7 +87,7 @@ class ToolIOFile(ToolIO):
         Returns the hash value of this file.
         :return: Hash
         """
-        return FileUtils.hash_file(self.path)
+        return fileutils.hash_file(self.path)
 
     @property
     def type_name(self) -> str:

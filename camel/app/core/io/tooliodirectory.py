@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.io.toolio import ToolIO
+from camel.app.core.utils import fileutils
+from camel.app.core.io.toolio import ToolIO
 
 
 class ToolIODirectory(ToolIO):
@@ -45,7 +45,7 @@ class ToolIODirectory(ToolIO):
         Returns the hash value.
         :return: Hash value
         """
-        return FileUtils.hash_directory(self.path)
+        return fileutils.hash_directory(self.path)
 
     @property
     def path(self) -> Path:
