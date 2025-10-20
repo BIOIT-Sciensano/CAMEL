@@ -437,7 +437,7 @@ rule iterative_mapping_trim_fasta_edges:
         step.run_step()
         SnakemakeUtils.dump_tool_outputs(trim_edges, output)
 
-rule iterative_mapping_add_empty_unselected_segments:
+rule iterative_mapping_add_empty_unselected_segs:
     """
     When the reference selection doesn't select a reference for a segment, this segment is not used in the iterative 
     mapping and subsequently does not appear as an empty sequence in the consensus sequence. This is an issue for 
@@ -448,15 +448,14 @@ rule iterative_mapping_add_empty_unselected_segments:
         FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'trim_edges' / 'fasta-trim.io',
         TSV_refselection = Path(config['working_dir']) / refselection.OUTPUT_REF_SELECTION_SUMMARY
     output:
-        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'add_empty_segments' / 'fasta-all_segments.io'
+        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'add_empty_segs' / 'fasta-all_segments.io'
     params:
-        dir_ = Path(config['working_dir']) / 'iterative_mapping' / 'add_empty_segments',
+        dir_ = Path(config['working_dir']) / 'iterative_mapping' / 'add_empty_segs',
         name = config['sample_name']
     run:
         from Bio import SeqIO
-        from Bio.Seq import Seq
 
-        fasta_path_in = SnakemakeUtils.load_object(Path(input.FASTA))[0].path
+        fasta_path_in = (SnakemakeUtils.load_object(Path(input.FASTA)))[0].path
         fasta_path_out = Path(params.dir_) / 'reference_masked_all_segs.fasta'
 
         segments = list(SeqIO.parse(fasta_path_in, "fasta"))
@@ -475,7 +474,7 @@ rule iterative_mapping_report:
     Generates the HTML report for the iterative mapping workflow.
     """
     input:
-        FASTA = rules.iterative_mapping_add_empty_unselected_segments.output.FASTA,
+        FASTA = rules.iterative_mapping_add_empty_unselected_segs.output.FASTA,
         FASTA_ref = rules.iterative_mapping_select_output.output.FASTA_ref,
         BAM = rules.iterative_mapping_select_output.output.BAM,
         TSV = rules.iterative_mapping_combine_stats_all_iterations.output.TSV,
