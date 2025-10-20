@@ -90,10 +90,8 @@ class MainViralConsensusPipeline(ReportPipeline):
         :param args: Command line arguments
         :return: Parsed arguments
         """
-        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser = argparse.ArgumentParser()
         ReportPipeline.add_common_arguments(parser)
-        # Overwrite ont-min-length parameter default from common arguments for viral pathogens
-        parser.set_defaults(ont_min_length=500)
 
         # Species
         parser.add_argument('--species', required=True)
