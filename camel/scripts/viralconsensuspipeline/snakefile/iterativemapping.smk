@@ -9,7 +9,7 @@ import pandas as pd
 from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
+from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection
 
 
 def _get_reference_genome(wildcards) -> Path:
@@ -437,12 +437,45 @@ rule iterative_mapping_trim_fasta_edges:
         step.run_step()
         SnakemakeUtils.dump_tool_outputs(trim_edges, output)
 
+rule iterative_mapping_add_empty_unselected_segments:
+    """
+    When the reference selection doesn't select a reference for a segment, this segment is not used in the iterative 
+    mapping and subsequently does not appear as an empty sequence in the consensus sequence. This is an issue for 
+    Nextclade because Nextclade expects to find a contig name for every segment, even if the sequence is empty.
+    This rule adds empty contigs for segments for which no reference was selected.
+    """
+    input:
+        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'trim_edges' / 'fasta-trim.io',
+        TSV_refselection = Path(config['working_dir']) / refselection.OUTPUT_REF_SELECTION_SUMMARY
+    output:
+        FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'add_empty_segments' / 'fasta-all_segments.io'
+    params:
+        dir_ = Path(config['working_dir']) / 'iterative_mapping' / 'add_empty_segments',
+        name = config['sample_name']
+    run:
+        from Bio import SeqIO
+        from Bio.Seq import Seq
+
+        fasta_path_in = SnakemakeUtils.load_object(Path(input.FASTA))[0].path
+        fasta_path_out = Path(params.dir_) / 'reference_masked_all_segs.fasta'
+
+        segments = list(SeqIO.parse(fasta_path_in, "fasta"))
+        df = pd.read_csv(input.TSV_refselection, sep='\t')
+        for _, row in df.iterrows():
+            segment_ref_info = row.iloc[1]
+            if segment_ref_info == '-':
+                segment_name = row.iloc[0].split('ref_selection-')[-1]
+                segments.append(SeqIO.SeqRecord(seq=Seq(""), id=f"{str(params.name)}-{segment_name}", description=''))
+
+        SeqIO.write(segments, fasta_path_out, "fasta")
+        SnakemakeUtils.dump_object([ToolIOFile(fasta_path_out)], Path(output.FASTA))
+
 rule iterative_mapping_report:
     """
     Generates the HTML report for the iterative mapping workflow.
     """
     input:
-        FASTA = rules.iterative_mapping_trim_fasta_edges.output.FASTA,
+        FASTA = rules.iterative_mapping_add_empty_unselected_segments.output.FASTA,
         FASTA_ref = rules.iterative_mapping_select_output.output.FASTA_ref,
         BAM = rules.iterative_mapping_select_output.output.BAM,
         TSV = rules.iterative_mapping_combine_stats_all_iterations.output.TSV,

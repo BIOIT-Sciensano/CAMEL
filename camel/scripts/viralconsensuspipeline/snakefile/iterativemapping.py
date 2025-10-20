@@ -12,7 +12,7 @@ OUTPUT_ITERATIVE_MAPPING_REPORT = _dir_iterative_mapping / 'report' / 'html.io'
 OUTPUT_ITERATIVE_MAPPING_SUMMARY = _dir_iterative_mapping / 'report' / 'summary_iterative_mapping.tsv'
 OUTPUT_ITERATIVE_MAPPING_INFORMS = _dir_iterative_mapping / 'report' / 'informs.io'
 OUTPUT_ITERATIVE_MAPPING_FASTA_CONSENSUS_FINAL = _dir_iterative_mapping / 'output' / 'fasta.io'
-OUTPUT_ITERATIVE_MAPPING_FASTA_CONSENSUS_FINAL_TRIMMED = _dir_iterative_mapping / 'trim_edges' / 'fasta-trim.io'
+OUTPUT_ITERATIVE_MAPPING_FASTA_CONSENSUS_FINAL_TRIMMED = _dir_iterative_mapping / 'add_empty_segments' / 'fasta-all_segments.io'
 
 
 def get_fasta(config: dict[str, Any]) -> Path:
