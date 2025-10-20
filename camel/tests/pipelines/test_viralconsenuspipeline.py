@@ -330,7 +330,6 @@ class TestViralConsensusPipeline(CamelTestSuite):
         main.run()
         self.assertGreater(path_report_out.stat().st_size, 0)
 
-
     ##############################
     # ONT - FASTA reference file #
     ##############################
