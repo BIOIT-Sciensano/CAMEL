@@ -9,7 +9,7 @@ import pandas as pd
 from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, nextclade3, refselection
+from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection
 
 
 def _get_reference_genome(wildcards) -> Path:
