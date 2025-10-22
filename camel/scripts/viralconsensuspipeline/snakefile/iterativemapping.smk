@@ -5,11 +5,12 @@ from pathlib import Path
 from typing import Union
 
 import pandas as pd
+import yaml
 
 from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection
+from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, nextclade3, refselection
 
 
 def _get_reference_genome(wildcards) -> Path:
@@ -446,13 +447,15 @@ rule iterative_mapping_add_empty_unselected_segments:
     """
     input:
         FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'trim_edges' / 'fasta-trim.io',
-        TSV_refselection = Path(config['working_dir']) / refselection.OUTPUT_REF_SELECTION_SUMMARY
+        TSV_refselection = Path(config['working_dir']) / refselection.OUTPUT_REF_SELECTION_SUMMARY if config.get('fasta_ref') is None else []
     output:
         FASTA = Path(config['working_dir']) / 'iterative_mapping' / 'add_empty_segments' / 'fasta-all_segments.io'
     params:
         dir_ = Path(config['working_dir']) / 'iterative_mapping' / 'add_empty_segments',
-        name = config['sample_name']
+        name = config['sample_name'],
+        db = config['nextclade'].get('db_mash')
     run:
+        import yaml
         from Bio import SeqIO
         from Bio.Seq import Seq
 
@@ -460,12 +463,28 @@ rule iterative_mapping_add_empty_unselected_segments:
         fasta_path_out = Path(params.dir_) / 'reference_masked_all_segs.fasta'
 
         segments = list(SeqIO.parse(fasta_path_in, "fasta"))
-        df = pd.read_csv(input.TSV_refselection, sep='\t')
-        for _, row in df.iterrows():
-            segment_ref_info = row.iloc[1]
-            if segment_ref_info == '-':
-                segment_name = row.iloc[0].split('ref_selection-')[-1]
-                segments.append(SeqIO.SeqRecord(seq=Seq(""), id=f"{str(params.name)}-{segment_name}", description=''))
+        if config.get('fasta_ref') is None:
+            df = pd.read_csv(input.TSV_refselection, sep='\t')
+            for _, row in df.iterrows():
+                segment_ref_info = row.iloc[1]
+                if segment_ref_info == '-':
+                    segment_name = row.iloc[0].split('ref_selection-')[-1]
+                    segments.append(
+                        SeqIO.SeqRecord(seq=Seq(""), id=f"{str(params.name)}-{segment_name}", description=''))
+        elif params.db is not None:
+            # At this point in time do not have subtype info for input with fasta_ref, so we don't know the segments;
+            # take a uniq of all the segments across all subtypes and add all missing ones as empty segments
+            segments = list(SeqIO.parse(fasta_path_in,"fasta"))
+            with (Path(params.db) / 'nextclade_dbs.yml').open() as handle:
+                nextclade_dbs = yaml.safe_load(handle)
+            all_segment_names = set(key for _, subtype in nextclade_dbs.items() for key in subtype.keys())
+            for segment_name in all_segment_names:
+                if not any(record.id == f"{str(params.name)}-{segment_name.upper()}" for record in segments):
+                    segments.append(
+                        SeqIO.SeqRecord(seq=Seq(""), id=f"{str(params.name)}-{segment_name.upper()}", description=''))
+        else:
+            shutil.copyfile(input.FASTA, output.FASTA)
+            return
 
         SeqIO.write(segments, fasta_path_out, "fasta")
         SnakemakeUtils.dump_object([ToolIOFile(fasta_path_out)], Path(output.FASTA))
