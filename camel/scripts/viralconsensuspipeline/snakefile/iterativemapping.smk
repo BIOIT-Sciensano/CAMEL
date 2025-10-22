@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Union
 
 import pandas as pd
-import yaml
 
 from camel.app.camel import Camel
 from camel.app.pipeline.step import Step
