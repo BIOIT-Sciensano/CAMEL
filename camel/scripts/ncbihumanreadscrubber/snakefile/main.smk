@@ -1,6 +1,6 @@
 from pathlib import Path
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import human_read_scrubbing
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import human_read_scrubbing
 
 #######################
 # Included Snakefiles #
@@ -24,7 +24,7 @@ rule link_scrubbing_input:
         FASTQ = human_read_scrubbing.INPUT_FASTQ if not 'fasta' in config['input'] else [],
         FASTA = human_read_scrubbing.INPUT_FASTA if 'fasta' in config['input'] else []
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         if 'fasta' in config['input']:
             snakemakeutils.dump_object([ToolIOFile(Path(config['input']['fasta'][0]['path']))], Path(output.FASTA))
         elif 'fastq_pe' in config['input']:
@@ -44,7 +44,7 @@ rule report_command_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
         ReportPipeline.export_command_section(input,Path(output.HTML), Path(params.dir_))
 
 
@@ -66,13 +66,13 @@ rule report_combine_all:
         input_type = config['input_type']
     run:
         import datetime
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
+        from camel.app.core.snakemake import snakepipelineutils
 
         # Add the header section
-        report = SnakePipelineUtils.init_pipeline_report(
+        report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
-        report.add_html_object(SnakePipelineUtils.create_input_section(
+        report.add_html_object(snakepipelineutils.create_input_section(
             sample_name=params.sample_name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
@@ -86,4 +86,4 @@ rule report_combine_all:
         ReportPipeline.add_content_scrubbing(
             report_structure, params.input_type, input.reports_scrubbing)
         report_structure.extend([('Commands', 'commands', [Path(input.report_commands)])])
-        SnakePipelineUtils.add_report_content(report, report_structure)
+        snakepipelineutils.add_report_content(report, report_structure)

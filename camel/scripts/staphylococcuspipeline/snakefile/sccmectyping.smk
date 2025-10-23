@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import gene_detection
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import gene_detection
 
 
 rule sccmec_typing_run:
@@ -18,7 +18,7 @@ rule sccmec_typing_run:
         dir_ = 'sccmec_typing/tool'
     run:
         from camel.app.tools.sccmectyping.sccmectyping import SCCmecTyping
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         sccmec_typing = SCCmecTyping()
         sccmec_typing.add_input_files({'YML': [ToolIOFile(Path(input.YAML))]})
         snakemakeutils.add_pickle_input(sccmec_typing, 'VAL_HITS', Path(input.VAL_HITS))
@@ -35,8 +35,8 @@ rule sccmec_typing_report:
     output:
         HTML = 'sccmec_typing/report/html.iob' # sccmectyping.OUTPUT_REPORT
     run:
-        from camel.app.io.tooliovalue import ToolIOValue
-        from camel.app.components.html.htmlreportsection import HtmlReportSection
+        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camel.app.core.reports.htmlreportsection import HtmlReportSection
         section = HtmlReportSection('SCC<i>mec</i> type', 3)
         informs = snakemakeutils.load_object(Path(input.INFORMS))
         section.add_table(
@@ -51,8 +51,8 @@ rule sccmec_typing_report_empty:
     output:
         VAL_HTML = 'sccmec_typing/report/html-empty.iob' # sccmectyping.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('SCC<i>mec</i> type', Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('SCC<i>mec</i> type', Path(output.VAL_HTML))
 
 rule sccmec_typing_summary:
     """

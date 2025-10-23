@@ -3,7 +3,7 @@ from typing import Optional
 import yaml
 
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class SCCmecTyping(Tool):

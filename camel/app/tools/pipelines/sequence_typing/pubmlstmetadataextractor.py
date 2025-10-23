@@ -1,6 +1,6 @@
-from camel.app.components.pubmlst.pubmlstparser import PubMLSTParser
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
+from camel.app.toolkits.pubmlst.pubmlstparser import PubMLSTParser
 
 
 class PubmlstMetadataExtractor(Tool):
@@ -45,9 +45,9 @@ class PubmlstMetadataExtractor(Tool):
         allele_name = '_'.join([name, PubmlstMetadataExtractor.__clean_allele_id(allele_id)])
         try:
             label, value = PubMLSTParser.parse_linked_data(allele_url)
-            self.informs[allele_name] = ['{} ({})'.format(label, allele_name), value]
+            self.informs[allele_name] = [f'{label} ({allele_name})', value]
         except RuntimeError as err:
-            logger.warning('Cannot retrieve linked data for {} ({}, {})'.format(name, err, allele_url))
+            logger.warning(f'Cannot retrieve linked data for {name} ({err}, {allele_url})')
 
     @staticmethod
     def __clean_allele_id(allele_id: str) -> str:

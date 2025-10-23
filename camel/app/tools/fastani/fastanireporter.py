@@ -3,11 +3,11 @@ from typing import Union
 
 import pandas as pd
 
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
 
 
 class FastANIReporter(Tool):
@@ -44,7 +44,7 @@ class FastANIReporter(Tool):
 
         # Add output tables
         output_table = self.__parse_input_file()
-        self.__add_output_table(section, output_table.columns, output_table.values.tolist())
+        self.__add_output_table(section, list(output_table.columns), output_table.values.tolist())
 
         # Add link to TSV file
         relative_path = Path('fastani') / self._tool_inputs['TSV'][0].path.name

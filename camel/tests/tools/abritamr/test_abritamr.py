@@ -1,9 +1,9 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.abritamr.abritamrreport import AbriTAMRReport
 from camel.app.tools.abritamr.abritamrreporter import AbriTAMRReporter
 from camel.app.tools.abritamr.abritamrrun import AbriTAMRRun

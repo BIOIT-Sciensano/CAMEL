@@ -4,14 +4,13 @@ from pathlib import Path
 import os
 import shutil
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils, fileutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class CfsanSnpPipeline(Tool):
@@ -79,18 +78,18 @@ class CfsanSnpPipeline(Tool):
         for i, io_sample in zip(range(0, len(self._tool_inputs['FASTQ']), 2), self._tool_inputs['VAL_name']):
             forward_reads = Path(self._tool_inputs['FASTQ'][i].path)
             reverse_reads = Path(self._tool_inputs['FASTQ'][i + 1].path)
-            sample_name_valid = FileSystemHelper.make_valid(io_sample.value)
+            sample_name_valid = fileutils.make_valid(io_sample.value)
             logger.info(f"Adding sample '{sample_name_valid}' as input")
             dir_sample = dir_reads / sample_name_valid
             if dir_sample.is_dir():
                 shutil.rmtree(str(dir_sample))
             dir_sample.mkdir()
-            if not FileSystemHelper.is_gzipped(forward_reads):
+            if not fileutils.is_gzipped(forward_reads):
                 (dir_sample / f"{sample_name_valid}_1.fastq").symlink_to(forward_reads)
                 (dir_sample / f"{sample_name_valid}_2.fastq").symlink_to(reverse_reads)
             else:
-                FileSystemHelper.gzip_extract(forward_reads, dir_sample / f"{sample_name_valid}_1.fastq")
-                FileSystemHelper.gzip_extract(reverse_reads, dir_sample / f"{sample_name_valid}_2.fastq")
+                fileutils.gzip_extract(forward_reads, dir_sample / f"{sample_name_valid}_1.fastq")
+                fileutils.gzip_extract(reverse_reads, dir_sample / f"{sample_name_valid}_2.fastq")
         return dir_reads
 
     def __build_command(self, input_dir: Path) -> None:

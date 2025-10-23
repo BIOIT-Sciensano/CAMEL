@@ -9,9 +9,9 @@ import vcf
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
 
-from camel.app.error import InvalidToolInputError
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 @dataclass(frozen=True, unsafe_hash=True)

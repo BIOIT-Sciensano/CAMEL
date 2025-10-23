@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.snpphylogeny.snakefile.trimming_all import TRIMMING_ALL
 
 rule run_trimming_workflow:
@@ -16,9 +16,9 @@ rule run_trimming_workflow:
         working_dir = lambda wildcards: wildcards.sample,
         adapter = config['read_trimming']['adapter']
     run:
-        from camel.app.components.workflows.trimmingilluminawrapper import TrimmingIlluminaWrapper
+        from camel.app.wrappers.trimmingilluminawrapper import TrimmingIlluminaWrapper
         trimming = TrimmingIlluminaWrapper(Path(str(params.working_dir)).absolute() / 'trimming')
-        trimming.run_workflow([Path(x) for x in input.FASTQ_PE], params.adapter, threads)
+        trimming.run([Path(x) for x in input.FASTQ_PE], params.adapter, threads)
         snakemakeutils.dump_object(trimming.output, Path(output.TRIMMING_OUTPUT))
 
 rule collect_trimming_output:

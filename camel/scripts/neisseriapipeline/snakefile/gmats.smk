@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import sequence_typing
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import sequence_typing
 
 
 rule gmats_run:
@@ -18,7 +18,7 @@ rule gmats_run:
         dir_ = 'gmats/tool',
         db = config.get('gmats', {}).get('db')
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.neisseria.gmats import GMats
 
         gmats_ = GMats()
@@ -63,8 +63,8 @@ rule gmats_report_empty:
     output:
         HTML = 'gmats/report/html-empty.iob' # gmats.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('gMATS', Path(output.HTML), 3)
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('gMATS', Path(output.HTML), 3)
 
 rule gmats_create_summary:
     """

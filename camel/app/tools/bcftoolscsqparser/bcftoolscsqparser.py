@@ -2,18 +2,18 @@ import vcf
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
 
-from camel.app.components.csq.csqutils import BCSQInfo
-from camel.app.components.csq.mutations.aminoacidmutation import AminoAcidMutation
-from camel.app.components.csq.mutations.basemutation import BaseMutation
-from camel.app.components.csq.mutations.frameshiftmutation import FrameshiftMutation
-from camel.app.components.csq.mutations.nucelotidemutation import NucleotideMutation
-from camel.app.components.csq.mutations.stopmutation import StopMutation
-from camel.app.components.csq.mutations.unknownmutation import UnknownMutation
-from camel.app.components.tabix import tabixparser
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.toolkits.csq.csqutils import BCSQInfo
+from camel.app.toolkits.csq.mutations.aminoacidmutation import AminoAcidMutation
+from camel.app.toolkits.csq.mutations.basemutation import BaseMutation
+from camel.app.toolkits.csq.mutations.frameshiftmutation import FrameshiftMutation
+from camel.app.toolkits.csq.mutations.nucelotidemutation import NucleotideMutation
+from camel.app.toolkits.csq.mutations.stopmutation import StopMutation
+from camel.app.toolkits.csq.mutations.unknownmutation import UnknownMutation
+from camel.app.toolkits.tabix import tabixparser
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class CsqParsingError(ValueError):

@@ -1,9 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.config import config
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.salmonella.sistr import Sistr
 from camel.app.tools.pipelines.salmonella.sistrreporter import SistrReporter
 
@@ -15,7 +16,7 @@ class TestSistr(CamelTestSuite):
     # Input files
     test_file_dir = CamelTestSuite.get_test_file_dir('salmonella')
     input_fasta_file = test_file_dir / 'assembly_filtered.fasta'
-    db_path = Path(CamelTestSuite.camel.config['db_root']) / 'SISTR/1.1.1/data'
+    db_path = Path(config.dir_db / 'SISTR/1.1.1/data')
 
     def test_sistr(self) -> None:
         """
@@ -45,8 +46,9 @@ class TestSistr(CamelTestSuite):
         self.verify_output_files(sistr_tool, 'JSON')
 
         sistr_reporter = SistrReporter()
-        sistr_reporter.add_input_files({'JSON_SISTR': sistr_tool.tool_outputs['JSON'],
-                                        'DIR_sistr': [ToolIODirectory(self.db_path)]})
+        sistr_reporter.add_input_files({
+            'JSON_SISTR': sistr_tool.tool_outputs['JSON'],
+            'DIR_sistr': [ToolIODirectory(self.db_path)]})
         sistr_reporter.add_input_informs({'serotyping_sistr': sistr_tool.informs})
         sistr_reporter.run(self.running_dir)
         output_section = sistr_reporter.tool_outputs['VAL_HTML'][0].value

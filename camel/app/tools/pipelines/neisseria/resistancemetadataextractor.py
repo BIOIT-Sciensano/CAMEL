@@ -1,9 +1,9 @@
 from typing import Optional
 
-from camel.app.components.pubmlst.pubmlstparser import PubMLSTParser, PubMLSTParsingError
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.toolkits.pubmlst.pubmlstparser import PubMLSTParser, PubMLSTParsingError
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class ResistanceMetadataExtractor(Tool):

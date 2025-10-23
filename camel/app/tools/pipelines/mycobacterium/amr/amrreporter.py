@@ -4,16 +4,16 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.components.files.tsvexporter import TsvExporter
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.mycobacterium import amrutils
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
 from camel.app.tools.pipelines.mycobacterium.amr import amrtypedetermination
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
+from camel.app.toolkits.export.tsvexporter import TsvExporter
+from camel.app.toolkits.mycobacterium import amrutils
 
 
 class AMRReporter(Tool):

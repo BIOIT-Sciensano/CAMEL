@@ -3,13 +3,13 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from camel.app.command.command import Command
+from camel.app.core.command import Command
 from camel.app.config import config
-from camel.app.error import InvalidToolInputError
-from camel.app.error import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.toolpipeable import ToolPipeable
+from camel.app.core.piping.toolpipeable import ToolPipeable
 
 
 class Picard(ToolPipeable, metaclass=abc.ABCMeta):

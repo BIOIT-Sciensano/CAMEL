@@ -5,15 +5,14 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.workflows.inputtype import helper_by_input_type
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.reports.htmlreport import HtmlReport
+from camel.app.scriptutils import mainscriptutils
+from camel.app.loggers import logger, initialize_logging
 from camel.app.tools.blast.blastn import Blastn
 from camel.app.tools.spatyping.spatyping import SpaTyping
 from camel.app.tools.spatyping.spatypingreporter import SpaTypingReporter
+from camel.app.wrappers.inputtype import helper_by_input_type
 
 
 class MainSpaTyping:
@@ -26,7 +25,6 @@ class MainSpaTyping:
         Initializes the main script.
         :param args: Arguments, if not set they are removed from the command line
         """
-        self._camel = Camel.get_instance()
         self._args = MainSpaTyping._parse_arguments(args)
         self._sample_name = mainscriptutils.determine_sample_name(self._args)
         self._helper = helper_by_input_type[self._args.input_type](self._args.working_dir, self._sample_name)
@@ -133,5 +131,5 @@ def main(args: Sequence[str] | None = None) -> None:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main()

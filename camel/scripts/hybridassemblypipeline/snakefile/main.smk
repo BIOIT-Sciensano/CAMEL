@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import core, downsampling, polish_assembly_long, polish_assembly_short, \
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import core, downsampling, polish_assembly_long, polish_assembly_short, \
     trimming_illumina, trimming_ont, assembly
 from camel.scripts.hybridassemblypipeline.snakefile import qc_hybrid
 
@@ -47,7 +47,7 @@ rule unicycler:
         dir_ = 'unicycler'
     threads: 16
     run:
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
+        from camel.app.scriptutils.fastqinput import FastqInput
         from camel.app.tools.unicycler.unicycler import Unicycler
         unicycler_assembly = Unicycler()
         fq_hybrid = FastqInput.from_fq_dict(Path(input.FQ_dict), 'hybrid')
@@ -180,9 +180,9 @@ rule report_pickle_citations:
     params:
         citation_keys = config['citations']
     run:
-        from camel.app.io.tooliovalue import ToolIOValue
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        section = SnakePipelineUtils.create_citations_section(
+        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camel.app.core.reports import reportutils
+        section = reportutils.create_citations_section(
             params.citation_keys['other'], params.citation_keys['main'])
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.HTML))
 
@@ -210,7 +210,7 @@ rule report_command_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
         ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
 
 rule report_create_sections:

@@ -4,15 +4,15 @@ from typing import Optional
 
 from Bio import SeqIO
 
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.sequencetyping.typinghitbase import TypingHitBase
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.utils import fileutils
+from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class HtmlReporterTyping(Tool):
@@ -68,7 +68,7 @@ class HtmlReporterTyping(Tool):
         if 'message' in self._parameters:
             self._report_section.add_alert(
                 self._parameters['message'].value, self._parameters['message_category'].value)
-        
+
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._report_section)]
         self.__export_analysis_metadata()
 
@@ -78,7 +78,7 @@ class HtmlReporterTyping(Tool):
         :return: None
         """
         self._report_section = HtmlReportSection(self._input_informs['scheme']['title'], 3)
-        self._sub_folder = Path('sequence_typing', FileSystemHelper.make_valid(self._input_informs['scheme']['name']))
+        self._sub_folder = Path('sequence_typing', fileutils.make_valid(self._input_informs['scheme']['name']))
 
     def __add_sequence_type(self) -> None:
         """
@@ -196,7 +196,7 @@ class HtmlReporterTyping(Tool):
 
         # Save in FASTA format
         basename = f"novel-{self._tool_inputs['VAL_SAMPLE'][0].value}-{self._input_informs['scheme']['name']}.fasta"
-        path_out = self.folder / FileSystemHelper.make_valid(basename)
+        path_out = self.folder / fileutils.make_valid(basename)
         with path_out.open('w') as handle:
             SeqIO.write(seqs_out, handle, 'fasta')
         return path_out

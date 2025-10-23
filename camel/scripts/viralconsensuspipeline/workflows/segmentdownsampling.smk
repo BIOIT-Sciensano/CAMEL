@@ -1,13 +1,11 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.command.command import Command
-from camel.app.components.workflows.utils.fastqinput import FastqInput
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.core.command import Command
+from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake import snakemakeutils
 
-Camel.get_instance()
 
 rule samtools_ampliconclip:
     """
@@ -50,6 +48,7 @@ rule samtools_ampliconclip:
         # Save the informs
         with open(output.INFORMS, 'w') as handle:
             json.dump({
+                '_name': 'samtools ampliconclip',
                 '_name_full': 'samtools ampliconclip 1.17',
                 '_version': '1.17',
                 '_command': command.command,
@@ -84,7 +83,11 @@ rule create_bam_for_seq_id:
             raise RuntimeError(f'Error extracting BAM file: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
             json.dump({
-                '_name_full': 'samtools view 1.17;', '_version': '1.17', '_command': command.command}, handle, indent=2)
+                '_name': 'samtools view',
+                '_name_full': 'samtools view 1.17',
+                '_version': '1.17',
+                '_command': command.command
+            }, handle, indent=2)
 
 rule downsample_bam:
     """
@@ -133,8 +136,12 @@ rule extract_fq_ont:
         if not command.returncode == 0:
             raise RuntimeError(f'Error extracting FASTQ files: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
-            json.dump({'_name_full': 'samtools fastq 1.17;', '_version': '1.17', '_command': command.command},
-                handle, indent=2)
+            json.dump({
+                '_name': 'samtools fastq',
+                '_name_full': 'samtools fastq 1.17;',
+                '_version': '1.17',
+                '_command': command.command
+            }, handle, indent=2)
 
 rule extract_fq_ont_merge:
     """
@@ -155,7 +162,7 @@ rule extract_fq_ont_merge:
         if not command.returncode == 0:
             raise RuntimeError(f'Error merged FASTQ files: {command.returncode}')
         fq_dict = FastqInput('nanopore', se=[ToolIOFile(fq_out)], is_trimmed=True, is_pe=False)
-        SnakemakeUtils.dump_object(fq_dict.to_fq_dict(), Path(output.FQ_dict))
+        snakemakeutils.dump_object(fq_dict.to_fq_dict(), Path(output.FQ_dict))
 
 rule extract_fq_illumina:
     """
@@ -194,8 +201,12 @@ rule extract_fq_illumina:
         if not command.returncode == 0:
             raise RuntimeError(f'Error extracting FASTQ files: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
-            json.dump({'_name_full': 'samtools fastq 1.17;', '_version': '1.17', '_command': command.command},
-                handle, indent=2)
+            json.dump({
+                '_name': 'samtools fastq',
+                '_name_full': 'samtools fastq 1.17;',
+                '_version': '1.17',
+                '_command': command.command
+            }, handle, indent=2)
 
         # Split singleton reads
         command = Command(' '.join([
@@ -224,7 +235,7 @@ rule extract_fq_illumina:
         # Save output dictionary
         fq_dict_out = FastqInput('illumina', [ToolIOFile(fq_1p_out), ToolIOFile(fq_2p_out)],
             se_fwd=[ToolIOFile(fq_1u_out_merged)], se_rev=[ToolIOFile(fq_2u_out)])
-        SnakemakeUtils.dump_object(fq_dict_out.to_fq_dict(), Path(output.FASTQ))
+        snakemakeutils.dump_object(fq_dict_out.to_fq_dict(), Path(output.FASTQ))
 
 rule extract_fq_illumina_merge:
     """
@@ -262,7 +273,7 @@ rule extract_fq_illumina_merge:
             se_fwd=[ToolIOFile(dir_ / 'reads_1U.fastq.gz')],
             se_rev=[ToolIOFile(dir_ / 'reads_2U.fastq.gz')],
             is_trimmed=True, is_pe=True)
-        SnakemakeUtils.dump_object(fq_dict.to_fq_dict(), Path(output.FQ_dict))
+        snakemakeutils.dump_object(fq_dict.to_fq_dict(), Path(output.FQ_dict))
 
 rule collect_informs:
     """

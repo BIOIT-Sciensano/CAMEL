@@ -1,9 +1,9 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.ampligone.ampligone import AmpliGone
 from camel.app.tools.ampligone.ampligonefasta2bed import AmpliGoneFasta2Bed
 from camel.app.tools.ampligone.ampligonefasta2bedreporter import AmpliGoneFasta2BedReporter

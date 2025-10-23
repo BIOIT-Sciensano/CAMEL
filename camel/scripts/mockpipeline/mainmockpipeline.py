@@ -6,10 +6,10 @@ from typing import Optional
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.scriptutils.reportpipeline import ReportPipeline
+from camel.app.core.snakemake import snakepipelineutils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.loggers import initialize_logging
 from camel.scripts.mockpipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
@@ -72,10 +72,10 @@ class MainMockPipeline(ReportPipeline):
                 config_data, yaml.safe_load(handle_in.read().format(
                     coverage_max=self._args.cov_max
                 )))
-        return Path(SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir))
+        return Path(snakepipelineutils.generate_config_file(config_data, self._args.working_dir))
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainMockPipeline()
     main.run()

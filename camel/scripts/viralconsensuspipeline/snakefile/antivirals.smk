@@ -1,9 +1,9 @@
 import itertools
 import json
 
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.viralconsensuspipeline.snakefile import nextclade3
 
 
@@ -60,8 +60,8 @@ rule antivirals_report_empty:
     output:
         VAL_HTML = 'antivirals/report/html-empty.iob' # antivirals.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Antiviral resistance', Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Antiviral resistance', Path(output.VAL_HTML))
 
 rule antivirals_summary:
     """

@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.bedtools.bedtoolsgenomecov import BedtoolsGenomecov
 
 
@@ -10,7 +10,6 @@ class TestBedtools(CamelTestSuite):
     """
     Tests the bedtools tool suite.
     """
-
     test_file_dir = CamelTestSuite.get_test_file_dir('bedtools')
     TEST_FILE_BAM = ToolIOFile(test_file_dir / 'samtools_sort.bam')
 

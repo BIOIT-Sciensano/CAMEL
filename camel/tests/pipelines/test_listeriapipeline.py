@@ -4,8 +4,8 @@ from pathlib import Path
 import yaml
 
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.scripts.listeriapipeline import CONFIG_DATA
 from camel.scripts.listeriapipeline.mainlisteriapipeline import MainListeriaPipeline
 from camel.tests import longRunningTest

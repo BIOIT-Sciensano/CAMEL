@@ -1,14 +1,14 @@
 from pathlib import Path
 
-from camel.app.components.blast.blasthitstatistics import BlastHitStatistics
-from camel.app.components.blasttyping import blasthitclustering
-from camel.app.components.blasttyping.blasthitfilteringhelper import BlastHitFilteringHelper
-from camel.app.components.genedetection.genedetectionblasthit import GeneDetectionBlastHit
-from camel.app.error import InvalidToolInputError
-from camel.app.error import ToolExecutionError
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.toolkits.blast.blasthitstatistics import BlastHitStatistics
+from camel.app.toolkits.blasttyping import blasthitclustering
+from camel.app.toolkits.blasttyping.blasthitfilteringhelper import BlastHitFilteringHelper
+from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class BlastHitFiltering(Tool):

@@ -3,20 +3,22 @@ import argparse
 import json
 import shutil
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.pipelines import absolute_path_by_pathlib
-from camel.app.components.workflows.genedetectionwrapper import (
-    GeneDetectionOutput,
+from camel.app.core.reports import reportutils
+from camel.app.core.reports.htmlreport import HtmlReport
+from camel.app.scriptutils.basescript import BaseScript
+from camel.app.scriptutils import mainscriptutils, absolute_path_by_pathlib
+from camel.app.loggers import initialize_logging
+from camel.app.wrappers.genedetectionwrapper import (
     GeneDetectionWrapper,
+    GeneDetectionOutput,
 )
-from camel.app.components.workflows.inputtype import helper_by_input_type
+from camel.app.wrappers.inputtype import helper_by_input_type
 
 
-class MainGeneDetection:
+class MainGeneDetection(BaseScript):
     """
     This class is used to run the gene detection tool.
     """
@@ -26,12 +28,13 @@ class MainGeneDetection:
         Initializes the main script.
         :param args: Arguments (optional)
         """
-        self._args = MainGeneDetection.parse_arguments(args)
+        super().__init__(name='gene detection', version='1.0', snakefile=None)
+        self._args = MainGeneDetection._parse_arguments(args)
         self._sample_name = mainscriptutils.determine_sample_name(self._args)
         self._helper = helper_by_input_type[self._args.input_type](self._args.working_dir, self._sample_name)
 
     @staticmethod
-    def parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
+    def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
         """
         Parses the command line arguments.
         :return: Parsed arguments
@@ -69,10 +72,18 @@ class MainGeneDetection:
         mainscriptutils.validate_input_files(self._args)
 
         # Initialize report
-        report = mainscriptutils.init_report(
-            self._args.output_html, self._args.output_dir, 'Gene detection report',
-            f'Gene detection {self._args.detection_method}')
-        report.add_html_object(mainscriptutils.generate_analysis_info_section(self._args))
+        report = reportutils.init_report(
+            path_out=Path(self._args.output_html),
+            key='Gene detection',
+            title='Gene detection',
+            dir_out=self._args.output_dir
+        )
+        report.add_html_object(reportutils.create_overview_section(
+            version=self._version,
+            dataset_name=self._sample_name,
+            input_file_str=mainscriptutils.determine_input_file_str(self._args),
+            extra_data=[('Detection method', self._args.detection_method)]
+        ))
         report.save()
 
         # Prepare wrapper
@@ -88,10 +99,10 @@ class MainGeneDetection:
             # Save assembly if specified
             if self._args.output_fasta is not None:
                 shutil.copyfile(str(fasta_input), self._args.output_fasta)
-            wrapper.run_workflow_blast(fasta_input, self._sample_name, db_data, self._args.threads)
+            wrapper.run_blast(fasta_input, self._sample_name, db_data, self._args.threads)
         elif self._args.detection_method == 'kma':
             fastq_input = self._helper.prepare_fastq_input(report, self._args)
-            wrapper.run_workflow_kma(fastq_input, self._sample_name, db_data, self._args.threads)
+            wrapper.run_kma(fastq_input, self._sample_name, db_data, self._args.threads)
 
         # Export all output
         self.__export_output(report, wrapper.output)
@@ -156,6 +167,6 @@ class MainGeneDetection:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainGeneDetection()
     main.run()

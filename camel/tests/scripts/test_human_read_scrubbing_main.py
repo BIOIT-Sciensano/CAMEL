@@ -1,7 +1,7 @@
 import unittest
 
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.utils import fastqutils
 from camel.scripts.ncbihumanreadscrubber.mainncbihumanreadscrubber import MainNcbiHumanReadScrubber
 
 
@@ -83,15 +83,15 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 if dataset['contains_human'] is False:
                     # Check whether all reads were retained (no human reads)
                     self.assertEqual(
-                        FastqUtils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq'][fq_idx]),
-                        FastqUtils.count_reads(path_fq_scrubbed),
+                        fastqutils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq'][fq_idx]),
+                        fastqutils.count_reads(path_fq_scrubbed),
                         "Input and output file should contain the same number of reads."
                     )
                 else:
                     # Check whether reads were removed (human reads)
                     self.assertGreater(
-                        FastqUtils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq'][fq_idx]),
-                        FastqUtils.count_reads(path_fq_scrubbed),
+                        fastqutils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq'][fq_idx]),
+                        fastqutils.count_reads(path_fq_scrubbed),
                         "No reads removed from dataset containing human reads."
                     )
 
@@ -134,7 +134,7 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                     except StopIteration:
                         paths_fq = (fq.name for fq in path_report.parent.glob('*.fastq.gz'))
                         raise FileNotFoundError(f"File with removed reads _R{fq_idx} not found ({', '.join(paths_fq)})")
-                    self.assertGreater(FastqUtils.count_reads(path_fq), 0)
+                    self.assertGreater(fastqutils.count_reads(path_fq), 0)
 
     def test_scrubbing_ont(self) -> None:
         """
@@ -170,15 +170,15 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
             if dataset['contains_human'] is False:
                 # Check whether all reads were retained (no human reads)
                 self.assertEqual(
-                    FastqUtils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq']),
-                    FastqUtils.count_reads(path_fq_scrubbed),
+                    fastqutils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq']),
+                    fastqutils.count_reads(path_fq_scrubbed),
                     "Input and output file should contain the same number of reads."
                 )
             else:
                 # Check whether reads were removed (human reads)
                 self.assertGreater(
-                    FastqUtils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq']),
-                    FastqUtils.count_reads(path_fq_scrubbed),
+                    fastqutils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq']),
+                    fastqutils.count_reads(path_fq_scrubbed),
                     "No reads removed from dataset containing human reads."
                 )
 
@@ -221,8 +221,8 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 path_removed = next(path_report.parent.glob("*-removed.fastq.gz"))
                 # Check whether reads were removed (human reads)
                 self.assertEqual(
-                    FastqUtils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq']),
-                    FastqUtils.count_reads(path_fq_scrubbed) + FastqUtils.count_reads(path_removed),
+                    fastqutils.count_reads(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq']),
+                    fastqutils.count_reads(path_fq_scrubbed) + fastqutils.count_reads(path_removed),
                     "Number of reads should match."
                 )
 

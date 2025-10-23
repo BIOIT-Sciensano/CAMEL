@@ -1,4 +1,4 @@
-from camel.app.error import InvalidToolInputError
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.picard.picard import Picard
 
 

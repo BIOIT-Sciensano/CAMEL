@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
+from camel.app.core.utils import fileutils
 
 
 class HtmlReporterAssembly(Tool):
@@ -67,7 +67,7 @@ class HtmlReporterAssembly(Tool):
         Adds a download link for the assembly.
         :return: None
         """
-        sample_name_valid = FileSystemHelper.make_valid(self._tool_inputs['SAMPLE_NAME'][0].value)
+        sample_name_valid = fileutils.make_valid(self._tool_inputs['SAMPLE_NAME'][0].value)
 
         # Add filtered assembly
         relative_path = self.__subfolder / f'{sample_name_valid}_contigs.fasta'

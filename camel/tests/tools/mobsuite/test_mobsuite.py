@@ -1,10 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mobsuite.mobrecon import MOBRecon
 from camel.app.tools.mobsuite.mobreconreporter import MOBReconReporter
 

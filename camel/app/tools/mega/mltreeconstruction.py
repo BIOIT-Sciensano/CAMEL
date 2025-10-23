@@ -1,10 +1,10 @@
 from importlib.resources import files
 from pathlib import Path
 
-from camel.app.command.command import Command
-from camel.app.error import InvalidParameterError, ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.errors import InvalidParameterError, ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class MLTreeConstruction(Tool):

@@ -1,7 +1,7 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.components.vcf.vcfutils import VCFUtils
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.utils import vcfutils
 from camel.scripts.variantcalling.samtools.maincallingsamtools import MainCalling
 
 
@@ -31,7 +31,7 @@ class TestVariantCalling(CamelTestSuite):
         main_calling = MainCalling(args)
         main_calling.run()
         self.assertGreater(output_file_vcf.stat().st_size, 0)
-        self.assertGreater(VCFUtils.count_variants(output_file_vcf), 0)
+        self.assertGreater(vcfutils.count_variants(output_file_vcf), 0)
 
     def test_variant_calling_consensus(self) -> None:
         """
@@ -68,7 +68,7 @@ class TestVariantCalling(CamelTestSuite):
         main_calling = MainCalling(args)
         main_calling.run()
         self.assertGreater(output_file_vcf.stat().st_size, 0)
-        self.assertGreater(VCFUtils.count_variants(output_file_vcf), 0)
+        self.assertGreater(vcfutils.count_variants(output_file_vcf), 0)
 
 if __name__ == '__main__':
     unittest.main()

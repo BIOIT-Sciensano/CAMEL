@@ -5,8 +5,8 @@ from typing import Any
 
 import vcf
 
-from camel.app.command.command import Command
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.command import Command
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.clair3.clair3 import Clair3
 
 

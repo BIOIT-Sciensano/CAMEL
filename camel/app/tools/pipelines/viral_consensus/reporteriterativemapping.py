@@ -3,14 +3,14 @@ from typing import Callable, Union
 
 import pandas as pd
 
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.app.tools.tool import Tool
-from camel.app.components.html.htmltableformatter import HtmlTableFormatter, FormatEntry
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.tool import Tool
+from camel.app.core.reports.htmltableformatter import HtmlTableFormatter, FormatEntry
 
 
 class ReporterIterativeMapping(Tool):
@@ -209,7 +209,7 @@ class ReporterIterativeMapping(Tool):
         # Add link to the BED file
         nb_iter = data_stats['iter'].iloc[-1]
         path_bed_io = self.folder.parents[1] / str(data_stats['dirname'].iloc[-1]) / 'phase_2-mapping' / 'bed.io'
-        path_bed = SnakemakeUtils.load_object(path_bed_io)[0].path
+        path_bed = snakemakeutils.load_object(path_bed_io)[0].path
         relative_path = Path('iterative_mapping', f"{self._parameters['name'].value}-iter_{nb_iter}-low_depth.bed")
         section.add_file(path_bed, relative_path)
         div.add_link_to_file('Download low coverage regions (BED)', relative_path)

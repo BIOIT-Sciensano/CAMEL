@@ -1,7 +1,7 @@
 import unittest
 
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.hybridassemblypipeline.mainhybridassemblypipeline import MainHybridAssemblyPipeline
 from camel.tests import longRunningTest
 

@@ -1,10 +1,10 @@
 import json
 
-from camel.app.components.sequencetyping.sequencetypingutils import LocusMetadataHolder
-from camel.app.error import InvalidToolInputError
-from camel.app.error import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.toolkits.sequencetyping.sequencetypingutils import LocusMetadataHolder
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class TypingDBLoader(Tool):

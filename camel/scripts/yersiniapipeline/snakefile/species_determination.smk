@@ -1,6 +1,6 @@
 from pathlib import Path
-from camel.app.snakemake import snakemakeutils
-from camel.app.pipeline.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
 
 
 rule species_determination_analysis:
@@ -51,8 +51,8 @@ rule species_determination_report_empty:
     output:
         VAL_HTML = 'species_determination/report/html-empty.iob' # species_determination.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Species determination', Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Species determination', Path(output.VAL_HTML))
 
 rule species_determination_create_summary:
     """

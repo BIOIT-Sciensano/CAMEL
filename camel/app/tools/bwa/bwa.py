@@ -1,8 +1,8 @@
 import abc
 
-from camel.app.command.command import Command
-from camel.app.error import ToolExecutionError
-from camel.app.tools.toolpipeable import ToolPipeable
+from camel.app.core.command import Command
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.piping.toolpipeable import ToolPipeable
 
 
 class BWA(ToolPipeable, metaclass=abc.ABCMeta):

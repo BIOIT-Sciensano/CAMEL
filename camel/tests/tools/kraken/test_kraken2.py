@@ -1,9 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.config import config
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.kraken.kraken2 import Kraken2
 
 
@@ -16,7 +17,7 @@ class TestKraken2(CamelTestSuite):
     test_file_dir = CamelTestSuite.get_test_file_dir('kraken')
     input_pe_reads = [test_file_dir / 'lm1_1.fastq', test_file_dir / 'lm1_2.fastq']
     input_fasta_reads = test_file_dir / 'reads_test.fasta'
-    input_db = Path(CamelTestSuite.camel.config['db_root'], 'kraken2_microbial', 'latest')
+    input_db = Path(config.dir_db, 'kraken2_microbial', 'latest')
 
     def test_kraken2_paired(self) -> None:
         """

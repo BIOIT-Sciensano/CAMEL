@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.bacilluspipeline.snakefile import btyper as bt
 
 
@@ -56,9 +56,9 @@ rule btyper_report_empty:
     params:
         dir_ = 'btyper/report'
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.btyper.btyperreporter import BTyperReporter
-        SnakePipelineUtils.create_empty_report_section(BTyperReporter.TITLE, Path(output.HTML))
+        snakepipelineutils.create_empty_report_section(BTyperReporter.TITLE, Path(output.HTML))
 
 rule btyper_dump_summary_info:
     """

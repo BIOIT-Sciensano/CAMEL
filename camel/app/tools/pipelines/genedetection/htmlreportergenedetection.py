@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.genedetection.genedetectionhitbase import GeneDetectionHitBase
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.utils import fileutils
+from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
+from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class HtmlReporterGeneDetection(Tool):
@@ -75,7 +75,7 @@ class HtmlReporterGeneDetection(Tool):
         """
         db_name = self._input_informs['db_info']['name']
         self._report_section = HtmlReportSection(self._input_informs['db_info']['title'], 3)
-        self._sub_folder = Path('gene_detection') / FileSystemHelper.make_valid(db_name)
+        self._sub_folder = Path('gene_detection') / fileutils.make_valid(db_name)
 
     def __add_parameter_table(self, informs_detection: dict[str, str]) -> None:
         """

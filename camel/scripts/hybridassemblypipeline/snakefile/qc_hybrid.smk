@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.app.core.snakemake.step import Step
 from camel.scripts.hybridassemblypipeline.snakefile import qc_hybrid
 
 
@@ -116,7 +116,7 @@ rule qc_hybrid_read_mapping_illumina:
         dir_ = lambda wildcards: f'qc_hybrid/{wildcards.name}/read_mapping/illumina'
     threads: 8
     run:
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
+        from camel.app.scriptutils.fastqinput import FastqInput
         from camel.app.tools.bwa.bwamap import BWAMap
         bwa_map = BWAMap()
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict), 'illumina')
@@ -145,7 +145,7 @@ rule qc_hybrid_read_mapping_ont:
         from camel.app.tools.minimap2.minimap2mapping import Minimap2Mapping
         minimap2 = Minimap2Mapping()
         snakemakeutils.add_pickle_input(minimap2, 'FASTA', Path(input.FASTA))
-        minimap2.add_input_files(SnakePipelineUtils.extracts_fq_input(Path(input.FQ), key_se='FASTQ', read_type='SE'))
+        minimap2.add_input_files(snakepipelineutils.extract_fq_input(Path(input.FQ), key_se='FASTQ', read_type='SE'))
         step = Step(str(rule), minimap2, dir_=Path(str(params.dir_)))
         step.run()
         snakemakeutils.dump_tool_outputs(minimap2, output)
@@ -443,7 +443,7 @@ rule qc_hybrid_add_vcf_info_to_informs:
     params:
         dir_ = lambda wildcards: f'qc_hybrid/{wildcards.name}/{wildcards.method}'
     run:
-        from camel.app.components.vcf.vcfutils import VCFUtils
+        from camel.app.core.utils import vcfutils
         informs = snakemakeutils.load_object(Path(input.INFORMS))
         if wildcards.method == 'sniffles':
             informs['nb_of_variants'] = sum(informs['variants'].values())
@@ -451,7 +451,7 @@ rule qc_hybrid_add_vcf_info_to_informs:
             informs['nb_of_indels'] = informs['variants']['DEL'] + informs['variants']['INS']
             informs['nb_of_svs'] = informs['variants']['BND'] + informs['variants']['DUP'] + informs['variants']['INV']
         else:
-            variants = VCFUtils.retrieve_variants(snakemakeutils.load_object(Path(input.VCF))[0].path)
+            variants = vcfutils.retrieve_variants(snakemakeutils.load_object(Path(input.VCF))[0].path)
             informs['nb_of_variants'] = len(variants)
             informs['nb_of_snps'] = sum(v.is_snp for v in variants)
             informs['nb_of_indels'] = sum(v.is_indel for v in variants)

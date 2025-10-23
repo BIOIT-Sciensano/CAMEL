@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
 
 
 class ReporterTrimmingONT(Tool):

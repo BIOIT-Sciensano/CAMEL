@@ -6,8 +6,7 @@ from typing import Optional, Union
 
 from Bio import SeqIO
 
-from camel.app.camel import Camel
-from camel.app.loggers import logger
+from camel.app.loggers import logger, initialize_logging
 
 
 class MainExtractConsensusSeqs:
@@ -96,6 +95,6 @@ class MainExtractConsensusSeqs:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     extract_seqs = MainExtractConsensusSeqs()
     extract_seqs.run()

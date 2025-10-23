@@ -5,7 +5,7 @@ import tempfile
 import yaml
 
 from camel.app.config import config
-from camel.app.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.scripts.yersiniapipeline import CONFIG_DATA
 from camel.scripts.yersiniapipeline.mainyersiniapipeline import MainYersiniaPipeline
 from camel.tests import longRunningTest

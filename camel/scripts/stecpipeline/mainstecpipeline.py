@@ -6,10 +6,10 @@ from typing import Optional
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.scriptutils.reportpipeline import ReportPipeline
+from camel.app.core.snakemake import snakepipelineutils
+from camel.app.loggers import initialize_logging
 from camel.scripts.stecpipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
@@ -59,7 +59,7 @@ class MainSTECPipeline(ReportPipeline):
         # Read trimming
         if self._args.library is not None:
             config_data['read_trimming']['adapter'] = self._args.library
-        return Path(SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir))
+        return Path(snakepipelineutils.generate_config_file(config_data, self._args.working_dir))
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -75,6 +75,6 @@ class MainSTECPipeline(ReportPipeline):
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainSTECPipeline()
     main.run()

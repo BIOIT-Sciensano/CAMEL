@@ -3,8 +3,8 @@ from pathlib import Path
 from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 import yaml
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.scripts.neisseriapipeline import CONFIG_DATA
 from camel.scripts.neisseriapipeline.mainneisseriapipeline import MainNeisseriaPipeline
 from camel.tests import longRunningTest

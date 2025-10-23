@@ -1,8 +1,8 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.art.art import ART
 
 

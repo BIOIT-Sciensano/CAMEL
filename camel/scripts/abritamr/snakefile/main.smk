@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import abritamr, assembly, core
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import abritamr, assembly, core
 
 #######################
 # Included Snakefiles #
@@ -30,7 +30,8 @@ rule report_pickle_citations:
     params:
         citation_keys = config['citations']
     run:
-        section = SnakePipelineUtils.create_citations_section(
+        from camel.app.core.reports import reportutils
+        section = reportutils.create_citations_section(
             params.citation_keys['other'], params.citation_keys['main'])
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.HTML))
 
@@ -46,7 +47,7 @@ rule report_command_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
         ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
 
 rule report_combine_all:
@@ -68,12 +69,12 @@ rule report_combine_all:
         citation_keys = config['citations']
     run:
         import datetime
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
 
         # Add header section
-        report = SnakePipelineUtils.init_pipeline_report(
+        report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
-        report.add_html_object(SnakePipelineUtils.create_input_section(
+        report.add_html_object(snakepipelineutils.create_input_section(
             sample_name=params.sample_name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
@@ -88,7 +89,7 @@ rule report_combine_all:
             ('Citations', 'citations', [Path(input.report_citations)]),
             ('Commands', 'commands', [Path(input.report_commands)])
         ]
-        SnakePipelineUtils.add_report_content(report, report_structure)
+        snakepipelineutils.add_report_content(report, report_structure)
 
 rule summary_combine_all:
     """

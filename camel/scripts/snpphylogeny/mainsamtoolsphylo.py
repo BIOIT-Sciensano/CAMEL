@@ -5,21 +5,20 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.phylogeny.snpphylogenyutils import (
+from camel.app.core.reports import reportutils
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.utils import fileutils
+from camel.app.loggers import initialize_logging
+from camel.app.toolkits.phylogeny import snpphylogenyutils
+from camel.app.toolkits.phylogeny.snpphylogenyutils import (
     MappingInput,
-    Sample,
-    SnpPhylogenyUtils,
+    Sample
 )
-from camel.app.components.workflows.variantcallingwrapper import VariantCallingOutput
-from camel.app.components.workflows.variantfilteringwrapper import (
-    VariantFilteringOutput,
-)
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.wrappers.variantcallingwrapper import VariantCallingOutput
+from camel.app.wrappers.variantfilteringwrapper import VariantFilteringOutput
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
 from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
 from camel.scripts.snpphylogeny import (
     SNAKEFILE_SAMTOOLS_CALLING_ALL,
@@ -79,7 +78,7 @@ class MainSamtoolsPhylo(BasePhylo):
         filtering_out_by_sample = self.__run_variant_filtering_workflow(calling_out_by_sample)
 
         # Create SNP matrix
-        snp_matrix = SnpPhylogenyUtils.construct_snp_matrix(
+        snp_matrix = snpphylogenyutils.construct_snp_matrix(
             [s.name_valid for s in self._samples],
             [filtering_out_by_sample[s].vcf_filtered for s in self._samples],
             self._args.working_dir / 'snp_matrix',
@@ -101,7 +100,7 @@ class MainSamtoolsPhylo(BasePhylo):
         # Add commands section
         all_informs = self._informs + calling_out_by_sample[self._samples[0]].informs_all + filtering_out_by_sample[
             self._samples[0]].informs
-        self._report.add_html_object(SnakePipelineUtils.create_commands_section(all_informs, self._args.working_dir))
+        self._report.add_html_object(reportutils.create_commands_section(all_informs, self._args.working_dir))
         self._report.save()
 
     @staticmethod
@@ -111,7 +110,7 @@ class MainSamtoolsPhylo(BasePhylo):
         :return: Parsed arguments
         """
         argument_parser = argparse.ArgumentParser()
-        SnpPhylogenyUtils.add_common_arguments(argument_parser)
+        snpphylogenyutils.add_common_arguments(argument_parser)
         argument_parser.add_argument('--ploidy', default='haploid', choices=['haploid', 'diploid'])
         argument_parser.add_argument('--calling-method', default='consensus', choices=['consensus', 'multiallelic'])
         argument_parser.add_argument('--soft-filter', action='store_true')
@@ -136,7 +135,7 @@ class MainSamtoolsPhylo(BasePhylo):
         dir_ref = self._args.working_dir / 'ref'
         if not dir_ref.is_dir():
             dir_ref.mkdir(parents=True)
-        link_path = dir_ref / FileSystemHelper.make_valid(
+        link_path = dir_ref / fileutils.make_valid(
             self._args.reference_name if self._args.reference_name else self._args.reference.name)
         if link_path.is_symlink():
             link_path.unlink()
@@ -165,8 +164,8 @@ class MainSamtoolsPhylo(BasePhylo):
                 'skip_variants': 'indels'
             }
         }
-        config_file = SnakePipelineUtils.generate_config_file(config_data, working_dir)
-        SnakePipelineUtils.run_snakemake(
+        config_file = snakepipelineutils.generate_config_file(config_data, working_dir)
+        snakepipelineutils.run_snakemake(
             SNAKEFILE_SAMTOOLS_CALLING_ALL, config_file, [Path(OUTPUT_CALLING_ALL)], working_dir, self._args.threads)
         return {self.samples_by_name[name]: output for name, output in snakemakeutils.load_object(working_dir / OUTPUT_CALLING_ALL).items()}
 
@@ -181,9 +180,9 @@ class MainSamtoolsPhylo(BasePhylo):
             calling_output_by_sample.items()
         }
         config_data = {'working_dir': str(working_dir), 'samples': samples, 'options': self.__get_filtering_options()}
-        config_file = SnakePipelineUtils.generate_config_file(config_data, working_dir)
-        output_path = OUTPUT_FILTERING_ALL
-        SnakePipelineUtils.run_snakemake(
+        config_file = snakepipelineutils.generate_config_file(config_data, working_dir)
+        output_path = Path(OUTPUT_FILTERING_ALL)
+        snakepipelineutils.run_snakemake(
             SNAKEFILE_SAMTOOLS_FILTERING_ALL, config_file, [output_path], working_dir, self._args.threads)
         return {self.samples_by_name[name]: output for name, output in snakemakeutils.load_object(working_dir / output_path).items()}
 
@@ -249,7 +248,7 @@ class MainSamtoolsPhylo(BasePhylo):
             calling_out_by_sample[sample].nb_of_variants,
             filtering_out_by_sample[sample].nb_of_variants] for sample in self._samples}
         header = ['Sample', 'Total reads', 'Mapping rate (%)', 'Nb. of SNPs (unfiltered)', 'Nb. of SNPs (filtered)']
-        SnpPhylogenyUtils.add_metrics_section(self._report, stats, header)
+        snpphylogenyutils.add_metrics_section(self._report, stats, header)
 
     def __add_output_files_section(self, snp_matrix: Path, calling_out_by_sample: CallingOutBySample,
                                    filtering_out_by_sample: FilteringOutBySample) -> None:
@@ -264,10 +263,10 @@ class MainSamtoolsPhylo(BasePhylo):
             filtering_out_by_sample[sample].vcf_filtered.path
         ] for sample in self._samples}
         column_names = ['Alignment (BAM)', 'SNPs unfiltered (VCF)', 'SNPs filtered (VCF)']
-        SnpPhylogenyUtils.add_output_files_section(self._report, column_names, output_files, snp_matrix)
+        snpphylogenyutils.add_output_files_section(self._report, column_names, output_files, snp_matrix)
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainSamtoolsPhylo()
     main.run()

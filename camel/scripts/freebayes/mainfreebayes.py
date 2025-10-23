@@ -4,8 +4,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.loggers import initialize_logging
 from camel.app.tools.freebayes.freebayes import Freebayes
 
 
@@ -19,7 +19,6 @@ class MainFreebayesCalling:
         Initializes the main script.
         """
         self._args = MainFreebayesCalling._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -82,6 +81,6 @@ class MainFreebayesCalling:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     freebayes_main = MainFreebayesCalling()
     freebayes_main.run()

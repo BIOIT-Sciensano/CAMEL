@@ -1,13 +1,12 @@
 import json
 from pathlib import Path
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error import InvalidToolInputError
-from camel.app.error import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils, fileutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class SeqSero2(Tool):
@@ -39,7 +38,7 @@ class SeqSero2(Tool):
         Checks if the provided input is valid.
         :return: None
         """
-        super(SeqSero2, self)._check_input()
+        super()._check_input()
         if not self._parameters.get('mode') \
                 or self._parameters['mode'].value not in ('kmer', 'allele', 'kmerread'):
             raise InvalidToolInputError("A Seqsero2 processing mode must be passed to the tool, "
@@ -79,18 +78,16 @@ class SeqSero2(Tool):
             if 'FASTQ_ONT' in self._tool_inputs:  # in case of ONT input data
                 # create intermediary input dir because Seqsero2 needs a different input than output dir
                 (self.folder / 'in').mkdir()
-                if FileSystemHelper.is_gzipped(self._tool_inputs['FASTQ_ONT'][0].path):
+                if fileutils.is_gzipped(self._tool_inputs['FASTQ_ONT'][0].path):
                     # Gunzip file because in -t 5 the input needs to be gunzipped.
                     fastq_gunzipped = self.folder / 'in' / self._tool_inputs['FASTQ_ONT'][0].path.stem
-                    FileSystemHelper.gzip_extract(self._tool_inputs['FASTQ_ONT'][0].path, fastq_gunzipped)
+                    fileutils.gzip_extract(self._tool_inputs['FASTQ_ONT'][0].path, fastq_gunzipped)
                     command_parts.extend(['-t 5', '-i', str(fastq_gunzipped)])
                 else:
                     command_parts.extend(['-t 5', '-i', str(self._tool_inputs['FASTQ_ONT'][0].path)])
             else:  # if 'FASTQ_PE' in self._tool_inputs:
-                command_parts.extend(['-t 2', '-i',
-                                      str(self._tool_inputs['FASTQ_PE'][0].path),
-                                      str(self._tool_inputs['FASTQ_PE'][1].path)])
-
+                command_parts.extend([
+                    '-t 2', '-i', str(self._tool_inputs['FASTQ_PE'][0].path), str(self._tool_inputs['FASTQ_PE'][1].path)])
         self._command.command = ' '.join(command_parts)
 
     def _check_command_output(self, command: Command) -> None:

@@ -6,12 +6,11 @@ from typing import Any, Optional
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
+from camel.app.scriptutils.reportpipeline import ReportPipeline
 from camel.app.config import config
-from camel.app.loggers import logger
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakepipelineutils
 from camel.scripts.enterococcuspipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
@@ -128,7 +127,7 @@ class MainEnterococcusPipeline(ReportPipeline):
 
         # Set the species
         config_data['selected_species'] = MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species]['full_name']
-        return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        return snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
@@ -165,6 +164,6 @@ class MainEnterococcusPipeline(ReportPipeline):
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainEnterococcusPipeline()
     main.run()

@@ -1,15 +1,15 @@
 from pathlib import Path
 
-from camel.app.components.files.tsvexporter import TsvExporter
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.mycobacterium import assay51snputils
-from camel.app.components.mycobacterium.assay51snputils import SNPPosition
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.utils import fileutils
+from camel.app.toolkits.export.tsvexporter import TsvExporter
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.toolkits.mycobacterium import assay51snputils
+from camel.app.toolkits.mycobacterium.assay51snputils import SNPPosition
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
 
 
 class Assay51SnpReporter(Tool):
@@ -106,7 +106,7 @@ class Assay51SnpReporter(Tool):
         table_data = [[HtmlElement('th', 'Matching SNPs', [('colspan', nb_columns)])]]
         row = []
         for i, snp in enumerate(self._input_informs['detection']['scg_profile'].snps):
-            position = snp_positions_by_name['SNP{:02d}'.format(i+7)]
+            position = snp_positions_by_name[f'SNP{i+7:02d}']
             row.append(HtmlTableCell(position.name, color=position.get_color(snp)))
             if len(row) > 5:
                 table_data.append(row)
@@ -136,7 +136,7 @@ class Assay51SnpReporter(Tool):
         self._section.add_html_object(div)
 
         table_path = self._folder / 'all_snps-{}.tsv'.format(
-            FileSystemHelper.make_valid(self._tool_inputs['VAL_Sample'][0].value))
+            fileutils.make_valid(self._tool_inputs['VAL_Sample'][0].value))
         TsvExporter.export(table_data, header, table_path)
         relative_path = self._sub_folder / table_path.name
         self._section.add_file(table_path, relative_path)

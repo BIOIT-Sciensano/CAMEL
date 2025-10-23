@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 

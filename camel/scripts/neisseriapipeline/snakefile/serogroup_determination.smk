@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.resources.snakefile import sequence_typing, assembly
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.snakefiles import sequence_typing, assembly
+from camel.app.core.snakemake import snakemakeutils
 
 
 rule serogroup_determination_analysis:
@@ -53,8 +53,8 @@ rule serogroup_determination_report_empty:
     output:
         VAL_HTML = 'serogroup_determination/legacy/report/html-empty.iob' # serogroup_determination.OUTPUT_LEGACY_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Serogroup determination (legacy)', Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Serogroup determination (legacy)', Path(output.VAL_HTML))
 
 rule serogroup_capsule_tool:
     """
@@ -104,8 +104,8 @@ rule serogroup_capsule_tool_report_empty:
     output:
         VAL_HTML = 'serogroup_determination/capsule/report/html-empty.iob' # serogroup_determination.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Capsule characterization', Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Capsule characterization', Path(output.VAL_HTML))
 
 rule serogroup_determination_summary:
     """

@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 
 
 rule multi_allelic_sites_bcftools_pileup:
@@ -85,7 +85,7 @@ rule multi_allelic_sites_apply_to_consensus:
     run:
         from Bio import SeqIO
         from Bio.Seq import Seq
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
 
         # Parse the input FASTA file
         path_fasta = snakemakeutils.load_object(Path(input.FASTA))[0].path

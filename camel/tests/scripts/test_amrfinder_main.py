@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.scripts.amrfinder.mainamrfinder import MainAMRFinder
 
 

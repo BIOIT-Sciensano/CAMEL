@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
 
 
@@ -23,7 +23,7 @@ rule preprocess_ampligone_to_bed:
         dir_ = 'preprocess/ampligone/tool',
         primer_mismatch_rate = '0.01' if config['input_type'] == 'illumina' else '0.1'
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.ampligone.ampligonefasta2bed import AmpliGoneFasta2Bed
         ampligone = AmpliGoneFasta2Bed()
         snakemakeutils.add_pickle_input(ampligone, 'FASTA_ref', Path(input.FASTA_ref))
@@ -62,8 +62,8 @@ rule preprocess_remove_ampligone_report_empty:
     output:
         HTML = 'preprocess/ampligone/report/html-empty.iob' # preprocess.OUTPUT_AMPLIGONE_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Primer localization', Path(output.HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Primer localization', Path(output.HTML))
 
 ############################
 # Per-segment downsampling #
@@ -86,8 +86,8 @@ rule preprocess_map_reads_pre:
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff', 10)
     threads: 8
     run:
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
         # Run the workflow
@@ -148,8 +148,8 @@ rule preprocess_map_reads_post:
         input_type = config['input_type']
     threads: 8
     run:
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
         # Run the workflow
@@ -210,7 +210,7 @@ rule preprocess_report:
         max_depth = config['downsampling'].get('coverage_max_by_segment', 250),
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff', 5)
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.viral_consensus.reportersegmentdownsampling import ReporterSegmentDownsampling
         reporter = ReporterSegmentDownsampling()
         reporter.add_input_files({'TSV': [ToolIOFile(Path(input.TSV))]})
@@ -253,8 +253,8 @@ rule preprocess_report_ampliconclip_empty:
     params:
         dir_ = 'preprocess/ampliconclip'
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Primer removal', Path(output.HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Primer removal', Path(output.HTML))
 
 #########
 # Other #

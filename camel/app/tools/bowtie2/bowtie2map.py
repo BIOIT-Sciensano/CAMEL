@@ -2,9 +2,9 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from camel.app.command.command import Command
-from camel.app.error import InvalidToolInputError, InvalidParameterError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.command import Command
+from camel.app.core.errors import InvalidToolInputError, InvalidParameterError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.bowtie2.bowtie2 import Bowtie2
 
 

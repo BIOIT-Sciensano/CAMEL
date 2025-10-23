@@ -1,9 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.config import config
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.salmonella.seqsero2 import SeqSero2
 from camel.app.tools.pipelines.salmonella.seqsero2reporter import SeqSero2Reporter
 
@@ -18,7 +19,7 @@ class TestSeqsero2(CamelTestSuite):
     input_pe_reads = [test_file_dir / "SRR493330_1.fastq.gz", test_file_dir / "SRR493330_2.fastq.gz"]
     input_fasta_file = test_file_dir / 'assembly_filtered.fasta'
     input_fastq_se = test_file_dir / 'Salmonella_S23BD05337-RBK_ont-ds-ds.fastq.gz'
-    db_path = Path(CamelTestSuite.camel.config['db_root']) / 'pipelines/salmonella/seqsero2/1.2.1/seqsero2_db'
+    db_path = Path(config.dir_db, 'pipelines/salmonella/seqsero2/1.2.1/seqsero2_db')
 
     def test_seqsero2_kmer(self) -> None:
         """

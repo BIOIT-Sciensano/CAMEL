@@ -1,8 +1,8 @@
 import re
 from pathlib import Path
 
-from camel.app.error import InvalidToolInputError, ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
 
 
@@ -16,7 +16,7 @@ class BcftoolsNorm(BcftoolsBase):
         Initializes this tool.
         :return: None
         """
-        super().__init__('bcftools norm', '1.17', None)
+        super().__init__('bcftools norm', '1.17')
         self._input_key = None
 
     def _check_input(self) -> None:

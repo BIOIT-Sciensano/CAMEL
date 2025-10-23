@@ -10,20 +10,20 @@ from typing import Optional
 
 import pandas as pd
 
-from camel.app.components import mainscriptutils
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.phylogeny import mlstphyloutils
-from camel.app.components.phylogeny.newickutils import NewickUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.reports import reportutils
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlreport import HtmlReport
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger, initialize_logging
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.scriptutils.basescript import BaseScript
 from camel.app.tools.figtree.figtree import FigTree
 from camel.app.tools.grapetree.grapetree import GrapeTree
+from camel.app.toolkits.phylogeny import mlstphyloutils
+from camel.app.toolkits.phylogeny.newickutils import NewickUtils
 
 
-class MainMLSTPhylogeny:
+class MainMLSTPhylogeny(BaseScript):
     """
     Creates phylogenies based on the sequence typing output.
     """
@@ -33,6 +33,7 @@ class MainMLSTPhylogeny:
         Initializes the main scripts.
         :param args: Command line arguments
         """
+        super().__init__(name='MLST phylogeny', version='1.0', snakefile=None)
         self._args = MainMLSTPhylogeny._parse_arguments(args)
 
     def run(self) -> None:
@@ -65,7 +66,7 @@ class MainMLSTPhylogeny:
                     nwk_out:
                 figtree = NewickUtils.create_image_figtree(
                     grapetree.tool_outputs['NWK'][0].path,
-                    Path(str(files('camel').joinpath('resources/figtree/template_cgmlst_tree.txt'))),
+                    Path(str(files('camel').joinpath('resources/tools/figtree/template_cgmlst_tree.txt'))),
                     Path(nwk_out.name), self._args.image_width,
                     NewickUtils.calculate_tree_image_height(self._args.image_min_height, len(allele_data_filtered))
                 )
@@ -136,24 +137,30 @@ class MainMLSTPhylogeny:
 
     def __initialize_report(self) -> HtmlReport:
         """
-        Initializes the HTML report
+        Initializes the HTML report.
         :return: HTML report
         """
         # Header
-        report = mainscriptutils.init_report(
-            self._args.output_html, self._args.output_dir, 'MLST phylogeny report', 'MLST phylogeny')
+        report = reportutils.init_report(
+            path_out=self._args.output_html,
+            key='MLST phylogeny',
+            title='MLST phylogeny report',
+            dir_out=self._args.output_dir)
         if self._args.input_tsv is not None:
             input_file_str = ', '.join([Path(name).name for _, name in self._args.input_tsv])
         else:
             input_file_str = f'Sequence typing output ({len(self._args.input_html)} datasets)'
 
         # Analysis info section
-        report.add_html_object(mainscriptutils.generate_analysis_info_section(
-            self._args, additional_info=[
-                ['Allele detection method:', self._args.detection_method],
-                ['Tree building method:', self._args.tree_method]
-            ],
-            input_file_str=input_file_str))
+        report.add_html_object(reportutils.create_overview_section(
+            version=self._version,
+            dataset_name=input_file_str,
+            input_file_str=input_file_str,
+            extra_data=[
+                ['Allele detection method', self._args.detection_method],
+                ['Tree building method', self._args.tree_method]
+            ]
+        ))
         report.save()
         return report
 
@@ -345,9 +352,9 @@ class MainMLSTPhylogeny:
         report.add_html_object(section_phylo)
 
         # Add commands and citations
-        report.add_html_object(SnakePipelineUtils.create_commands_section(
+        report.add_html_object(reportutils.create_commands_section(
             [grapetree.informs, figtree.informs], self._args.dir_working))
-        report.add_html_object(SnakePipelineUtils.create_citations_section(['Zhou_2018-grapetree']))
+        report.add_html_object(reportutils.create_citations_section(['Zhou_2018-grapetree']))
         report.save()
 
     def __report_add_section_phylogeny_empty(self, report: HtmlReport) -> None:

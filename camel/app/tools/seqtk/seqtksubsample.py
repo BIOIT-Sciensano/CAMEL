@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import fileutils, fastqutils
 from camel.app.loggers import logger
 from camel.app.tools.seqtk.seqtk import Seqtk
 
@@ -91,7 +90,7 @@ class SeqtkSubsample(Seqtk):
         if 'combine_output' in self._parameters:
             # Tag if set: combine outputs of individual PE reads into one file
             output_file = self.folder / (self._parameters['output_prefix'].value + self.__get_output_file_suffix())
-            FileUtils.concatenate_files(output_file, self._output_files)
+            fileutils.concatenate_files(output_file, self._output_files)
             self._tool_outputs[self.input_file_type] = [ToolIOFile(output_file)]
         else:
             self._tool_outputs[self.input_file_type + '_PE'] = [ToolIOFile(f) for f in self._output_files]
@@ -115,9 +114,9 @@ class SeqtkSubsample(Seqtk):
         """
         if self.input_mode == 'PE':
             if 'combine_output' in self._parameters:
-                self._informs['reads_count'] = FastqUtils.count_reads(self._tool_outputs[self.input_file_type][0].path)
+                self._informs['reads_count'] = fastqutils.count_reads(self._tool_outputs[self.input_file_type][0].path)
             else:
-                reads_count_per_file = [FastqUtils.count_reads(f.path) for f in self._tool_outputs[self.input_file_type+'_PE']]
+                reads_count_per_file = [fastqutils.count_reads(f.path) for f in self._tool_outputs[self.input_file_type+'_PE']]
                 self._informs['reads_count'] = sum(reads_count_per_file)
         elif self.input_mode == 'SE':
-            self._informs['reads_count'] = FastqUtils.count_reads(self._tool_outputs[self.input_file_type][0].path)
+            self._informs['reads_count'] = fastqutils.count_reads(self._tool_outputs[self.input_file_type][0].path)

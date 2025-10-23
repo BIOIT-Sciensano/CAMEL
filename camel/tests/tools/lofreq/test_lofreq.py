@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.components.vcf.vcfutils import VCFUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.utils import vcfutils
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.lofreq.lofreqcall import LofreqCall
 
 
@@ -24,7 +24,7 @@ class TestLofreq(CamelTestSuite):
         lofreq.add_input_files({'FASTA': [TestLofreq.FILE_FASTA], 'BAM': [TestLofreq.FILE_BAM]})
         lofreq.run(self.running_dir)
         self.verify_output_files(lofreq, 'VCF')
-        self.assertGreater(VCFUtils.count_variants(lofreq.tool_outputs['VCF'][0].path), 0)
+        self.assertGreater(vcfutils.count_variants(lofreq.tool_outputs['VCF'][0].path), 0)
 
 
 if __name__ == '__main__':

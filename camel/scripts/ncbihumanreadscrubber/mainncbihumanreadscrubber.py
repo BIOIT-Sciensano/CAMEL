@@ -7,12 +7,11 @@ from typing import Optional, Any
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.loggers import logger
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import human_read_scrubbing
+from camel.app.scriptutils.reportpipeline import ReportPipeline
+from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import human_read_scrubbing
 from camel.scripts.ncbihumanreadscrubber import CONFIG_DATA
 from camel.scripts.ncbihumanreadscrubber import SNAKEFILE_MAIN
 
@@ -62,7 +61,7 @@ class MainNcbiHumanReadScrubber(ReportPipeline):
         with open(CONFIG_DATA) as handle_in:
             config_data.update(yaml.safe_load(handle_in.read()))
         self._config_data = config_data
-        return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        return snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
 
     def _copy_output_files(self) -> None:
         """
@@ -111,6 +110,6 @@ class MainNcbiHumanReadScrubber(ReportPipeline):
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainNcbiHumanReadScrubber()
     main.run()

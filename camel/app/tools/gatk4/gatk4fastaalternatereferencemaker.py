@@ -4,8 +4,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from camel.app.components.files.fastautils import FastaUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import fastautils
 from camel.app.loggers import logger
 from camel.app.tools.gatk import MASK_NT
 from camel.app.tools.gatk4.gatk4 import GATK4
@@ -36,7 +36,7 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
         """
         super()._execute_tool()
         if self._concatenate_sequence:
-            FastaUtils.write(self.__concatenate_sequence_segments(), self._fasta_concatenated)
+            fastautils.write(self.__concatenate_sequence_segments(), self._fasta_concatenated)
 
     def _check_parameters(self) -> None:
         """
@@ -127,7 +127,7 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
         Concatenate sequence segments for each sequence (identified by seqid from interval file)
         :return: segments concatenated sequences
         """
-        extracted_seq_dict = FastaUtils.read_as_dict(self._fasta_extracted)
+        extracted_seq_dict = fastautils.read_as_dict(self._fasta_extracted)
         seq_intervals = [x.strip() for x in open(self._tool_inputs['TXT_intervals'][0].path)]
         seq_intervals_ordered = self.__rearrange_seq_intervals(seq_intervals)
 
@@ -165,6 +165,6 @@ class GATK4FastaAlternateReferenceMaker(GATK4):
 
         # Note: seq_record in extracted_seq_dict has been updated with ids, now output into self._fasta_extracted with
         #       updated ids
-        FastaUtils.write(list(extracted_seq_dict.values()), self._fasta_extracted)
+        fastautils.write(list(extracted_seq_dict.values()), self._fasta_extracted)
 
         return concatenated_seqs

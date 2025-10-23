@@ -1,9 +1,9 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.tools.bwa.bwaindex import BWAIndex
 from camel.app.tools.bwa.bwamap import BWAMap
 

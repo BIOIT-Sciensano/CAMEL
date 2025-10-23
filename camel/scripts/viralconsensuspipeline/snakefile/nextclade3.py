@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakemakeutils
 
 SNAKEFILE_NEXTCLADE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 

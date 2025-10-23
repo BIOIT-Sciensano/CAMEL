@@ -2,8 +2,7 @@ from Bio import SeqIO, Alphabet
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from camel.app.components.files.fastautils import FastaUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.gatk import MASK_NT
 from camel.app.tools.gatk.gatk import GATK
@@ -35,7 +34,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         super(GATKFastaAlternateReferenceMaker, self)._execute_tool()
 
         if self._concatenate_sequence:
-            FastaUtils.write(self.__concatenate_sequence_segments(), self._fasta_concatenated)
+            fastautils.write(self.__concatenate_sequence_segments(), self._fasta_concatenated)  # noqa: F821
 
     def _check_parameters(self):
         """

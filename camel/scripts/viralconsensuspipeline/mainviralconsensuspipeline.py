@@ -11,12 +11,11 @@ from typing import Optional
 import yaml
 from Bio import SeqIO
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.loggers import logger
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.config import config
+from camel.app.scriptutils import mainscriptutils
+from camel.app.scriptutils.reportpipeline import ReportPipeline
+from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
 from camel.scripts.viralconsensuspipeline import SNAKEFILE_MAIN
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
 
@@ -27,7 +26,7 @@ class MainViralConsensusPipeline(ReportPipeline):
     """
 
     CUSTOM_ANALYSES = []
-    DB_ROOT = Path(Camel.get_instance().config['db_root'], 'pipelines', 'viral_consensus', 'version_1.1')
+    DB_ROOT = Path(config.dir_db, 'pipelines', 'viral_consensus', 'version_1.1')
 
     SUPPORTED_SPECIES = {
         'influenza_a': {
@@ -50,21 +49,21 @@ class MainViralConsensusPipeline(ReportPipeline):
             'name': 'SARS-CoV-2',
             'k2_name': 'Severe acute respiratory syndrome-related coronavirus',
             'nextclade_dbs': {
-                'genome': str(Path(Camel.get_instance().config['db_root'], 'nextclade3', 'sars-cov-2',))
+                'genome': str(Path(config.dir_db, 'nextclade3', 'sars-cov-2',))
             },
         },
         'rsv_a': {
             'name': 'Respiratory syncytial virus (A)',
             'k2_name': 'Orthopneumovirus hominis',
             'nextclade_dbs': {
-                'genome': str(Path(Camel.get_instance().config['db_root'], 'nextclade3', 'rsv_a'))
+                'genome': str(Path(config.dir_db, 'nextclade3', 'rsv_a'))
             }
         },
         'rsv_b': {
             'name': 'Respiratory syncytial virus (B)',
             'k2_name': 'Orthopneumovirus hominis',
             'nextclade_dbs': {
-                'genome': str(Path(Camel.get_instance().config['db_root'], 'nextclade3', 'rsv_b'))
+                'genome': str(Path(config.dir_db, 'nextclade3', 'rsv_b'))
             }
         },
     }
@@ -214,7 +213,7 @@ class MainViralConsensusPipeline(ReportPipeline):
 
         # Copy the FASTA file of the consensus sequence (if specified)
         if self._args.output_fasta is not None:
-            output_io_list = SnakemakeUtils.load_object(Path(
+            output_io_list = snakemakeutils.load_object(Path(
                 self._args.working_dir, iterativemapping.OUTPUT_FASTA_CONSENSUS_FINAL_TRIMMED))
             shutil.copyfile(output_io_list[0].path, self._args.output_fasta)
 
@@ -265,10 +264,10 @@ class MainViralConsensusPipeline(ReportPipeline):
             clair3_model = self._args.clair3_model
         elif self._args.input_type == 'illumina':
             logger.info("Clair3 model not specified, using default model for Illumina data")
-            clair3_model = Path(Camel.get_instance().config['db_root'], 'clair3', 'models', 'ilmn')
+            clair3_model = Path(config.dir_db, 'clair3', 'models', 'ilmn')
         else:
             logger.info("Clair3 model not specified, using default model for ONT data")
-            clair3_model = Path(Camel.get_instance().config['db_root'], 'clair3', 'models', 'ont')
+            clair3_model = Path(config.dir_db, 'clair3', 'models', 'ont')
 
         # Other values
         config_data['iterative_mapping'] = {
@@ -328,11 +327,11 @@ class MainViralConsensusPipeline(ReportPipeline):
         self.__config_add_iterative_mapping_data(config_data)
 
         # Create YAML file
-        path_config = SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        path_config = snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
         return Path(path_config)
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainViralConsensusPipeline()
     main.run()

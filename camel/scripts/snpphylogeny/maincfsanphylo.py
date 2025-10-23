@@ -6,12 +6,12 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.components.phylogeny.snpphylogenyutils import SnpPhylogenyUtils
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.reports import reportutils
+from camel.app.loggers import initialize_logging
 from camel.app.tools.cfsan.cfsansnppipeline import CfsanSnpPipeline
+from camel.app.toolkits.phylogeny import snpphylogenyutils
 from camel.scripts.snpphylogeny.basephylo import BasePhylo
 
 
@@ -55,7 +55,7 @@ class MainCfsanPhylo(BasePhylo):
 
         # Add commands section
         all_informs = self._informs
-        self._report.add_html_object(SnakePipelineUtils.create_commands_section(all_informs, self._args.working_dir))
+        self._report.add_html_object(reportutils.create_commands_section(all_informs, self._args.working_dir))
         self._report.save()
 
     @staticmethod
@@ -66,7 +66,7 @@ class MainCfsanPhylo(BasePhylo):
         :return: Parsed arguments
         """
         argument_parser = argparse.ArgumentParser()
-        SnpPhylogenyUtils.add_common_arguments(argument_parser)
+        snpphylogenyutils.add_common_arguments(argument_parser)
         argument_parser.add_argument('--selected-matrix', choices=['preserved', 'regular'])
         argument_parser.add_argument('--report-include-bam', action='store_true')
         return argument_parser.parse_args(args)
@@ -116,7 +116,7 @@ class MainCfsanPhylo(BasePhylo):
         ] for s in self._samples}
         header = ['Sample', 'Total reads', 'Mapping rate (%)', 'Avg. pileup depth', 'Nb. of SNPs (unfiltered)',
                   'Nb. of SNPs (filtered)']
-        SnpPhylogenyUtils.add_metrics_section(self._report, stats, header)
+        snpphylogenyutils.add_metrics_section(self._report, stats, header)
 
     def __add_output_files_section(self, cfsan: CfsanSnpPipeline, snp_matrix: ToolIOFile) -> None:
         """
@@ -131,10 +131,10 @@ class MainCfsanPhylo(BasePhylo):
             cfsan.tool_outputs['VCF_preserved'][i].path
         ] for i in range(0, len(cfsan.tool_outputs['Sample_names']))}
         header = ['Alignment (BAM)', 'SNPs filtered (VCF)', 'SNPs filtered preserved (VCF)']
-        SnpPhylogenyUtils.add_output_files_section(self._report, header, output_files, snp_matrix.path)
+        snpphylogenyutils.add_output_files_section(self._report, header, output_files, snp_matrix.path)
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainCfsanPhylo()
     main.run()

@@ -4,8 +4,8 @@ from pathlib import Path
 import yaml
 
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.scripts.enterococcuspipeline import CONFIG_DATA
 from camel.scripts.enterococcuspipeline.mainenterococcuspipeline import MainEnterococcusPipeline
 from camel.tests import longRunningTest

@@ -5,12 +5,11 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import variant_calling_clair3
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import variant_calling_clair3
 
 
 class MainCalling:
@@ -23,7 +22,6 @@ class MainCalling:
         Initializes the main script.
         """
         self._args = MainCalling._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -56,7 +54,7 @@ class MainCalling:
         """
         # Create configuration file
         config_data = self.__create_snakemake_config_data()
-        config_file = SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        config_file = snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
 
         # Copy input BAM file to the right location
         target_dir = self._args.working_dir / 'variant_calling' / 'read_mapping'
@@ -66,7 +64,7 @@ class MainCalling:
 
         # Run Snakemake to generate output file
         path_vcf = variant_calling_clair3.OUTPUT_UNFILTERED_VCF
-        SnakePipelineUtils.run_snakemake(
+        snakepipelineutils.run_snakemake(
             variant_calling_clair3.SNAKEFILE, config_file, [path_vcf], self._args.working_dir,
             self._args.threads)
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from snakemake.io import expand
 
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.snpphylogeny.snakefile.samtools_filtering_all import OUTPUT_FILTERING_ALL
 
 
@@ -21,9 +21,9 @@ rule filter_variants:
         filtering_options=config['options'],
         sample_name=lambda wildcards: wildcards.sample
     run:
-        from camel.app.components.workflows.variantfilteringwrapper import VariantFilteringWrapper
+        from camel.app.wrappers.variantfilteringwrapper import VariantFilteringWrapper
         wrapper = VariantFilteringWrapper(Path(str(params.working_dir), 'variant_filtering'))
-        wrapper.run_workflow(
+        wrapper.run(
             sample_name=str(params.sample_name),
             vcf_file=Path(str(input.VCF)),
             bam_file=Path(str(input.BAM)),

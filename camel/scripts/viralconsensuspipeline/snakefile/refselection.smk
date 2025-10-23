@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.app.tools.mash.mashscreen import MashScreen
 from camel.scripts.viralconsensuspipeline.snakefile import refselection
 
@@ -23,7 +23,7 @@ rule ref_selection_mash_screen:
         input_type = config['input_type'],
         segment = lambda wildcards: wildcards.segment
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
 
         # Load FASTQ data
         if params.input_type == 'ont':
@@ -57,7 +57,7 @@ rule ref_selection_create_fasta:
         dir_ = 'ref_selection/create_fasta'
     run:
         import itertools
-        from camel.app.io.tooliodirectory import ToolIODirectory
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.viral_consensus.refselectioncreatefasta import RefSelection
         ref_selection = RefSelection()
         tsv_in = list(itertools.chain(*[snakemakeutils.load_object(Path(io)) for io in input.TSV]))
@@ -80,7 +80,7 @@ rule ref_selection_report:
     params:
         dir_ = 'ref_selection/report'
     run:
-        from camel.app.io.tooliodirectory import ToolIODirectory
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.viral_consensus.reporterrefselection import ReporterRefSelection
         reporter = ReporterRefSelection()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
@@ -96,8 +96,8 @@ rule ref_selection_report_empty:
     output:
         VAL_HTML = 'ref_selection/report/html-empty.iob' # refselection.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Reference selection', Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Reference selection', Path(output.VAL_HTML))
 
 rule ref_selection_dump_summary_info:
     """

@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.components.vcf.vcfutils import VCFUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import vcfutils
 from camel.scripts.variantcalling.clair3.maincallingclair3 import MainCalling
 
 
@@ -36,7 +36,7 @@ class TestClair3(CamelTestSuite):
         main_calling = MainCalling(args)
         main_calling.run()
         self.assertGreater(output_file_vcf.stat().st_size, 0)
-        self.assertGreater(VCFUtils.count_variants(output_file_vcf), 0)
+        self.assertGreater(vcfutils.count_variants(output_file_vcf), 0)
 
     def test_variant_calling_illumina(self) -> None:
         """
@@ -58,7 +58,7 @@ class TestClair3(CamelTestSuite):
         main_calling = MainCalling(args)
         main_calling.run()
         self.assertGreater(output_file_vcf.stat().st_size, 0)
-        self.assertGreater(VCFUtils.count_variants(output_file_vcf), 0)
+        self.assertGreater(vcfutils.count_variants(output_file_vcf), 0)
 
 
 if __name__ == '__main__':

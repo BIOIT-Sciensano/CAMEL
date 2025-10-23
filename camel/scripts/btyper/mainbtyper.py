@@ -7,11 +7,11 @@ from typing import Optional
 
 import pandas as pd
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.reports import reportutils
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.scriptutils import mainscriptutils
+from camel.app.loggers import initialize_logging
 from camel.app.tools.btyper.btyper import BTyper
 from camel.app.tools.btyper.btyperreporter import BTyperReporter
 
@@ -73,8 +73,8 @@ class MainBTyper:
 
         # Save report
         all_informs = [btyper.informs]
-        report.add_html_object(SnakePipelineUtils.create_commands_section(all_informs, self._args.working_dir))
-        report.add_html_object(SnakePipelineUtils.create_citations_section([
+        report.add_html_object(reportutils.create_commands_section(all_informs, self._args.working_dir))
+        report.add_html_object(reportutils.create_citations_section([
             'Carroll_2020a-btyper3', 'Carroll_2020b-btyper3']))
         report.save()
 
@@ -131,6 +131,6 @@ class MainBTyper:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     btyper_main = MainBTyper()
     btyper_main.run()

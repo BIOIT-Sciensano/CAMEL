@@ -5,8 +5,8 @@ from pathlib import Path
 
 from Bio import SeqIO
 
-from camel.app.camel import Camel
-from camel.app.command.command import Command
+from camel.app.config import config
+from camel.app.core.command import Command
 
 
 @dataclasses.dataclass
@@ -47,7 +47,7 @@ class ApplyVariants:
         :return: None
         """
         path_fasta_out = self._dir / f'{prefix}.fasta'
-        with tempfile.TemporaryDirectory(prefix='camel_', dir=Camel.get_instance().config['temp_dir']) as dir_temp:
+        with tempfile.TemporaryDirectory(prefix='camel_', dir=config.dir_temp) as dir_temp:
             path_vcf_idx = self.__index_vcf(vcf_in, Path(dir_temp))
             self.__apply_variants(fasta_in, path_vcf_idx, path_fasta_out)
             self.__update_headers(path_fasta_out, name, description)

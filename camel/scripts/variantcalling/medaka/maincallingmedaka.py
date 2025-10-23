@@ -4,10 +4,9 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import fileutils
+from camel.app.loggers import logger, initialize_logging
 from camel.app.tools.medaka.medakainference import MedakaInference
 from camel.app.tools.medaka.medakavcf import MedakaVcf
 from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
@@ -23,7 +22,6 @@ class MainCallingMedaka:
         Initializes the main script.
         """
         self._args = MainCallingMedaka._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -81,17 +79,17 @@ class MainCallingMedaka:
         :return: Input dictionary
         """
         self._args.working_dir.mkdir(parents=True, exist_ok=True)
-        input_dict = {'BAM': None, 'FASTA': None}
+        input_dict: dict[str, None | list[ToolIOFile]] = {'BAM': None, 'FASTA': None}
 
         # input BAM file
         bam_file = Path(self._args.bam)
-        path_bam = self._args.working_dir / FileSystemHelper.make_valid(bam_file.name)
+        path_bam = self._args.working_dir / fileutils.make_valid(bam_file.name)
         path_bam.symlink_to(bam_file)
         input_dict['BAM'] = [ToolIOFile(path_bam)]
 
         # Reference genome
         reference_file = Path(self._args.reference)
-        path_ref = self._args.working_dir / FileSystemHelper.make_valid(reference_file.name)
+        path_ref = self._args.working_dir / fileutils.make_valid(reference_file.name)
         path_ref.symlink_to(reference_file)
         input_dict['FASTA'] = [ToolIOFile(path_ref)]
 
@@ -99,6 +97,6 @@ class MainCallingMedaka:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainCallingMedaka()
     main.run()

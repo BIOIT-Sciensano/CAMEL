@@ -1,7 +1,7 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.variantfiltering.depthfilter import DepthFilter
 from camel.app.tools.variantfiltering.distancefilter import DistanceFilter
 from camel.app.tools.variantfiltering.mappingqualityfilter import MappingQualityFilter

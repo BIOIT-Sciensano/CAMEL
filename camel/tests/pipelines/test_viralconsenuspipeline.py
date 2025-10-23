@@ -3,7 +3,7 @@ from pathlib import Path
 
 from Bio import SeqIO
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
 from camel.app.loggers import logger
 from camel.scripts.viralconsensuspipeline.mainviralconsensuspipeline import MainViralConsensusPipeline
@@ -344,7 +344,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL1.01-H1N1.fastq.gz'),
             '--input-type', 'ont',
-            '--clair3-model', str(Path(self.camel.config['db_root'], 'clair3', 'models', 'ont')),
+            '--clair3-model', str(Path(config.dir_db, 'clair3', 'models', 'ont')),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
@@ -369,7 +369,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL1.01-H1N1.fastq.gz'),
             '--input-type', 'ont',
-            '--clair3-model', str(Path(self.camel.config['db_root'], 'clair3', 'models', 'ont')),
+            '--clair3-model', str(Path(config.dir_db, 'clair3', 'models', 'ont')),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--human-read-scrubbing',
@@ -395,7 +395,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H3N2.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL1.06_H3N2.fastq.gz'),
             '--input-type', 'ont',
-            '--clair3-model', str(Path(self.camel.config['db_root'], 'clair3', 'models', 'ont')),
+            '--clair3-model', str(Path(config.dir_db, 'clair3', 'models', 'ont')),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
@@ -447,7 +447,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'sars_cov_2-Wuhan-Hu-1.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS1.01.fastq.gz'),
             '--input-type', 'ont',
-            '--clair3-model', str(Path(self.camel.config['db_root'], 'clair3', 'models', 'ont')),
+            '--clair3-model', str(Path(config.dir_db, 'clair3', 'models', 'ont')),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
@@ -473,7 +473,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS1.01.fastq.gz'),
             '--input-type', 'ont',
             '--fasta-primers', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS1.primers.fasta'),
-            '--clair3-model', str(Path(self.camel.config['db_root'], 'clair3', 'models', 'ont')),
+            '--clair3-model', str(Path(config.dir_db, 'clair3', 'models', 'ont')),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
@@ -549,7 +549,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS1.01.fastq.gz'),
             '--ref-genome-db', str(TestViralConsensusPipeline.dir_db / 'ref_mash_dbs' / 'sars_cov_2-ncbi'),
             '--input-type', 'ont',
-            '--clair3-model', str(Path(self.camel.config['db_root'], 'clair3', 'models', 'ont')),
+            '--clair3-model', str(Path(config.dir_db, 'clair3', 'models', 'ont')),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),

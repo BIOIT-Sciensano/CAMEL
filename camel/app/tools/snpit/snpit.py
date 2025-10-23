@@ -2,11 +2,11 @@ from io import StringIO
 
 import pandas as pd
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
 
 
 class Snpit(Tool):

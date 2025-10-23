@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import assembly
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import assembly
 from camel.scripts.salmonellapipeline.snakefile import serotyping_seqsero2
 
 
@@ -53,9 +53,9 @@ rule serotyping_seqsero2_run_fastq:
         seqsero_tool = SeqSero2()
         seqsero_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db_path_seqsero2))]})
         if config['input_type'] == 'illumina':
-            seqsero_tool.add_input_files(SnakePipelineUtils.extracts_fq_input(Path(input.IO), key_pe='FASTQ_PE'))
+            seqsero_tool.add_input_files(snakepipelineutils.extract_fq_input(Path(input.IO), key_pe='FASTQ_PE'))
         elif config['input_type'] == 'ont':
-            seqsero_tool.add_input_files(SnakePipelineUtils.extracts_fq_input(
+            seqsero_tool.add_input_files(snakepipelineutils.extract_fq_input(
                 Path(input.IO), key_se='FASTQ_ONT', read_type='SE'))
         seqsero_tool.update_parameters(mode=str(params.mode))
         step = Step(rule_name=str(rule), tool=seqsero_tool, dir_=Path(str(params.dir_)))
@@ -141,6 +141,6 @@ rule serotyping_seqsero2_report_empty:
     output:
         VAL_HTML = 'serotyping/seqsero2/report/html-empty.iob' # serotyping_seqsero2.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.pipelines.salmonella.seqsero2reporter import SeqSero2Reporter
-        SnakePipelineUtils.create_empty_report_section(SeqSero2Reporter.TITLE, Path(output.VAL_HTML))
+        snakepipelineutils.create_empty_report_section(SeqSero2Reporter.TITLE, Path(output.VAL_HTML))

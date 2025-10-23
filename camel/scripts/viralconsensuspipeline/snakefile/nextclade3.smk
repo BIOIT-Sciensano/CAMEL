@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.viralconsensuspipeline.snakefile import preprocess, nextclade3
 
 
@@ -21,10 +21,10 @@ rule nextclade3_detect_subtype_mash:
         input_type = config['input_type'],
         db = config['nextclade'].get('db_mash')
     run:
-        from camel.app.error import ToolExecutionError
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.errors import ToolExecutionError
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.mash.mashscreen import MashScreen
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
+        from camel.app.scriptutils.fastqinput import FastqInput
 
         mash_screen = MashScreen()
         if params.input_type != 'fasta':
@@ -61,9 +61,9 @@ checkpoint nextclade3_detect_subtype_report:
         dir_ = 'nextclade/subtype_determination/report',
         db = config['nextclade'].get('db_mash')
     run:
-        from camel.app.io.tooliodirectory import ToolIODirectory
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.nextclade3.nextcladesubtypereporter import NextcladeSubTypeReporter
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils
 
         if params.db is not None:
             reporter = NextcladeSubTypeReporter()
@@ -72,7 +72,7 @@ checkpoint nextclade3_detect_subtype_report:
             reporter.run(Path(params.dir_))
             snakemakeutils.dump_tool_outputs(reporter, output)
         else:
-            SnakePipelineUtils.create_empty_report_section('Subtype determination', Path(output.HTML))
+            snakepipelineutils.create_empty_report_section('Subtype determination', Path(output.HTML))
             snakemakeutils.dump_object({}, Path(output.INFORMS))
 
 rule nextclade3_detect_subtype_report_empty:
@@ -84,8 +84,8 @@ rule nextclade3_detect_subtype_report_empty:
     params:
         dir_ = 'nextclade/subtype_determination/report'
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Subtype determination', Path(output.HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Subtype determination', Path(output.HTML))
 
 rule nextclade3_extract_segment:
     """
@@ -101,7 +101,7 @@ rule nextclade3_extract_segment:
         input_type = config['input_type']
     run:
         from Bio import SeqIO
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
 
         # Retrieve the sequence of the corresponding segment
         fasta_in = snakemakeutils.load_object(Path(input.FASTA))[0].path
@@ -136,7 +136,7 @@ rule nextclade3_run:
     params:
         dir_ = lambda wildcards: f'nextclade/{wildcards.segment}'
     run:
-        from camel.app.io.tooliodirectory import ToolIODirectory
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.nextclade3.nextclade3 import Nextclade3
 
         # Check if database input is valid
@@ -218,8 +218,8 @@ rule nextclade3_report_empty:
     output:
         HTML = 'nextclade/report/html-empty.iob' # nextclade3.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Nextclade', Path(output.HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Nextclade', Path(output.HTML))
 
 rule nextclade3_create_summary:
     """

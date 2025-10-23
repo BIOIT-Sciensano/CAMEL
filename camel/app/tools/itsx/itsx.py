@@ -1,11 +1,11 @@
 import os
 from pathlib import Path
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class Itsx(Tool):
@@ -40,13 +40,13 @@ class Itsx(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(Itsx, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError('Not enough valid input files given for ITSx (FASTA required): {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Not enough valid input files given for ITSx (FASTA required): {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidToolInputError('Invalid number (max = 1) of FASTA files given for ITSx: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (max = 1) of FASTA files given for ITSx: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidToolInputError('Too many input keys given for ITSx (only FASTA allowed): {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for ITSx (only FASTA allowed): {self._tool_inputs!r}')
 
     def __get_basename(self):
         """
@@ -54,7 +54,7 @@ class Itsx(Tool):
         :return: String with the prefix used in the output
         """
         infile = self._tool_inputs['FASTA'][0].basename
-        return '{}_ITSx'.format(os.path.join(self._folder, os.path.splitext(infile)[0]))
+        return f'{os.path.join(self._folder, os.path.splitext(infile)[0])}_ITSx'
 
     def __set_output(self):
         """
@@ -79,8 +79,10 @@ class Itsx(Tool):
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        return ' '.join(['-i {}'.format(self._tool_inputs['FASTA'][0]),
-                         '-o {}'.format(self.__get_basename())])
+        return ' '.join([
+            f"-i {self._tool_inputs['FASTA'][0].path}",
+            f'-o {self.__get_basename()}'
+        ])
 
     def __build_command(self):
         """

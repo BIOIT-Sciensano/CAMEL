@@ -1,7 +1,7 @@
 import unittest
 
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.checkv.maincheckv import MainCheckV
 from camel.tests import resourceIntensiveTest, longRunningTest
 

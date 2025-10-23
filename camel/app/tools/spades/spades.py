@@ -1,10 +1,10 @@
 import re
 from pathlib import Path
 
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class SPAdes(Tool):
@@ -204,6 +204,8 @@ class SPAdes(Tool):
         Build the command to run tool
         :return: None
         """
-        self._command.command = " ".join([
-            self._tool_command, self._input_string, " ".join(self._build_options())
+        self._command.command = ' '.join([
+            self._tool_command,
+            self._input_string,
+            *self._build_options()
         ])

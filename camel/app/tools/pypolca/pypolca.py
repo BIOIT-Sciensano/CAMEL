@@ -1,9 +1,8 @@
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.components.files.fastautils import FastaUtils
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils, fastautils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class Pypolca(Tool):
@@ -36,8 +35,7 @@ class Pypolca(Tool):
             raise InvalidToolInputError('FASTA reference is required')
         if 'FASTQ_PE' not in self._tool_inputs:
             raise InvalidToolInputError('FASTQ_PE files are required')
-
-        if not FastaUtils.is_indexed(self._tool_inputs['FASTA'][0].path):
+        if not fastautils.is_indexed(self._tool_inputs['FASTA'][0].path):
             raise InvalidToolInputError('FASTA reference needs to be indexed')
         super()._check_input()
 

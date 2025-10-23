@@ -4,9 +4,9 @@ from pathlib import Path
 import yaml
 
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.mycobacterium.bamaddcustomtag import BAMAddCustomTag
 from camel.scripts.mycobacteriumpipeline import CONFIG_DATA
 from camel.scripts.mycobacteriumpipeline.mainmycobacteriumpipeline import MainMycobacteriumPipeline

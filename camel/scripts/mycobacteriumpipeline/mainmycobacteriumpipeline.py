@@ -7,14 +7,14 @@ from typing import Optional
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.loggers import logger
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.config import config
+from camel.app.scriptutils.reportpipeline import ReportPipeline
+from camel.app.scriptutils import mainscriptutils
+from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
 from camel.app.tools.pipelines.mycobacterium.bamaddcustomtag import BAMAddCustomTag
-from camel.resources.snakefile import variant_calling
+from camel.snakefiles import variant_calling
 from camel.scripts.mycobacteriumpipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
@@ -66,7 +66,7 @@ class MainMycobacteriumPipeline(ReportPipeline):
         bam_input = snakemakeutils.load_object(Path(self._args.working_dir, path_io))
 
         # Add custom tag with the sample name for PACU
-        with tempfile.TemporaryDirectory(prefix='camel_', dir=Camel.get_instance().config['temp_dir']) as dir_:
+        with tempfile.TemporaryDirectory(prefix='camel_', dir=config.dir_temp) as dir_:
             add_tag = BAMAddCustomTag()
             add_tag.add_input_files({'BAM': bam_input})
             add_tag.update_parameters(output=str(self._args.output_bam), name='PACU_name', value=self.sample_name)
@@ -112,10 +112,10 @@ class MainMycobacteriumPipeline(ReportPipeline):
             config_data['quality_checks']['forced'] = ['map_rate_ref_ont', 'cov_ref_ont']
             config_data['quality_checks']['skipped'] = ['map_rate_assembly_ont', 'cov_assembly_ont']
 
-        return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        return snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainMycobacteriumPipeline()
     main.run()

@@ -4,12 +4,12 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.reports import reportutils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.loggers import initialize_logging
 from camel.app.tools.resfinder.resfinder import ResFinder
 from camel.app.tools.resfinder.resfinderreporter import ResFinderReporter
 
@@ -93,8 +93,8 @@ class MainResFinder:
 
         # Save report
         all_informs = [resfinder.informs]
-        report.add_html_object(SnakePipelineUtils.create_commands_section(all_informs, self._args.working_dir))
-        report.add_html_object(SnakePipelineUtils.create_citations_section(['Bortolaia_2020-resfinder_4.0']))
+        report.add_html_object(reportutils.create_commands_section(all_informs, self._args.working_dir))
+        report.add_html_object(reportutils.create_citations_section(['Bortolaia_2020-resfinder_4.0']))
         report.save()
 
     def __run_resfinder(self) -> ResFinder:
@@ -148,6 +148,6 @@ class MainResFinder:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     resfinder_main = MainResFinder()
     resfinder_main.run()

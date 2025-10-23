@@ -1,9 +1,8 @@
 import os
 
-from camel.app.camel import Camel
 from camel.app.io.tooliofile import ToolIOFile
 from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.pipeline.step import Step
+from camel.app.core.snakemake.step import Step
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
 
 working_dir = config['working_dir']

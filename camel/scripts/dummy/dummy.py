@@ -4,7 +4,7 @@ from importlib.resources import files
 from pathlib import Path
 
 from camel.app.loggers import initialize_logging
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.snakemake import snakepipelineutils
 from collections.abc import Sequence
 
 class MainDummy:
@@ -38,12 +38,12 @@ class MainDummy:
         Runs this script.
         :return: None
         """
-        path_config = SnakePipelineUtils.generate_config_file({
+        path_config = snakepipelineutils.generate_config_file({
             'input': str(self._args.fasta),
             'output': str(self._args.output)
         }, Path('.'))
         path_snakefile = Path(str(files('camel').joinpath('scripts/dummy/dummy.smk')))
-        SnakePipelineUtils.run_snakemake(
+        snakepipelineutils.run_snakemake(
             path_snakefile, path_config, [self._args.output], Path('.'), self._args.threads
         )
 

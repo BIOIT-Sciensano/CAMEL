@@ -7,10 +7,10 @@ from Bio.SeqRecord import SeqRecord
 # noinspection PyProtectedMember
 from vcf.model import _Record as VCFRecord
 
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 @dataclass(unsafe_hash=True, frozen=True)

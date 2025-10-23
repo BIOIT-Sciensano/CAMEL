@@ -7,12 +7,12 @@ from typing import Optional
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.workflows.genedetectionwrapper import GeneDetectionWrapper
-from camel.app.components.workflows.inputtype import helper_by_input_type
-from camel.app.loggers import logger
+from camel.app.core.reports import reportutils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.loggers import logger, initialize_logging
+from camel.app.wrappers.genedetectionwrapper import GeneDetectionWrapper
+from camel.app.wrappers.inputtype import helper_by_input_type
 
 
 class MainSCCmecFinder:
@@ -25,7 +25,6 @@ class MainSCCmecFinder:
         Initializes the main script.
         :param args: Arguments, if not set they are removed from the command line
         """
-        self._camel = Camel()
         self._args = MainSCCmecFinder._parse_arguments(args)
         self._sample_name = mainscriptutils.determine_sample_name(self._args)
         self._helper = helper_by_input_type[self._args.input_type](self._args.working_dir, self._sample_name)
@@ -66,8 +65,11 @@ class MainSCCmecFinder:
         :return: None
         """
         # Init report
-        self._report = mainscriptutils.init_report(
-            self._args.output_html, self._args.output_dir, 'SCCmecFinder ouptput', 'SCCmecFinder (local)')
+        self._report = reportutils.init_report(
+            path_out=self._args.output_html,
+            dir_out=self._args.output_dir,
+            key='SCCmecFinder ouptput',
+            title='SCCmecFinder (local)')
         self._report.add_html_object(mainscriptutils.generate_analysis_info_section(self._args))
         self._report.save()
 
@@ -92,7 +94,7 @@ class MainSCCmecFinder:
         :return: List of detected genes
         """
         wrapper = GeneDetectionWrapper(self._args.working_dir / 'meca')
-        wrapper.run_workflow_blast(
+        wrapper.run_blast(
           fasta_file, self._sample_name, {'path': str(self._args.db_mec_genes)}, self._args.threads)
         self._report.add_html_object(wrapper.output.report_section)
         wrapper.output.report_section.copy_files(self._report.output_dir)
@@ -124,6 +126,6 @@ class MainSCCmecFinder:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainSCCmecFinder()
     main.run()

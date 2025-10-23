@@ -3,13 +3,13 @@ from distutils.util import strtobool
 from pathlib import Path
 from typing import Any
 
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
+from camel.app.core.utils import fileutils
 
 
 class VariantCallingReporter(Tool):
@@ -140,7 +140,7 @@ class VariantCallingReporter(Tool):
         self._section.add_table(table_data, ['Mapping rate (%)', 'Median depth'], [('class', 'data')])
         if bool(strtobool(self._parameters['export_bam'].value)) is True:
             relative_path = Path('variant_calling', 'alignment-{}.bam'.format(
-                FileSystemHelper.make_valid(self._tool_inputs['VAL_Sample'][0].value)))
+                fileutils.make_valid(self._tool_inputs['VAL_Sample'][0].value)))
             self._section.add_file(self._tool_inputs['BAM'][0].path, relative_path)
             self._section.add_link_to_file('Alignment (Sorted BAM)', relative_path)
         else:

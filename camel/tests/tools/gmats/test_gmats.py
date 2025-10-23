@@ -2,8 +2,9 @@ import logging
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.config import config
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.neisseria.gmatsreporter import GMatsReporter
 from camel.app.tools.pipelines.neisseria.gmats import GMats
 
@@ -14,7 +15,7 @@ class TestGMats(CamelTestSuite):
     """
 
     test_file_dir = CamelTestSuite.get_test_file_dir('gmats')
-    DB = Path(CamelTestSuite.camel.config['db_root'], 'pipelines', 'neisseria', 'gMATS_DB.txt')
+    DB = Path(config.dir_db, 'pipelines', 'neisseria', 'gMATS_DB.txt')
 
     def test_gmats(self) -> None:
         """

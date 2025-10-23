@@ -1,8 +1,8 @@
 import json
 
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 DESCRIPTION_BY_RES_TYPE = {
     'NONE': 'No resistance',

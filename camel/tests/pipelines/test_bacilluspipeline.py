@@ -2,8 +2,8 @@ import unittest
 from pathlib import Path
 
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 from camel.scripts.bacilluspipeline.mainbacilluspipeline import MainBacillusPipeline
 from camel.tests import longRunningTest

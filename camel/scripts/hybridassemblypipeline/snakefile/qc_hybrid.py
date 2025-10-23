@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.resources.snakefile import assembly_flye
+from camel.snakefiles import assembly_flye
 
 SNAKEFILE_QC = f'{Path(__file__).parent / Path(__file__).stem}.smk'
 

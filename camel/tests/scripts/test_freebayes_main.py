@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.components.vcf.vcfutils import VCFUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import vcfutils
 from camel.scripts.freebayes.mainfreebayes import MainFreebayesCalling
 
 
@@ -31,7 +31,7 @@ class TestFreebayesMain(CamelTestSuite):
         ]
         main = MainFreebayesCalling(args)
         main.run()
-        self.assertGreater(VCFUtils.count_variants(output_file_vcf), 0)
+        self.assertGreater(vcfutils.count_variants(output_file_vcf), 0)
 
 
 if __name__ == '__main__':

@@ -1,9 +1,9 @@
 import shutil
 from pathlib import Path
 
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import trimming_illumina, trimming_ont, trimming, downsampling, \
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import trimming_illumina, trimming_ont, trimming, downsampling, \
     contamination_check_kraken, core, human_read_scrubbing, assembly
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection, preprocess, \
     multiallelicsites, nextclade3, antivirals
@@ -49,7 +49,7 @@ rule link_fasta_to_iterative_mapping:
         input_type = config['input_type'],
         fasta_ref = config['fasta_ref']
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         if params.fasta_ref is not None:
             snakemakeutils.dump_object([ToolIOFile(Path(params.fasta_ref))], Path(output.FASTA))
         else:
@@ -86,7 +86,7 @@ rule report_create_command_section:
     params:
         working_dir = config['working_dir']
     run:
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
         ReportPipeline.export_command_section(input, Path(output.HTML), params.working_dir)
 
 rule report_combine_all:
@@ -120,14 +120,14 @@ rule report_combine_all:
         pipeline_info = config['pipeline']
     run:
         import datetime
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
 
         # Add header section
-        report = SnakePipelineUtils.init_pipeline_report(
+        report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         extra_info = [('Reference genome', Path(params.ref_genome).name if params.ref_genome is not None else '-')]
         input_file_str = ', '.join(f['name'] for _, input_files in params.config_input.items() for f in input_files)
-        report.add_html_object(SnakePipelineUtils.create_input_section(
+        report.add_html_object(snakepipelineutils.create_input_section(
             params.sample_name,
             datetime.datetime.now(),
             params.pipeline_info['version'], input_file_str, input_type=params.input_type, extra_data=extra_info))
@@ -158,7 +158,7 @@ rule report_combine_all:
             ('Commands', 'commands', [Path(input.report_commands)]),
             ('Citations', 'citations', [Path(input.report_citations)]),
         ])
-        SnakePipelineUtils.add_report_content(report, report_structure)
+        snakepipelineutils.add_report_content(report, report_structure)
 
 rule summary_combine_all:
     """
@@ -181,5 +181,5 @@ rule summary_combine_all:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.combine_summary_data(input, Path(output.FILE), str(params.ext))

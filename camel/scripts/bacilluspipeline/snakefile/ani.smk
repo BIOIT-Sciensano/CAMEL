@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.bacilluspipeline.snakefile import ani
 
 
@@ -60,9 +60,9 @@ rule fastani_report_empty:
     params:
         dir_ = 'ani/report'
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.fastani.fastanireporter import FastANIReporter
-        SnakePipelineUtils.create_empty_report_section(FastANIReporter.TITLE, Path(output.HTML))
+        snakepipelineutils.create_empty_report_section(FastANIReporter.TITLE, Path(output.HTML))
 
 rule fastani_dump_summary_info:
     """

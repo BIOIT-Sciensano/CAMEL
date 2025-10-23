@@ -5,14 +5,14 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.genedetection.dbhelper import DBHelper
-from camel.app.components.genedetection.genedetectionutils import GeneDetectionUtils
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.reports import reportutils
+from camel.app.core.reports.htmlreport import HtmlReport
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.utils import fileutils
+from camel.app.loggers import initialize_logging
 from camel.app.tools.cdhit.cdhitest import Cluster
+from camel.app.toolkits.genedetection.dbhelper import DBHelper
+from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
 from camel.resources import CSS_STYLE
 
 
@@ -28,7 +28,7 @@ class MainMakeGeneDetectionDB:
         """
         self._args = MainMakeGeneDetectionDB.parse_arguments(args)
         fasta_name = self._args.fasta_name if self._args.fasta_name is not None else self._args.fasta.name
-        self._db_name = FileSystemHelper.make_valid(Path(fasta_name).stem)
+        self._db_name = fileutils.make_valid(Path(fasta_name).stem)
         self._helper = DBHelper(self._db_name, self._args.working_dir)
         self._clusters: list[Cluster] | None = None
         self._new_name_by_header = None
@@ -102,7 +102,7 @@ class MainMakeGeneDetectionDB:
         self._report.initialize('Gene detection database', CSS_STYLE)
         self._report.add_html_object(self.__create_db_info_section())
         self._report.add_html_object(self.__create_clusters_section())
-        self._report.add_html_object(SnakePipelineUtils.create_commands_section(
+        self._report.add_html_object(reportutils.create_commands_section(
             self._helper.informs, self._args.working_dir))
         self._report.save()
 
@@ -138,6 +138,6 @@ class MainMakeGeneDetectionDB:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainMakeGeneDetectionDB()
     main.run()

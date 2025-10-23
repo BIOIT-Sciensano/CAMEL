@@ -1,9 +1,8 @@
 import logging
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.shigella.shigeifinder import ShigEiFinder
 from camel.app.tools.pipelines.shigella.shigeifinderreporter import ShigEiFinderReporter
 
@@ -44,9 +43,7 @@ class TestShigEiFinder(CamelTestSuite):
         self.assertGreater(len(reporter.tool_outputs['HTML'][0].value.to_html()), 0)
 
         # Save the report in a pickle
-        path_html_io = self.running_dir / 'html.iob'
-        SnakemakeUtils.dump_object(reporter.tool_outputs['HTML'], path_html_io)
-        logging.info(f'Report pickle saved to: {path_html_io}')
+        CamelTestSuite.export_report_section(reporter.tool_outputs['HTML'][0].value, self.running_dir / 'report.html')
 
 
 if __name__ == '__main__':

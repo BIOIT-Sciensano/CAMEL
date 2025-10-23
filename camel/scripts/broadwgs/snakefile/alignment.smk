@@ -1,15 +1,12 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.pipelines import pipeutils
-from camel.app.error.pipelineexecutionerror import PipelineExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.core.errors import PipelineExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.piping import pipeutils
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
 from camel.scripts.broadwgs import references
 from camel.scripts.broadwgs.snakefile import alignment
-
-camel = Camel.get_instance()
 
 
 rule bwa_aln_to_bam:
@@ -33,11 +30,11 @@ rule bwa_aln_to_bam:
 
         Path(params.working_dir).mkdir(exist_ok=True)
 
-        bwa_mem = BWAMap(camel)
-        sam_to_bam = SamtoolsView(camel)
+        bwa_mem = BWAMap()
+        sam_to_bam = SamtoolsView()
 
-        SnakemakeUtils.add_pickle_input(bwa_mem, 'FASTQ_PE', Path(input.FASTQ))
-        SnakemakeUtils.add_pickle_input(bwa_mem, 'INDEX_GENOME_PREFIX', Path(input.FASTA_GENOME))
+        snakemakeutils.add_pickle_input(bwa_mem, 'FASTQ_PE', Path(input.FASTQ))
+        snakemakeutils.add_pickle_input(bwa_mem, 'INDEX_GENOME_PREFIX', Path(input.FASTA_GENOME))
 
         bwa_mem.update_parameters(
             threads = threads,
@@ -51,7 +48,7 @@ rule bwa_aln_to_bam:
 
         pipeutils.run_as_pipe([bwa_mem, sam_to_bam], params.working_dir)
 
-        SnakemakeUtils.dump_tool_output(sam_to_bam, "BAM", Path(output.BAM))
+        snakemakeutils.dump_tool_output(sam_to_bam, "BAM", Path(output.BAM))
 
 rule picard_add_readgroups:
     """
@@ -72,9 +69,9 @@ rule picard_add_readgroups:
     run:
         from camel.app.tools.picard.addorreplacereadgroups import AddOrReplaceReadGroups
 
-        add_rg = AddOrReplaceReadGroups(camel)
-        SnakemakeUtils.add_pickle_inputs(add_rg, input)
-        step = Step(rule_name=str(rule), tool=add_rg, params.working_dir)
+        add_rg = AddOrReplaceReadGroups()
+        snakemakeutils.add_pickle_inputs(add_rg, input)
+        step = Step(rule_name=str(rule), tool=add_rg, dir_=params.working_dir)
         add_rg.update_parameters(
             output = params.output_file,
             RG_id = params.RG_id,
@@ -82,7 +79,7 @@ rule picard_add_readgroups:
             **config['rule_params']['alignment'][rule],
         )
         step.run()
-        SnakemakeUtils.dump_tool_output(add_rg, "BAM", Path(output.BAM))
+        snakemakeutils.dump_tool_output(add_rg, "BAM", Path(output.BAM))
 
 rule picard_mark_duplicates_sort:
     """
@@ -109,10 +106,10 @@ rule picard_mark_duplicates_sort:
 
         Path(params.qc_dir).mkdir(exist_ok=True, parents=True)
 
-        mark_duplicates = MarkDuplicates(camel)
-        sort_sam = SortSam(camel)
+        mark_duplicates = MarkDuplicates()
+        sort_sam = SortSam()
 
-        mark_duplicates.add_input_files({"BAM": [SnakemakeUtils.load_object(Path(path))[0] for path in input.BAM]})
+        mark_duplicates.add_input_files({"BAM": [snakemakeutils.load_object(Path(path))[0] for path in input.BAM]})
 
         mark_duplicates.update_parameters(
             output = params.output_file,
@@ -128,8 +125,8 @@ rule picard_mark_duplicates_sort:
 
         pipeutils.run_as_pipe([mark_duplicates, sort_sam], params.working_dir)
 
-        SnakemakeUtils.dump_tool_output(mark_duplicates, "METRICS", Path(output.metrics))
-        SnakemakeUtils.dump_tool_output(sort_sam, "BAM", Path(output.BAM))
+        snakemakeutils.dump_tool_output(mark_duplicates, "METRICS", Path(output.metrics))
+        snakemakeutils.dump_tool_output(sort_sam, "BAM", Path(output.BAM))
 
 rule picard_set_tags:
     """
@@ -148,15 +145,15 @@ rule picard_set_tags:
     run:
         from camel.app.tools.picard.setnmmdanduqtags import SetNmMdAndUqTags
 
-        set_tags = SetNmMdAndUqTags(camel)
-        SnakemakeUtils.add_pickle_inputs(set_tags, input)
-        step = Step(rule_name=str(rule), tool=set_tags, params.working_dir)
+        set_tags = SetNmMdAndUqTags()
+        snakemakeutils.add_pickle_inputs(set_tags, input)
+        step = Step(rule_name=str(rule), tool=set_tags, dir_=params.working_dir)
         set_tags.update_parameters(
             output = "aligned_dupmarked_sorted_rgadded_settags.bam",
             **config['rule_params']['alignment'][rule]
         )
         step.run()
-        SnakemakeUtils.dump_tool_output(set_tags, "BAM", Path(output.BAM))
+        snakemakeutils.dump_tool_output(set_tags, "BAM", Path(output.BAM))
 
 checkpoint create_intervalfiles:
     """
@@ -176,7 +173,7 @@ checkpoint create_intervalfiles:
     run:
         Path(params.working_dir).mkdir(exist_ok=True)
 
-        dict_genome = SnakemakeUtils.load_object(Path(input.DICT_GENOME))[0].path
+        dict_genome = snakemakeutils.load_object(Path(input.DICT_GENOME))[0].path
         with open(dict_genome, "r") as ref_dict_file:
             sequence_tuple_list = []
             longest_sequence = 0
@@ -221,7 +218,7 @@ checkpoint create_intervalfiles:
         for n, interval in enumerate(intervals):
             with open(f'{params.output_txt}_{n}.list', "w") as fh:
                 fh.write("\n".join(interval))
-            SnakemakeUtils.dump_object([ToolIOFile(Path(f'{params.output_txt}_{n}.list'))], Path(f'{params.output_txt}_{n}.list.io'))
+            snakemakeutils.dump_object([ToolIOFile(Path(f'{params.output_txt}_{n}.list'))], Path(f'{params.output_txt}_{n}.list.io'))
 
 rule gatk4_baserecalibrator:
     """
@@ -244,16 +241,16 @@ rule gatk4_baserecalibrator:
     run:
         from camel.app.tools.gatk4.gatk4baserecalibrator import GATK4BaseRecalibrator
 
-        bqsr = GATK4BaseRecalibrator(camel)
-        SnakemakeUtils.add_pickle_inputs(bqsr, input)
+        bqsr = GATK4BaseRecalibrator()
+        snakemakeutils.add_pickle_inputs(bqsr, input)
 
-        step = Step(rule_name=str(rule), tool=bqsr, params.working_dir)
+        step = Step(rule_name=str(rule), tool=bqsr, dir_=params.working_dir)
         bqsr.update_parameters(
             **config['rule_params']['alignment'][rule],
             output = params.output_file
         )
         step.run()
-        SnakemakeUtils.dump_tool_output(bqsr, "TXT_RecalibrationTable", Path(output.TXT_RecalibrationTable))
+        snakemakeutils.dump_tool_output(bqsr, "TXT_RecalibrationTable", Path(output.TXT_RecalibrationTable))
 
 def aggregate_intervals_reports(wildcards):
     """
@@ -286,14 +283,14 @@ rule gatk4_gather_bqsr_reports:
 
         input_bqsr_reports = aggregate_intervals_reports(wildcards)
 
-        gather_bqsr = GATK4GatherBQSRReports(camel)
-        step = Step(rule_name=str(rule), tool=gather_bqsr, params.working_dir)
-        gather_bqsr.add_input_files({"TXT_intervals": [SnakemakeUtils.load_object(Path(path))[0] for path in input_bqsr_reports]})
+        gather_bqsr = GATK4GatherBQSRReports()
+        step = Step(rule_name=str(rule), tool=gather_bqsr, dir_=params.working_dir)
+        gather_bqsr.add_input_files({"TXT_intervals": [snakemakeutils.load_object(Path(path))[0] for path in input_bqsr_reports]})
         gather_bqsr.update_parameters(
             output = "recal_data.csv"
         )
         step.run()
-        SnakemakeUtils.dump_tool_output(gather_bqsr, 'TXT_RecalibrationTable', Path(output.bqsr_report_gathered))
+        snakemakeutils.dump_tool_output(gather_bqsr, 'TXT_RecalibrationTable', Path(output.bqsr_report_gathered))
 
 rule gatk4_apply_bqsr:
     """
@@ -317,15 +314,15 @@ rule gatk4_apply_bqsr:
 
         Path(params.working_dir).mkdir(exist_ok=True)
 
-        apply_bqsr = GATK4ApplyBQSR(camel)
-        SnakemakeUtils.add_pickle_inputs(apply_bqsr, input)
-        step = Step(rule_name=str(rule), tool=apply_bqsr, params.working_dir)
+        apply_bqsr = GATK4ApplyBQSR()
+        snakemakeutils.add_pickle_inputs(apply_bqsr, input)
+        step = Step(rule_name=str(rule), tool=apply_bqsr, dir_=params.working_dir)
         apply_bqsr.update_parameters(
             **config['rule_params']['alignment'][rule],
             output = params.output_file
         )
         step.run_step()
-        SnakemakeUtils.dump_tool_output(apply_bqsr, "BAM", Path(output.BAM))
+        snakemakeutils.dump_tool_output(apply_bqsr, "BAM", Path(output.BAM))
 
 def aggregate_intervals_bam(wildcards):
     """
@@ -357,12 +354,12 @@ rule picard_gather_sorted_bam:
 
         Path(params.working_dir).mkdir(exist_ok=True)
 
-        gather_bam = GatherBamFiles(camel)
-        step = Step(rule_name=str(rule), tool=gather_bam, params.working_dir)
-        gather_bam.add_input_files({"BAMs": [SnakemakeUtils.load_object(Path(path))[0] for path in input.bqsr_BAM_interval]})
+        gather_bam = GatherBamFiles()
+        step = Step(rule_name=str(rule), tool=gather_bam, dir_=params.working_dir)
+        gather_bam.add_input_files({"BAMs": [snakemakeutils.load_object(Path(path))[0] for path in input.bqsr_BAM_interval]})
         gather_bam.update_parameters(
             **config['rule_params']['alignment'][rule],
             output = f"{config['sample']}_gathered_sorted.bam"
         )
         step.run_step()
-        SnakemakeUtils.dump_tool_output(gather_bam, 'BAM', Path(output.BAM))
+        snakemakeutils.dump_tool_output(gather_bam, 'BAM', Path(output.BAM))

@@ -1,6 +1,6 @@
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.error import InvalidToolInputError
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
+from camel.app.core.utils import fastqutils
 
 
 class FastqStats(Tool):
@@ -32,6 +32,6 @@ class FastqStats(Tool):
         for fastq_file in self._tool_inputs['FASTQ']:
             self._informs['stats'].append({
                 'path': str(fastq_file.path),
-                'nb_of_sequences': FastqUtils.count_reads(fastq_file.path),
-                'nb_of_bases': FastqUtils.count_bases(fastq_file.path)
+                'nb_of_sequences': fastqutils.count_reads(fastq_file.path),
+                'nb_of_bases': fastqutils.count_bases(fastq_file.path)
             })

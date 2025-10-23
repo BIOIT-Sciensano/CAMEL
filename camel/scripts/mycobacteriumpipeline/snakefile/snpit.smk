@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import variant_calling
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import variant_calling
 
 
 rule snpit_report:
@@ -31,8 +31,8 @@ rule snpit_report_empty:
     output:
         HTML = 'snpit/html-empty.iob' # snpit.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Snpit', Path(output.HTML), 2)
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Snpit', Path(output.HTML), 2)
 
 rule snpit_export_summary:
     """

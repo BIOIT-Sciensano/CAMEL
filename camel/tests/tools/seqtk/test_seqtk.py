@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.utils import fastqutils
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.seqtk.seqtkmergepe import SeqtkMergePE
 from camel.app.tools.seqtk.seqtkseq import SeqtkSeq
@@ -81,8 +81,8 @@ class TestSeqtk(CamelTestSuite):
         seqtk_merge_pe.run(self.running_dir)
         self.verify_output_files(seqtk_merge_pe, 'FASTQ')
         self.assertEqual(
-            FastqUtils.count_reads(TestSeqtk.FILE_FASTQ_A.path) + FastqUtils.count_reads(TestSeqtk.FILE_FASTQ_B.path),
-            FastqUtils.count_reads(seqtk_merge_pe.tool_outputs['FASTQ'][0].path)
+            fastqutils.count_reads(TestSeqtk.FILE_FASTQ_A.path) + fastqutils.count_reads(TestSeqtk.FILE_FASTQ_B.path),
+            fastqutils.count_reads(seqtk_merge_pe.tool_outputs['FASTQ'][0].path)
         )
 
 

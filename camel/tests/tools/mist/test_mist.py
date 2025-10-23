@@ -1,9 +1,8 @@
 import unittest
-from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mist.mistcall import MiSTCall
 
 
@@ -51,7 +50,6 @@ class TestMiST(CamelTestSuite):
             'DB': [ToolIODirectory(TestMiST.input_db / 'mist')]
         })
         mist_call.run(self.running_dir)
-        self.verify_output_files(mist_call, 'JSON')
         self._verify_output(mist_call)
 
 

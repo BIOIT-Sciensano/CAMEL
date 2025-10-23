@@ -5,16 +5,17 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.components.phylogeny.megautils import MEGAUtils
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.scriptutils.basescript import BaseScript
 from camel.app.loggers import initialize_logging
 from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 from camel.app.tools.mega.modelselection import ModelSelection
 from camel.app.tools.snpmatrix.snpmatrixconstructor import SnpMatrixConstructor
+from camel.app.toolkits.phylogeny.megautils import MEGAUtils
 
 
-class MainMega:
+class MainMega(BaseScript):
     """
     This class contains the main script for the MEGA model selection and tree building.
     """
@@ -25,6 +26,7 @@ class MainMega:
         """
         Initializes the main script.
         """
+        super().__init__(name='MEGA', version='1.0', snakefile=None)
         self._args = MainMega._parse_arguments(args)
 
     @staticmethod

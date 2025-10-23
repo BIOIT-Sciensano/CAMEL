@@ -7,8 +7,8 @@ from vcf.model import _Record as Record
 # noinspection PyProtectedMember
 from vcf.parser import _Filter as Filter
 
-from camel.app.command.command import Command
-from camel.app.error import InvalidToolInputError
+from camel.app.core.command import Command
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.variantfiltering.basefilter import BaseFilter
 
 

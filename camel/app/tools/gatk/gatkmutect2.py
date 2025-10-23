@@ -1,7 +1,7 @@
 import os
 
 from camel.app.tools.gatk.gatk import GATK
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 
 
 class GATKMuTect2(GATK):

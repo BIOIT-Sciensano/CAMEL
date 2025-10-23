@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
 
-from camel.app.components.mycobacterium import amrutils
-from camel.app.components.mycobacterium.amrutils import ConfidenceLevel
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.toolkits.mycobacterium import amrutils
+from camel.app.toolkits.mycobacterium.amrutils import ConfidenceLevel
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 from camel.scripts.mycobacteriumpipeline import AMR_CIRCOS_TEMPLATE
 
 #############
@@ -136,9 +136,9 @@ class AMRCircosTemplateGeneration(Tool):
         :return: Karyogram file path
         """
         karyogram_path = self._folder / 'karyogram.txt'
-        logger.info("Creating karyogram data file: {}".format(karyogram_path))
+        logger.info(f"Creating karyogram data file: {karyogram_path}")
         with open(karyogram_path, 'w') as handle_out:
-            handle_out.write('chr - myco1 H37Rv 0 {} chr'.format(self._total_size))
+            handle_out.write(f'chr - myco1 H37Rv 0 {self._total_size} chr')
             handle_out.write('\n')
         return karyogram_path
 
@@ -150,7 +150,7 @@ class AMRCircosTemplateGeneration(Tool):
         """
         # Full circle
         path_full_circle = self._folder / 'highlights-full.txt'
-        logger.info("Creating full circle: {}".format(path_full_circle))
+        logger.info(f"Creating full circle: {path_full_circle}")
         with open(path_full_circle, 'w') as handle:
             handle.write(' '.join(['myco1', '0', str(self._total_size)]))
             handle.write('\n')
@@ -176,7 +176,7 @@ class AMRCircosTemplateGeneration(Tool):
         # Small ticks
         interval = 1e5
         path_ticks_small = self._folder / 'ticks-small.txt'
-        logger.info("Creating chromosome ticks: {}".format(path_ticks_small))
+        logger.info(f"Creating chromosome ticks: {path_ticks_small}")
         with open(path_ticks_small, 'w') as handle:
             i = 0
             while i < genome_size:
@@ -200,7 +200,7 @@ class AMRCircosTemplateGeneration(Tool):
         interval = 1e6
         tick_locations = []
         path_ticks_large = self._folder / 'ticks-large.txt'
-        logger.info("Creating chromosome ticks: {}".format(path_ticks_large))
+        logger.info(f"Creating chromosome ticks: {path_ticks_large}")
         with open(path_ticks_large, 'w') as handle:
             i = 0
             while i < genome_size:
@@ -224,7 +224,7 @@ class AMRCircosTemplateGeneration(Tool):
 
         # Labels for the large ticks
         path_tick_labels = self.folder / 'labels-ticks.txt'
-        logger.info("Creating tick labels: {}".format(path_tick_labels))
+        logger.info(f"Creating tick labels: {path_tick_labels}")
         with open(path_tick_labels, 'w') as handle:
             for i in range(0, len(tick_locations)):
                 handle.write(' '.join(['myco1', str(tick_locations[i]), str(tick_locations[i] + 1), f'{i}Mb']))
@@ -317,7 +317,7 @@ class AMRCircosTemplateGeneration(Tool):
         :return: Path to config file
         """
         circos_config_path = self._folder / 'circos-config.txt'
-        logger.info("Creating config file for circos: {}".format(circos_config_path))
+        logger.info(f"Creating config file for circos: {circos_config_path}")
         with open(self._folder / 'circos-config.txt', 'w') as handle_out:
             with open(AMR_CIRCOS_TEMPLATE) as handle_in:
                 handle_out.write(handle_in.read().format(
@@ -334,7 +334,7 @@ class AMRCircosTemplateGeneration(Tool):
         """
         # AMR associated regions, colored by type
         region_color_highlight_path = self.folder / 'highlight-regions-by-type.txt'
-        logger.info("Creating gene highlights data file: {}".format(region_color_highlight_path))
+        logger.info(f"Creating gene highlights data file: {region_color_highlight_path}")
         with region_color_highlight_path.open('w') as handle:
             for region_name, converted_coordinates in self.__coord_by_region_name.items():
                 handle.write(' '.join([
@@ -358,7 +358,7 @@ class AMRCircosTemplateGeneration(Tool):
 
         # Add boxes for regions
         region_highlight_path = self._folder / 'highlight-regions.txt'
-        logger.info("Creating gene highlights data file: {}".format(region_highlight_path))
+        logger.info(f"Creating gene highlights data file: {region_highlight_path}")
         with region_highlight_path.open('w') as handle:
             for region, converted_coordinates in self.__coord_by_region_name.items():
                 handle.write(' '.join([
@@ -382,7 +382,7 @@ class AMRCircosTemplateGeneration(Tool):
 
         # Add labels
         region_labels_path = self.folder / 'labels-region-names.txt'
-        logger.info("Creating region name labels: {}".format(region_labels_path))
+        logger.info(f"Creating region name labels: {region_labels_path}")
         with open(region_labels_path, 'w') as handle:
             for region_name, converted_coordinates in self.__coord_by_region_name.items():
                 middle = int((converted_coordinates[0] + converted_coordinates[1]) / 2)
@@ -425,7 +425,7 @@ class AMRCircosTemplateGeneration(Tool):
         """
         # Add boxes for regions
         region_highlight_path = self.folder / 'highlight-regions-muts.txt'
-        logger.info("Creating gene highlights data file: {}".format(region_highlight_path))
+        logger.info(f"Creating gene highlights data file: {region_highlight_path}")
         with open(region_highlight_path, 'w') as handle:
             for region, converted_coordinates in self.__coord_by_region_name.items():
                 handle.write(' '.join([
@@ -461,7 +461,7 @@ class AMRCircosTemplateGeneration(Tool):
             for idx, converted_position in self.__coord_by_mut_idx.items():
                 handle.write('\t'.join([
                     'myco1', str(converted_position), str(converted_position + 1),
-                    'stroke_color={}'.format(color_by_mut_idx[idx])]))
+                    f'stroke_color={color_by_mut_idx[idx]}']))
                 handle.write('\n')
         self._plots.append(
             f"""
@@ -489,7 +489,7 @@ class AMRCircosTemplateGeneration(Tool):
 
         # Add labels
         mutation_labels_path = self.folder / 'labels-mutations.txt'
-        logger.info("Creating mutation highlights: {}".format(mutation_labels_path))
+        logger.info(f"Creating mutation highlights: {mutation_labels_path}")
         with open(mutation_labels_path, 'w') as handle:
             for mut_idx, converted_position in self.__coord_by_mut_idx.items():
                 mutation = self._mutations_by_idx[mut_idx]
@@ -517,7 +517,7 @@ class AMRCircosTemplateGeneration(Tool):
         Adds lines that connect the boxes to their location on the chromosome.
         """
         connectors_path = self.folder / 'connectors.txt'
-        logger.info("Creating connectors: {}".format(connectors_path))
+        logger.info(f"Creating connectors: {connectors_path}")
         with open(connectors_path, 'w') as handle:
             for r_name, coordinates in self.__coord_by_region_name.items():
                 outer_mid_coord = int((coordinates[0] + coordinates[1]) / 2)
@@ -549,7 +549,7 @@ class AMRCircosTemplateGeneration(Tool):
         step_size = 10
         cov_values = self.__parse_coverage_values(self._tool_inputs['TSV_depth'][0].path, step_size)
         region_coverage_path = self._folder / 'histogram-region-coverage.txt'
-        logger.info("Creating gene highlights data file: {}".format(region_coverage_path))
+        logger.info(f"Creating gene highlights data file: {region_coverage_path}")
         with open(region_coverage_path, 'w') as handle:
             for region_name, converted_coordinates in self.__coord_by_region_name.items():
                 region = self._regions_by_name[region_name]

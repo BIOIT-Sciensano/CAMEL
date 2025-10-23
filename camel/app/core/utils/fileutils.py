@@ -31,28 +31,42 @@ def is_gzipped(path: Path) -> bool:
         magic_number = binascii.hexlify(handle.read(2))
     return magic_number == b'1f8b'
 
-def gzip_file(input_file: Path, output_gz_file: Path) -> None:
+def gzip_compress(input_file: Path, output_gz_file: Path, threads: int = 1) -> None:
     """
     Extracts a GZIP compressed file, the original file is left untouched.
+    If multiple threads are specified, pigz is used.
     :param input_file: Input non GZ file
     :param output_gz_file: Output path
+    :param threads: Number of threads to use
     :return: None
     """
-    logger.info(f"Extracting: {input_file}")
-    command = Command(f'gzip -c {input_file} > {output_gz_file}')
+    logger.info(f"Compressing: {input_file}")
+    if threads == 1:
+        command = Command(f'gzip -c {input_file} > {output_gz_file}')
+    elif threads > 1:
+        command = Command(f'pigz -c -p {threads} {input_file} > {output_gz_file}')
+    else:
+        raise ValueError(f"Invalid number of threads: {threads}")
     command.run(Path.cwd())
     if not command.returncode == 0:
-        raise RuntimeError(f"Cannot gzip '{input_file}': {command.stderr}")
+        raise RuntimeError(f"Cannot compress '{input_file}': {command.stderr}")
 
-def gzip_extract(input_gz_file: Path, output_gz_file: Path) -> None:
+def gzip_extract(input_gz_file: Path, output_gz_file: Path, threads: int = 1) -> None:
     """
     Extracts a GZIP compressed file, the original file is left untouched.
+    If multiple threads are specified, pigz is used.
     :param input_gz_file: Input GZ file
     :param output_gz_file: Output path
+    :param threads: Number of threads to use
     :return: None
     """
     logger.info(f"Extracting: {input_gz_file}")
-    command = Command(f'gunzip -k -c {input_gz_file} > {output_gz_file}')
+    if threads == 1:
+        command = Command(f'gunzip -k -c {input_gz_file} > {output_gz_file}')
+    elif threads > 1:
+        command = Command(f'pigz -k -p {threads} -dc {input_gz_file} > {output_gz_file}')
+    else:
+        raise ValueError(f"Invalid number of threads: {threads}")
     command.run(Path.cwd())
     if not command.returncode == 0:
         raise RuntimeError(f"Cannot extract '{input_gz_file}': {command.stderr}")

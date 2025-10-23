@@ -5,12 +5,11 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.reports import reportutils
+from camel.app.core.utils import fileutils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.loggers import logger, initialize_logging
 from camel.app.tools.checkm.checkm import CheckM
 from camel.app.tools.checkm.checkmreporter import CheckMReporter
 
@@ -25,7 +24,6 @@ class MainCheckM:
         Initializes the main script.
         """
         self._args = MainCheckM._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -79,8 +77,8 @@ class MainCheckM:
         report.add_html_object(section)
 
         # Add citation and command
-        report.add_html_object(SnakePipelineUtils.create_commands_section([checkm.informs], self._args.working_dir))
-        report.add_html_object(SnakePipelineUtils.create_citations_section(['Parks_2015-checkm']))
+        report.add_html_object(reportutils.create_commands_section([checkm.informs], self._args.working_dir))
+        report.add_html_object(reportutils.create_citations_section(['Parks_2015-checkm']))
         report.save()
 
     def __prepare_input(self) -> tuple[dict[str, Any], str]:
@@ -91,7 +89,7 @@ class MainCheckM:
         self._args.working_dir.mkdir(parents=True, exist_ok=True)
         input_dict = {'FASTA': []}
         for fasta_file, fasta_name in self._args.fasta:
-            path_new = self._args.working_dir / FileSystemHelper.make_valid(fasta_name)
+            path_new = self._args.working_dir / fileutils.make_valid(fasta_name)
             path_new.symlink_to(fasta_file)
             input_dict['FASTA'].append(ToolIOFile(path_new))
         input_str = ', '.join([fasta_name for _, fasta_name in self._args.fasta])
@@ -99,6 +97,6 @@ class MainCheckM:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainCheckM()
     main.run()

@@ -8,13 +8,12 @@ from typing import Optional
 import pandas as pd
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.galaxy.galaxyutils import GalaxyUtils
-from camel.app.components.pipelines import absolute_path_by_pathlib
-from camel.app.components.pipelines.basepipeline import BasePipeline
-from camel.app.loggers import logger
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.config import config
+from camel.app.scriptutils.basepipeline import BasePipeline
+from camel.app.core.utils import galaxyutils
+from camel.app.scriptutils import mainscriptutils, absolute_path_by_pathlib
+from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakepipelineutils
 from camel.scripts.hybridassemblypipeline import CONFIG_DATA
 
 
@@ -49,8 +48,8 @@ class MainHybridAssemblyPipeline(BasePipeline):
             return args.sample_name
         logger.debug('Sample name not provided, determining name from short-reads')
         if args.fastq_pe_names is not None:
-            return GalaxyUtils.determine_sample_name_from_fq([Path(fq) for fq in args.fastq_pe_names])
-        return GalaxyUtils.determine_sample_name_from_fq([Path(fq) for fq in args.fastq_pe])
+            return galaxyutils.determine_sample_name_from_fq([Path(fq) for fq in args.fastq_pe_names])
+        return galaxyutils.determine_sample_name_from_fq([Path(fq) for fq in args.fastq_pe])
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -145,7 +144,7 @@ class MainHybridAssemblyPipeline(BasePipeline):
                     sniffles_min_support=self._args.sniffles_min_support if self._args.sniffles_min_support is not None else 'auto',
                     sniffles_min_svlen=self._args.sniffles_min_svlen if self._args.sniffles_min_svlen is not None else 35
                 )))
-        return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        return snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
 
     def _get_clair3_model(self, medaka_model: str) -> Path:
         """
@@ -158,13 +157,13 @@ class MainHybridAssemblyPipeline(BasePipeline):
         clair3_model = next(
             r['clair3_model'] for r in self._data_models.to_dict('records') if r['medaka_model'] == medaka_model)
         logger.info(f"Best matching Clair3 model for medaka model '{medaka_model}': {clair3_model}")
-        path_model = Path(Camel.get_instance().config['db_root'], 'clair3', 'models', clair3_model)
+        path_model = Path(config.dir_db, 'clair3', 'models', clair3_model)
         if not path_model.exists():
             raise ValueError(f'Clair3 model not found: {path_model}')
         return path_model
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainHybridAssemblyPipeline()
     main.run()

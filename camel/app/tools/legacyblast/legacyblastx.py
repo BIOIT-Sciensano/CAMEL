@@ -3,11 +3,11 @@ from pathlib import Path
 
 from Bio import SeqIO
 
-from camel.app.command.command import Command
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.error import InvalidToolInputError, ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
+from camel.app.core.utils import fileutils
 
 
 class LegacyBlastx(Tool):
@@ -41,8 +41,9 @@ class LegacyBlastx(Tool):
         Concatenates the outputs of the split input file into one big output file
         :return: None
         """
-        FileUtils.concatenate_files(self._tool_outputs['BLASTX'][0].path,
-                                    [os.path.splitext(f.path)[0] + '.blastx' for f in self._fasta])
+        fileutils.concatenate_files(
+            self._tool_outputs['BLASTX'][0].path,
+            [os.path.splitext(f.path)[0] + '.blastx' for f in self._fasta])
         for infile in self._fasta:
             os.remove(infile.path)
             os.remove(os.path.splitext(infile.path)[0] + '.blastx')
@@ -55,7 +56,7 @@ class LegacyBlastx(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(LegacyBlastx, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs or 'DB' not in self._tool_inputs:
             raise InvalidToolInputError('FASTA or DB input files missing from input for '
                                                  'legacy blastx: {!r}'.format(self._tool_inputs))
@@ -100,7 +101,7 @@ class LegacyBlastx(Tool):
         """
         items = ['-p blastx',
                  '-d {}'.format(self._tool_inputs['DB'][0].path),
-                 '-i {}'.format(infile.path),
+                 f'-i {infile.path}',
                  '-o {}.blastx'.format(os.path.join(self._folder, os.path.splitext(os.path.basename(infile.path))[0]))]
         return ' '.join(items)
 
@@ -122,7 +123,7 @@ class LegacyBlastx(Tool):
         """
         input_string = self.__build_input_string(infile)
         options_string = ' '.join(self._build_options())
-        self._command.command = '{} {} {}'.format(self._tool_command, input_string, options_string)
+        self._command.command = f'{self._tool_command} {input_string} {options_string}'
 
     def __is_large_fasta(self):
         """
@@ -167,6 +168,6 @@ class LegacyBlastx(Tool):
         self._fasta = []
         record_iter = SeqIO.parse(self._tool_inputs['FASTA'][0].path, 'fasta')
         for i, batch in enumerate(self.__create_iterator_batch(record_iter, 100)):
-            with open(os.path.join(self._folder, 'temp_{}.fasta'.format(i)), 'wb') as f:
+            with open(os.path.join(self._folder, f'temp_{i}.fasta'), 'wb') as f:
                 SeqIO.write(batch, f, 'fasta')
                 self._fasta.append(ToolIOFile(self._folder / f'temp_{i}.fasta'))

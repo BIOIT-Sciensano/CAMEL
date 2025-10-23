@@ -9,10 +9,10 @@ import pandas as pd
 from Bio import SeqIO
 from pysam.libcvcf import defaultdict
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class RefSelection(Tool):

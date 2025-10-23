@@ -5,16 +5,16 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.reports import reportutils
+from camel.app.scriptutils.basescript import BaseScript
+from camel.app.scriptutils import mainscriptutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.loggers import logger, initialize_logging
 from camel.app.tools.confindr.confindr import ConFindr
 from camel.app.tools.confindr.confindrreporter import ConFindrReporter
 
 
-class MainConFindr:
+class MainConFindr(BaseScript):
     """
     This class contains the main script for the ConFindr tool.
     """
@@ -23,8 +23,8 @@ class MainConFindr:
         """
         Initializes the main script.
         """
+        super().__init__(name='ConFindr', version='1.0', snakefile=None)
         self._args = MainConFindr._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -55,10 +55,18 @@ class MainConFindr:
         Runs the tool.
         :return: None
         """
-        # Initialize report
-        report = mainscriptutils.init_report(
-            self._args.output_html, self._args.output_dir, 'ConFindr report', 'ConFindr')
-        report.add_html_object(mainscriptutils.generate_analysis_info_section(self._args))
+        # Initialize the report
+        report = reportutils.init_report(
+            path_out=self._args.output_html,
+            key=self._name,
+            title='ConFindr',
+            dir_out=self._args.output_dir)
+        report.add_html_object(reportutils.create_overview_section(
+            version=self.version,
+            dataset_name=self._name,
+            input_file_str=mainscriptutils.determine_input_file_str(self._args),
+            input_type=self._args.input_type
+        ))
         report.save()
 
         # Check if the database exists
@@ -96,8 +104,8 @@ class MainConFindr:
         report.add_html_object(confindr_reporter.tool_outputs['HTML'][0].value)
 
         # Add citation and command
-        report.add_html_object(SnakePipelineUtils.create_commands_section([confindr.informs], self._args.working_dir))
-        report.add_html_object(SnakePipelineUtils.create_citations_section(['Low_2019-confindr', 'Jolley_2012-rmlst']))
+        report.add_html_object(reportutils.create_commands_section([confindr.informs], self._args.working_dir))
+        report.add_html_object(reportutils.create_citations_section(['Low_2019-confindr', 'Jolley_2012-rmlst']))
         report.save()
         logger.info(f'Report saved to: {self._args.output_html}')
 
@@ -113,6 +121,6 @@ class MainConFindr:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainConFindr()
     main.run()

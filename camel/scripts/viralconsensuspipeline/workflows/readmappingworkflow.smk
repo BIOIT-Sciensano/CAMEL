@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
 
 rule all:
     input:
@@ -56,7 +56,7 @@ rule bwa_map_reads_pe:
         from camel.app.tools.bwa.bwamap import BWAMap
         bwa_map = BWAMap()
         snakemakeutils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.FASTA))
-        bwa_map.add_input_files(SnakePipelineUtils.extracts_fq_input(Path(
+        bwa_map.add_input_files(snakepipelineutils.extract_fq_input(Path(
             input.FASTQ), drop_empty=True, read_type='PE'))
         bwa_map.run(Path(str(params.dir_)))
         snakemakeutils.dump_tool_outputs(bwa_map, output)
@@ -76,8 +76,8 @@ rule bwa_map_reads_se:
         dir_ = lambda wildcards: f'bwa/map_se_{wildcards.key}',
         key = lambda wildcards: wildcards.key
     run:
-        from camel.app.components.files.sambamutils import SAMBAMutils
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
+        from camel.app.core.utils import sambamutils
+        from camel.app.scriptutils.fastqinput import FastqInput
         from camel.app.tools.bwa.bwamap import BWAMap
 
         fq_dict = FastqInput.from_fq_dict(Path(input.FASTQ), 'illumina')
@@ -86,7 +86,7 @@ rule bwa_map_reads_se:
             # If there are no SE reads -> create empty output file
             path_out = Path(str(params.dir_), 'empty.sam')
             path_fasta = snakemakeutils.load_object(Path(input.FASTA))[0].value
-            SAMBAMutils.create_empty(path_out, path_fasta, compress=False)
+            sambamutils.create_empty(path_out, path_fasta, compress=False)
             snakemakeutils.dump_object([ToolIOFile(path_out)], Path(output.SAM))
             Path(output.INFORMS).touch()
         else:
@@ -114,7 +114,7 @@ rule bwa_map_merge_sam:
     params:
         dir_ = 'bwa/map'
     run:
-        from camel.app.components.files.sambamutils import SAMBAMutils
+        from camel.app.core.utils import sambamutils
         from camel.app.tools.samtools.samtoolsmerge import SamtoolsMerge
         merge = SamtoolsMerge()
         merge.update_parameters(output_filename='bwa_merged.sam')
@@ -123,7 +123,7 @@ rule bwa_map_merge_sam:
         sam_input = snakemakeutils.load_object(Path(input.SAM_pe)) \
                     + snakemakeutils.load_object(Path(input.SAM_se_fwd)) \
                     + snakemakeutils.load_object(Path(input.SAM_se_rev))
-        sam_input = [io for io in sam_input if not SAMBAMutils.is_empty(io.path)]
+        sam_input = [io for io in sam_input if not sambamutils.is_empty(io.path)]
         if len(sam_input) == 0:
             raise RuntimeError(f'All SAM files are empty')
 
@@ -165,7 +165,7 @@ rule minimap2_map_reads:
 
         # Add inputs
         minimap2.add_input_files({'FASTA': [ToolIOFile(Path(input.FASTA))]})
-        fq_se_in = SnakePipelineUtils.extracts_fq_input(Path(input.FASTQ), read_type='SE', key_se='FASTQ')
+        fq_se_in = snakepipelineutils.extract_fq_input(Path(input.FASTQ), read_type='SE', key_se='FASTQ')
         minimap2.add_input_files(fq_se_in)
 
         # Run tool and collect output
@@ -185,7 +185,7 @@ rule sam_to_bam:
         dir_ = 'sam_to_bam',
         name = f"{config['input']['prefix']}.bam"
     run:
-        from camel.app.components.pipelines import pipeutils
+        from camel.app.core.piping import pipeutils
         from camel.app.tools.samtools.samtoolssort import SamtoolsSort
         from camel.app.tools.samtools.samtoolsview import SamtoolsView
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex

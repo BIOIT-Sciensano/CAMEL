@@ -2,12 +2,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils, fileutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class ConFindr(Tool):
@@ -55,11 +54,11 @@ class ConFindr(Tool):
         """
         dir_working = Path(self._folder)
         if 'FASTQ_SE' in self._tool_inputs:
-            is_gzipped = FileSystemHelper.is_gzipped(self._tool_inputs['FASTQ_SE'][0].path)
+            is_gzipped = fileutils.is_gzipped(self._tool_inputs['FASTQ_SE'][0].path)
             extension = 'fastq' if not is_gzipped else 'fastq.gz'
             (dir_working / f'sample_R1.{extension}').symlink_to(self._tool_inputs['FASTQ_SE'][0].path)
         elif 'FASTQ_PE' in self._tool_inputs:
-            is_gzipped = FileSystemHelper.is_gzipped(self._tool_inputs['FASTQ_PE'][0].path)
+            is_gzipped = fileutils.is_gzipped(self._tool_inputs['FASTQ_PE'][0].path)
             extension = 'fastq' if not is_gzipped else 'fastq.gz'
             (dir_working / f'sample_R1.{extension}').symlink_to(self._tool_inputs['FASTQ_PE'][0].path)
             (dir_working / f'sample_R2.{extension}').symlink_to(self._tool_inputs['FASTQ_PE'][1].path)

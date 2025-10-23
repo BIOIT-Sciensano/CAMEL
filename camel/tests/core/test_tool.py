@@ -1,8 +1,8 @@
 import pydantic
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.error import InvalidParameterError
-from camel.app.parameter.parameter import Parameter
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.errors import  InvalidParameterError
+from camel.app.core.parameter import Parameter
 from camel.app.tools.dummytool import DummyTool
 
 

@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
 
 
 class AMRFinderReporter(Tool):
@@ -87,7 +87,7 @@ class AMRFinderReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('AMRFinder', subtitle=self._input_informs['amrfinder']['_name'])
+        section = HtmlReportSection('AMRFinder', subtitle=self._input_informs['amrfinder']['_name_full'])
 
         # Parse input data
         data_out = pd.read_table(self._tool_inputs['TSV'][0].path)

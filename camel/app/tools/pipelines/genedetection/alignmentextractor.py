@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from camel.app.components.blast.alignmentextraction import AlignmentExtraction
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.genedetection.genedetectionblasthit import GeneDetectionBlastHit
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.utils import fileutils
+from camel.app.toolkits.blast.alignmentextraction import AlignmentExtraction
+from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class AlignmentExtractor(Tool):
@@ -60,7 +60,7 @@ class AlignmentExtractor(Tool):
         :param alignment: Alignment
         :return: Filename of the saved alignment
         """
-        path_out = self._folder / f'{FileSystemHelper.make_valid(hit.locus)}.txt'
+        path_out = self._folder / f'{fileutils.make_valid(hit.locus)}.txt'
         alignment = alignment.replace(hit.blast_stats.subject_id, hit.locus)
         alignment = alignment.replace('Query  ', 'Contig ').replace('Sbjct  ', 'Locus  ')
         with path_out.open('w') as output_handle:

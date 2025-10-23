@@ -4,11 +4,11 @@ from typing import Optional
 
 import pandas as pd
 
-from camel.app.components.sequencetyping.typinghitbase import TypingHitBase
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 @dataclass(frozen=True, unsafe_hash=True)

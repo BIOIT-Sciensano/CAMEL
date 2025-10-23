@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from camel.app.error import InvalidToolInputError, InvalidParameterError
+from camel.app.core.errors import InvalidToolInputError, InvalidParameterError
 from camel.app.tools.picard.picard import Picard
 
 

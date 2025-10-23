@@ -1,12 +1,11 @@
 from pathlib import Path
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error import InvalidToolInputError, ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils, fileutils
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class ART(Tool):
@@ -30,8 +29,8 @@ class ART(Tool):
         self.__build_command()
         self._execute_command()
         # Compress the two output files
-        FileSystemHelper.gzip_file(self.__get_output_path('1'), Path(f"{self.__get_output_path('_1')}.gz"))
-        FileSystemHelper.gzip_file(self.__get_output_path('2'), Path(f"{self.__get_output_path('_2')}.gz"))
+        fileutils.gzip_compress(self.__get_output_path('1'), Path(f"{self.__get_output_path('_1')}.gz"))
+        fileutils.gzip_compress(self.__get_output_path('2'), Path(f"{self.__get_output_path('_2')}.gz"))
         # Remove the uncompressed FASTQ files
         self.__remove_file(self.__get_output_path('1'))
         self.__remove_file(self.__get_output_path('2'))
@@ -78,7 +77,7 @@ class ART(Tool):
         :return: Path to the generated reads
         """
         basename = self._parameters['out'].value
-        return self.folder / f"{FileSystemHelper.make_valid(basename)}{suffix}.fq"
+        return self.folder / f"{fileutils.make_valid(basename)}{suffix}.fq"
 
     def __set_output(self) -> None:
         """

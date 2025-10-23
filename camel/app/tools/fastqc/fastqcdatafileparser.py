@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from camel.app.components import toolutils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.utils import toolutils
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class FastQCDataFileParser(Tool):

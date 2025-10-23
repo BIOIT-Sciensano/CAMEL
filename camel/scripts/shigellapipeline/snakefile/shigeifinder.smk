@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.resources.snakefile import assembly
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.snakefiles import assembly
+from camel.app.core.snakemake import snakemakeutils
 
 rule shigeifinder_run:
     """
@@ -52,8 +52,8 @@ rule shigeifinder_report_empty:
     output:
         HTML = 'shigeifinder/report/html-empty.iob' # shigeifinder.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('ShigEiFinder', Path(output.HTML), 3)
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('ShigEiFinder', Path(output.HTML), 3)
 
 rule shigeifinder_create_summary:
     """

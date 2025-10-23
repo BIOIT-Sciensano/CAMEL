@@ -2,11 +2,11 @@ from pathlib import Path
 
 import abc
 
-from camel.app.components.vcf.vcfutils import VCFUtils
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.utils import vcfutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class BaseFilter(Tool, metaclass=abc.ABCMeta):
@@ -55,9 +55,9 @@ class BaseFilter(Tool, metaclass=abc.ABCMeta):
         Executes this tool.
         :return: None
         """
-        nb_of_variants_pre = VCFUtils.count_variants(self._tool_inputs['VCF_GZ'][0].path)
+        nb_of_variants_pre = vcfutils.count_variants(self._tool_inputs['VCF_GZ'][0].path)
         self._apply_filter()
-        nb_of_variants_post = VCFUtils.count_variants(self.output_path)
+        nb_of_variants_post = vcfutils.count_variants(self.output_path)
         logger.info(f'{nb_of_variants_post}/{nb_of_variants_pre} variants passed {self._name} filtering')
         self._informs['variants_in'] = nb_of_variants_pre
         self._informs['variants_out'] = nb_of_variants_post

@@ -1,9 +1,9 @@
 import unittest
 
 
-from camel.app.command.command import Command
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.command import Command
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.checkv.checkv import CheckV
 from camel.tests import resourceIntensiveTest, longRunningTest
 

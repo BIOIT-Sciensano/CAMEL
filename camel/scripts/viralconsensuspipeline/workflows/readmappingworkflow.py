@@ -5,10 +5,9 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.camel import Camel
-from camel.app.components.workflows.utils.fastqinput import FastqInput
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
 
 
 @dataclasses.dataclass
@@ -50,8 +49,7 @@ class ReadMappingWorkflow:
         :param gap_depth_cutoff: Min gap coverage
         :return: Output holder
         """
-        Camel.get_instance()
-        path_config = SnakePipelineUtils.generate_config_file({
+        path_config = snakepipelineutils.generate_config_file({
             'input': {
                 'prefix': prefix,
                 'FASTA': str(fasta_ref)
@@ -64,7 +62,7 @@ class ReadMappingWorkflow:
         snakemakeutils.dump_object(fastq_in.to_fq_dict(), dir_input / 'fq_dict.io')
         path_snakefile = str(
             files('camel').joinpath('scripts/viralconsensuspipeline/workflows/readmappingworkflow.smk'))
-        SnakePipelineUtils.run_snakemake(path_snakefile, str(path_config), [], working_dir=self._dir, threads=threads)
+        snakepipelineutils.run_snakemake(path_snakefile, str(path_config), [], working_dir=self._dir, threads=threads)
 
         # Collect output
         path_bam = snakemakeutils.load_object(self._dir / 'sam_to_bam' / 'bam.io')[0].path

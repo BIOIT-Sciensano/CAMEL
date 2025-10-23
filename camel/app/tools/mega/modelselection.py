@@ -2,12 +2,12 @@ import os
 from importlib.resources import files
 from pathlib import Path
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.error import ToolExecutionError, InvalidParameterError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils
+from camel.app.core.errors import ToolExecutionError, InvalidParameterError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class ModelSelection(Tool):
@@ -49,9 +49,8 @@ class ModelSelection(Tool):
                 int(self._parameters['site_coverage_cutoff'].value)
             except ValueError:
                 raise InvalidParameterError("Site coverage cutoff must be an integer")
-        else:
-            if 'site_coverage_cutoff' in self._parameters:
-                raise InvalidParameterError("Site coverage cutoff is only applicable for 'Partial deletion'")
+        elif 'site_coverage_cutoff' in self._parameters:
+            raise InvalidParameterError("Site coverage cutoff is only applicable for 'Partial deletion'")
         super()._check_parameters()
 
     def _execute_tool(self) -> None:

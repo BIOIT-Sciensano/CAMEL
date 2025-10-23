@@ -1,6 +1,6 @@
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 
 
 rule seqtk_seq:

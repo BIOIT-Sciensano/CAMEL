@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from camel.app.components.blast.alignmentextraction import AlignmentExtraction
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.sequencetyping.typingblasthit import TypingBlastHit
-from camel.app.error import InvalidToolInputError
-from camel.app.error import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.utils import fileutils
+from camel.app.toolkits.blast.alignmentextraction import AlignmentExtraction
+from camel.app.toolkits.sequencetyping.typingblasthit import TypingBlastHit
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class AlignmentExtractor(Tool):
@@ -65,7 +65,7 @@ class AlignmentExtractor(Tool):
         :param alignment: Alignment
         :return: Filename of the saved alignment
         """
-        path_out = self._folder / f'{FileSystemHelper.make_valid(allele_name)}.txt'
+        path_out = self._folder / f'{fileutils.make_valid(allele_name)}.txt'
         with path_out.open('w') as output_handle:
             output_handle.write(alignment)
         return path_out

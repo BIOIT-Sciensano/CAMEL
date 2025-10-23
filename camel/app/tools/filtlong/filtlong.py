@@ -1,12 +1,11 @@
 from pathlib import Path
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils, fileutils
+from camel.app.core.utils import fastqutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class Filtlong(Tool):
@@ -35,7 +34,7 @@ class Filtlong(Tool):
         Executes this tool.
         """
         # Construct command
-        path_out = self.folder / FileSystemHelper.make_valid(self._parameters['output_name'].value)
+        path_out = self.folder / fileutils.make_valid(self._parameters['output_name'].value)
         self._command.command = ' '.join([
             self._tool_command,
             *self._build_options(excluded_parameters=['output_name']),
@@ -54,8 +53,8 @@ class Filtlong(Tool):
         :param path_out: Path to output file
         :return: None
         """
-        self._informs['nb_reads_in'] = FastqUtils.count_reads(self._tool_inputs['FASTQ'][0].path)
-        self._informs['nb_reads_out'] = FastqUtils.count_reads(path_out)
+        self._informs['nb_reads_in'] = fastqutils.count_reads(self._tool_inputs['FASTQ'][0].path)
+        self._informs['nb_reads_out'] = fastqutils.count_reads(path_out)
 
     def _check_command_output(self, command: Command) -> None:
         """

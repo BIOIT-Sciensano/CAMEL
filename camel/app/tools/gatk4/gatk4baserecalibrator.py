@@ -1,4 +1,4 @@
-from camel.app.error import InvalidToolInputError
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 

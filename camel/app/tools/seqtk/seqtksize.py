@@ -1,5 +1,5 @@
-from camel.app.components import toolutils
-from camel.app.tools.tool import Tool
+from camel.app.core.utils import toolutils
+from camel.app.core.tool import Tool
 
 
 class SeqtkSize(Tool):

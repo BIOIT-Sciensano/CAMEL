@@ -1,6 +1,6 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
 from camel.scripts.confindr.mainconfindr import MainConFindr
 

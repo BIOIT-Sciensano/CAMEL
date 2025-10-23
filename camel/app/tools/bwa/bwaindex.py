@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.utils import fileutils
 from camel.app.tools.bwa.bwa import BWA
 
 
@@ -48,7 +48,7 @@ class BWAIndex(BWA):
             raise ValueError("Required reference genome (FASTA) input file is missing.")
         elif nb_of_inputs > 1:
             multifasta_file = self.__get_multi_fasta_genome_filename()
-            FileUtils.concatenate_files(Path(multifasta_file), [f.path for f in self._tool_inputs['FASTA_REF']])
+            fileutils.concatenate_files(Path(multifasta_file), [f.path for f in self._tool_inputs['FASTA_REF']])
             self._refgenome_fasta = multifasta_file
         else:
             self._refgenome_fasta = self.folder / self._tool_inputs['FASTA_REF'][0].basename

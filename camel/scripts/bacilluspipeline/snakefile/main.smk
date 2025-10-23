@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import core, assembly, downsampling, quast, confindr, trimming, trimming_illumina, \
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import core, assembly, downsampling, quast, confindr, trimming, trimming_illumina, \
     quality_checks, variant_calling, variant_filtering, contamination_check_kraken, sequence_typing, amrfinder, \
     trimming_ont, gene_detection, mobsuite, human_read_scrubbing, read_simulation
 from camel.scripts.bacilluspipeline.snakefile import btyper, ani, straingst
@@ -83,8 +83,8 @@ rule main_update_gmm_report:
         running_dir = 'gene_detection/gmo'
     run:
         from camel.app.tools.pipelines.bacillus.updategmmreport import UpdateGMMReport
-        from camel.app.io.tooliofile import ToolIOFile
-        from camel.app.pipeline.step import Step
+        from camel.app.core.io.tooliofile import ToolIOFile
+        from camel.app.core.snakemake.step import Step
         gmmupdater = UpdateGMMReport()
         snakemakeutils.add_pickle_inputs(gmmupdater, input, excluded_keys=['TSV_STRAINS', 'TSV_GMM_VECTORS', 'TSV_GMM_JUNCTIONS', 'TSV_GMM_DB'])
         gmmupdater.add_input_files({
@@ -130,7 +130,7 @@ rule report_create_commands_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
         ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
 
 rule report_content_cereus:
@@ -170,13 +170,13 @@ rule report_content_cereus:
         detection_method = config['gene_detection']['options']['method']
     run:
         import datetime
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
+        from camel.app.core.snakemake import snakepipelineutils
 
         # Add the header section
-        report = SnakePipelineUtils.init_pipeline_report(
+        report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
-        report.add_html_object(SnakePipelineUtils.create_input_section(
+        report.add_html_object(snakepipelineutils.create_input_section(
             sample_name=params.sample_name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
@@ -211,7 +211,7 @@ rule report_content_cereus:
             ('Citations', 'citations', [Path(input.report_citations)]),
             ('Commands', 'commands', [Path(input.report_commands)])
         ])
-        SnakePipelineUtils.add_report_content(report, report_structure)
+        snakepipelineutils.add_report_content(report, report_structure)
         report.save()
 
 rule report_content_subtilis:
@@ -254,13 +254,13 @@ rule report_content_subtilis:
     run:
         # Init report
         import datetime
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.scriptutils.reportpipeline import ReportPipeline
+        from camel.app.core.snakemake import snakepipelineutils
 
         # Add the header section
-        report = SnakePipelineUtils.init_pipeline_report(
+        report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
-        report.add_html_object(SnakePipelineUtils.create_input_section(
+        report.add_html_object(snakepipelineutils.create_input_section(
             sample_name=params.sample_name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
@@ -297,7 +297,7 @@ rule report_content_subtilis:
             ('Citations', 'citations', [Path(input.report_citations)]),
             ('Commands', 'commands', [Path(input.report_commands)])
         ])
-        SnakePipelineUtils.add_report_content(report, report_structure)
+        snakepipelineutils.add_report_content(report, report_structure)
         report.save()
 
 rule report_select_by_species:
@@ -347,8 +347,8 @@ rule summary_combine_all:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.combine_summary_data(input, Path(output.FILE), str(params.ext))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.combine_summary_data(input, Path(output.FILE), str(params.ext))
 
 rule link_genomic_context:
     """

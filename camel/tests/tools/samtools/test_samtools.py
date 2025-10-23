@@ -2,8 +2,8 @@ import unittest
 
 import shutil
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsdepth import SamtoolsDepth
 from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
 from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat

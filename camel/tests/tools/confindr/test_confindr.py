@@ -1,10 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.command.command import Command
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.command import Command
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.confindr.confindr import ConFindr
 from camel.app.tools.confindr.confindrreporter import ConFindrReporter
 

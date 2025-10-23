@@ -4,16 +4,15 @@ from typing import Any
 
 import pandas as pd
 
-from camel.app.camel import Camel
-from camel.app.components.html import PATH_JQUERY
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
+from camel.app.core.reports import PATH_JQUERY
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlreport import HtmlReport
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.scriptutils.reportpipeline import ReportPipeline
 from camel.app.config import config
-from camel.app.error import InvalidToolInputError
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 from camel.resources import CSS_STYLE
 
 

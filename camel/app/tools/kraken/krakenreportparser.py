@@ -1,13 +1,13 @@
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 import pandas as pd
 
-from camel.app.components.kraken2.taxonnode import TaxonNode
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.toolkits.kraken2.taxonnode import TaxonNode
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 class KrakenReportParser(Tool):

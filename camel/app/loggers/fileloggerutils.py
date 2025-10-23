@@ -6,8 +6,9 @@ from typing import Optional
 import shutil
 import socket
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
+from camel.app.config import config
+from camel.app.core.utils import fileutils
+from camel.app.scriptutils import mainscriptutils
 
 
 def store_config_file(
@@ -20,27 +21,27 @@ def store_config_file(
     :param dir_: (Optional) Directory to store file, defaults to value from config
     :return: Path to config file
     """
-    # Determine output directory
+    # Determine the output directory
     if dir_ is not None:
         output_dir = dir_
     else:
-        dir_out = Camel.get_instance().config.get('logging', {}).get('dir_snakemake_configs')
+        dir_out = config.dir_configs
         if dir_out is None:
-            raise RuntimeError("Logging enabled but 'dir_snakemake_configs' not set in main.yml config file")
+            raise RuntimeError("Logging enabled but 'dir_configs' not set in the config.")
         output_dir = Path(dir_out)
     if not output_dir.exists():
-        raise RuntimeError(f'Logging directory does not exist: {output_dir}')
+        raise FileNotFoundError(f'Logging directory does not exist: {output_dir}')
 
-    # Determine output path
+    # Determine the output path
     export_path = output_dir / '{}.yml.gz'.format('__'.join([
         'config',
-        FileSystemHelper.make_valid(basename),
-        FileSystemHelper.make_valid(socket.gethostname()),
-        FileSystemHelper.get_timestamp_str(),
+        fileutils.make_valid(basename),
+        fileutils.make_valid(socket.gethostname()),
+        mainscriptutils.get_timestamp_str(),
         galaxy_job_id if galaxy_job_id is not None else 'NA',
     ]))
 
-    # Save config file
+    # Save the compressed config file
     with gzip.open(export_path, 'wb') as file_out, config_file.open('rb') as file_in:
         shutil.copyfileobj(file_in, file_out)
     logging.info(f"Config file stored in: '{export_path}'")
@@ -58,9 +59,10 @@ def store_log_file(log_file: Path, basename: str, galaxy_job_id: Optional[str] =
     :param dir_: (Optional) Directory to store file, defaults to value from config
     :return: Path to log file
     """
-    # Determine output directory
+    # Determine the output directory
     key_dir = 'dir_error_logs' if is_error_log else 'dir_camel_logs'
-    output_dir = dir_ if dir_ is not None else Path(Camel.get_instance().config.get('logging', {}).get(key_dir))
+    # TODO FIX!
+    output_dir = dir_ if dir_ is not None else config.dir_logs
     if not output_dir.exists():
         raise RuntimeError(f'Logging directory does not exist: {output_dir}')
 
@@ -68,9 +70,9 @@ def store_log_file(log_file: Path, basename: str, galaxy_job_id: Optional[str] =
     prefix = 'error' if is_error_log else 'camel'
     output_path = output_dir / '{}.txt.gz'.format('__'.join([
         prefix,
-        FileSystemHelper.make_valid(basename).lower(),
-        FileSystemHelper.make_valid(socket.gethostname()),
-        FileSystemHelper.get_timestamp_str(),
+        fileutils.make_valid(basename).lower(),
+        fileutils.make_valid(socket.gethostname()),
+        mainscriptutils.get_timestamp_str(),
         galaxy_job_id if galaxy_job_id is not None else 'NA'
     ]))
 

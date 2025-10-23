@@ -1,4 +1,4 @@
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.seqtk.seqtk import Seqtk
 
 

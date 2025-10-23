@@ -2,9 +2,10 @@ import logging
 import unittest
 from pathlib import Path
 
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.config import config
+from camel.app.core.reports.htmlreport import HtmlReport
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.neisseria.mendevarreporter import MenDeVARReporter
 from camel.app.tools.pipelines.neisseria.mendevar import MenDeVAR
 from camel.resources import CSS_STYLE
@@ -16,7 +17,7 @@ class TestMendevar(CamelTestSuite):
     """
 
     test_file_dir = CamelTestSuite.get_test_file_dir('mendevar')
-    DB = Path(CamelTestSuite.camel.config['db_root'], 'pipelines', 'neisseria', 'mendevar_DB.txt')
+    DB = Path(config.dir_db, 'pipelines', 'neisseria', 'mendevar_DB.txt')
 
     def test_mendevar(self) -> None:
         """

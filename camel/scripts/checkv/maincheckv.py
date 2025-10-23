@@ -4,11 +4,11 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.reports import reportutils
+from camel.app.core.utils import fileutils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.loggers import initialize_logging
 from camel.app.tools.checkv.checkv import CheckV
 from camel.app.tools.checkv.checkvreporter import CheckVReporter
 
@@ -23,7 +23,6 @@ class MainCheckV:
         Initializes the main script.
         """
         self._args = MainCheckV._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -65,8 +64,8 @@ class MainCheckV:
         section.copy_files(report.output_dir)
 
         # Add citation and command
-        report.add_html_object(SnakePipelineUtils.create_commands_section([checkv.informs], self._args.working_dir))
-        # report.add_html_object(SnakePipelineUtils.create_citations_section(['Parks_2015-checkm']))
+        report.add_html_object(reportutils.create_commands_section([checkv.informs], self._args.working_dir))
+        report.add_html_object(reportutils.create_citations_section(['Parks_2015-checkm']))
         report.save()
 
     def __prepare_input(self) -> tuple[dict[str, Any], str]:
@@ -77,12 +76,12 @@ class MainCheckV:
         dir_input = self._args.working_dir / 'input'
         dir_input.mkdir(parents=True, exist_ok=True)
         fasta_name = self._args.fasta_name if self._args.fasta_name else self._args.fasta.name
-        path_new = dir_input / FileSystemHelper.make_valid(fasta_name)
+        path_new = dir_input / fileutils.make_valid(fasta_name)
         path_new.symlink_to(self._args.fasta)
         return {'FASTA': [ToolIOFile(path_new)]}, fasta_name
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainCheckV()
     main.run()

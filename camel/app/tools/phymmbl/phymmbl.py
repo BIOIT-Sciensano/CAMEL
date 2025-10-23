@@ -4,11 +4,11 @@ import shutil
 import os
 import re
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class Phymmbl(Tool):
@@ -93,7 +93,7 @@ class Phymmbl(Tool):
         """
         phymm_cmd = Command()
         phymm_cmd.command = self._build_dependencies() + ' echo $PATH'
-        phymm_cmd.run_command(self._folder)
+        phymm_cmd.run(self._folder)
         for item in phymm_cmd.stdout.split(':'):
             if '/phymmbl/' in item:
                 return item

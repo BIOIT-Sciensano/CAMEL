@@ -7,10 +7,8 @@ from typing import Any, Optional
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components.workflows.variantfilteringwrapper import (
-    VariantFilteringWrapper,
-)
+from camel.app.loggers import initialize_logging
+from camel.app.wrappers.variantfilteringwrapper import VariantFilteringWrapper
 
 
 class MainFiltering:
@@ -56,7 +54,7 @@ class MainFiltering:
         :return: None
         """
         wrapper = VariantFilteringWrapper(self._args.working_dir)
-        wrapper.run_workflow(
+        wrapper.run(
             sample_name=self._args.vcf.stem, vcf_file=self._args.vcf, bam_file=self._args.bam,
             filtering_options=self.__get_filtering_options(), input_type=self._args.input_type)
         shutil.copyfile(wrapper.output.vcf_filtered.path, self._args.output_vcf)
@@ -93,6 +91,6 @@ class MainFiltering:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainFiltering()
     main.run()

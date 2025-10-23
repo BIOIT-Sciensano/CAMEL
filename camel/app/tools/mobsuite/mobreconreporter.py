@@ -3,13 +3,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
 
 
 class MOBReconReporter(Tool):

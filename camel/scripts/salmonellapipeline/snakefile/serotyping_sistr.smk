@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import assembly
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import assembly
 from camel.scripts.salmonellapipeline.snakefile import serotyping_sistr
 
 
@@ -110,6 +110,6 @@ rule serotyping_sistr_report_empty:
     output:
         VAL_HTML = 'serotyping/sistr/report/html-empty.iob' # serotyping_sistr.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.pipelines.salmonella.sistrreporter import SistrReporter
-        SnakePipelineUtils.create_empty_report_section(SistrReporter.TITLE, Path(output.VAL_HTML))
+        snakepipelineutils.create_empty_report_section(SistrReporter.TITLE, Path(output.VAL_HTML))

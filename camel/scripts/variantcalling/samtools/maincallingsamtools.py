@@ -5,11 +5,11 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger, initialize_logging
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import variant_calling
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import variant_calling
 
 
 class MainCalling:
@@ -58,7 +58,7 @@ class MainCalling:
         """
         # Create configuration file
         config_data = self.__create_snakemake_config_data()
-        config_file = SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        config_file = snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
 
         # Copy input BAM file to the right location
         target_dir = self._args.working_dir / 'variant_calling' / 'read_mapping' / self._args.input_type
@@ -67,7 +67,7 @@ class MainCalling:
         snakemakeutils.dump_object([ToolIOFile(self._args.bam)], target_dir / 'bam.io')
 
         # Run Snakemake to generate output file
-        SnakePipelineUtils.run_snakemake(
+        snakepipelineutils.run_snakemake(
             snakefile=variant_calling.SNAKEFILE,
             config_path=config_file,
             targets=[Path(variant_calling.OUTPUT_UNFILTERED_VCF)],
@@ -116,8 +116,8 @@ class MainCalling:
         :param config_data: Snakemake config data
         :return: None
         """
-        config_file = SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir, 'consensus.yml')
-        SnakePipelineUtils.run_snakemake(
+        config_file = snakepipelineutils.generate_config_file(config_data, self._args.working_dir, 'consensus.yml')
+        snakepipelineutils.run_snakemake(
             variant_calling.SNAKEFILE, config_file, [Path(variant_calling.OUTPUT_CONSENSUS)],  self._args.working_dir,
             self._args.threads)
         fasta_consensus = snakemakeutils.load_object(self._args.working_dir / variant_calling.OUTPUT_CONSENSUS)[0].path

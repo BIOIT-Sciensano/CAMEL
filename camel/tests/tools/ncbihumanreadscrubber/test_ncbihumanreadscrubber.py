@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import fastqutils
 from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import NcbiHumanReadScrubber
 from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubberreporter import NcbiHumanReadScrubberReporter
 
@@ -36,11 +36,11 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
 
             # Check that the input file is larger than the output file
             self.assertGreater(
-                FastqUtils.count_reads(file),
-                FastqUtils.count_reads(scrubber.tool_outputs['FASTQ_SCRUBBED'][0].path)
+                fastqutils.count_reads(file),
+                fastqutils.count_reads(scrubber.tool_outputs['FASTQ_SCRUBBED'][0].path)
             ) if out else self.assertEqual(
-                FastqUtils.count_reads(file),
-                FastqUtils.count_reads(scrubber.tool_outputs['FASTQ_SCRUBBED'][0].path)
+                fastqutils.count_reads(file),
+                fastqutils.count_reads(scrubber.tool_outputs['FASTQ_SCRUBBED'][0].path)
             )
 
             # Check if the informs were added
@@ -85,11 +85,11 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
 
             # Check that the input file is larger than the output file
             self.assertEqual(
-                FastqUtils.count_reads(fastq),
-                FastqUtils.count_reads(scrubber_def.tool_outputs['FASTQ_SCRUBBED'][0].path)
+                fastqutils.count_reads(fastq),
+                fastqutils.count_reads(scrubber_def.tool_outputs['FASTQ_SCRUBBED'][0].path)
             ) if not val else self.assertGreater(
-                FastqUtils.count_reads(fastq),
-                FastqUtils.count_reads(scrubber_def.tool_outputs['FASTQ_SCRUBBED'][0].path))
+                fastqutils.count_reads(fastq),
+                fastqutils.count_reads(scrubber_def.tool_outputs['FASTQ_SCRUBBED'][0].path))
 
             # Check if the informs were added
             self.assertIn('statistics', scrubber_def.informs)

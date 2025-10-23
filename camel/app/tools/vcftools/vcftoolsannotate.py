@@ -1,5 +1,5 @@
 from camel.app.tools.vcftools.vcftools import VCFtools
-from camel.app.error import InvalidToolInputError
+from camel.app.core.errors import InvalidToolInputError
 
 
 class VCFtoolsAnnotate(VCFtools):

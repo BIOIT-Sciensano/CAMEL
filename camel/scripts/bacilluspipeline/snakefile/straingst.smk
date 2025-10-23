@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.components.workflows.utils.fastqinput import FastqInput
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 
 
 rule straingst_kmerize:
@@ -84,9 +84,9 @@ rule straingst_report_empty:
     params:
         dir_ = lambda wildcards: f'straingst/{wildcards.read_type}/report/'
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.strainge.straingstreporter import StrainGSTReporter
-        SnakePipelineUtils.create_empty_report_section(StrainGSTReporter.TITLE, Path(output.VAL_HTML))
+        snakepipelineutils.create_empty_report_section(StrainGSTReporter.TITLE, Path(output.VAL_HTML))
 
 rule straingst_dump_summary_info:
     """

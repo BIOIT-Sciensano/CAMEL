@@ -5,7 +5,7 @@ from typing import Any
 
 import vcf
 
-from camel.app.command.command import Command
+from camel.app.core.command import Command
 
 
 @dataclasses.dataclass
@@ -81,7 +81,12 @@ class FilterVariants:
         command.run(self._dir)
         if not command.returncode == 0:
             raise RuntimeError(f'Error applying filter ({filter_key}): {command.stderr}')
-        self._informs.append({'_name_full': 'bcftools filter 1.17', '_version': '1.17', '_command': command.command})
+        self._informs.append({
+            '_name': 'bcftools filter',
+            '_name_full': 'bcftools filter 1.17',
+            '_version': '1.17',
+            '_command': command.command
+        })
         return path_out
 
     @staticmethod

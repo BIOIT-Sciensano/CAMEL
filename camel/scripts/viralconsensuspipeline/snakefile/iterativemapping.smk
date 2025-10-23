@@ -6,8 +6,8 @@ from typing import Union
 
 import pandas as pd
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
 
 
@@ -45,8 +45,8 @@ rule iterative_mapping_phase_1_map_reads:
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff')
     threads: 16
     run:
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
         # Run the workflow
@@ -80,7 +80,7 @@ rule iterative_mapping_phase_1_call_variants_bcftools:
         input_type = config['input_type']
     threads: 1
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.callvariants import CallVariants
         workflow = CallVariants(Path(str(params.dir_)).absolute())
         out = workflow.run(
@@ -111,7 +111,7 @@ rule iterative_mapping_phase_1_filter_variants_bcftools:
         min_qual = config['iterative_mapping'].get('variant_filters', {}).get('min_qual', 25),
         min_mq = config['iterative_mapping'].get('variant_filters', {}).get('min_mq', 30)
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.filtervariants import FilterVariants
         workflow = FilterVariants(Path(str(params.dir_)).absolute())
         out = workflow.run(
@@ -140,7 +140,7 @@ rule iterative_mapping_phase_1_apply_variants:
         name = lambda wildcards: config['sample_name'],
         iter_nb = lambda wildcards: wildcards.nb_iter
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.applyvariants import ApplyVariants
 
         apply_variants = ApplyVariants(Path(str(params.dir_)).absolute())
@@ -170,8 +170,8 @@ rule iterative_mapping_phase_2_map_reads:
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff')
     threads: 16
     run:
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
         # Run the workflow
@@ -205,7 +205,7 @@ rule iterative_mapping_phase_2_call_variants_clair3:
         model_path = config['iterative_mapping'].get('clair3', {}).get('model')
     threads: 4
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.callvariants import CallVariants
 
         # Run workflow
@@ -237,7 +237,7 @@ rule iterative_mapping_phase_2_filter_variants_clair3:
         min_dp = config['iterative_mapping'].get('variant_filters', {}).get('min_dp', 5),
         min_qual = config['iterative_mapping'].get('variant_filters', {}).get('min_qual', 25)
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.filtervariants import FilterVariants
         workflow = FilterVariants(Path(str(params.dir_)).absolute())
         out = workflow.run(
@@ -263,7 +263,7 @@ rule iterative_mapping_phase_2_apply_variants:
         name = lambda wildcards: config['sample_name'],
         iter_nb = lambda wildcards: wildcards.nb_iter
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.applyvariants import ApplyVariants
         apply_variants = ApplyVariants(Path(str(params.dir_)).absolute())
         out = apply_variants.run(
@@ -291,7 +291,7 @@ checkpoint iterative_mapping_collect_stats:
         nb_iter = lambda wildcards: wildcards.nb_iter,
         dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}'
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.viral_consensus.combineiterativemappingstats import CollectIterativeMappingStats
         combiner = CollectIterativeMappingStats()
         combiner.add_input_files({
@@ -460,7 +460,7 @@ rule iterative_mapping_report:
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff', 50),
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff', 10)
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.viral_consensus.reporteriterativemapping import ReporterIterativeMapping
         reporter = ReporterIterativeMapping()
         reporter.add_input_files({
@@ -494,7 +494,6 @@ rule iterative_mapping_summary:
         informs_depth = snakemakeutils.load_object(Path(input.INFORMS_low_depth))
 
         # Iterative mapping
-        print(data_in)
         rows_out = [
             ('iterative_mapping_nb_iterations', len(data_in)),
             ('iterative_mapping_sequence_length', int(data_in.iloc[-1]['length'])),

@@ -1,9 +1,9 @@
 import shutil
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.error import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.bcftools.bcftoolscall import BcftoolsCall
 from camel.app.tools.bcftools.bcftoolsconsensus import BcftoolsConsensus
 from camel.app.tools.bcftools.bcftoolscsq import BcftoolsCsq

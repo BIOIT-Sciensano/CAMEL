@@ -11,9 +11,9 @@ from Bio import SeqIO
 from Bio.Data import CodonTable, IUPACData
 from Bio.Seq import Seq
 
-from camel.app.camel import Camel
-from camel.app.components.mycobacterium.amrutils import ConfidenceLevel
-from camel.app.loggers import logger
+from camel.app.loggers import logger, initialize_logging
+from camel.app.toolkits.mycobacterium.amrutils import ConfidenceLevel
+
 
 # Example usage:
 # update_amr_db.py \
@@ -438,6 +438,6 @@ class UpdateAMRDB:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     updater = UpdateAMRDB()
     updater.run()

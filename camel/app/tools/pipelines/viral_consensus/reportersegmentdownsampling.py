@@ -1,4 +1,7 @@
 import logging
+
+from camel.app.core.utils import fileutils
+
 # Disable logging for matplotlib
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 import matplotlib
@@ -9,14 +12,13 @@ from pathlib import Path
 import pandas as pd
 import plotnine
 
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
 
 
 class ReporterSegmentDownsampling(Tool):
@@ -155,7 +157,7 @@ class ReporterSegmentDownsampling(Tool):
         section.add_file(self._tool_inputs['FASTA'][0].path, relative_path_fasta)
 
         # BAM File
-        relative_path_bam = Path('preprocess', f"{FileSystemHelper.make_valid(self._parameters['name'].value)}.bam")
+        relative_path_bam = Path('preprocess', f"{fileutils.make_valid(self._parameters['name'].value)}.bam")
         section.add_file(self._tool_inputs['BAM'][0].path, relative_path_bam)
         path_bam_idx = next(self._tool_inputs['BAM'][0].path.parent.glob('*.bai'))
         relative_path_bai = relative_path_bam.parent / f'{relative_path_bam.name}.bai'

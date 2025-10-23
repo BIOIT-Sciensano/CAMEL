@@ -3,9 +3,8 @@ from pathlib import Path
 
 import yaml
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.config import config
-from camel.app.io.tooliodirectory import ToolIODirectory
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 from camel.scripts.klebsiellapipeline import CONFIG_DATA
 from camel.scripts.klebsiellapipeline.mainklebsiellapipeline import MainKlebsiellaPipeline

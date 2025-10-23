@@ -5,11 +5,11 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.core.reports import reportutils
+from camel.app.core.utils import fileutils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.loggers import initialize_logging
 from camel.app.tools.integronfinder.integronfinder import IntegronFinder
 from camel.app.tools.integronfinder.integronfinderreporter import IntegronFinderReporter
 
@@ -68,15 +68,15 @@ class MainIntegronFinder:
         reporter = IntegronFinderReporter()
         reporter.add_input_files({'TSV': integron_finder.tool_outputs['TSV']})
         reporter.add_input_informs({'integron_finder': integron_finder.informs})
-        reporter.update_parameters(name=FileSystemHelper.make_valid(self._sample_name))
+        reporter.update_parameters(name=fileutils.make_valid(self._sample_name))
         reporter.run(self._args.working_dir)
         report.add_html_object(reporter.tool_outputs['HTML'][0].value)
         reporter.tool_outputs['HTML'][0].value.copy_files(report.output_dir)
 
         # Add commands and citations
-        report.add_html_object(SnakePipelineUtils.create_commands_section(
+        report.add_html_object(reportutils.create_commands_section(
             [integron_finder.informs], self._args.working_dir))
-        report.add_html_object(SnakePipelineUtils.create_citations_section(['Neron_2022-integronfinder']))
+        report.add_html_object(reportutils.create_citations_section(['Neron_2022-integronfinder']))
         report.save()
 
         # Copy the TSV output file when specified
@@ -85,6 +85,6 @@ class MainIntegronFinder:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainIntegronFinder()
     main.run()

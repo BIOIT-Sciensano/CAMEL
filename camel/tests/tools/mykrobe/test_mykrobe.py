@@ -2,10 +2,11 @@ import logging
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.config import config
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.tools.mykrobe.mykrobe import Mykrobe
 from camel.app.tools.mykrobe.mykrobereporter import MykrobeReporter
 
@@ -17,7 +18,7 @@ class TestMykrobe(CamelTestSuite):
     # Input files
     test_file_dir = CamelTestSuite.get_test_file_dir('salmonella')
     testdata_dir = Path('/testdata/camel/pipelines')
-    db_dir = Path('/db/mykrobe/latest/')
+    db_dir = Path(config.dir_db, 'mykrobe/latest')
 
     typhi_pe_reads = [test_file_dir / "SRR493330_1.fastq.gz",
                       test_file_dir / "SRR493330_2.fastq.gz"]

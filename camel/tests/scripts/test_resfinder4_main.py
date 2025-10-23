@@ -1,8 +1,9 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.config import config
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.scripts.resfinder.mainresfinder import MainResFinder
 
 
@@ -19,7 +20,7 @@ class TestResFinder(CamelTestSuite):
     FILE_FASTQ_1 = ToolIOFile(test_file_dir / 'reads_illumina_1.fastq')
     FILE_FASTQ_2 = ToolIOFile(test_file_dir / 'reads_illumina_2.fastq')
     FILE_FASTA_ENTERO = ToolIOFile(test_file_dir / 'assembly_entero.fasta')
-    DB_RESFINDER = Path(CamelTestSuite.camel.config['db_root'], 'resfinder4')
+    DB_RESFINDER = Path(config.dir_db, 'resfinder4')
 
     def test_resfinder_main_fasta(self) -> None:
         """

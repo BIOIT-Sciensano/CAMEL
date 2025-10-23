@@ -1,9 +1,9 @@
 import shutil
 from pathlib import Path
 
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.broadwgs.snakefile import alignment, bam_to_cram, variant_calling, qc
 
 #######################
@@ -48,10 +48,10 @@ rule link_and_clean_output:
         VCF = Path(config['final_output_dir']) / f'{config["sample"]}.gVCF.gz',
         VCF_index = Path(config['final_output_dir']) / f'{config["sample"]}.gVCF.gz.tbi',
     run:
-        SnakemakeUtils.load_object(Path(input.CRAM))[0].path.link_to(output.CRAM)
-        SnakemakeUtils.load_object(Path(input.CRAI))[0].path.link_to(output.CRAI)
+        snakemakeutils.load_object(Path(input.CRAM))[0].path.link_to(output.CRAM)
+        snakemakeutils.load_object(Path(input.CRAI))[0].path.link_to(output.CRAI)
         Path(input.CRAM_checksum).link_to(output.CRAM_checksum)
-        SnakemakeUtils.load_object(Path(input.VCF))[0].path.link_to(output.VCF)
+        snakemakeutils.load_object(Path(input.VCF))[0].path.link_to(output.VCF)
         Path(input.VCF_index).link_to(output.VCF_index)
 
         if not config['debug']:
@@ -88,15 +88,15 @@ rule prepare_references_io:
         COVERAGE_INTERVALS = Path(config['working_dir']) / "ref_input" / "coverage_interval_list.io",
         EVALUATION_INTERVALS = Path(config['working_dir']) / "ref_input" / "evaluation_interval_list.io",
     run:
-        SnakemakeUtils.dump_object([ToolIOValue(Path(input.fasta_genome))], Path(output.FASTA_GENOME))
-        SnakemakeUtils.dump_object([ToolIOFile(Path(input.fasta_genome))], Path(output.FASTA_GENOME_FILE))
-        SnakemakeUtils.dump_object([ToolIOFile(Path(input.dict_genome))], Path(output.DICT_GENOME))
-        SnakemakeUtils.dump_object([ToolIOFile(Path(input.dbsnp))], Path(output.DBSNP))
-        SnakemakeUtils.dump_object([ToolIOFile(Path(f)) for f in input.known_indels], Path(output.KNOWN_INDELS))
-        SnakemakeUtils.dump_object([ToolIOFile(Path(input.calling_intervals))], Path(output.CALLING_INTERVALS))
-        SnakemakeUtils.dump_object([ToolIOFile(Path(input.contamination_sites_bed)), ToolIOFile(Path(input.contamination_sites_mu)), ToolIOFile(Path(input.contamination_sites_ud))], Path(output.CONTAMINATION_SITES_UD))
-        SnakemakeUtils.dump_object([ToolIOFile(Path(input.coverage_interval_list))], Path(output.COVERAGE_INTERVALS))
-        SnakemakeUtils.dump_object([ToolIOFile(Path(input.evaluation_interval_list))], Path(output.EVALUATION_INTERVALS))
+        snakemakeutils.dump_object([ToolIOValue(Path(input.fasta_genome))], Path(output.FASTA_GENOME))
+        snakemakeutils.dump_object([ToolIOFile(Path(input.fasta_genome))], Path(output.FASTA_GENOME_FILE))
+        snakemakeutils.dump_object([ToolIOFile(Path(input.dict_genome))], Path(output.DICT_GENOME))
+        snakemakeutils.dump_object([ToolIOFile(Path(input.dbsnp))], Path(output.DBSNP))
+        snakemakeutils.dump_object([ToolIOFile(Path(f)) for f in input.known_indels], Path(output.KNOWN_INDELS))
+        snakemakeutils.dump_object([ToolIOFile(Path(input.calling_intervals))], Path(output.CALLING_INTERVALS))
+        snakemakeutils.dump_object([ToolIOFile(Path(input.contamination_sites_bed)), ToolIOFile(Path(input.contamination_sites_mu)), ToolIOFile(Path(input.contamination_sites_ud))], Path(output.CONTAMINATION_SITES_UD))
+        snakemakeutils.dump_object([ToolIOFile(Path(input.coverage_interval_list))], Path(output.COVERAGE_INTERVALS))
+        snakemakeutils.dump_object([ToolIOFile(Path(input.evaluation_interval_list))], Path(output.EVALUATION_INTERVALS))
 
 rule move_qc:
     """
@@ -205,10 +205,10 @@ rule move_qc:
 
 
         if config["no_qc"]:
-            SnakemakeUtils.load_object(Path(input.mark_duplicates_metrics))[0].path.link_to(params.mark_duplicates_metrics)
+            snakemakeutils.load_object(Path(input.mark_duplicates_metrics))[0].path.link_to(params.mark_duplicates_metrics)
         else:
             for quality_yield_io in input.TXT:
-                quality_yield_file = SnakemakeUtils.load_object(Path(quality_yield_io))[0].path
+                quality_yield_file = snakemakeutils.load_object(Path(quality_yield_io))[0].path
                 file = Path(quality_yield_file).parts[-1]
                 out = Path(config['final_output_dir']) / "qc" / "quality_yield" / f'{file}.txt'
                 quality_yield_file.link_to(out)
@@ -229,7 +229,7 @@ rule move_qc:
             Path(input.alignment_summary_metrics_agg).link_to(params.alignment_summary_metrics_agg)
             Path(input.bait_bias_detail_metrics).link_to(params.bait_bias_detail_metrics)
             Path(input.bait_bias_summary_metrics).link_to(params.bait_bias_summary_metrics)
-            SnakemakeUtils.load_object(Path(input.mark_duplicates_metrics))[0].path.link_to(params.mark_duplicates_metrics)
+            snakemakeutils.load_object(Path(input.mark_duplicates_metrics))[0].path.link_to(params.mark_duplicates_metrics)
             Path(input.gc_bias_detail_metrics_agg).link_to(params.gc_bias_detail_metrics_agg)
             Path(input.gc_bias_pdf_agg).link_to(params.gc_bias_pdf_agg)
             Path(input.gc_bias_summary_metrics_agg).link_to(params.gc_bias_summary_metrics_agg)
@@ -243,8 +243,8 @@ rule move_qc:
             Path(input.TXT_metrics_checksum).link_to(params.TXT_metrics_checksum)
             Path(input.TXT_metrics_WGS).link_to(params.TXT_metrics_WGS)
             Path(input.TXT_metrics_rawWGS).link_to(params.TXT_metrics_rawWGS)
-            SnakemakeUtils.load_object(Path(input.TXT_metrics_CRAM))[0].path.link_to(params.TXT_metrics_CRAM)
-            SnakemakeUtils.load_object(Path(input.TXT_metrics_varCalling))[0].path.link_to(params.TXT_metrics_varCalling)
+            snakemakeutils.load_object(Path(input.TXT_metrics_CRAM))[0].path.link_to(params.TXT_metrics_CRAM)
+            snakemakeutils.load_object(Path(input.TXT_metrics_varCalling))[0].path.link_to(params.TXT_metrics_varCalling)
             Path(input.QC_summary).link_to(params.QC_summary)
 
         Path(output.QC_done).touch()

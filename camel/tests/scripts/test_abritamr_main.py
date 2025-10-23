@@ -1,6 +1,6 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.abritamr.mainabritamr import MainAbriTAMR
 
 

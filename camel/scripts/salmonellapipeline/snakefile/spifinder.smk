@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import assembly
+from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import assembly
 from camel.scripts.salmonellapipeline.snakefile import spifinder
 
 
@@ -26,9 +26,9 @@ rule spifinder_fastq_run:
         spifinder_tool = SPIFinder()
         spifinder_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db_path))]})
         if config['input_type'] == 'illumina':
-            spifinder_tool.add_input_files(SnakePipelineUtils.extracts_fq_input(Path(input.IO), key_pe='FASTQ_PE'))
+            spifinder_tool.add_input_files(snakepipelineutils.extract_fq_input(Path(input.IO), key_pe='FASTQ_PE'))
         elif config['input_type'] == 'ont':
-            spifinder_tool.add_input_files(SnakePipelineUtils.extracts_fq_input(
+            spifinder_tool.add_input_files(snakepipelineutils.extract_fq_input(
                 Path(input.IO), key_se='FASTQ', read_type='SE'))
         step = Step(rule_name=str(rule), tool=spifinder_tool, dir_=Path(params.dir_))
         step.run()
@@ -144,5 +144,5 @@ rule spifinder_report_empty:
         VAL_HTML = 'spifinder/report/html-empty.iob' # # spifinder.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.tools.pipelines.salmonella.spifinderreporter import SPIFinderReporter
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section(SPIFinderReporter.TITLE, Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section(SPIFinderReporter.TITLE, Path(output.VAL_HTML))

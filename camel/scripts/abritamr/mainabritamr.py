@@ -5,10 +5,10 @@ from typing import Optional
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.error import InvalidToolInputError
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.scriptutils.reportpipeline import ReportPipeline
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.snakemake import snakepipelineutils
+from camel.app.loggers import initialize_logging
 from camel.scripts.abritamr import CONFIG_DATA, SNAKEFILE_MAIN
 
 
@@ -56,7 +56,7 @@ class MainAbriTAMR(ReportPipeline):
             config_data.update(yaml.safe_load(handle_in.read()))
         config_data['abritamr']['species'] = self._args.species
         config_data['analyses'] = ['abritamr']
-        return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        return snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -80,6 +80,6 @@ class MainAbriTAMR(ReportPipeline):
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainAbriTAMR()
     main.run()

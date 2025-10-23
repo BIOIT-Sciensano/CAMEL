@@ -2,12 +2,12 @@ import pandas as pd
 
 from pathlib import Path
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.tools.tool import Tool
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.error import InvalidToolInputError
-from camel.app.error import ToolExecutionError
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils
+from camel.app.core.tool import Tool
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.errors import ToolExecutionError
 
 
 class ShigEiFinder(Tool):
@@ -75,7 +75,7 @@ class ShigEiFinder(Tool):
 
         # Collect the output
         if not tsv_out.exists():
-            raise ToolExecutionError(f'{tsv_out} not generated (TSV)')
+            raise ToolExecutionError(self.name, f'{tsv_out} not generated (TSV)')
         self._tool_outputs['TSV'] = [ToolIOFile(tsv_out)]
 
         # Parse TSV output file

@@ -1,10 +1,8 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.broadwgs.snakefile import qc_summary
 
-camel = Camel.get_instance()
 
 rule generate_qc_summary:
     """
@@ -39,7 +37,7 @@ rule generate_qc_summary:
 
         ## Parse files and get relevant metrics
         # Mark Duplicates metrics
-        mark_duplicates_file = Path(SnakemakeUtils.load_object(Path(input.mark_duplicates_metrics))[0].path)
+        mark_duplicates_file = Path(snakemakeutils.load_object(Path(input.mark_duplicates_metrics))[0].path)
         alignment_metrics['percent_duplication'] = qc_summary.parse_metric_file(mark_duplicates_file,
                                                                                 "## METRICS CLASS\tpicard.sam.DuplicationMetrics\n",
                                                                                 "PERCENT_DUPLICATION")
@@ -69,7 +67,7 @@ rule generate_qc_summary:
         alignment_metrics['evenness_coverage'] = qc_summary.get_fold_80(input.wgs_metrics, mean_coverage, percentile_20)
 
         # Variant calling metrics
-        var_calling_file = Path(SnakemakeUtils.load_object(Path(input.variant_calling_metrics))[0].path)
+        var_calling_file = Path(snakemakeutils.load_object(Path(input.variant_calling_metrics))[0].path)
         variant_calling_metrics["TITV_DBSNP"] = qc_summary.parse_metric_file(var_calling_file,
                                                                              "## METRICS CLASS\tpicard.vcf.CollectVariantCallingMetrics$VariantCallingSummaryMetrics\n",
                                                                              'DBSNP_TITV')

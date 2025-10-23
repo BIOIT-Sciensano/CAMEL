@@ -5,19 +5,18 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.pipelines import absolute_path_by_pathlib
-from camel.app.components.sequencetyping.sequencetypingutils import SequenceTypingUtils
-from camel.app.components.workflows.inputtype import helper_by_input_type
-from camel.app.components.workflows.sequencetypingwrapper import (
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.reports.htmlreport import HtmlReport
+from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils import mainscriptutils, absolute_path_by_pathlib
+from camel.app.loggers import initialize_logging
+from camel.app.toolkits.sequencetyping.sequencetypingutils import SequenceTypingUtils
+from camel.app.wrappers.inputtype import helper_by_input_type
+from camel.app.wrappers.sequencetypingwrapper import (
+    SequenceTypingWrapper,
     SequenceTypingInput,
     SequenceTypingOutput,
-    SequenceTypingWrapper,
 )
-from camel.app.components.workflows.utils.fastqinput import FastqInput
-from camel.app.io.tooliofile import ToolIOFile
 
 
 class MainSequenceTyping:
@@ -173,5 +172,5 @@ def run(args: Sequence[str] | None = None) -> None:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     run()

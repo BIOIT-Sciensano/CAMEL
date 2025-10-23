@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from camel.resources.snakefile import human_read_scrubbing
+from camel.snakefiles import human_read_scrubbing
 
 SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 

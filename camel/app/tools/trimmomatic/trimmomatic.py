@@ -2,11 +2,10 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
+from camel.app.core.utils import fileutils, fastqutils
 
 
 class Trimmomatic(Tool):
@@ -104,8 +103,8 @@ class Trimmomatic(Tool):
         basename = re.search(r'(.*)\.fastq(.gz)?', Path(self._parameters['baseout'].value).name).group(1)
         is_gzipped = self._parameters['baseout'].value.endswith('.gz')
         if suffix is not None:
-            return self.folder / f"{FileSystemHelper.make_valid(basename)}_{suffix}.fastq{'.gz' if is_gzipped else ''}"
-        return self.folder / f"{FileSystemHelper.make_valid(basename)}.fastq{'.gz' if is_gzipped else ''}"
+            return self.folder / f"{fileutils.make_valid(basename)}_{suffix}.fastq{'.gz' if is_gzipped else ''}"
+        return self.folder / f"{fileutils.make_valid(basename)}.fastq{'.gz' if is_gzipped else ''}"
 
     def __set_output(self) -> None:
         """
@@ -128,7 +127,7 @@ class Trimmomatic(Tool):
         """
         for key in self._tool_outputs:
             self._tool_outputs[key] = [
-                tool_io for tool_io in self._tool_outputs[key] if FastqUtils.count_reads(tool_io.path) > 0]
+                tool_io for tool_io in self._tool_outputs[key] if fastqutils.count_reads(tool_io.path) > 0]
 
     def __set_informs(self) -> None:
         """

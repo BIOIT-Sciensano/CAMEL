@@ -1,10 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.pipelines import pipeutils
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.piping import pipeutils
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
 from camel.app.tools.bowtie2.bowtie2map import Bowtie2Map
 from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat
@@ -57,7 +57,7 @@ class TestPipedTools(CamelTestSuite):
         # Initialize tools
         bowtie2 = Bowtie2Map()
         bowtie2.add_input_files({
-            'FASTQ_PE': [ToolIOFile(Path(x)) for x in ('non_existing_file')],
+            'FASTQ_PE': [ToolIOFile(Path(x)) for x in ('non_existing_file',)],
             'INDEX_GENOME_PREFIX': [ToolIOValue(TestPipedTools.input_reference)]
         })
         samtools_view = SamtoolsView()

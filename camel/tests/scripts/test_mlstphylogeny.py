@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.mlstphylogeny.mainmlstphylogeny import MainMLSTPhylogeny
 
 

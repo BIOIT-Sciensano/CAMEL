@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 

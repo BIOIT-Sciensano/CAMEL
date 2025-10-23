@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.picard.picard import Picard
 
 

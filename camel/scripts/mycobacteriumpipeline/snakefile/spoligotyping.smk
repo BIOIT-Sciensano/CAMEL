@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import assembly, variant_calling
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import assembly, variant_calling
 
 
 rule spoligotyping_downsample:
@@ -27,7 +27,7 @@ rule spoligotyping_downsample:
         logger.info(f"Downsampling factor for SpoTyping: {downsample_factor:.2f}")
         if downsample_factor < 1:
             seqtk = SeqtkSubsample()
-            seqtk.add_input_files(SnakePipelineUtils.extracts_fq_input(Path(input.IO_FASTQ)))
+            seqtk.add_input_files(snakepipelineutils.extract_fq_input(Path(input.IO_FASTQ)))
             step = Step(rule_name=str(rule), tool=seqtk, dir_=Path(str(params.dir_)))
             seqtk.update_parameters(fraction=downsample_factor)
             step.run()
@@ -111,7 +111,7 @@ rule spoligotyping_report_empty:
     output:
         VAL_HTML = 'spoligotyping/report/html-empty.iob' # spoligotyping.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.io.tooliovalue import ToolIOValue
+        from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.spotyping.spotypingreporter import SpoTypingReporter
         section = SpoTypingReporter.generate_empty_section()
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))

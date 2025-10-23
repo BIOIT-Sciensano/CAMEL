@@ -5,9 +5,9 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Union, Optional
 
-from camel.app.camel import Camel
-from camel.app.components.workflows.utils.fastqinput import FastqInput
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.loggers import initialize_logging
+from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.core.snakemake import snakepipelineutils
 
 
 @dataclasses.dataclass
@@ -64,7 +64,7 @@ class SegmentDownsamplingWorkflow:
             data_mapping = json.load(handle)
 
         # Create configfile
-        path_config = SnakePipelineUtils.generate_config_file({
+        path_config = snakepipelineutils.generate_config_file({
             'input': {'bam': str(bam_in), 'input_type': input_type},
             'downsampling': {
                 seq_id: SegmentDownsamplingWorkflow.calculate_ratio(d['depth_median'], max_depth)
@@ -76,7 +76,7 @@ class SegmentDownsamplingWorkflow:
 
         # Run snakemake
         targets = {'fq': Path(f'merged/{input_type}/fq_dict.io'), 'informs': 'informs_all.json'}
-        SnakePipelineUtils.run_snakemake(
+        snakepipelineutils.run_snakemake(
             path_snakefile, str(path_config), list(targets.values()), working_dir=self._dir, threads=threads)
 
         # Collect output
@@ -87,4 +87,4 @@ class SegmentDownsamplingWorkflow:
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()

@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.components.vcf.vcfutils import VCFUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import vcfutils
 from camel.app.tools.clair3.clair3 import Clair3
 
 
@@ -26,7 +26,7 @@ class TestClair3(CamelTestSuite):
         clair3.update_parameters(output_path=self.running_dir, haploid_precise=True, no_phasing=True, include_ctgs=True)
         clair3.run(self.running_dir)
         self.verify_output_files(clair3, 'VCF')
-        self.assertGreater(VCFUtils.count_variants(clair3.tool_outputs['VCF'][0].path), 0)
+        self.assertGreater(vcfutils.count_variants(clair3.tool_outputs['VCF'][0].path), 0)
 
     def test_clair3_ont(self) -> None:
         """
@@ -40,7 +40,7 @@ class TestClair3(CamelTestSuite):
             model_path='/db/clair3/models/ont/')
         clair3.run(self.running_dir)
         self.verify_output_files(clair3, 'VCF')
-        self.assertGreater(VCFUtils.count_variants(clair3.tool_outputs['VCF'][0].path), 0)
+        self.assertGreater(vcfutils.count_variants(clair3.tool_outputs['VCF'][0].path), 0)
 
 
 if __name__ == '__main__':

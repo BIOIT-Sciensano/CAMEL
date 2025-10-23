@@ -1,13 +1,11 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.broadwgs import references
 from camel.scripts.broadwgs.snakefile import alignment
 from camel.scripts.broadwgs.snakefile import variant_calling
 
-camel = Camel.get_instance()
 
 rule picard_create_interval_lists:
     """
@@ -25,16 +23,16 @@ rule picard_create_interval_lists:
     run:
         from camel.app.tools.picard.intervallisttools import IntervalListTools
 
-        generate_interval_list = IntervalListTools(camel)
-        SnakemakeUtils.add_pickle_inputs(generate_interval_list, input)
-        step = Step(rule_name=str(rule), tool=generate_interval_list, params.working_dir)
+        generate_interval_list = IntervalListTools()
+        snakemakeutils.add_pickle_inputs(generate_interval_list, input)
+        step = Step(rule_name=str(rule), tool=generate_interval_list, dir_=params.working_dir)
         generate_interval_list.update_parameters(
             **config['rule_params']['variant_calling'][rule],
             output = params.working_dir
         )
         step.run()
 
-        SnakemakeUtils.dump_tool_output(generate_interval_list, 'TXT_intervalLists', Path(output.TXT_intervalLists))
+        snakemakeutils.dump_tool_output(generate_interval_list, 'TXT_intervalLists', Path(output.TXT_intervalLists))
 
 
 rule create_io_intervalLists:
@@ -46,10 +44,10 @@ rule create_io_intervalLists:
     output:
        TXT_intervalList = Path(config['working_dir']) / "variant_calling" / "varcalling_intervals" / f'temp_{{scatter}}_of_{config["rule_params"]["variant_calling"]["picard_create_interval_lists"]["scatter_count"]}' / "scattered.interval_list.io",
     run:
-       for interval_list in SnakemakeUtils.load_object(Path(input.TXT_intervalLists)):
+       for interval_list in snakemakeutils.load_object(Path(input.TXT_intervalLists)):
            intervalList_io = f'{interval_list.path}.io'
            if intervalList_io.split("/")[-2].split("_")[1] == wildcards.scatter:
-                SnakemakeUtils.dump_object([interval_list], Path(intervalList_io))
+                snakemakeutils.dump_object([interval_list], Path(intervalList_io))
 
 rule gatk4_haplotype_caller:
     """
@@ -76,14 +74,14 @@ rule gatk4_haplotype_caller:
         # BAM output not required, but will crash if file not present
         subprocess.run(f"touch {output.bamout}", shell = True, executable="/bin/bash")
 
-        hc = GATK4HaplotypeCaller(camel)
-        SnakemakeUtils.add_pickle_inputs(hc, input)
-        step = Step(rule_name=str(rule), tool=hc, params.working_dir)
+        hc = GATK4HaplotypeCaller()
+        snakemakeutils.add_pickle_inputs(hc, input)
+        step = Step(rule_name=str(rule), tool=hc, dir_=params.working_dir)
         hc.update_parameters(
             **config['rule_params']['variant_calling'][rule],
         )
         step.run()
-        SnakemakeUtils.dump_tool_output(hc, 'VCF', Path(output.VCF))
+        snakemakeutils.dump_tool_output(hc, 'VCF', Path(output.VCF))
 
 rule picard_merge_vcfs:
     """
@@ -102,8 +100,8 @@ rule picard_merge_vcfs:
     run:
         from camel.app.tools.picard.mergevcfs import MergeVCFs
 
-        merge_vcf = MergeVCFs(camel)
-        merge_vcf.add_input_files({"VCF": [SnakemakeUtils.load_object(Path(path))[0] for path in input.VCF]})
-        step = Step(rule_name=str(rule), tool=merge_vcf, params.working_dir)
+        merge_vcf = MergeVCFs()
+        merge_vcf.add_input_files({"VCF": [snakemakeutils.load_object(Path(path))[0] for path in input.VCF]})
+        step = Step(rule_name=str(rule), tool=merge_vcf, dir_=params.working_dir)
         step.run()
-        SnakemakeUtils.dump_tool_output(merge_vcf, "VCF", Path(output.VCF))
+        snakemakeutils.dump_tool_output(merge_vcf, "VCF", Path(output.VCF))

@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import variant_calling, variant_filtering, gene_detection
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import variant_calling, variant_filtering, gene_detection
 from camel.scripts.mycobacteriumpipeline.snakefile import snplineage
 
 
@@ -89,7 +89,7 @@ rule amr_screen_mutations:
         db = config['amr']['mutation_db'],
         resistance_bed = config['amr']['bed_regions']
     run:
-        from camel.app.io.tooliodirectory import ToolIODirectory
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.mycobacterium.amr.amrscreen import AMRScreen
 
         amr_screen = AMRScreen()
@@ -161,7 +161,7 @@ rule amr_parse_actg_counts:
     output:
         JSON = 'amr/pileup/json_counts.io'
     run:
-        from camel.app.components.mycobacterium import amrutils
+        from camel.app.toolkits.mycobacterium import amrutils
         counts_by_pos = amrutils.parse_pileup(snakemakeutils.load_object(Path(input.PILEUP))[0].path)
 
         # Save output
@@ -182,7 +182,7 @@ rule amr_predict_phenotype:
         dir_ = 'amr/phenotype_prediction',
         dir_amr_db = config['amr']['mutation_db']
     run:
-        from camel.app.io.tooliodirectory import ToolIODirectory
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.mycobacterium.amr.amrphenotypepredictor import AMRPhenotypePredictor
         type_determination = AMRPhenotypePredictor()
         snakemakeutils.add_pickle_inputs(type_determination, input)
@@ -263,7 +263,7 @@ rule amr_visualization_add_text:
         dir_ = 'amr/visualization',
         sample_name = config['sample_name']
     run:
-        from camel.app.io.tooliovalue import ToolIOValue
+        from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.amr.amraddtext import AMRAddText
         text_adder = AMRAddText()
         text_adder.add_input_files({'VAL_sample': [ToolIOValue(params.sample_name)]})
@@ -325,8 +325,8 @@ rule amr_create_report_empty:
         HTML = 'amr/report/html-empty.iob' # amrdetection.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.tools.pipelines.mycobacterium.amr.amrreporter import AMRReporter
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section(AMRReporter.TITLE, Path(output.HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section(AMRReporter.TITLE, Path(output.HTML))
 
 rule amr_dump_summary_info:
     """
@@ -344,7 +344,7 @@ rule amr_dump_summary_info:
         ext = lambda wildcards: wildcards.ext
     run:
         import json
-        from camel.app.components.mycobacterium import amrutils
+        from camel.app.toolkits.mycobacterium import amrutils
 
         data_summary = []
 

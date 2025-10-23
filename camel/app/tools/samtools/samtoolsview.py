@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from camel.app.error import ToolExecutionError, InvalidParameterError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.errors import ToolExecutionError, InvalidParameterError
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsbasepipeable import SamtoolsBasePipeable
 
 

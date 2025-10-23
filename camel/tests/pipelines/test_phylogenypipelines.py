@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.snpphylogeny.maincfsanphylo import MainCfsanPhylo
 from camel.scripts.snpphylogeny.mainsamtoolsphylo import MainSamtoolsPhylo
 from camel.tests import longRunningTest

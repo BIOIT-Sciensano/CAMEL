@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import assembly
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import assembly
 
 rule spa_typing_blastn:
     """
@@ -19,7 +19,7 @@ rule spa_typing_blastn:
     run:
         from camel.app.tools.blast.blastn import Blastn
         from camel.app.tools.spatyping.spatyping import SpaTyping
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         blastn = Blastn()
         snakemakeutils.add_pickle_input(blastn, 'FASTA', Path(input.FASTA))
         blastn.add_input_files({'DB_BLAST': [ToolIOFile(Path(input.DB_BLAST))]})
@@ -45,7 +45,7 @@ rule spa_typing_run:
     params:
         dir_ = 'spa_typing/detection'
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.spatyping.spatyping import SpaTyping
         spatyping = SpaTyping()
         snakemakeutils.add_pickle_input(spatyping, 'TSV', Path(input.TSV))
@@ -80,8 +80,8 @@ rule spa_typing_report_empty:
     output:
         VAL_HTML = 'spa_typing/report/html-empty.iob' # spatyping_workflow.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('<i>spa</i> typing', Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('<i>spa</i> typing', Path(output.VAL_HTML))
 
 rule spa_typing_summary:
     """

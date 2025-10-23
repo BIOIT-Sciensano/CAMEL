@@ -1,4 +1,4 @@
-from camel.app.error import InvalidParameterError
+from camel.app.core.errors import InvalidParameterError
 from camel.app.tools.variantfiltering.basefilter import BaseFilter
 
 

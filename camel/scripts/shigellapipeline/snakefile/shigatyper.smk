@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.shigellapipeline.snakefile import shigatyper
 
 
@@ -20,7 +20,7 @@ rule shigatyper_run:
         input_type = config['input_type']
     run:
         from camel.app.tools.pipelines.shigella.shigatyper import ShigaTyper
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
+        from camel.app.scriptutils.fastqinput import FastqInput
 
         typer = ShigaTyper()
 
@@ -71,8 +71,8 @@ rule shigatyper_report_empty:
     output:
         HTML = 'shigatyper/report/html-empty.iob' # shigatyper.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('ShigaTyper', Path(output.HTML), 3)
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('ShigaTyper', Path(output.HTML), 3)
 
 rule shigatyper_create_summary:
     """

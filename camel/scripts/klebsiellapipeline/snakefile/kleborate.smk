@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import assembly
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import assembly
 
 rule kleborate_run:
     """
@@ -50,8 +50,8 @@ rule kleborate_report_empty:
     output:
         VAL_HTML = 'kleborate/report/html-empty.iob' # kleborate.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('Kleborate', Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('Kleborate', Path(output.VAL_HTML))
 
 rule kleborate_create_summary:
     """

@@ -1,4 +1,4 @@
-from camel.app.error import InvalidParameterError
+from camel.app.core.errors import InvalidParameterError
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 

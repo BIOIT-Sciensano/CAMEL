@@ -5,10 +5,10 @@ from typing import Optional
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+from camel.app.scriptutils import mainscriptutils
+from camel.app.scriptutils.reportpipeline import ReportPipeline
+from camel.app.core.snakemake import snakepipelineutils
+from camel.app.loggers import initialize_logging
 from camel.scripts.staphylococcuspipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
@@ -64,7 +64,7 @@ class MainStaphylococcusPipeline(ReportPipeline):
                     qc_typing_scheme='cgmlst' if self._args.cgmlst else 'mlst',
                     export_bam='true' if self._args.report_include_bam else 'false',
                 )))
-        return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
+        return snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
@@ -80,6 +80,6 @@ class MainStaphylococcusPipeline(ReportPipeline):
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainStaphylococcusPipeline()
     main.run()

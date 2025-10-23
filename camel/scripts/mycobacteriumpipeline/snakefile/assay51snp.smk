@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import variant_calling, variant_filtering
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import variant_calling, variant_filtering
 
 
 rule assay_51snp_init_db:
@@ -16,7 +16,7 @@ rule assay_51snp_init_db:
         bed = config['51snp']['bed'],
         tsv = config['51snp']['profiles']
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         snakemakeutils.dump_object([ToolIOFile(Path(params.bed))], Path(output.BED))
         snakemakeutils.dump_object([ToolIOFile(Path(params.tsv))], Path(output.TSV))
 
@@ -73,7 +73,7 @@ rule assay_51snp_report:
         dir_ = '51snp/report',
         sample_name = config['sample_name']
     run:
-        from camel.app.io.tooliovalue import ToolIOValue
+        from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.assay51snpreporter import Assay51SnpReporter
         spr = Assay51SnpReporter()
         snakemakeutils.add_pickle_inputs(spr, input)
@@ -89,9 +89,9 @@ rule assay_51snp_report_empty:
     output:
         VAL_HTML= '51snp/report/html-empty.iob' # assay51snp.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.pipelines.mycobacterium.assay51snpreporter import Assay51SnpReporter
-        SnakePipelineUtils.create_empty_report_section(Assay51SnpReporter.TITLE, Path(output.VAL_HTML), 3)
+        snakepipelineutils.create_empty_report_section(Assay51SnpReporter.TITLE, Path(output.VAL_HTML), 3)
 
 rule assay_51snp_dump_summary_info:
     """

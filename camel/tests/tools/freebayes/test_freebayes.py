@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.components.vcf.vcfutils import VCFUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import vcfutils
 from camel.app.tools.freebayes.freebayes import Freebayes
 
 
@@ -24,7 +24,7 @@ class TestFreebayes(CamelTestSuite):
         freebayes.add_input_files({'FASTA': [TestFreebayes.FILE_FASTA], 'BAM': [TestFreebayes.FILE_BAM_ILLUMINA]})
         freebayes.run(self.running_dir)
         self.verify_output_files(freebayes, 'VCF')
-        self.assertGreater(VCFUtils.count_variants(freebayes.tool_outputs['VCF'][0].path), 0)
+        self.assertGreater(vcfutils.count_variants(freebayes.tool_outputs['VCF'][0].path), 0)
 
 
 if __name__ == '__main__':

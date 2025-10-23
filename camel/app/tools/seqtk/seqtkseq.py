@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from camel.app.components.files.fastautils import FastaUtils
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.utils import fastautils, fastqutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class SeqtkSeq(Tool):
@@ -78,8 +77,8 @@ class SeqtkSeq(Tool):
         :return: None
         """
         if self.__get_input_key() == 'FASTQ':
-            self._informs['nb_seqs_in'] = FastqUtils.count_reads(self._tool_inputs['FASTQ'][0].path)
-            self._informs['nb_seqs_out'] = FastqUtils.count_reads(path_out)
+            self._informs['nb_seqs_in'] = fastqutils.count_reads(self._tool_inputs['FASTQ'][0].path)
+            self._informs['nb_seqs_out'] = fastqutils.count_reads(path_out)
         else:
-            self._informs['nb_seqs_in'] = FastaUtils.count_reads(self._tool_inputs['FASTA'][0].path)
-            self._informs['nb_seqs_out'] = FastaUtils.count_reads(path_out)
+            self._informs['nb_seqs_in'] = fastautils.count_reads(self._tool_inputs['FASTA'][0].path)
+            self._informs['nb_seqs_out'] = fastautils.count_reads(path_out)

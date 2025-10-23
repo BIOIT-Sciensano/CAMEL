@@ -7,9 +7,8 @@ import sys
 
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.command.command import Command
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.command import Command
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.pipeline.pipeline import Pipeline
 
 

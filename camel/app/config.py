@@ -17,6 +17,9 @@ class CamelConfig(BaseModel):
     dependency_service: str = 'lmod'
     logging_fmt: str = '%(asctime)s - %(module)15s - %(levelname)7s - %(message)s'
     date_fmt: str = '%d/%m/%Y - %X'
+    # Logging
+    dir_configs: Optional[Path] = None
+    dir_logs: Optional[Path] = None
 
 
 def load_yaml_config(config_path: Path) -> dict:

@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.mockpipeline.mainmockpipeline import MainMockPipeline
 from camel.tests import longRunningTest
 

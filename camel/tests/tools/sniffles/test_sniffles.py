@@ -1,8 +1,8 @@
 import unittest
 
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.components.vcf.vcfutils import VCFUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import vcfutils
 from camel.app.tools.sniffles.sniffles import Sniffles
 
 
@@ -23,7 +23,7 @@ class TestSniffles(CamelTestSuite):
         sniffles.add_input_files({'BAM': [TestSniffles.FILE_BAM_ONT], 'FASTA': [TestSniffles.FILE_FASTA]})
         sniffles.run(self.running_dir)
         self.verify_output_files(sniffles, 'VCF')
-        self.assertGreater(VCFUtils.count_variants(sniffles.tool_outputs['VCF'][0].path), 0)
+        self.assertGreater(vcfutils.count_variants(sniffles.tool_outputs['VCF'][0].path), 0)
 
 
 if __name__ == '__main__':

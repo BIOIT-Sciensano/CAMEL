@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.snakemake import snakemakeutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.snpphylogeny.snakefile.samtools_calling_all import OUTPUT_CALLING_ALL
 
 rule run_variant_calling_workflow:
@@ -18,8 +18,8 @@ rule run_variant_calling_workflow:
         sample_name = lambda wildcards: wildcards.sample,
         sample_config = lambda wildcards: config['samples'][wildcards.sample]
     run:
-        from camel.app.components.workflows.utils.fastqinput import FastqInput
-        from camel.app.components.workflows.variantcallingwrapper import VariantCallingWrapper
+        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.wrappers.variantcallingwrapper import VariantCallingWrapper
         fastq_input = FastqInput(
             'illumina',
             pe=[ToolIOFile(Path(x)) for x in params.sample_config['PE']],
@@ -27,7 +27,7 @@ rule run_variant_calling_workflow:
             se_rev=[ToolIOFile(Path(params.sample_config['SE_REV']))] if 'SE_REV' in params.sample_config else None
         )
         wrapper = VariantCallingWrapper(Path(str(params.working_dir)).absolute() / 'variant_calling')
-        wrapper.run_workflow(
+        wrapper.run(
             params.ref_info, str(params.sample_name), fastq_input, 'illumina', params.calling_options, int(str(threads)))
         snakemakeutils.dump_object(wrapper.output, Path(output.IO))
 

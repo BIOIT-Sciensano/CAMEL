@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import gene_detection
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import gene_detection
 
 
 rule rd_csb_report:
@@ -40,7 +40,7 @@ rule rd_csb_report_empty:
     params:
         dir_ = 'csb_rd/report'
     run:
-        from camel.app.io.tooliovalue import ToolIOValue
+        from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.rdcsbreporter import RdCsbReporter
         section = RdCsbReporter.generate_empty_section()
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))

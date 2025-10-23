@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import Any
 
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error import InvalidToolInputError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.tool import Tool
+from camel.app.core.utils import fileutils
 
 
 class QuastReporter(Tool):
@@ -139,7 +139,7 @@ class QuastReporter(Tool):
         :return: None
         """
         section.add_header('Downloads', 3)
-        name_sanitized = FileSystemHelper.make_valid(self._parameters['name'].value)
+        name_sanitized = fileutils.make_valid(self._parameters['name'].value)
 
         # QUAST report
         relative_path_html = Path('assembly', 'quast', f'quast_{name_sanitized}.html')

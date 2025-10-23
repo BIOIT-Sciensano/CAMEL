@@ -1,7 +1,7 @@
 import abc
 
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
-from camel.app.tools.toolpipeable import ToolPipeable
+from camel.app.core.piping.toolpipeable import ToolPipeable
 
 
 class SamtoolsBasePipeable(ToolPipeable, SamtoolsBase, metaclass=abc.ABCMeta):

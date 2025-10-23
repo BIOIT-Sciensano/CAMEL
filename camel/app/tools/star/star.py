@@ -1,7 +1,7 @@
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.error import InvalidToolInputError
-from camel.app.tools.toolpipeable import ToolPipeable
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.piping.toolpipeable import ToolPipeable
 
 
 class Star(ToolPipeable):

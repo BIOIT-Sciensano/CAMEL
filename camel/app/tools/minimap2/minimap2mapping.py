@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Optional
 
-from camel.app.command.command import Command
-from camel.app.components import toolutils
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.toolpipeable import ToolPipeable
+from camel.app.core.command import Command
+from camel.app.core.utils import toolutils
+from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.piping.toolpipeable import ToolPipeable
 
 
 class Minimap2Mapping(ToolPipeable):

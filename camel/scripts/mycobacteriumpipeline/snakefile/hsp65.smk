@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.resources.snakefile import gene_detection
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.snakefiles import gene_detection
 
 rule hps65_report:
     """
@@ -23,9 +23,9 @@ rule hps65_report:
         reporter = Hsp65Reporter()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         reporter.update_parameters(hit_type=params.hit_type)
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_pickle_inputs(reporter, input)
         step.run()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule hps65_report_empty:
     """
@@ -36,10 +36,10 @@ rule hps65_report_empty:
     params:
         dir_ = 'hsp65/report'
     run:
-        from camel.app.io.tooliovalue import ToolIOValue
+        from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.hsp65reporter import Hsp65Reporter
         section = Hsp65Reporter.generate_empty_section()
-        SnakemakeUtils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))
+        snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))
 
 rule hsp65_dump_summary_info:
     """
@@ -52,6 +52,6 @@ rule hsp65_dump_summary_info:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS))
+        informs = snakemakeutils.load_object(Path(input.INFORMS))
         data_summary = [('hsp65_species', informs['hits']),]
-        SnakemakeUtils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'hsp65')
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'hsp65')

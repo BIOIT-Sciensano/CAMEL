@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.pipeline.step import Step
-from camel.app.snakemake import snakemakeutils
-from camel.resources.snakefile import variant_calling, variant_filtering
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import variant_calling, variant_filtering
 
 
 rule snp_lineage_detection:
@@ -18,7 +18,7 @@ rule snp_lineage_detection:
         dir_ = 'snp_lineage/tool',
         lineage_snp_positions = config['snp_lineage']['bed']
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.mycobacterium.snplineagedetector import SNPLineageDetector
         detector = SNPLineageDetector()
         snakemakeutils.add_pickle_inputs(detector, input)
@@ -54,8 +54,8 @@ rule snp_lineage_report_empty:
         VAL_HTML = 'snp_lineage/report/html-empty.iob' # snplineage.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.tools.pipelines.mycobacterium.snplineagereporter import SNPLineageReporter
-        from camel.app.snakemake.snakepipelineutils import  SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section(SNPLineageReporter.TITLE, Path(output.VAL_HTML), 2)
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section(SNPLineageReporter.TITLE, Path(output.VAL_HTML), 2)
 
 rule snp_lineage_dump_summary_info:
     """
