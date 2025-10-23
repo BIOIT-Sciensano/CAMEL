@@ -1,5 +1,5 @@
 # Configuration
-dir_temp: /scratch/temp/bebog/camel
+dir_temp: /path/to/temp
 dependency_service: conda
 
 # Resource locations
