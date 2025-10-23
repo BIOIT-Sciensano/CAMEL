@@ -210,7 +210,7 @@ rule extract_fq_illumina:
 
         # Split singleton reads
         command = Command(' '.join([
-            'module load java/18.0.1.1; module load bbtools/38.44;'
+            'module load java/18.0.1.1; module load bbtools/39.15;'
             f'demuxbyname.sh in={fq_single_out} out=reads_%U.fastq delimiter="/" prefixmode=f'
         ]))
         command.run(dir_)
