@@ -101,6 +101,7 @@ rule nextclade3_extract_segment:
         input_type = config['input_type']
     run:
         from Bio import SeqIO
+        from Bio.Seq import Seq
         from camel.app.core.io.tooliofile import ToolIOFile
 
         # Retrieve the sequence of the corresponding segment
@@ -115,7 +116,8 @@ rule nextclade3_extract_segment:
                         s for s in seqs if s.id.lower().endswith(f'-{params.segment_name}'.lower()))
                 except StopIteration:
                     segments = [s.id.split('-')[-1].lower() for s in seqs]
-                    raise RuntimeError(f"Cannot find segment: {params.segment_name} (found: {', '.join(segments)})")
+                    logger.warning(f"Cannot find segment: {params.segment_name} (found: {', '.join(segments)}), using empty sequence")
+                    seq_segment = SeqIO.SeqRecord(seq=Seq(''), id=str(params.segment_name), description="")
 
         # Save the output file
         path_fasta_out = Path(str(params.dir_), fasta_in.name.replace('.fasta', f'-{params.segment_name}.fasta'))

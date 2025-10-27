@@ -84,7 +84,12 @@ class CallVariants:
         command.run(self._dir)
         if not command.returncode == 0:
             raise RuntimeError(command.stderr)
-        self._informs.append({'_name_full': 'bcftools mpileup 1.17', '_version': '1.17', '_command': command.command})
+        self._informs.append({
+            '_name': 'bcftools mpileup',
+            '_name_full': 'bcftools mpileup 1.17',
+            '_version': '1.17',
+            '_command': command.command
+        })
 
         # Save output file
         return path_vcf_out

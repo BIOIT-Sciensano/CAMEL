@@ -84,7 +84,12 @@ class ApplyVariants:
         command.run(self._dir)
         if not command.returncode == 0:
             raise RuntimeError(f'Error applying variants: {command.stderr}')
-        self._informs.append({'_name_full': 'bcftools consensus 1.17', '_version': '1.17', '_command': command.command})
+        self._informs.append({
+            '_name': 'bcftools consensus',
+            '_name_full': 'bcftools consensus 1.17',
+            '_version': '1.17',
+            '_command': command.command
+        })
 
     def __update_headers(self, path_fasta: Path, name: str, description: str = '') -> None:
         """
