@@ -12,7 +12,7 @@ class MedakaInference(Medaka):
         Initializes Medaka inference.
         :return: None
         """
-        super().__init__('medaka inference', '2.0.0')
+        super().__init__('medaka inference')
 
         self._required_inputs = ['BAM']
         self._output_type = 'HDF'

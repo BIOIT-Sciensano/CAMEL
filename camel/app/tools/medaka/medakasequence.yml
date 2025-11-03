@@ -1,4 +1,4 @@
-dependencies: [medaka/1.12.0, bcftools/1.17, samtools/1.17, htslib/1.19, minimap2/2.26]
+dependencies: [medaka/2.0.0, bcftools/1.17, samtools/1.17, htslib/1.19, minimap2/2.26]
 parameters:
   fill_char: {default: false, mandatory: false, option: --fill_char, value: ''}
   min_depth: {default: false, mandatory: false, option: --min_depth, value: '0'}

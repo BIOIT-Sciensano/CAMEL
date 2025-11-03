@@ -13,20 +13,27 @@ class Medaka(Tool, metaclass=abc.ABCMeta):
     Base class for Medaka tools.
     """
 
-    def __init__(self, tool_name: str, version: str) -> None:
+    def __init__(self, tool_name: str) -> None:
         """
         Initializes a Medaka tool.
-        :param tool_name: Tool name
-        :param version: Tool version
         :return: None
         """
-        super().__init__(tool_name, version)
+        super().__init__(tool_name, version=None)
         self._specific_parameters = []
         self._required_inputs = []
         self._input_string = ''
         self._output_string = ''
         self._option_string = ''
         self._output_type = ''
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f"{self._tool_command.split(' ')[0]} --version")
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _execute_tool(self) -> None:
         """

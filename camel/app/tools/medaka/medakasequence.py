@@ -13,7 +13,7 @@ class MedakaSequence(Medaka):
         Initializes Medaka sequence.
         :return: None
         """
-        super().__init__('medaka sequence', '2.0.0')
+        super().__init__('medaka sequence')
 
         self._required_inputs = ['HDF', 'FASTA']
         self._output_type = 'FASTA'

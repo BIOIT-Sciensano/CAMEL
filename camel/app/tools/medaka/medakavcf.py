@@ -12,7 +12,7 @@ class MedakaVcf(Medaka):
         Initializes Medaka vcf.
         :return: None
         """
-        super().__init__('medaka vcf', '2.0.0')
+        super().__init__('medaka vcf')
 
         self._required_inputs = ['HDF', 'FASTA']
         self._output_type = 'VCF'
