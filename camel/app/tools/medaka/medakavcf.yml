@@ -1,4 +1,4 @@
-dependencies: [medaka/2.0.0, bcftools/1.21, samtools/1.21, htslib/1.21, minimap2/2.28]
+dependencies: [bcftools/1.21, samtools/1.21, htslib/1.21, minimap2/2.28, medaka/2.0.0]
 parameters:
   ambig_ref: {default: false, mandatory: false, option: --ambig_ref, value: ''}
   gvcf: {default: false, mandatory: false, option: --gvcf, value: ''}
