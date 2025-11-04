@@ -1,10 +1,44 @@
-dependencies: [bcftools/1.17, samtools/1.21, htslib/1.21, minimap2/2.28, medaka/2.0.0]
+dependencies:
+  - bcftools/1.17
+  - samtools/1.21
+  - htslib/1.21
+  - minimap2/2.28
+  - medaka/2.0.0
 parameters:
-  batch_size: {default: false, mandatory: false, option: --batch_size, value: '100'}
-  chunk_len: {default: false, mandatory: false, option: --chunk_len, value: '10000'}
-  chunk_ovlp: {default: false, mandatory: false, option: --chunk_ovlp, value: '1000'}
-  model: {default: true, mandatory: true, option: --model, value: 'r941_min_hac_g507'}
-  output: {default: true, mandatory: true, option: '', p_index: 0, value: raw.hdf}
-  regions: {default: false, mandatory: false, option: --regions, value: ''}
-  threads: {default: true, mandatory: false, option: --threads, value: '4'}
+  batch_size:
+    default: false
+    mandatory: false
+    option: '--batch_size'
+    value: '100'
+  chunk_len:
+    default: false
+    mandatory: false
+    option: '--chunk_len'
+    value: '10000'
+  chunk_ovlp:
+    default: false
+    mandatory: false
+    option: '--chunk_ovlp'
+    value: '1000'
+  model:
+    default: true
+    mandatory: true
+    option: '--model'
+    value: r941_min_hac_g507
+  output:
+    default: true
+    mandatory: true
+    option: ''
+    p_index: 0
+    value: raw.hdf
+  regions:
+    default: false
+    mandatory: false
+    option: '--regions'
+    value: ''
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: '4'
 tool_command: medaka inference
