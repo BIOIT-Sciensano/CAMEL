@@ -104,7 +104,8 @@ rule ref_selection_dump_summary_info:
     Creates the summary information for the reference selection.
     """
     input:
-        JSON = rules.ref_selection_create_fasta.output.JSON
+        JSON = rules.ref_selection_create_fasta.output.JSON,
+        DB = Path(config['ref_selection']['db']) if config['ref_selection'].get('db') is not None else []
     output:
         FILE = 'ref_selection/summary/summary.{ext}' # refselection.OUTPUT_REF_SELECTION_SUMMARY
     params:
@@ -120,6 +121,7 @@ rule ref_selection_dump_summary_info:
 
         # Output the selected references
         data_summary = []
+        data_summary.append(('ref_selection_database', Path(input.DB).name))
         for segment, ref in data_ref_selection.items():
             data_summary.append((f"ref_selection-{segment}", ref if ref is not None else '-'))
         snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'ref_selection')
