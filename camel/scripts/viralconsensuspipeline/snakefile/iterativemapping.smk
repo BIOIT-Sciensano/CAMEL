@@ -505,7 +505,7 @@ rule iterative_mapping_summary:
         ]
 
         # Save to summary
-        snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), 'preprocess')
+        snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), 'iterative_mapping')
 
 rule iterative_mapping_combine_informs:
     """
