@@ -121,7 +121,7 @@ rule ref_selection_dump_summary_info:
 
         # Output the selected references
         data_summary = []
-        data_summary.append(('ref_selection_database', Path(input.DB).name))
+        data_summary.append(('ref_selection_database', Path(input.DB).name if input.DB else '-'))
         for segment, ref in data_ref_selection.items():
             data_summary.append((f"ref_selection-{segment}", ref if ref is not None else '-'))
         snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'ref_selection')
