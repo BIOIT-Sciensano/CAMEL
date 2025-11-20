@@ -16,8 +16,8 @@ def get_input(config: dict[str, Any]) -> str:
     :param config: Snakemake configuration
     :return: Path to the input file
     """
-    if config['input_type'] in ('illumina', 'ont', 'hybrid'):
+    if config['input']['type'] in ('illumina', 'ont', 'hybrid'):
         return 'fq_dict.io'
-    if config['input_type'] == 'fasta':
+    if config['input']['type'] == 'fasta':
         return read_simulation.OUTPUT_FASTQ
-    raise ValueError(f"Input type '{config['input_type']}' is not supported by LRE-finder")
+    raise ValueError(f"Input type '{config['input']['type']}' is not supported by LRE-finder")

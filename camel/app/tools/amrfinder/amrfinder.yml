@@ -23,4 +23,9 @@ parameters:
     mandatory: true
     option: '--output'
     value: amrfinder_out.tsv
+  threads:
+    default: false
+    mandatory: false
+    option: '--threads'
+    value: '1'
 tool_command: amrfinder

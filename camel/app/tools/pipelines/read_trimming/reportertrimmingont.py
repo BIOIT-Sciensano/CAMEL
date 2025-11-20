@@ -24,7 +24,8 @@ class ReporterTrimmingONT(Tool):
         Executes this tool.
         :return: None
         """
-        self._report_section = HtmlReportSection('Read trimming', subtitle=self._input_informs['trimming']['_name'])
+        self._report_section = HtmlReportSection(
+            'Read trimming', subtitle=self._input_informs['trimming']['_name_full'])
         self.__add_nanoplot_report('Pre-filtering', 'pre', 'HTML_PRE')
         self.__add_parameters_section()
         self.__add_statistics_section()

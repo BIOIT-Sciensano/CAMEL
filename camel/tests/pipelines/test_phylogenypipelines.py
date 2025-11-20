@@ -1,8 +1,9 @@
 from pathlib import Path
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.snpphylogeny.maincfsanphylo import MainCfsanPhylo
-from camel.scripts.snpphylogeny.mainsamtoolsphylo import MainSamtoolsPhylo
+from camel.scripts.snpphylogeny.mainsamtoolsphylo import MainSamtoolsPhylo, main
 from camel.tests import longRunningTest
 
 
@@ -35,20 +36,20 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
         output_file_fasta = Path(self.running_dir) / 'report' / 'snps.fasta'
-        args = TestSnpPhylogenyPipelines.__get_samples() + [
+        result = cliutils.invoke(main, TestSnpPhylogenyPipelines.__get_samples() + [
             '--reference', str(TestSnpPhylogenyPipelines.reference_fasta),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--output-fasta', str(output_file_fasta),
             '--working-dir', str(self.running_dir),
-            '--trim-reads', '--include-ref',
+            '--trim-reads',
+            '--include-ref',
             '--min-total-depth', '1',
-            '--min-forward-depth', '0',
-            '--min-reverse-depth', '0',
+            '--min-fwd-depth', '0',
+            '--min-rev-depth', '0',
             '--min-distance', '2'
-        ]
-        main = MainSamtoolsPhylo(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
         self.assertGreater(output_file_fasta.stat().st_size, 0)
 
@@ -66,8 +67,8 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--trim-reads', '--include-ref',
             '--min-total-depth', '1',
-            '--min-forward-depth', '0',
-            '--min-reverse-depth', '0',
+            '--min-fwd-depth', '0',
+            '--min-rev-depth', '0',
             '--min-distance', '2',
             '--soft-filter'
         ]

@@ -1,0 +1,133 @@
+#####################
+# Pipeline settings #
+#####################
+citations:
+  main: Timmermans_2021-enterococcus
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Li_2009-samtools
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Bortolaia_2020-resfinder_4.0
+    - Feldgarden_2019-ndaro
+    - Joensen_2014-virulencefinder
+    - Chen_2016-vfdb
+    - Carattoli_2020-plasmidfinder
+    - Jolley_2010-bigsdb
+    - Hyatt_2010-prodigal
+    - Pal_2014-bacmet
+
+#########################
+# Tool specific options #
+#########################
+amrfinder:
+  db: /db/amrfinder/v4/latest
+  species: {AMRFINDER_SPECIES}
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+
+bacmet:
+  db: /db/bacmet/latest
+
+confindr:
+  db: /db/confindr/0.8.1
+
+contamination_check:
+  db: /db/kraken2_microbial/latest
+  expected_species: {K2_NAME}
+  level_of_depth: {K2_LEVEL}
+
+downsampling:
+  coverage_max: {COV_MAX}
+
+mob_suite:
+  db: /db/mob_suite/latest
+
+reference:
+  name: {REF_NAME}
+  url: {REF_URL}
+  fasta: {REF_FASTA}
+  gff3: {REF_GFF3}
+  expected_gc: {REF_GC}
+  expected_size: {REF_SIZE}
+
+read_scrubbing: {{}}
+
+read_trimming: {{}}
+
+resfinder4:
+  db: /db/resfinder4
+  species: {RESFINDER4_SPECIES}
+  min_identity: 0.90
+  min_cov: 0.60
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering: {{}}
+
+############################
+# Gene detection databases #
+############################
+gene_detection:
+  dbs:
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
+
+    virulencefinder:
+      path: /db/gene_detection/VirulenceFinder-Enterococcus
+      metadata:
+        name: Protein function
+        key: protein_function
+
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-gram_positive
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
+
+###################
+# Sequence typing #
+###################
+sequence_typing:
+  dbs:
+    mlst:
+      path: {MLST_DB}
+    mlst_bezdicek:
+      path: '/db/sequence_typing/enterococcus_faecium/mlst_bezdicek'
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+    cgmlst:
+      path: {CGMLST_DB}
+      detection_method: blast

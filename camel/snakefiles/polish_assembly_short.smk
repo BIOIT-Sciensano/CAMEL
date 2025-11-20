@@ -57,7 +57,7 @@ rule polishing_read_mapping_1:
         dir_ = lambda wildcards: f'polish/short_reads/{wildcards.assembly_type}/read_mapping/forward'
     threads: 8
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.tools.bwa.bwamap import BWAMap
         bwa_map = BWAMap()
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict), 'illumina')
@@ -83,7 +83,7 @@ rule polishing_read_mapping_2:
         dir_ = lambda wildcards: f'polish/short_reads/{wildcards.assembly_type}/read_mapping/reverse'
     threads: 8
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.tools.bwa.bwamap import BWAMap
         bwa_map = BWAMap()
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict), 'illumina')
@@ -173,7 +173,7 @@ rule polishing_pypolca:
     run:
         from camel.app.tools.pypolca.pypolca import Pypolca
         pypolca = Pypolca()
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict),'illumina')
         pypolca.add_input_files({'FASTQ_PE': fq_in.pe})
         snakemakeutils.add_pickle_input(pypolca, 'FASTA', Path(input.FASTA))

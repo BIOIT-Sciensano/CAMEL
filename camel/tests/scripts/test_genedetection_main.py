@@ -1,7 +1,9 @@
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.genedetection.maingenedetection import MainGeneDetection
+from camel.app.loggers import initialize_logging
+from camel.scripts.genedetection.maingenedetection import main
 
 
 class TestGeneDetection(CamelTestSuite):
@@ -44,13 +46,13 @@ class TestGeneDetection(CamelTestSuite):
         args = [
             '--fasta', str(TestGeneDetection.input_fasta),
             '--input-type', 'fasta',
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_fasta_galaxy(self) -> None:
@@ -63,13 +65,13 @@ class TestGeneDetection(CamelTestSuite):
             '--fasta', str(TestGeneDetection.input_fasta_galaxy),
             '--input-type', 'fasta',
             '--fasta-name', TestGeneDetection.input_fasta.name,
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
-            '--working-dir', str(self.running_dir)
+            '--working-dir', str(self.running_dir),
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_fasta_spaces(self) -> None:
@@ -82,13 +84,13 @@ class TestGeneDetection(CamelTestSuite):
             '--fasta', str(TestGeneDetection.input_fasta_galaxy),
             '--fasta-name', '"my reference genome.fasta"',
             '--input-type', 'fasta',
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
-            '--working-dir', str(self.running_dir)
+            '--working-dir', str(self.running_dir),
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_fasta_score(self) -> None:
@@ -98,19 +100,20 @@ class TestGeneDetection(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
-            '--fasta', str(TestGeneDetection.input_fasta),
+            '--fasta',
+            str(TestGeneDetection.input_fasta),
             '--input-type', 'fasta',
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--blast-min-percent-identity', '95',
             '--blast-min-percent-coverage', '99',
             '--blast-filtering-method', 'score',
-            '--blast-score-nb-of-hits', '10'
+            '--blast-score-nb-of-hits', '10',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_fasta_overlap(self) -> None:
@@ -122,7 +125,7 @@ class TestGeneDetection(CamelTestSuite):
         args = [
             '--fasta', str(TestGeneDetection.input_fasta),
             '--input-type', 'fasta',
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
@@ -130,8 +133,8 @@ class TestGeneDetection(CamelTestSuite):
             '--blast-min-percent-coverage', '99',
             '--blast-filtering-method', 'overlap',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     ###############
@@ -145,16 +148,19 @@ class TestGeneDetection(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
-            '--fastq-pe', str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
+            '--fastq-pe',
+            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
             str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--input-type', 'illumina',
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
-            '--assembly-kmers', '33,55'
+            '--assembly-kmers', '33,55',
+            '--threads', '4'
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_illumina_fasta_out(self) -> None:
@@ -165,17 +171,20 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         path_fasta_out = self.running_dir / 'report' / 'assembly.fasta'
         args = [
-            '--fastq-pe', str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
+            '--fastq-pe',
+            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
             str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--input-type', 'illumina',
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-fasta', str(path_fasta_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
-            '--assembly-kmers', '33,55'
+            '--assembly-kmers', '33,55',
+            '--threads', '4'
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
         self.assertGreater(path_fasta_out.stat().st_size, 0)
 
@@ -186,18 +195,19 @@ class TestGeneDetection(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
-            '--fastq-pe', str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
+            '--fastq-pe',
+            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
             str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--input-type', 'illumina',
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--trim-reads',
             '--assembly-kmers', '33,55',
-            '--adapter', 'TruSeq2'
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_ont(self) -> None:
@@ -208,14 +218,15 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
             '--fastq-se', str(TestGeneDetection.input_fastq_by_key['ont'][0]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--input-type', 'ont',
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
-            '--input-type', 'ont'
+            '--threads', '4'
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_ont_meta(self) -> None:
@@ -226,16 +237,16 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
             '--fastq-se', str(TestGeneDetection.input_fastq_by_key['ont'][0]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--input-type', 'ont',
             '--assembly-flye-meta',
-            '--assembly-min-contig-length', '750'
+            '--assembly-min-contig-len', '750',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_ont_with_filtering(self) -> None:
@@ -246,15 +257,15 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
             '--fastq-se', str(TestGeneDetection.input_fastq_by_key['ont'][0]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--input-type', 'ont',
-            '--trim-reads'
+            '--trim-reads',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_blast_ont_reads(self) -> None:
@@ -265,7 +276,7 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
             '--fastq-se', str(TestGeneDetection.input_fastq_by_key['ont'][0]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
@@ -273,10 +284,10 @@ class TestGeneDetection(CamelTestSuite):
             '--trim-reads',
             '--blast-reads',
             '--blast-filtering-method', 'score',
-            '--blast-score-nb-of-hits', '10'
+            '--blast-score-nb-of-hits', '10',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     # KMA
@@ -287,17 +298,18 @@ class TestGeneDetection(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
-            '--fastq-pe', str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
+            '--fastq-pe',
+            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
             str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--input-type', 'illumina',
             '--detection-method', 'kma',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_kma_illumina_trim(self) -> None:
@@ -307,19 +319,19 @@ class TestGeneDetection(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
-            '--fastq-pe', str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
+            '--fastq-pe',
+            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
             str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--input-type', 'illumina',
             '--detection-method', 'kma',
-            '--adapter', 'TruSeq3',
-            '--trim-reads'
+            '--trim-reads',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_kma_ont(self) -> None:
@@ -330,15 +342,15 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
             '--fastq-se', str(TestGeneDetection.input_fastq_by_key['ont'][0]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--input-type', 'ont',
-            '--detection-method', 'kma'
+            '--detection-method', 'kma',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_kma_ont_trim(self) -> None:
@@ -349,18 +361,18 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
             '--fastq-se', str(TestGeneDetection.input_fastq_by_key['ont'][0]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--input-type', 'ont',
             '--detection-method', 'kma',
             '--trim-reads',
-            '--ont-min-length', '666',
-            '--ont-min-qual', '12'
+            '--ont-min-len', '666',
+            '--ont-min-qual', '12',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_gene_detection_kma_apm(self) -> None:
@@ -370,20 +382,22 @@ class TestGeneDetection(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
-            '--fastq-pe', str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
+            '--fastq-pe',
+            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
             str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
-            '--database-dir', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
             '--input-type', 'illumina',
             '--detection-method', 'kma',
-            '--kma-apm', 'p'
+            '--kma-apm', 'p',
         ]
-        main = MainGeneDetection(args)
-        main.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 
 if __name__ == '__main__':
+    initialize_logging()
     unittest.main()

@@ -159,7 +159,7 @@ rule variant_filtering_zscore:
     """
     input:
         VCF_GZ = rules.variant_filtering_zscore_index.output.VCF_GZ,
-        BAM = variant_calling.get_bam(config) if config['input_type'] != 'fasta_with_vcf' else []
+        BAM = variant_calling.get_bam(config) if config['input']['type'] != 'fasta_with_vcf' else []
     output:
         VCF_GZ = 'variant_filtering/05-zscore/vcf_gz.io',
         INFORMS = 'variant_filtering/05-zscore/informs.io'
@@ -178,7 +178,7 @@ rule variant_filtering_zscore:
         if params.y_multiplier is not None:
             zscore_filter.update_parameters(y_multiplier=params.y_multiplier)
         zscore_filter.update_parameters(soft_filter=params.soft_filter)
-        if config['input_type'] == 'fasta_with_vcf' or len(snakemakeutils.load_object(Path(input.BAM))) == 0:
+        if config['input']['type'] == 'fasta_with_vcf' or len(snakemakeutils.load_object(Path(input.BAM))) == 0:
             logger.info("No BAM input found, skipping Z-score filter.")
             shutil.copyfile(input.VCF_GZ, output.VCF_GZ)
             snakemakeutils.dump_object({'variants_in': 'NA', 'variants_out': 'NA'}, Path(output.INFORMS))

@@ -11,20 +11,20 @@ rule nextclade3_detect_subtype_mash:
     Uses mash to determine the best matching subtype.
     """
     input:
-        FASTQ = preprocess.OUTPUT_FASTQ if config['input_type'] != 'fasta' else [],
-        FASTA = 'fasta.io' if config['input_type'] == 'fasta' else []
+        FASTQ = preprocess.OUTPUT_FASTQ if config['input']['type'] != 'fasta' else [],
+        FASTA = 'fasta.io' if config['input']['type'] == 'fasta' else []
     output:
         TSV = 'nextclade/subtype_determination/mash/tsv.io',
         INFORMS = 'nextclade/subtype_determination/mash/informs.io'
     params:
         dir_ = 'nextclade/subtype_determination/mash',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         db = config['nextclade'].get('db_mash')
     run:
         from camel.app.core.errors import ToolExecutionError
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.mash.mashscreen import MashScreen
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 
         mash_screen = MashScreen()
         if params.input_type != 'fasta':
@@ -98,7 +98,7 @@ rule nextclade3_extract_segment:
     params:
         dir_ = lambda wildcards: f'nextclade/{wildcards.segment}/input',
         segment_name = lambda wildcards: wildcards.segment,
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from Bio import SeqIO
         from Bio.Seq import Seq
@@ -169,7 +169,7 @@ rule nextclade3_reporter:
         HTML = 'nextclade/report/html.iob' # nextclade3.OUTPUT_REPORT
     params:
         dir_ = 'nextclade/report',
-        name = config['sample_name'],
+        name = config['input']['sample_name'],
         capitalize_segment_names = config['nextclade'].get('capitalize', False)
     run:
         from camel.app.tools.nextclade3.nextclade3reporter import Nextclade3Reporter

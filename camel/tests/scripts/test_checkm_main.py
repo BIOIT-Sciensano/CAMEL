@@ -1,7 +1,8 @@
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.checkm.maincheckm import MainCheckM
+from camel.scripts.checkm.maincheckm import main
 from camel.tests import longRunningTest, resourceIntensiveTest
 
 
@@ -22,14 +23,14 @@ class TestCheckMMain(CamelTestSuite):
         :return: None
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
-        checkm_main = MainCheckM([
-            '--fasta', str(TestCheckMMain.input_fasta), TestCheckMMain.input_fasta.name,
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestCheckMMain.input_fasta),
             '--working-dir', str(self.running_dir),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
-            '--reduced_tree'
+            '--reduced-tree'
         ])
-        checkm_main.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -40,14 +41,15 @@ class TestCheckMMain(CamelTestSuite):
         :return: None
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
-        checkm_main = MainCheckM([
-            '--fasta', str(TestCheckMMain.input_fasta), '"SPAdes on data 126 and data 125 - Contigs"',
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestCheckMMain.input_fasta),
+            '--fasta-name', '"SPAdes on data 126 and data 125 - Contigs"',
             '--working-dir', str(self.running_dir),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
-            '--reduced_tree'
+            '--reduced-tree'
         ])
-        checkm_main.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

@@ -2,7 +2,8 @@ import unittest
 
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.utils import vcfutils
-from camel.scripts.variantcalling.samtools.mainfilteringsamtools import MainFiltering
+from camel.app.cli import cliutils
+from camel.scripts.variantcalling.mainfilteringsamtools import main
 
 
 class TestVariantFilteringMain(CamelTestSuite):
@@ -24,15 +25,14 @@ class TestVariantFilteringMain(CamelTestSuite):
         number_variants_in = vcfutils.count_variants(TestVariantFilteringMain.PATH_VCF_GZ_UNFILTERED)
         output_file_vcf = self.running_dir / 'filtered_variants.vcf'
         output_file_stats = self.running_dir / 'filter_stats.txt'
-        args = [
+        result = cliutils.invoke(main, [
             '--vcf', str(TestVariantFilteringMain.PATH_VCF_GZ_UNFILTERED),
             '--bam', str(TestVariantFilteringMain.PATH_BAM),
             '--working-dir', str(self.running_dir),
             '--output-vcf', str(output_file_vcf),
             '--output-stats', str(output_file_stats)
-        ]
-        main_filtering = MainFiltering(args)
-        main_filtering.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_vcf.stat().st_size, 0)
         self.assertGreater(output_file_stats.stat().st_size, 0)
         self.assertLess(vcfutils.count_variants(output_file_vcf), number_variants_in)
@@ -45,16 +45,15 @@ class TestVariantFilteringMain(CamelTestSuite):
         number_variants_in = vcfutils.count_variants(TestVariantFilteringMain.PATH_VCF_GZ_UNFILTERED)
         output_file_vcf = self.running_dir / 'filtered_variants.vcf'
         output_file_stats = self.running_dir / 'filter_stats.txt'
-        args = [
+        result = cliutils.invoke(main, [
             '--vcf', str(TestVariantFilteringMain.PATH_VCF_GZ_UNFILTERED),
             '--bam', str(TestVariantFilteringMain.PATH_BAM),
             '--working-dir', str(self.running_dir),
             '--output-vcf', str(output_file_vcf),
             '--output-stats', str(output_file_stats),
             '--soft-filter'
-        ]
-        main_filtering = MainFiltering(args)
-        main_filtering.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_vcf.stat().st_size, 0)
         self.assertGreater(output_file_stats.stat().st_size, 0)
         self.assertLess(vcfutils.count_variants(output_file_vcf), number_variants_in)
@@ -66,15 +65,14 @@ class TestVariantFilteringMain(CamelTestSuite):
         """
         number_variants_in = vcfutils.count_variants(TestVariantFilteringMain.PATH_VCF_GZ_UNFILTERED)
         output_file_vcf = self.running_dir / 'filtered_variants.vcf'
-        args = [
+        result = cliutils.invoke(main, [
             '--vcf', str(TestVariantFilteringMain.PATH_VCF_GZ_UNFILTERED),
             '--bam', str(TestVariantFilteringMain.PATH_BAM),
             '--working-dir', str(self.running_dir),
             '--output-vcf', str(output_file_vcf),
             '--min-snp-quality', '30'
-        ]
-        main_filtering = MainFiltering(args)
-        main_filtering.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_vcf.stat().st_size, 0)
         self.assertLess(vcfutils.count_variants(output_file_vcf), number_variants_in)
 
@@ -85,16 +83,15 @@ class TestVariantFilteringMain(CamelTestSuite):
         """
         number_variants_in = vcfutils.count_variants(TestVariantFilteringMain.PATH_VCF_GZ_UNFILTERED)
         output_file_vcf = self.running_dir / 'filtered_variants.vcf'
-        args = [
+        result = cliutils.invoke(main, [
             '--vcf', str(TestVariantFilteringMain.PATH_VCF_GZ_UNFILTERED),
             '--bam', str(TestVariantFilteringMain.PATH_BAM),
             '--bed', str(TestVariantFilteringMain.PATH_BED),
             '--working-dir', str(self.running_dir),
             '--output-vcf', str(output_file_vcf),
             '--min-snp-quality', '30'
-        ]
-        main_filtering = MainFiltering(args)
-        main_filtering.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_vcf.stat().st_size, 0)
         self.assertLess(vcfutils.count_variants(output_file_vcf), number_variants_in)
 

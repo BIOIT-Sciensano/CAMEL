@@ -64,7 +64,7 @@ class HtmlReporterContamination(Tool):
         :return: None
         """
         self._report_section = HtmlReportSection(
-            self._title, subtitle=self._input_informs['kraken2']['_name'])
+            self._title, subtitle=self._input_informs['kraken2']['_name_full'])
         self.__add_database_info()
         self.__add_filtering_info(self._input_informs['species'])
         self.__add_species_table()

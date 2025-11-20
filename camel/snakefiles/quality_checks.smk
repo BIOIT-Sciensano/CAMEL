@@ -494,7 +494,7 @@ rule quality_checks_combine_all:
     """
     input:
         JSON = quality_checks.get_qc_checks(
-            config['input_type'],
+            config['input']['type'],
             config.get('quality_checks', {}).get('skipped', []),
             config.get('quality_checks', {}).get('forced'),
         )

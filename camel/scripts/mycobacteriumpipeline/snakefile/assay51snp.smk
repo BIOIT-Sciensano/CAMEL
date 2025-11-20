@@ -71,7 +71,7 @@ rule assay_51snp_report:
         VAL_HTML = '51snp/report/html.iob' # assay51snp.OUTPUT_REPORT
     params:
         dir_ = '51snp/report',
-        sample_name = config['sample_name']
+        sample_name = config['input']['sample_name']
     run:
         from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.assay51snpreporter import Assay51SnpReporter

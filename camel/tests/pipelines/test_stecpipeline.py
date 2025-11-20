@@ -3,13 +3,14 @@ from pathlib import Path
 
 import yaml
 
-
+from camel.app.cli import cliutils
+from camel.app.core import cameltesthelper
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.tools.pipelines.genedetection.dbmanager import DBManager
 from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 from camel.scripts.stecpipeline import CONFIG_DATA
-from camel.scripts.stecpipeline.mainstecpipeline import MainSTECPipeline
+from camel.scripts.stecpipeline.mainstecpipeline import main, CUSTOM_ANALYSES
 from camel.tests import longRunningTest
 
 
@@ -24,7 +25,6 @@ class TestSTECPipeline(CamelTestSuite):
         test_file_dir / 'STEC-591_S13-ds_1.fastq.gz',
         test_file_dir / 'STEC-591_S13-ds_2.fastq.gz'
     ]
-    input_fastq_iontorrent = test_file_dir / 'Ecoli-iontorrent-ERR2019997-ds.fastq.gz'
     input_fastq_ont = test_file_dir / 'STEC-SRR16955601_ont-ds.fastq.gz'
     input_fasta = test_file_dir / 'STEC-591_S13-ds.fasta'
 
@@ -33,10 +33,8 @@ class TestSTECPipeline(CamelTestSuite):
         Checks if the databases for the sequence typing are available.
         :return: None
         """
-        with open(CONFIG_DATA) as handle_in:
-            config_data = yaml.safe_load(handle_in)
-
-        for key, scheme_data in config_data['sequence_typing']['dbs'].items():
+        data_typing = cameltesthelper.extract_from_yaml(CONFIG_DATA, 'sequence_typing')
+        for key, scheme_data in data_typing['dbs'].items():
             # Check if scheme exists
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
@@ -51,10 +49,8 @@ class TestSTECPipeline(CamelTestSuite):
         Checks if the databases for the gene detection are available.
         :return: None
         """
-        with open(CONFIG_DATA) as handle_in:
-            config_data = yaml.safe_load(handle_in)
-
-        for key, db_data in config_data['gene_detection']['dbs'].items():
+        data_gd = cameltesthelper.extract_from_yaml(CONFIG_DATA, 'gene_detection')
+        for key, db_data in data_gd['dbs'].items():
             # Check if DB exists
             self.assertGreater(Path(db_data['path']).stat().st_size, 0)
 
@@ -73,17 +69,18 @@ class TestSTECPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-pe',
             str(TestSTECPipeline.input_fastq_illumina_pe[0]),
             str(TestSTECPipeline.input_fastq_illumina_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainSTECPipeline.CUSTOM_ANALYSES if 'cgmlst' not in a]
-        main = MainSTECPipeline(args)
-        main.run()
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if  'cgmlst' not in a)
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -94,19 +91,19 @@ class TestSTECPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-pe',
             str(TestSTECPipeline.input_fastq_illumina_pe[0]),
             str(TestSTECPipeline.input_fastq_illumina_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'kma',
-            '--library', 'TruSeq2'
-        ] + [f"--{a.replace('_', '-')}" for a in MainSTECPipeline.CUSTOM_ANALYSES if 'cgmlst' not in a]
-        main = MainSTECPipeline(args)
-        main.run()
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if 'cgmlst' not in a),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -117,19 +114,19 @@ class TestSTECPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-pe',
             str(TestSTECPipeline.input_fastq_illumina_pe[0]),
             str(TestSTECPipeline.input_fastq_illumina_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--mlst-warwick',
-            '--cov-max', '5.0'
-        ]
-        main = MainSTECPipeline(args)
-        main.run()
+            '--analyses', 'mlst-warwick',
+            '--cov-max', '5',
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -140,16 +137,16 @@ class TestSTECPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fasta', str(TestSTECPipeline.input_fasta),
-                   '--input-type', 'fasta',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir)
-               ] + [f"--{a.replace('_', '-')}" for a in MainSTECPipeline.CUSTOM_ANALYSES if 'cgmlst' not in a]
-        main = MainSTECPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestSTECPipeline.input_fasta),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if 'cgmlst' not in a)
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -160,18 +157,17 @@ class TestSTECPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fastq-se', str(TestSTECPipeline.input_fastq_ont),
-                   '--input-type', 'ont',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir)
-               ] + [f"--{a.replace('_', '-')}" for a in MainSTECPipeline.CUSTOM_ANALYSES if 'cgmlst' not in a]
-        main = MainSTECPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-se', str(TestSTECPipeline.input_fastq_ont),
+            '--input-type', 'ont',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if 'cgmlst' not in a)
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
-
 
     @longRunningTest()
     def test_stec_pipeline_kma_ont(self) -> None:
@@ -181,17 +177,17 @@ class TestSTECPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-               '--fastq-se', str(TestSTECPipeline.input_fastq_ont),
-               '--input-type', 'ont',
-               '--output-html', str(path_report_out),
-               '--output-dir', str(path_report_out.parent),
-               '--output-tsv', str(path_summary_out),
-               '--working-dir', str(self.running_dir),
-               '--detection-method', 'kma'
-           ] + [f"--{a.replace('_', '-')}" for a in MainSTECPipeline.CUSTOM_ANALYSES if 'cgmlst' not in a]
-        main = MainSTECPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-se', str(TestSTECPipeline.input_fastq_ont),
+            '--input-type', 'ont',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--detection-method', 'kma',
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if 'cgmlst' not in a)
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

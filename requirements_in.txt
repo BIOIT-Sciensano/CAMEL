@@ -3,6 +3,7 @@ PuLP==2.7.0
 PyVCF3
 biopython
 bs4
+click
 humanize
 matplotlib==3.10.1
 openpyxl

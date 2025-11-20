@@ -34,8 +34,9 @@ rule all:
     This rule ensures that the required output files are generated.
     """
     input:
-        config['output_report'],
-        config['output_tabular']
+        config['output']['html'],
+        config['output']['tsv'],
+        config['output']['json'] if config['output'].get('json') is not None else []
 
 rule report_create_command_section:
     """
@@ -50,7 +51,7 @@ rule report_create_command_section:
         INFORMS_busco = quast.OUTPUT_INFORMS_BUSCO,
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
-        INFORMS_assembly_map = assembly.get_qc_informs(config, config['input_type']),
+        INFORMS_assembly_map = assembly.get_qc_informs(config, config['input']['type']),
         INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses'] else [],
         INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses'] else [],
         INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses'] else [],
@@ -69,8 +70,8 @@ rule report_create_command_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 rule combine_reports:
     """
@@ -84,7 +85,7 @@ rule combine_reports:
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
         report_adv_qc = str(quality_checks.OUTPUT_REPORT).format(
-            input_type=config['input_type']),
+            input_type=config['input']['type']),
         # AMR detection
         report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
         report_resfinder4 = resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses'] else resfinder4.OUTPUT_REPORT_EMPTY,
@@ -108,42 +109,41 @@ rule combine_reports:
         report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_create_command_section.output.HTML
     output:
-        HTML = config['output_report']
+        HTML = config['output']['html']
     params:
-        sample_name = config['sample_name'],
-        output_dir = config['output_dir'],
-        pipeline_info = config['pipeline'],
+        output_dir = config['output']['dir'],
+        pipeline_info = config['script_info'],
         input_dict = config['input'],
-        input_type = config['input_type'],
         citation_keys = config['citations'],
         detection_method = config['gene_detection']['options']['method']
     run:
         import datetime
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
         from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
+        from camel.app.scriptutils.basepipe import basepipeutils
+        from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 
         # Add the header section
+        script_input = ScriptInput.from_dict(params.input_dict)
         report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         report.add_html_object(snakepipelineutils.create_input_section(
-            sample_name=params.sample_name,
+            sample_name=script_input.name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
-            input_files=ReportPipeline.format_input_string(params.input_dict),
-            input_type=params.input_type,
-            key_citation=params.citation_keys['main'],
+            input_files=script_input.input_str,
+            input_type=script_input.type_.value,
             detection_method=params.detection_method
         ))
 
         # Set up the report content structure
         report_structure = []
-        ReportPipeline.add_content_scrubbing(
-            report_structure, params.input_type, input.reports_scrubbing)
-        ReportPipeline.add_content_trim_basic_qc(
-            report_structure, params.input_type, input.reports_downsampling, input.reports_trimming)
+        basepipeutils.add_content_scrubbing(
+            report_structure, script_input.type_.value, input.reports_scrubbing)
+        basepipeutils.add_content_trim_basic_qc(
+            report_structure, script_input.type_.value, input.reports_downsampling, input.reports_trimming)
         report_structure.append(('Assembly', 'assembly', [Path(input.report_quast)]))
-        ReportPipeline.add_content_contamination_check(
-            report_structure, params.input_type, input.reports_contamination, input.report_confindr)
+        basepipeutils.add_content_contamination_check(
+            report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.extend([
             ('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]),
             ('Species identification', 'species_id', [Path(input.report_rmlst)]),

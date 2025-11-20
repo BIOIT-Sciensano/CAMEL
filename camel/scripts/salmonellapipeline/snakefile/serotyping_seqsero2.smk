@@ -52,9 +52,9 @@ rule serotyping_seqsero2_run_fastq:
 
         seqsero_tool = SeqSero2()
         seqsero_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db_path_seqsero2))]})
-        if config['input_type'] == 'illumina':
+        if config['input']['type'] == 'illumina':
             seqsero_tool.add_input_files(snakepipelineutils.extract_fq_input(Path(input.IO), key_pe='FASTQ_PE'))
-        elif config['input_type'] == 'ont':
+        elif config['input']['type'] == 'ont':
             seqsero_tool.add_input_files(snakepipelineutils.extract_fq_input(
                 Path(input.IO), key_se='FASTQ_ONT', read_type='SE'))
         seqsero_tool.update_parameters(mode=str(params.mode))
@@ -69,10 +69,10 @@ rule serotyping_seqsero2_dump_summary_info:
     input:
         TXT_seqsero2_kmer = rules.serotyping_seqsero2_run_fasta.output.TXT,
         INFORMS_seqsero2_kmer = rules.serotyping_seqsero2_run_fasta.output.INFORMS,
-        TXT_seqsero2_allele = rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='allele') if config['input_type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
-        INFORMS_seqsero2_allele = rules.serotyping_seqsero2_run_fastq.output.INFORMS.format(mode='allele') if config['input_type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
-        TXT_seqsero2_kmerread = rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='kmerread') if config['input_type'] in ('ont', 'illumina') else [],
-        INFORMS_seqsero2_kmerread = rules.serotyping_seqsero2_run_fastq.output.INFORMS.format(mode='kmerread') if config['input_type'] in ('ont', 'illumina') else []
+        TXT_seqsero2_allele = rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='allele') if config['input']['type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
+        INFORMS_seqsero2_allele = rules.serotyping_seqsero2_run_fastq.output.INFORMS.format(mode='allele') if config['input']['type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
+        TXT_seqsero2_kmerread = rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='kmerread') if config['input']['type'] in ('ont', 'illumina') else [],
+        INFORMS_seqsero2_kmerread = rules.serotyping_seqsero2_run_fastq.output.INFORMS.format(mode='kmerread') if config['input']['type'] in ('ont', 'illumina') else []
     output:
         FILE = 'serotyping/seqsero2/summary/summary_seqsero2.{ext}' # serotyping_seqsero2.OUTPUT_SUMMARY
     params:
@@ -112,8 +112,8 @@ rule serotyping_seqsero2_report:
     """
     input:
         TXT_seqsero2_kmer = rules.serotyping_seqsero2_run_fasta.output.TXT,
-        TXT_seqsero2_allele = lambda wildcards: rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='allele') if config['input_type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
-        TXT_seqsero2_kmerread = lambda wildcards: rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='kmerread') if config['input_type'] in ('ont', 'illumina') else [],
+        TXT_seqsero2_allele = lambda wildcards: rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='allele') if config['input']['type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
+        TXT_seqsero2_kmerread = lambda wildcards: rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='kmerread') if config['input']['type'] in ('ont', 'illumina') else [],
         INFORMS_serotyping_seqsero2 = rules.serotyping_seqsero2_run_fasta.output.INFORMS
     output:
         VAL_HTML = 'serotyping/seqsero2/report/html.iob' # serotyping_seqsero2.OUTPUT_REPORT

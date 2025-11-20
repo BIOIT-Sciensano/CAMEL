@@ -82,7 +82,7 @@ class SamtoolsSort(SamtoolsBasePipeable):
         :return: None
         """
         if self._command.exit_code != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+            raise ToolExecutionError(f'Command execution failed (Exit code: {self._command.returncode})')
 
     def _before_pipe(self, dir_, pipe_in: bool, pipe_out: bool) -> None:
         """

@@ -1,13 +1,17 @@
 import argparse
+import dataclasses
 import datetime
 from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, Callable
 
+import click
 import pandas as pd
 from Bio import SeqIO
 
+from camel.app.cli import cliutils
+from camel.app.core.reports import reportutils
 from camel.app.core.reports.htmlelement import HtmlElement
 from camel.app.core.reports.htmlreport import HtmlReport
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
@@ -18,15 +22,24 @@ from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
 from camel.app.core.utils import fastqutils, fileutils
 from camel.app.loggers import logger
+from camel.app.scriptutils.model import BaseOptions, BaseInput, BaseOutput
 from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 from camel.app.tools.mega.modelselection import ModelSelection
 from camel.app.tools.snpmatrix.snpmatrixconstructor import SnpMatrixConstructor
 from camel.app.toolkits.phylogeny.megautils import MEGAUtils
 from camel.app.toolkits.phylogeny.newickutils import NewickUtils
 from camel.app.wrappers.trimmingilluminawrapper import TrimmingIlluminaWrapper
-from camel.resources import CSS_STYLE
 from camel.scripts.snpphylogeny import SNAKEFILE_TRIMMING_ALL
 from camel.scripts.snpphylogeny.snakefile.trimming_all import TRIMMING_ALL
+
+
+@dataclass(frozen=True)
+class CommonOptions(BaseOptions):
+    """
+    Common options for the phylogeny pipelines.
+    """
+    missing_data: str = dataclasses.field()
+    site_cov_cutoff: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -54,6 +67,24 @@ class Sample:
         """
         return self.name_valid == other.name_valid
 
+@dataclasses.dataclass(frozen=True)
+class PhyloInput(BaseInput):
+    """
+    Input for the phylogeny script.
+    """
+    reference: Path = dataclasses.field(metadata={'help': 'Reference genome FASTA file'})
+    reference_name: str | None
+    samples: list[Sample]
+
+
+@dataclasses.dataclass(frozen=True)
+class PhyloOutput(BaseOutput):
+    """
+    Output for the phylogeny script.
+    """
+    output_dir: Path = dataclasses.field(metadata={'help': 'Output directory'})
+    output_html: Path = dataclasses.field(metadata={'help': 'HTML report output'})
+    output_fasta: Path | None = dataclasses.field(default=None, metadata={'help': 'SNP matrix output'})
 
 @dataclass
 class MappingInput:
@@ -77,24 +108,25 @@ class MappingInput:
         return mapping_data
 
 
-def initialize_report(pipeline_name: str, args: argparse.Namespace) -> HtmlReport:
+def initialize_report(pipeline_name: str, script_in: PhyloInput, script_out: PhyloOutput) -> HtmlReport:
     """
     Initializes a HTML report.
-    :param pipeline_name: Pipeline name (e.g. 'Samtools', 'PHEnix')
-    :param args: Pipeline arguments
-    :return: Initializes HTML report
+    :param pipeline_name: Pipeline name
+    :param script_in: Script input
+    :param script_out: Script output
+    :return: HTML report object
     """
-    output_dir = Path(args.output_dir)
-    report = HtmlReport(Path(args.output_html), output_dir)
-    if not output_dir.exists():
-        output_dir.mkdir(parents=True)
-    report.initialize(f'SNP Phylogeny - {pipeline_name}', CSS_STYLE)
-    report.add_pipeline_header(f'SNP Phylogeny ({pipeline_name})')
+    report = reportutils.init_report(
+        path_out=script_out.output_html,
+        dir_out=script_out.output_dir,
+        key=f'SNP phylogeny - {pipeline_name}',
+        title=f'SNP phylogeny - {pipeline_name}'
+    )
     section = HtmlReportSection('Analysis info')
     section.add_table([
         ['Analysis date:', datetime.datetime.now().strftime(config.date_fmt)],
-        ['Nb. of samples:', len(args.sample)],
-        ['Reference:', args.reference_name if args.reference_name else Path(args.reference).name]],
+        ['Nb. of samples:', len(script_in.samples)],
+        ['Reference:', script_in.reference_name if script_in.reference_name else script_in.reference.name]],
         table_attributes=[('class', 'information')]
     )
     report.add_html_object(section)
@@ -127,37 +159,47 @@ def add_common_arguments(argument_parser: argparse.ArgumentParser) -> None:
     argument_parser.add_argument('--bootstraps', type=int, default=100)
     argument_parser.add_argument('--ml-method', choices=['nni', 'spr3', 'spr5'], default='spr3')
 
-def extract_samples(args: argparse.Namespace) -> list[Sample]:
+def add_input_options(f: Callable) -> Callable:
     """
-    Returns the sample names (sorted alphabetically).
-    :param args: Command line arguments
-    :return: Samples
+    Adds the input options.
     """
+    f = cliutils.add_click_options_from_dataclass(PhyloInput, skip=['samples'])(f)
+    f = click.option(
+        '--sample',
+        multiple=True,
+        type=click.Tuple([str, str, click.Path(), str, click.Path()]),
+        help='Sample(s): name, FQ forward, FQ forward name, FQ reverse, FQ reverse name',
+    )(f)
+    return f
+
+def parse_input_options(kwargs: dict) -> PhyloInput:
+    """
+    Parses the script input.
+    """
+    # Parse the provided samples
     samples = []
-    for sample_name, fwd_name, fwd_read, rev_name, rev_read in args.sample:
-        if (sample_name is None) or (len(fileutils.make_valid(sample_name)) == 0):
-            sample_name = fastqutils.get_sample_name(fwd_name)
+    for name, fq_fwd_name, fq_fwd, fq_rev_name, fq_rev in kwargs['sample']:
+        sample_name = name
+        if (name is None) or (len(name) == 0):
+            sample_name = fastqutils.get_sample_name(fq_fwd_name)
         samples.append(Sample(
-            sample_name, fileutils.make_valid(sample_name),
-            [ToolIOFile(Path(fwd_read)), ToolIOFile(Path(rev_read))],
-            [fwd_name, rev_name]
+            sample_name, fileutils.make_valid(name),
+            [ToolIOFile(Path(fq_fwd)), ToolIOFile(Path(fq_rev))],
+            [fq_fwd_name, fq_rev_name]
         ))
 
     # Check for duplicate names
-    if len(set(s.name_valid for s in samples)) != len(args.sample):
+    if len(set(s.name_valid for s in samples)) != len(kwargs['sample']):
         sample_names = [s.name_valid for s in samples]
         duplicate_sample_names = [x for x in set(sample_names) if sample_names.count(x) > 1]
-        raise ValueError("Duplicate sample names are not allowed. Conflicting sample(s): {}".format(
+        raise click.UsageError("Duplicate sample names are not allowed. Conflicting sample(s): {}".format(
             ', '.join([f"'{n}' ({sample_names.count(n)} times)" for n in duplicate_sample_names])))
 
-    # Check for empty sample names
-    empty_samples = [s for s in samples if len(s.name_valid) == 0]
-    if len(empty_samples) > 0:
-        raise ValueError("Empty sample name for sample(s): {}".format(', '.join([
-            str(s.reads_names) for s in empty_samples])))
-
-    # Sort samples by name
-    return sorted(samples, key=lambda s: s.name_valid)
+    return PhyloInput(
+        reference=Path(kwargs['reference']),
+        reference_name=kwargs['reference_name'],
+        samples=sorted(samples, key=lambda s: s.name_valid)
+    )
 
 def symlink_input_files(samples: list[Sample], dir_working: Path) -> dict[Sample, list[ToolIOFile]]:
     """
@@ -166,6 +208,8 @@ def symlink_input_files(samples: list[Sample], dir_working: Path) -> dict[Sample
     :param dir_working: Working directory
     :return: Symlink locations by sample
     """
+    import pprint
+    pprint.pprint(samples)
     logger.info(f"Creating symlinks for input files for {len(samples)} samples")
     symlink_dir = dir_working / 'input'
     if not symlink_dir.exists():
@@ -181,23 +225,24 @@ def symlink_input_files(samples: list[Sample], dir_working: Path) -> dict[Sample
             fq_by_sample[sample].append(ToolIOFile(path_link))
     return fq_by_sample
 
-def trim_all_reads(fq_by_sample: dict[Sample, list[ToolIOFile]], working_dir: Path, adapter: str,
-                   threads: int = 8) -> dict[Sample, TrimmingIlluminaWrapper.ReadTrimmingOutput]:
+def trim_all_reads(
+        fq_by_sample: dict[Sample, list[ToolIOFile]], working_dir: Path, threads: int = 8) -> \
+        dict[Sample, TrimmingIlluminaWrapper.ReadTrimmingOutput]:
     """
     Trims all the reads in parallel using Snakemake.
     :param fq_by_sample: FASTQ files by sample
     :param working_dir: Working directory
-    :param adapter: Adapters to trim
     :param threads: Number of threads
     :return: None
     """
+    logger.info("Trimming reads")
     config_data = {
         'working_dir': str(working_dir),
         'samples': {s.name_valid: [str(f.path) for f in fq] for s, fq in fq_by_sample.items()},
-        'read_trimming': {'adapter': adapter}
+        'read_trimming': {}
     }
     config_file = snakepipelineutils.generate_config_file(config_data, working_dir)
-    output_file = TRIMMING_ALL
+    output_file = Path(TRIMMING_ALL)
     snakepipelineutils.run_snakemake(
         SNAKEFILE_TRIMMING_ALL, config_file, [output_file], working_dir, threads)
     trimming_out_by_sample = snakemakeutils.load_object(working_dir / output_file)
@@ -363,8 +408,8 @@ def check_snp_matrix_size(snp_matrix: Path, size_min: int = 10, size_max: int = 
         raise ValueError(
             f'SNP matrix is too small ({snp_matrix_size}, min={size_min}) to perform model selection / tree building.')
 
-def add_model_selection_section(report: HtmlReport, model_selection: Optional[ModelSelection] = None,
-                                error_message: Optional[str] = None) -> None:
+def add_model_selection_section(
+        report: HtmlReport, model_selection: Optional[ModelSelection] = None, error_message: Optional[str] = None) -> None:
     """
     Adds the section with the model selection results.
     :param report: Report
@@ -388,18 +433,24 @@ def add_model_selection_section(report: HtmlReport, model_selection: Optional[Mo
     section.copy_files(report.output_dir)
     report.save()
 
-def run_model_selection(snp_matrix: ToolIOFile, args: argparse.Namespace) -> ModelSelection:
+def run_model_selection(
+        snp_matrix: ToolIOFile, dir_: Path, missing_data: str, branch_swap: str, site_cov_cutoff: int, threads: int
+    ) -> ModelSelection:
     """
     Runs the MEGA model selection step.
     :param snp_matrix: SNP matrix
-    :param args: Command line arguments
+    :param dir_: Working directory
+    :param missing_data: Missing data handling
+    :param branch_swap: Branch swap filter
+    :param site_cov_cutoff: Site coverage cutoff
+    :param threads: Number of threads
     :return: Model selection
     """
     model_selection = ModelSelection()
     model_selection.add_input_files({'FASTA': [snp_matrix]})
     MEGAUtils.update_model_selection_parameters(
-        model_selection, args.missing_data, args.branch_swap, args.site_cov_cutoff, args.threads)
-    working_dir = Path(args.working_dir) / 'model_selection'
+        model_selection, missing_data, branch_swap, site_cov_cutoff, threads)
+    working_dir = dir_ / 'model_selection'
     if not working_dir.exists():
         working_dir.mkdir(parents=True)
     model_selection.run(working_dir)
@@ -436,22 +487,29 @@ def add_tree_building_section(report: HtmlReport, newick_path: Optional[Path] = 
     section.copy_files(report.output_dir)
     report.save()
 
-def run_tree_building(snp_matrix: ToolIOFile, model: str, rates: str, args: argparse.Namespace) -> \
-        MLTreeConstruction:
+def run_tree_building(
+        snp_matrix: ToolIOFile, dir_: Path, model: str, rates: str, bootstraps: int, ml_method: str, branch_swap: str,
+        missing_data: str, site_cov_cutoff: int, threads: int
+    ) -> MLTreeConstruction:
     """
     Builds a phylogenetic tree based on the given SNP matrix.
     :param snp_matrix: SNP matrix
+    :param dir_: Working directory
     :param model: Selected model (e.g. 'T92')
     :param rates: Rates among sites (e.g. 'U')
-    :param args: Command line arguments
+    :param bootstraps: Number of bootstrap replicates
+    :param ml_method: ML method
+    :param branch_swap: Branch swap filter
+    :param missing_data: Missing data handling
+    :param site_cov_cutoff: Site coverage cutoff
+    :param threads: Number of threads
     :return: Tree building tool instance
     """
     tree_building = MLTreeConstruction()
     tree_building.add_input_files({'FASTA': [snp_matrix]})
     MEGAUtils.update_tree_building_parameters(
-        tree_building, model, rates, args.bootstraps, args.missing_data, args.site_cov_cutoff,
-        args.ml_method, args.branch_swap, args.threads)
-    working_dir = Path(args.working_dir) / 'tree_building'
+        tree_building, model, rates, bootstraps, missing_data, site_cov_cutoff, ml_method, branch_swap, threads=threads)
+    working_dir = dir_ / 'tree_building'
     if not working_dir.exists():
         working_dir.mkdir(parents=True)
     tree_building.run(working_dir)

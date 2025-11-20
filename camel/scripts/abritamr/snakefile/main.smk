@@ -17,9 +17,8 @@ include: assembly.SNAKEFILE
 #########
 rule all:
     input:
-        HTML = config['output_report'],
-        TSV = config['output_tabular']
-
+        HTML = config['output']['html'],
+        TSV = config['output']['tsv']
 
 rule report_pickle_citations:
     """
@@ -47,8 +46,8 @@ rule report_command_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.export_command_section(input, Path(output.HTML), Path(params.dir_))
 
 rule report_combine_all:
     """
@@ -59,28 +58,26 @@ rule report_combine_all:
         report_citations = rules.report_pickle_citations.output.HTML,
         report_commands = rules.report_command_section.output.HTML
     output:
-        HTML = config['output_report']
+        HTML = config['output']['html']
     params:
-        sample_name = config['sample_name'],
+        sample_name = config['input']['sample_name'],
         input_dict = config['input'],
-        input_type = config['input_type'],
-        output_dir = config['output_dir'],
-        pipeline_info = config['pipeline'],
+        output_dir = config['output']['dir'],
+        pipeline_info = config['script_info'],
         citation_keys = config['citations']
     run:
         import datetime
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
+        from camel.app.scriptutils import model
 
         # Add header section
         report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         report.add_html_object(snakepipelineutils.create_input_section(
-            sample_name=params.sample_name,
+            sample_name=params.input_dict['sample_name'],
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
-            input_files=ReportPipeline.format_input_string(params.input_dict),
-            input_type=params.input_type,
-            key_citation=params.citation_keys['main']
+            input_files=params.input_dict['fasta']['name'],
+            input_type=model.InputType.FASTA.value,
         ))
 
         # Add report content
@@ -98,7 +95,7 @@ rule summary_combine_all:
     input:
         TSV = str(abritamr.OUTPUT_SUMMARY).format(ext='tsv')
     output:
-        TSV = config['output_tabular']
+        TSV = config['output']['tsv']
     shell:
         """
         cp {input.TSV} {output.TSV}

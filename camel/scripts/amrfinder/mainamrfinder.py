@@ -1,121 +1,160 @@
 #!/usr/bin/env python
-import argparse
+import dataclasses
 import shutil
-from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+
+import click
 
 from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.reports import reportutils
-from camel.app.scriptutils.basescript import BaseScript
+from camel.app.core.reports.htmlreport import HtmlReport
 from camel.app.core.utils import fileutils
-from camel.app.scriptutils import mainscriptutils
 from camel.app.loggers import initialize_logging
+from camel.app.scriptutils.basescript.basescript import BaseScript
+from camel.app.scriptutils.basescript.fastainput import FastaInput
+from camel.app.scriptutils.model import BaseOptions, BaseOutput
 from camel.app.tools.amrfinder.amrfinder import AMRFinder
 from camel.app.tools.amrfinder.amrfinderreporter import AMRFinderReporter
+from camel.app.cli import cliutils
 
 
-class MainAMRFinder(BaseScript):
+@dataclasses.dataclass(frozen=True)
+class Output(BaseOutput):
+    """
+    Tool output.
+    """
+    output_html: Path = dataclasses.field(metadata={'help': 'Output HTML file'})
+    output_dir: Path | None = dataclasses.field(metadata={'help': 'Output directory'})
+    output_tsv: Path | None = dataclasses.field(default=None, metadata={'help': 'Output TSV file'})
+
+@dataclasses.dataclass(frozen=True)
+class Options(BaseOptions):
+    """
+    Specific options for AMFinder+.
+    """
+    db: Path = dataclasses.field(metadata={'help': 'Path to AMFinder+ database'})
+    working_dir: Path = dataclasses.field(default=Path('working'), metadata={
+        'help': 'Working directory', 'show_default': True})
+    min_id: int | None = dataclasses.field(default=None, metadata={
+        'help': 'Minimum identity threshold (defaults to curated cutoffs if not specified)'})
+    min_cov: int | None = dataclasses.field(default=50, metadata={
+        'help': 'Minimum coverage threshold', 'show_default': True})
+    organism: str | None = dataclasses.field(default=None, metadata={'help': 'Organism'})
+    threads: int = dataclasses.field(default=1, metadata={'help': 'Number of threads', 'show_default': True})
+
+
+class MainAMRFinder(BaseScript[FastaInput, Output, Options]):
     """
     Main script for the AMRFinder tool.
     """
 
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(self, in_: FastaInput, out: Output, opts: Options) -> None:
         """
         Initializes the main script.
-        :param args: Arguments (optional)
-        """
-        super().__init__(name='AMRFinder+', version='1.0', snakefile=None)
-        self._args = MainAMRFinder._parse_arguments(args)
-        self._sample_name = mainscriptutils.determine_sample_name(self._args)
-
-    @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
-        """
-        Parses the command line arguments.
-        :param args: Arguments to parse
-        :return: Parsed arguments
-        """
-        parser = argparse.ArgumentParser()
-        mainscriptutils.add_common_arguments(parser)
-        parser.add_argument('--fasta', help='Input FASTA file', type=Path, required=True)
-        parser.add_argument('--fasta-name', help="Input FASTA file name (For Galaxy)", type=str)
-        parser.add_argument('--output-tsv', help="Copy the tabular file to this location", type=Path)
-        parser.add_argument('--db', help='Database', type=Path, required=True)
-        parser.add_argument('--min-cov', help='Minimum target coverage', type=int, default=50)
-        parser.add_argument(
-            '--min-id', type=int, help='Minimum % identity (defaults to curated cutoffs when not specified)')
-        parser.add_argument(
-            '--organism', help='Organisms, required to identify point mutations associated with AMR', type=str)
-        return parser.parse_args(args)
-
-    def run(self) -> None:
-        """
-        Runs the main script.
+        :param in_: Script input
+        :param out: Script output
+        :param opts: Options
         :return: None
+        """
+        super().__init__(
+            name='AMRFinder+',
+            version='1.0.0',
+            title='AMRFinder+',
+            script_in=in_,
+            script_out=out,
+            script_opts=opts
+        )
+
+    def __initialize_report(self) -> HtmlReport:
+        """
+        Initializes the HTML output report.
+        :return: HTML report
         """
         # Initialize report
         report = reportutils.init_report(
-            path_out=self._args.output_html,
-            dir_out=self._args.output_dir,
+            path_out=self._script_out.output_html,
+            dir_out=self._script_out.output_dir,
             key=self.name,
             title=f'{self.name} v{self.version}',
         )
 
         # Create the overview section
         additional_info = [
-            ['Organism', self._args.organism if self._args.organism is not None else 'Not specified'],
-            ['Min % identity', self._args.min_id if self._args.min_id is not None else 'Curated (default)'],
-            ['Min % coverage', self._args.min_cov],
+            ['Organism', self._script_opts.organism if self._script_opts.organism is not None else 'Not specified'],
+            ['Min % identity', self._script_opts.min_id if self._script_opts.min_id is not None else 'Curated (default)'],
+            ['Min % coverage', self._script_opts.min_cov],
         ]
-        input_file_str = self._args.fasta_name if self._args.fasta_name is not None else self._args.fasta.name
         report.add_html_object(reportutils.create_overview_section(
             version=self.version,
-            dataset_name=self._sample_name,
-            input_file_str=input_file_str,
+            dataset_name=self._script_in.name,
+            input_file_str=self._script_in.input_str,
             date=datetime.now(),
             extra_data=additional_info
         ))
         report.save()
+        return report
+
+    def _execute(self) -> None:
+        """
+        Runs the main script.
+        :return: None
+        """
+        report = self.__initialize_report()
 
         # Run AMRFinder
         amrfinder = AMRFinder()
         amrfinder.add_input_files({
-            'FASTA': [ToolIOFile(self._args.fasta)],
-            'DIR': [ToolIODirectory(self._args.db)]
+            'FASTA': [ToolIOFile(self._script_in.fasta)],
+            'DIR': [ToolIODirectory(self._script_opts.db)]
         })
         amrfinder.update_parameters(
-            min_cov=self._args.min_cov / 100.0,
-            output_path=f'amrfinder_{fileutils.make_valid(self._sample_name)}.tsv'
+            min_cov=self._script_opts.min_cov / 100.0,
+            output_path=f'amrfinder_{fileutils.make_valid(self._script_in.name)}.tsv',
+            threads=self._script_opts.threads
         )
-        if self._args.min_id is not None:
-            amrfinder.update_parameters(min_ident=self._args.min_id / 100.0)
-        if self._args.organism is not None:
-            amrfinder.update_parameters(organism=self._args.organism)
-        self._args.working_dir.mkdir(parents=True, exist_ok=True)
-        amrfinder.run(self._args.working_dir)
+        if self._script_opts.min_id is not None:
+            amrfinder.update_parameters(min_ident=self._script_opts.min_id / 100.0)
+        if self._script_opts.organism is not None:
+            amrfinder.update_parameters(organism=self._script_opts.organism)
+        self._script_opts.working_dir.mkdir(parents=True, exist_ok=True)
+        amrfinder.run(self._script_opts.working_dir.absolute())
 
         # Create the output section
         amrfinder_reporter = AMRFinderReporter()
         amrfinder_reporter.add_input_files({'TSV': amrfinder.tool_outputs['TSV']})
         amrfinder_reporter.add_input_informs({'amrfinder': amrfinder.informs})
-        amrfinder_reporter.run(self._args.working_dir)
+        amrfinder_reporter.run(self._script_opts.working_dir.absolute())
         report.add_html_object(amrfinder_reporter.tool_outputs['HTML'][0].value)
         amrfinder_reporter.tool_outputs['HTML'][0].value.copy_files(report.output_dir)
 
         # Add commands and citations
-        report.add_html_object(reportutils.create_commands_section([amrfinder.informs], self._args.working_dir))
+        report.add_html_object(reportutils.create_commands_section([amrfinder.informs], self._script_opts.working_dir.absolute()))
         report.add_html_object(reportutils.create_citations_section(['Feldgarden_2019-ndaro']))
         report.save()
 
-        # Copy the TSV output file when specified
-        if self._args.output_tsv is not None:
-            shutil.copyfile(amrfinder.tool_outputs['TSV'][0].path, self._args.output_tsv)
+        # Copy the TSV output file if specified
+        if self._script_out.output_tsv is not None:
+            shutil.copyfile(amrfinder.tool_outputs['TSV'][0].path, self._script_out.output_tsv)
+
+
+@click.command(name='amrfinder', short_help='Wrapper for NCBI AMRFinder+')
+@cliutils.add_click_options_from_dataclass(FastaInput)
+@cliutils.add_click_options_from_dataclass(Output)
+@cliutils.add_click_options_from_dataclass(Options)
+def main(**kwargs) -> None:
+    """
+    Wrapper for NCBI AMRFinder+.
+    """
+    script = MainAMRFinder(
+        in_=FastaInput(**cliutils.from_kwargs(FastaInput, kwargs)),
+        out=Output(**cliutils.from_kwargs(Output, kwargs)),
+        opts=Options(**cliutils.from_kwargs(Options, kwargs))
+    )
+    script.run()
 
 
 if __name__ == '__main__':
     initialize_logging()
-    main = MainAMRFinder()
-    main.run()
+    main()

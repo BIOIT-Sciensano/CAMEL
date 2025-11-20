@@ -21,7 +21,7 @@ rule preprocess_ampligone_to_bed:
         INFORMS = 'preprocess/ampligone/tool/informs.io'
     params:
         dir_ = 'preprocess/ampligone/tool',
-        primer_mismatch_rate = '0.01' if config['input_type'] == 'illumina' else '0.1'
+        primer_mismatch_rate = '0.01' if config['input']['type'] == 'illumina' else '0.1'
     run:
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.ampligone.ampligonefasta2bed import AmpliGoneFasta2Bed
@@ -81,12 +81,12 @@ rule preprocess_map_reads_pre:
         INFORMS = 'preprocess/mapping_pre/informs.json'
     params:
         dir_ = lambda wildcards: 'preprocess/mapping_pre',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff', 5),
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff', 10)
     threads: 8
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
@@ -120,7 +120,7 @@ rule preprocess_downsample_by_segment:
         INFORMS = 'preprocess/downsample/informs.json'
     params:
         dir_ = 'preprocess/downsample',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         max_depth = config['downsampling'].get('coverage_max_by_segment', 250)
     threads: 8
     run:
@@ -145,10 +145,10 @@ rule preprocess_map_reads_post:
         JSON = 'preprocess/mapping_post/stats.json'
     params:
         dir_ = lambda wildcards: 'preprocess/mapping_post',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     threads: 8
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
@@ -206,7 +206,7 @@ rule preprocess_report:
         VAL_HTML = 'preprocess/report/html.iob' # preprocess.OUTPUT_REPORT
     params:
         dir_ = 'preprocess/report',
-        name = config['sample_name'],
+        name = config['input']['sample_name'],
         max_depth = config['downsampling'].get('coverage_max_by_segment', 250),
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff', 5)
     run:

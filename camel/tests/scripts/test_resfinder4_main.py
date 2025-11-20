@@ -1,10 +1,11 @@
 import unittest
 from pathlib import Path
 
+from camel.app.cli import cliutils
 from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.scripts.resfinder.mainresfinder import MainResFinder
+from camel.scripts.resfinder.mainresfinder import main
 
 
 class TestResFinder(CamelTestSuite):
@@ -28,21 +29,21 @@ class TestResFinder(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.FILE_FASTA_3),
+            '--input-type', 'fasta',
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
-            '--db-directory', str(self.DB_RESFINDER),
+            '--db', str(self.DB_RESFINDER),
             '--acquired',
             '--acq-overlap', '40',
             '--point',
             '--min-cov', '60',
             '--threshold', '80',
             '--species', 'Staphylococcus_aureus'
-        ]
-        main = MainResFinder(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_resfinder_main_fasta_unknown_phenotypes(self) -> None:
@@ -51,18 +52,18 @@ class TestResFinder(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.FILE_FASTA_4),
+            '--input-type', 'fasta',
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
-            '--db-directory', str(self.DB_RESFINDER),
+            '--db', str(self.DB_RESFINDER),
             '--acquired',
             '--min-cov', '60',
             '--threshold', '80',
-        ]
-        main = MainResFinder(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_resfinder_main_fastq(self) -> None:
@@ -71,21 +72,21 @@ class TestResFinder(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-pe', str(self.FILE_FASTQ_1), str(self.FILE_FASTQ_2),
+            '--input-type', 'illumina',
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
-            '--db-directory', str(self.DB_RESFINDER),
+            '--db', str(self.DB_RESFINDER),
             '--point',
             '--acquired',
             '--acq-overlap', '45',
             '--min-cov', '60',
             '--threshold', '80',
             '--species', 'Escherichia_coli'
-        ]
-        main = MainResFinder(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_resfinder_main_fastq_kleb(self) -> None:
@@ -94,21 +95,21 @@ class TestResFinder(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-pe', str(self.FILE_FASTQ_1), str(self.FILE_FASTQ_2),
+            '--input-type', 'illumina',
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
-            '--db-directory', str(self.DB_RESFINDER),
+            '--db', str(self.DB_RESFINDER),
             '--point',
             '--acquired',
             '--acq-overlap', '45',
             '--min-cov', '60',
             '--threshold', '80',
             '--species', 'Klebsiella'
-        ]
-        main = MainResFinder(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_resfinder_main_fastq_kleb_only_pointfinder(self) -> None:
@@ -117,20 +118,20 @@ class TestResFinder(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-pe', str(self.FILE_FASTQ_1), str(self.FILE_FASTQ_2),
+            '--input-type', 'illumina',
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
-            '--db-directory', str(self.DB_RESFINDER),
+            '--db', str(self.DB_RESFINDER),
             '--point',
             '--acq-overlap', '45',
             '--min-cov', '60',
             '--threshold', '80',
             '--species', 'Klebsiella'
-        ]
-        main = MainResFinder(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_resfinder_main_fasta_enterococcus_no_species(self) -> None:
@@ -139,19 +140,19 @@ class TestResFinder(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.FILE_FASTA_ENTERO),
+            '--input-type', 'fasta',
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
-            '--db-directory', str(self.DB_RESFINDER),
+            '--db', str(self.DB_RESFINDER),
             '--acquired',
             '--acq-overlap', '40',
             '--min-cov', '60',
             '--threshold', '80',
-        ]
-        main = MainResFinder(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
 

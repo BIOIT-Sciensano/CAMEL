@@ -1,5 +1,6 @@
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.mega.mainmega import MainMega
+from camel.scripts.mega.mainmega import main
 
 
 class TestMEGA(CamelTestSuite):
@@ -34,8 +35,8 @@ class TestMEGA(CamelTestSuite):
             '--site-cov-cutoff', '50',
             '--branch-swap', 'weak'
         ]
-        mega = MainMega(args)
-        mega.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file.stat().st_size, 0)
 
     def test_tree_building(self) -> None:
@@ -57,8 +58,8 @@ class TestMEGA(CamelTestSuite):
             '--branch-swap', 'moderate',
             '--bootstraps', '10',
         ]
-        mega = MainMega(args)
-        mega.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file.stat().st_size, 0)
 
     def test_both(self) -> None:
@@ -76,10 +77,10 @@ class TestMEGA(CamelTestSuite):
             '--action', 'both',
             '--output-tree', str(output_file_tree),
             '--output-model', str(output_file_model),
-            '--bootstraps', '10'
+            '--bootstraps', '10',
         ]
-        mega = MainMega(args)
-        mega.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_model.stat().st_size, 0)
         self.assertGreater(output_file_tree.stat().st_size, 0)
 
@@ -100,7 +101,7 @@ class TestMEGA(CamelTestSuite):
         ]
         for vcf_file in TestMEGA.input_vcf_files:
             args.extend(['--vcf', str(vcf_file), vcf_file.name])
-        mega = MainMega(args)
-        mega.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_model.stat().st_size, 0)
         self.assertGreater(output_file_fasta.stat().st_size, 0)

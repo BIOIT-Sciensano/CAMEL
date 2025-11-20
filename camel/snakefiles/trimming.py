@@ -11,7 +11,7 @@ def get_reports(config: dict[str, Any]) -> list[Path]:
     :return: List of paths to the trimming reports
     """
     paths = []
-    input_type = config['input_type']
+    input_type = config['input']['type']
 
     # FASTA input
     if input_type in ('fasta', 'fasta_with_vcf'):
@@ -36,7 +36,7 @@ def get_summaries(config: dict[str, Any]) -> list[Path]:
     :param config: Snakemake configuration
     :return: Path to read trimming summary file
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
 
     # FASTA input
     if input_type in ('fasta', 'fasta_with_vcf'):
@@ -58,7 +58,7 @@ def get_command_informs(config: dict[str, Any]) -> list[Path]:
     :return: List of informs IO files
     """
     paths = []
-    input_type = config['input_type']
+    input_type = config['input']['type']
     if input_type in ('illumina', 'hybrid'):
         paths.append(trimming_illumina.OUTPUT_INFORMS)
     if input_type in ('ont', 'hybrid'):

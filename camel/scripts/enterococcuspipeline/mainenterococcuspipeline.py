@@ -1,146 +1,179 @@
 #!/usr/bin/env python
-import argparse
-from collections.abc import Sequence
+import dataclasses
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+import click
 import yaml
 
-from camel.app.scriptutils.reportpipeline import ReportPipeline
+from camel.app.cli import cliutils
 from camel.app.config import config
-from camel.app.scriptutils import mainscriptutils
-from camel.app.loggers import logger, initialize_logging
 from camel.app.core.snakemake import snakepipelineutils
-from camel.scripts.enterococcuspipeline import CONFIG_DATA, SNAKEFILE_MAIN
+from camel.app.loggers import logger, initialize_logging
+from camel.app.scriptutils import model
+from camel.app.scriptutils.basepipe import basepipeutils
+from camel.app.scriptutils.basepipe.basepipe import BasePipe
+from camel.app.scriptutils.basescript import basescriptutils
+from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
+from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
+from camel.scripts.enterococcuspipeline import SNAKEFILE_MAIN, CONFIG_DATA
+
+CUSTOM_ANALYSES = [
+    'amrfinder',
+    'bacmet',
+    'cgmlst',
+    'confindr',
+    'human_read_scrubbing',
+    'kraken2',
+    'lrefinder',
+    'mlst',
+    'mob_suite',
+    'plasmidfinder',
+    'resfinder4',
+    'rmlst',
+    'variant_calling'
+    'vfdb_core',
+    'virulencefinder',
+]
+
+DATA_BY_SPECIES = {
+    'faecalis': {
+        'amrfinder_species': 'Enterococcus_faecalis',
+        'cgmlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecalis/cgmlst')),
+        'full_name': 'Enterococcus faecalis',
+        'reference': {
+            'fasta': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecalis/KB944666.1.fasta')),
+            'gff3': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecalis/KB944666.1.gff3')),
+            'name': 'KB944666.1',
+            'url': 'https://www.ncbi.nlm.nih.gov/nuccore/KB944666.1',
+        },
+        'mlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecalis/mlst')),
+        'resfinder4_species': 'Enterococcus faecalis',
+    },
+    'faecium': {
+        'amrfinder_species': 'Enterococcus_faecium',
+        'cgmlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecium/cgmlst')),
+        'full_name': 'Enterococcus faecium',
+        'reference': {
+            'fasta': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecium/CP038996.1.fasta')),
+            'gff3': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecium/CP038996.1.gff3')),
+            'name': 'CP038996.1',
+            'url': 'https://www.ncbi.nlm.nih.gov/nuccore/CP038996.1/',
+        },
+        'mlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecium/mlst')),
+        'resfinder4_species': 'Enterococcus faecium',
+    },
+    'spp': {
+        'amrfinder_species': None,
+        'disabled_assays': ['mlst', 'cgmlst', 'variant_calling'],
+        'full_name': 'Enterococcus spp.',
+        'reference': {
+            'gc': 37.4,
+            'size': 2_973_380
+        },
+        'resfinder4_species': None,
+    },
+}
 
 
-class MainEnterococcusPipeline(ReportPipeline):
+@dataclasses.dataclass(frozen=True)
+class Options(model.BaseOptions):
+    """
+    Pipeline-specific options.
+    """
+    species: str = dataclasses.field(metadata={'choices': list(DATA_BY_SPECIES.keys())})
+    analyses: list[str] = dataclasses.field(default_factory=list)
+
+class MainEnterococcusPipeline(BasePipe):
     """
     Main class to run the Enterococcus pipeline.
     """
 
-    CUSTOM_ANALYSES = [
-        'kraken2', 'confindr', 'rmlst', 'lrefinder', 'amrfinder', 'resfinder4', 'vfdb_core', 'virulencefinder', 'mlst',
-        'cgmlst', 'plasmidfinder', 'mob_suite', 'bacmet', 'human_read_scrubbing', 'variant_calling']
-
-    DATA_BY_SPECIES = {
-        'faecalis': {
-            'amrfinder_species': 'Enterococcus_faecalis',
-            'cgmlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecalis/cgmlst')),
-            'full_name': 'Enterococcus faecalis',
-            'reference': {
-                'fasta': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecalis/KB944666.1.fasta')),
-                'gff3': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecalis/KB944666.1.gff3')),
-                'name': 'KB944666.1',
-                'url': 'https://www.ncbi.nlm.nih.gov/nuccore/KB944666.1',
-            },
-            'mlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecalis/mlst')),
-            'resfinder4_species': 'Enterococcus faecalis',
-        },
-        'faecium': {
-            'amrfinder_species': 'Enterococcus_faecium',
-            'cgmlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecium/cgmlst')),
-            'full_name': 'Enterococcus faecium',
-            'reference': {
-                'fasta': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecium/CP038996.1.fasta')),
-                'gff3': str(Path(config.dir_db, 'refgenomes/Enterococcus_faecium/CP038996.1.gff3')),
-                'name': 'CP038996.1',
-                'url': 'https://www.ncbi.nlm.nih.gov/nuccore/CP038996.1/',
-            },
-            'mlst_db': str(Path(config.dir_db, 'sequence_typing/enterococcus_faecium/mlst')),
-            'resfinder4_species': 'Enterococcus faecium',
-        },
-        'spp': {
-            'amrfinder_species': None,
-            'disabled_assays': ['mlst', 'cgmlst', 'variant_calling'],
-            'full_name': 'Enterococcus spp.',
-            'reference': {
-                'gc': 37.4,
-                'size': 2_973_380
-            },
-            'resfinder4_species': None,
-        },
-    }
-
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(
+        self,
+        in_: ScriptInput,
+        out: ScriptOutput,
+        opts: ScriptOptions,
+        opts_custom: Options
+    ) -> None:
         """
         Initializes the main class.
-        :param args: Arguments (optional)
+        :param in_: Script input
+        :param out: Script output
+        :param opts: General pipeline options
+        :param opts_custom: Pipeline-specific options
+        :return: None
         """
-        super().__init__('Enterococcus pipeline', '1.2', SNAKEFILE_MAIN, args)
+        super().__init__(
+            name='Enterococcus pipeline',
+            title='<i>Enterococcus</i> pipeline',
+            version='1.2',
+            script_in=in_,
+            script_out=out,
+            opts=opts,
+            snakefile=SNAKEFILE_MAIN
+        )
+        self._opts_custom = opts_custom
 
-    @property
-    def title(self) -> str:
-        """
-        Returns the title of the pipeline as it appears in the HTML output.
-        :return: Title
-        """
-        return '<i>Enterococcus</i> pipeline'
-
-    def run(self) -> None:
+    def _execute(self) -> None:
         """
         Runs the pipeline.
         :return: None
         """
-        input_files = self._symlink_input()
-        self._validate_input_files()
-        config_file = self.__construct_config_file(input_files)
-        self._run_snakemake_main(config_file)
-        self._export_assembly()
+        # Parse template data
+        with open(CONFIG_DATA) as handle:
+            yaml_text = handle.read()
+        yaml_text = yaml_text.format(
+            AMRFINDER_SPECIES=DATA_BY_SPECIES[self._opts_custom.species]['amrfinder_species'],
+            CGMLST_DB=DATA_BY_SPECIES[self._opts_custom.species].get('cgmlst_db'),
+            COV_MAX=self._script_opts.cov_max,
+            EXPORT_BAM='true' if self._script_opts.include_bam else 'false',
+            K2_LEVEL='S' if self._opts_custom.species != 'spp' else 'G',
+            K2_NAME=DATA_BY_SPECIES[self._opts_custom.species][
+                'full_name'] if self._opts_custom.species != 'spp' else 'Enterococcus',
+            MLST_DB=DATA_BY_SPECIES[self._opts_custom.species].get('mlst_db'),
+            QC_SCHEME='cgmlst' if 'cgmlst' in self._opts_custom.analyses else 'rmlst',
+            REF_FASTA=DATA_BY_SPECIES[self._opts_custom.species].get('reference', {}).get('fasta', 'null'),
+            REF_GC=DATA_BY_SPECIES[self._opts_custom.species].get('reference', {}).get('gc', 'null'),
+            REF_GFF3=DATA_BY_SPECIES[self._opts_custom.species].get('reference', {}).get('gff3', 'null'),
+            REF_NAME=DATA_BY_SPECIES[self._opts_custom.species].get('reference', {}).get('name', 'null'),
+            REF_SIZE=DATA_BY_SPECIES[self._opts_custom.species].get('reference', {}).get('size', 'null'),
+            REF_URL=DATA_BY_SPECIES[self._opts_custom.species].get('reference', {}).get('url', 'null'),
+            RESFINDER4_SPECIES=DATA_BY_SPECIES[self._opts_custom.species]['resfinder4_species'],
+        )
+        data_template = yaml.safe_load(yaml_text)
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
 
-    def __construct_config_file(self, input_files: dict[str, list[dict[str, str]]]) -> str:
-        """
-        Constructs the configuration file.
-        :param input_files: Dictionary with the input files (keys can be FASTQ_PE, FASTQ_SE).
-        :return: Configuration file
-        """
-        config_data = self.get_template_data(input_files)
-        config_data['analyses'] = [key for key in MainEnterococcusPipeline.CUSTOM_ANALYSES if vars(self._args)[key]]
-        with CONFIG_DATA.open() as handle_in:
-            # Note that values are filled in as strings, to get 'None' values in YAML 'null' needs to be used
-            mainscriptutils.dict_merge(config_data, yaml.load(handle_in.read().format(
-                amrfinder_species=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species]['amrfinder_species'],
-                cgmlst_db=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species].get('cgmlst_db'),
-                coverage_max=self._args.cov_max,
-                export_bam='true' if self._args.report_include_bam else 'false',
-                k2_level = 'S' if self._args.species != 'spp' else 'G',
-                k2_name=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species]['full_name'] if self._args.species != 'spp' else 'Enterococcus',
-                mlst_db=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species].get('mlst_db'),
-                qc_typing_scheme='cgmlst' if self._args.cgmlst else 'rmlst',
-                ref_fasta=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species].get('reference', {}).get('fasta', 'null'),
-                ref_gc=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species].get('reference', {}).get('gc', 'null'),
-                ref_gff3=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species].get('reference', {}).get('gff3', 'null'),
-                ref_name=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species].get('reference', {}).get('name', 'null'),
-                ref_size=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species].get('reference', {}).get('size', 'null'),
-                ref_url=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species].get('reference', {}).get('url', 'null'),
-                resfinder4_species=MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species]['resfinder4_species'],
-            ), Loader=yaml.SafeLoader))
+        # Add the base config data
+        config_data = self.get_config_data()
+        basepipeutils.dict_merge(config_data, data_template)
+        config_data['analyses'] = self._opts_custom.analyses
+        config_data['species'] = self._opts_custom.species
+        config_data['sequence_typing']['options'] = {'method': self._script_opts.detection_method}
+        config_data['gene_detection']['options'] = {'method': self._script_opts.detection_method}
 
         # Additional MLST scheme for E. faecium
-        if (self._args.species == 'faecium') and self._args.mlst:
+        if (self._opts_custom.species == 'faecium') and ('mlst' in self._opts_custom.analyses):
             config_data['analyses'].append('mlst_bezdicek')
 
         # Disable species-specific assays for generic Enterococcus
-        config_data['is_generic'] = self._args.species == 'spp'
-        if self._args.species == 'spp':
+        config_data['is_generic'] = self._opts_custom.species == 'spp'
+        if self._opts_custom.species == 'spp':
             self._update_config_for_generic_spp(config_data)
+        config_data['selected_species'] = DATA_BY_SPECIES[self._opts_custom.species]['full_name']
 
-        # Set the species
-        config_data['selected_species'] = MainEnterococcusPipeline.DATA_BY_SPECIES[self._args.species]['full_name']
-        return snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
+        # Create the config file
+        path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
 
-    @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
-        """
-        Parses the command line arguments.
-        :return: Arguments
-        """
-        parser = argparse.ArgumentParser()
-        ReportPipeline.add_common_arguments(parser)
-        for analysis_key in MainEnterococcusPipeline.CUSTOM_ANALYSES:
-            parser.add_argument(f"--{analysis_key.replace('_', '-')}", action='store_true')
-        parser.add_argument('--species', required=True, choices=['faecium', 'faecalis', 'spp'])
-        return parser.parse_args(args)
+        # Run the Snakefile
+        snakepipelineutils.run_snakemake(
+            snakefile=self._snakefile,
+            config_path=path_config,
+            targets=[],
+            working_dir=self._script_opts.working_dir,
+            threads=self._script_opts.threads)
+        self._export_assembly()
 
     def _update_config_for_generic_spp(self, config_data: dict[str, Any]) -> None:
         """
@@ -149,7 +182,7 @@ class MainEnterococcusPipeline(ReportPipeline):
         :return: None
         """
         # Disable incompatible assays
-        disabled_assays = MainEnterococcusPipeline.DATA_BY_SPECIES['spp']['disabled_assays']
+        disabled_assays = DATA_BY_SPECIES['spp']['disabled_assays']
         config_data['analyses'] = [a for a in config_data['analyses'] if a not in disabled_assays]
         logger.warning(f"Generic 'Enterococcus' selected as species, disabling assays: {', '.join(disabled_assays)}")
 
@@ -163,7 +196,27 @@ class MainEnterococcusPipeline(ReportPipeline):
         config_data['quality_checks']['typing_scheme'] = 'rmlst'
 
 
+@click.command(name='enterococcus_pipeline', short_help='Pipeline for the complete characterization of Enterococcus isolates')
+@basescriptutils.add_input_opts()
+@basescriptutils.add_output_opts
+@basescriptutils.add_general_opts
+@click.option('--analyses', type=str, help=f"Comma-separated list of analyses to run ({', '.join(CUSTOM_ANALYSES)})")
+@cliutils.add_click_options_from_dataclass(Options, skip=['analyses'])
+def main(**kwargs) -> None:
+    """
+    Runs the main script.
+    """
+    script_input = basescriptutils.parse_script_input(kwargs)
+    script_out = basescriptutils.parse_script_output(kwargs)
+    script_opts = basescriptutils.parse_script_opts(kwargs)
+    custom_opts = Options(
+        analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
+        species=kwargs['species'],
+    )
+    pipe_script = MainEnterococcusPipeline(script_input, script_out, script_opts, custom_opts)
+    pipe_script.run()
+
+
 if __name__ == '__main__':
     initialize_logging()
-    main = MainEnterococcusPipeline()
-    main.run()
+    main()

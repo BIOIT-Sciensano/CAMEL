@@ -4,8 +4,9 @@ from pathlib import Path
 
 import pandas as pd
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.mlstphylogeny.mainmlstphylogeny import MainMLSTPhylogeny
+from camel.scripts.mlstphylogeny.mainmlstphylogeny import main
 
 
 class TestMLSTPhylogeny(CamelTestSuite):
@@ -17,7 +18,7 @@ class TestMLSTPhylogeny(CamelTestSuite):
     dir_dataset_large_blast = test_file_dir / 'dataset_large_blast'
     dir_dataset_large_kma = test_file_dir / 'dataset_large_kma'
     dir_dataset_small_blast = test_file_dir / 'dataset_small_blast'
-    dir_dataset_small_rapid = test_file_dir / 'dataset_small_rapid'
+    dir_dataset_small_mist = test_file_dir / 'dataset_small_rapid'
     dir_dataset_small_blast_html = test_file_dir / 'dataset_html_small_blast'
     dir_dataset_small_blast_novel_alleles = test_file_dir / 'dataset_small_blast-novel_alleles'
 
@@ -42,13 +43,13 @@ class TestMLSTPhylogeny(CamelTestSuite):
         """
         output_html = self.running_dir / 'out' / 'report.html'
         output_html.parent.mkdir(exist_ok=True, parents=True)
-        mlst_phylo = MainMLSTPhylogeny([
+        result = cliutils.invoke(main, [
             *TestMLSTPhylogeny.generate_tsv_input_arguments(TestMLSTPhylogeny.dir_dataset_small_blast),
             '--output-html', str(output_html),
             '--output-dir', str(output_html.parent),
             '--dir-working', str(self.running_dir),
         ])
-        mlst_phylo.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_html.stat().st_size, 0)
 
     def test_mlst_phylogeny_small_dataset_extra_outputs(self) -> None:
@@ -61,7 +62,7 @@ class TestMLSTPhylogeny(CamelTestSuite):
         output_tsv_dist = self.running_dir / 'out' / 'dist_matrix.tsv'
         output_nwk = self.running_dir / 'out' / 'tree.nwk'
         output_html.parent.mkdir(exist_ok=True, parents=True)
-        mlst_phylo = MainMLSTPhylogeny([
+        result = cliutils.invoke(main, [
             *TestMLSTPhylogeny.generate_tsv_input_arguments(TestMLSTPhylogeny.dir_dataset_small_blast),
             '--output-html', str(output_html),
             '--output-dir', str(output_html.parent),
@@ -70,7 +71,7 @@ class TestMLSTPhylogeny(CamelTestSuite):
             '--output-tree', str(output_nwk),
             '--dir-working', str(self.running_dir)
         ])
-        mlst_phylo.run()
+        self.assertEqual(result.exit_code, 0)
         for file in [output_html, output_tsv_alleles, output_tsv_dist, output_tsv_alleles]:
             self.assertGreater(file.stat().st_size, 0)
 
@@ -86,10 +87,10 @@ class TestMLSTPhylogeny(CamelTestSuite):
         args = input_tsv + [
             '--output-html', str(output_html),
             '--output-dir', str(output_html.parent),
-            '--dir-working', str(self.running_dir)
+            '--dir-working', str(self.running_dir),
         ]
-        mlst_phylo = MainMLSTPhylogeny(args)
-        mlst_phylo.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_html.stat().st_size, 0)
 
     def test_mlst_phylogeny_large_dataset(self) -> None:
@@ -99,14 +100,18 @@ class TestMLSTPhylogeny(CamelTestSuite):
         """
         output_html = self.running_dir / 'out' / 'report.html'
         output_html.parent.mkdir(exist_ok=True, parents=True)
-        mlst_phylo = MainMLSTPhylogeny([
-            *TestMLSTPhylogeny.generate_tsv_input_arguments(
-                TestMLSTPhylogeny.dir_dataset_large_blast),
-            '--output-html', str(output_html),
-            '--output-dir', str(output_html.parent),
-            '--dir-working', str(self.running_dir)
-        ])
-        mlst_phylo.run()
+        result = cliutils.invoke(
+            main,
+            [
+                *TestMLSTPhylogeny.generate_tsv_input_arguments(
+                    TestMLSTPhylogeny.dir_dataset_large_blast
+                ),
+                '--output-html', str(output_html),
+                '--output-dir', str(output_html.parent),
+                '--dir-working', str(self.running_dir),
+            ],
+        )
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_html.stat().st_size, 0)
 
     def test_mlst_phylogeny_large_dataset_kma(self) -> None:
@@ -116,14 +121,19 @@ class TestMLSTPhylogeny(CamelTestSuite):
         """
         output_html = self.running_dir / 'out' / 'report.html'
         output_html.parent.mkdir(exist_ok=True, parents=True)
-        mlst_phylo = MainMLSTPhylogeny([
-            *TestMLSTPhylogeny.generate_tsv_input_arguments(TestMLSTPhylogeny.dir_dataset_large_kma),
-            '--output-html', str(output_html),
-            '--output-dir', str(output_html.parent),
-            '--dir-working', str(self.running_dir),
-            '--detection-method', 'kma'
-        ])
-        mlst_phylo.run()
+        result = cliutils.invoke(
+            main,
+            [
+                *TestMLSTPhylogeny.generate_tsv_input_arguments(
+                    TestMLSTPhylogeny.dir_dataset_large_kma
+                ),
+                '--output-html', str(output_html),
+                '--output-dir', str(output_html.parent),
+                '--dir-working', str(self.running_dir),
+                '--detection-method', 'kma',
+            ],
+        )
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_html.stat().st_size, 0)
 
     def test_mlst_phylogeny_identical_profiles(self) -> None:
@@ -141,10 +151,10 @@ class TestMLSTPhylogeny(CamelTestSuite):
             '--input-tsv', str(input_tsv), 'dataset_4.tsv',
             '--output-html', str(output_html),
             '--output-dir', str(output_html.parent),
-            '--dir-working', str(self.running_dir)
+            '--dir-working', str(self.running_dir),
         ]
-        mlst_phylo = MainMLSTPhylogeny(args)
-        mlst_phylo.run()
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_html.stat().st_size, 0)
 
     def test_mlst_phylogeny_all_loci(self) -> None:
@@ -155,15 +165,20 @@ class TestMLSTPhylogeny(CamelTestSuite):
         output_html = self.running_dir / 'out' / 'report.html'
         output_html.parent.mkdir(exist_ok=True, parents=True)
         output_tsv_alleles = self.running_dir / 'out' / 'allele_matrix.tsv'
-        mlst_phylo = MainMLSTPhylogeny([
-            *TestMLSTPhylogeny.generate_tsv_input_arguments(TestMLSTPhylogeny.dir_dataset_large_blast),
-            '--output-html', str(output_html),
-            '--output-dir', str(output_html.parent),
-            '--output-allele-matrix', str(output_tsv_alleles),
-            '--dir-working', str(self.running_dir),
-            '--keep-all-loci'
-        ])
-        mlst_phylo.run()
+        result = cliutils.invoke(
+            main,
+            [
+                *TestMLSTPhylogeny.generate_tsv_input_arguments(
+                    TestMLSTPhylogeny.dir_dataset_large_blast
+                ),
+                '--output-html', str(output_html),
+                '--output-dir', str(output_html.parent),
+                '--output-allele-matrix', str(output_tsv_alleles),
+                '--dir-working', str(self.running_dir),
+                '--keep-all-loci',
+            ],
+        )
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_html.stat().st_size, 0)
 
         # Check if all loci are retained
@@ -178,15 +193,20 @@ class TestMLSTPhylogeny(CamelTestSuite):
         """
         output_html = self.running_dir / 'out' / 'report.html'
         output_html.parent.mkdir(exist_ok=True, parents=True)
-        mlst_phylo = MainMLSTPhylogeny([
-            *TestMLSTPhylogeny.generate_tsv_input_arguments(TestMLSTPhylogeny.dir_dataset_small_blast_novel_alleles),
-            '--output-html', str(output_html),
-            '--output-dir', str(output_html.parent),
-            '--dir-working', str(self.running_dir),
-            '--min-perc-samples', '50',
-            '--min-perc-loci', '50',
-        ])
-        mlst_phylo.run()
+        result = cliutils.invoke(
+            main,
+            [
+                *TestMLSTPhylogeny.generate_tsv_input_arguments(
+                    TestMLSTPhylogeny.dir_dataset_small_blast_novel_alleles
+                ),
+                '--output-html', str(output_html),
+                '--output-dir', str(output_html.parent),
+                '--dir-working', str(self.running_dir),
+                '--min-perc-samples', '50',
+                '--min-perc-loci', '50',
+            ],
+        )
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_html.stat().st_size, 0)
 
     def test_mlst_phylogeny_novel_alleles_no_temp(self) -> None:
@@ -196,16 +216,45 @@ class TestMLSTPhylogeny(CamelTestSuite):
         """
         output_html = self.running_dir / 'out' / 'report.html'
         output_html.parent.mkdir(exist_ok=True, parents=True)
-        mlst_phylo = MainMLSTPhylogeny([
-            *TestMLSTPhylogeny.generate_tsv_input_arguments(TestMLSTPhylogeny.dir_dataset_small_blast_novel_alleles),
-            '--output-html', str(output_html),
-            '--output-dir', str(output_html.parent),
-            '--dir-working', str(self.running_dir),
-            '--min-perc-samples', '50',
-            '--min-perc-loci', '50',
-            '--no-temp-allele-ids',
-        ])
-        mlst_phylo.run()
+        result = cliutils.invoke(
+            main,
+            [
+                *TestMLSTPhylogeny.generate_tsv_input_arguments(
+                    TestMLSTPhylogeny.dir_dataset_small_blast_novel_alleles
+                ),
+                '--output-html', str(output_html),
+                '--output-dir', str(output_html.parent),
+                '--dir-working', str(self.running_dir),
+                '--min-perc-samples', '50',
+                '--min-perc-loci', '50',
+                '--no-temp-allele-ids',
+            ],
+        )
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(output_html.stat().st_size, 0)
+
+    def test_mlst_phylogeny_small_mist(self) -> None:
+        """
+        Tests the MLST phylogeny tool with standard options and a small dataset called with the 'mist' method.
+        :return: None
+        """
+        output_html = self.running_dir / 'out' / 'report.html'
+        output_html.parent.mkdir(exist_ok=True, parents=True)
+        result = cliutils.invoke(
+            main,
+            [
+                *TestMLSTPhylogeny.generate_tsv_input_arguments(
+                    TestMLSTPhylogeny.dir_dataset_small_mist
+                ),
+                '--output-html', str(output_html),
+                '--output-dir', str(output_html.parent),
+                '--dir-working', str(self.running_dir),
+                '--detection-method', 'mist',
+                '--min-perc-loci', '75',
+                '--min-perc-samples', '0',
+            ],
+        )
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_html.stat().st_size, 0)
 
 

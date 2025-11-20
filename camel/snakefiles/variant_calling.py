@@ -27,9 +27,9 @@ def get_mapping_fq_input(config: dict[str, Any]) -> str:
     :return: Path to the mapping fq input file
     """
     # ONT and hybrid were added because otherwise some tests of the MockPipeline fail
-    if config['input_type'] in ('illumina', 'ont', 'hybrid'):
+    if config['input']['type'] in ('illumina', 'ont', 'hybrid'):
         return 'fq_dict.io'
-    if config['input_type'] in ('fasta', 'fasta_with_vcf'):
+    if config['input']['type'] in ('fasta', 'fasta_with_vcf'):
         return read_simulation.OUTPUT_FASTQ
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
@@ -41,13 +41,13 @@ def get_bam(config: dict[str, Any]) -> str:
     :return: Path to the BAM file
     """
     # ONT and hybrid were added because otherwise some tests of the MockPipeline fail
-    if config['input_type'] in ('illumina', 'fasta', 'hybrid'):
+    if config['input']['type'] in ('illumina', 'fasta', 'hybrid'):
         return 'variant_calling/read_mapping/illumina/bam.io'  # OUTPUT_BAM_ILLUMINA
-    if config['input_type'] == 'ont':
+    if config['input']['type'] == 'ont':
         return 'variant_calling/read_mapping/ont/bam.io'  # OUTPUT_BAM_ONT
-    if config['input_type'] == 'fasta_with_vcf':
+    if config['input']['type'] == 'fasta_with_vcf':
         return 'variant_calling/dummy_bam/bam.io'
-    raise ValueError(f'Input type {config["input_type"]} is not supported.')
+    raise ValueError(f'Input type {config["input"]["type"]} is not supported.')
 
 
 def get_vcf(config: dict[str, Any]) -> str:
@@ -56,9 +56,9 @@ def get_vcf(config: dict[str, Any]) -> str:
     :param config: Snakemake configuration
     :return: Path to the unfiltered VCF file
     """
-    if config['input_type'] in ('fasta', 'illumina', 'ont', 'hybrid'):
+    if config['input']['type'] in ('fasta', 'illumina', 'ont', 'hybrid'):
         return OUTPUT_UNFILTERED_VCF
-    if config['input_type'] == 'fasta_with_vcf':
+    if config['input']['type'] == 'fasta_with_vcf':
         return 'input/vcf.io'
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
@@ -69,9 +69,9 @@ def get_vcf_gz(config: dict[str, Any]) -> str:
     :param config: Snakemake configuration
     :return: Path to the unfiltered gzipped VCF file
     """
-    if config['input_type'] in ('fasta', 'illumina', 'ont', 'hybrid'):
+    if config['input']['type'] in ('fasta', 'illumina', 'ont', 'hybrid'):
         return OUTPUT_UNFILTERED_VCF_GZ
-    if config['input_type'] == 'fasta_with_vcf':
+    if config['input']['type'] == 'fasta_with_vcf':
         return 'variant_calling/gzip/vcf_gz.io'
     raise ValueError(f'Input type {config["input_type"]} is not supported.')
 
@@ -82,7 +82,7 @@ def get_reports(config: dict[str, Any]) -> str:
     :param config: Snakemake configuration
     :return: Report path
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     if input_type in ('illumina', 'fasta', 'ont'):
         return OUTPUT_REPORT
     if input_type == 'fasta_with_vcf':
@@ -96,7 +96,7 @@ def get_mapping_informs(config: dict[str, Any]) -> str:
     :param config: config
     :return: Path(s) to the variant calling mapping informs
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
 
     if input_type in ('illumina', 'fasta', 'fasta_with_vcf', 'hybrid'):
         # For hybrid, Illumina reads are used for now
@@ -111,7 +111,7 @@ def get_summaries(config: dict[str, Any]) -> list[Path]:
     :param config: Snakemake configuration
     :return: Summary path(s)
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
     if input_type in ('illumina', 'fasta', 'ont'):
         paths.append(OUTPUT_SUMMARY)
@@ -124,7 +124,7 @@ def get_command_informs(config: dict[str, Any]) -> list[Path]:
     :param config: config
     :return: Path(s) to the variant calling informs
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
     if input_type in ('illumina', 'fasta', 'ont'):
         paths.append(OUTPUT_INFORMS_ALL)

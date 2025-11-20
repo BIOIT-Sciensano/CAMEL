@@ -17,10 +17,10 @@ rule shigatyper_run:
         INFORMS = 'shigatyper/tool/informs.io' # shigatyper.OUTPUT_INFORMS
     params:
         dir_ = 'shigatyper/tool',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from camel.app.tools.pipelines.shigella.shigatyper import ShigaTyper
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 
         typer = ShigaTyper()
 
@@ -53,7 +53,7 @@ rule shigatyper_report:
         HTML = 'shigatyper/report/html.iob' # shigatyper.OUTPUT_REPORT
     params:
         dir_ = 'shigatyper/report',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from camel.app.tools.pipelines.shigella.shigatyperreporter import ShigaTyperReporter
         reporter = ShigaTyperReporter()

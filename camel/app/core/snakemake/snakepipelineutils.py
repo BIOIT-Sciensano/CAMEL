@@ -50,7 +50,7 @@ def __get_failed_rule(stderr: str) -> Union[str, None]:
 
 
 def run_snakemake(
-        snakefile: str | Path, config_path: str, targets: list[Path], working_dir: Path, threads: int = 8,
+        snakefile: str | Path, config_path: str | Path, targets: list[Path], working_dir: Path, threads: int = 8,
         resources: Optional[dict[str, Any]] = None, slurm_args: Optional[dict[str, int]] = None) -> Command:
     """
     Helper function to run snakemake workflows.

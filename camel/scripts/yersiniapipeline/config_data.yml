@@ -1,0 +1,120 @@
+####################
+# Pipeline options #
+####################
+citations:
+  main: null
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Danecek_2021-samtools
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Bortolaia_2020-resfinder_4.0
+    - Feldgarden_2019-ndaro
+    - Jolley_2010-bigsdb
+    - Chen_2016-vfdb
+    - Savin_2019-yersinia_cgmlst
+
+####################
+# Reference genome #
+####################
+reference:
+  name: <i>Neisseria meningitidis</i> (NZ_CP021520.1)
+  fasta: /db/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.fasta
+  gff3: /db/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.gff3
+  url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_025758635.1/
+
+#########################
+# Tool specific options #
+#########################
+downsampling:
+  coverage_max: {COV_MAX}
+
+contamination_check:
+  db: /db/kraken2_microbial/latest
+  expected_species: 'Yersinia'
+  level_of_depth: G
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+
+assembly:
+  spades:
+    cov_cutoff: 'off'
+  min_contig_length: 1000
+
+amrfinder:
+  db: /db/amrfinder/v4/latest
+
+mob_suite:
+  db: /db/mob_suite/latest
+
+confindr:
+  db: /db/confindr/0.8.1
+
+resfinder4:
+  point: False
+  db: /db/resfinder4
+
+read_trimming: {{}}
+read_scrubbing: {{}}
+species_determination:
+  tsv: /db/pipelines/yersinia/cgMLST_taxonomic.tsv
+
+############################
+# Gene detection databases #
+############################
+gene_detection:
+  dbs:
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
+    ampc:
+      path: /db/pipelines/yersinia/gene_detection-ampc
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+        kma:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Antibiotics
+        key: antibiotics
+
+###################
+# Sequence typing #
+###################
+sequence_typing:
+  dbs:
+    cgmlst:
+      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_spp'
+      detection_method: blast
+      write_all_matches: True
+    mlst:
+      path: '/db/sequence_typing/yersinia/mlst_achtman'
+    mlst_mcnally:
+      path: '/db/sequence_typing/yersinia/mlst_mcnally'
+    cgmlst_ye:
+      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_enterocolitica'
+      detection_method: blast
+    cgmlst_yp:
+      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_pseudotuberculosis'
+    cgmlst_enterobase:
+      path: '/db/sequence_typing/yersinia/cgmlst_enterobase'
+    rmlst:
+      path: '/db/sequence_typing/various/rmlst'
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

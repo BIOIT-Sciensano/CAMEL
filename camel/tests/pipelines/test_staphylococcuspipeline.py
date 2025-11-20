@@ -1,13 +1,17 @@
 import unittest
 from pathlib import Path
 
-import yaml
-
-
+from camel.app.cli import cliutils
+from camel.app.core import cameltesthelper
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camel.app.tools.pipelines.genedetection.dbmanager import DBManager
+from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 from camel.scripts.staphylococcuspipeline import CONFIG_DATA
-from camel.scripts.staphylococcuspipeline.mainstaphylococcuspipeline import MainStaphylococcusPipeline
+from camel.scripts.staphylococcuspipeline.mainstaphylococcuspipeline import (
+    CUSTOM_ANALYSES,
+    main,
+)
 from camel.tests import longRunningTest
 
 
@@ -30,11 +34,8 @@ class TestStaphylococcusPipeline(CamelTestSuite):
         Checks if the databases for the sequence typing are available.
         :return: None
         """
-        from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
-        with open(CONFIG_DATA) as handle_in:
-            config_data = yaml.safe_load(handle_in)
-
-        for key, scheme_data in config_data['sequence_typing']['dbs'].items():
+        data_typing = cameltesthelper.extract_from_yaml(CONFIG_DATA, 'sequence_typing')
+        for key, scheme_data in data_typing['dbs'].items():
             # Check if scheme exists
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
@@ -49,11 +50,8 @@ class TestStaphylococcusPipeline(CamelTestSuite):
         Checks if the databases for the gene detection are available.
         :return: None
         """
-        from camel.app.tools.pipelines.genedetection.dbmanager import DBManager
-        with open(CONFIG_DATA) as handle_in:
-            config_data = yaml.safe_load(handle_in)
-
-        for key, db_data in config_data['gene_detection']['dbs'].items():
+        data_gd = cameltesthelper.extract_from_yaml(CONFIG_DATA, 'gene_detection')
+        for key, db_data in data_gd['dbs'].items():
             # Check if scheme exists
             self.assertGreater(Path(db_data['path']).stat().st_size, 0)
 
@@ -72,16 +70,18 @@ class TestStaphylococcusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestStaphylococcusPipeline.input_fastq_pe[0]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestStaphylococcusPipeline.input_fastq_pe[0]),
             str(TestStaphylococcusPipeline.input_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainStaphylococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainStaphylococcusPipeline(args)
-        main.run()
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -92,16 +92,19 @@ class TestStaphylococcusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestStaphylococcusPipeline.input_fastq_pe[0]), str(TestStaphylococcusPipeline.input_fastq_pe[1]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestStaphylococcusPipeline.input_fastq_pe[0]),
+            str(TestStaphylococcusPipeline.input_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
             '--detection-method', 'kma'
-        ] + [f"--{a.replace('_', '-')}" for a in MainStaphylococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainStaphylococcusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -112,16 +115,16 @@ class TestStaphylococcusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fasta', str(TestStaphylococcusPipeline.input_fasta),
-                   '--input-type', 'fasta',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir)
-               ] + [f"--{a.replace('_', '-')}" for a in MainStaphylococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainStaphylococcusPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestStaphylococcusPipeline.input_fasta),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -132,16 +135,16 @@ class TestStaphylococcusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fastq-se', str(TestStaphylococcusPipeline.input_fastq_se),
-                   '--input-type', 'ont',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir)
-               ] + [f"--{a.replace('_', '-')}" for a in MainStaphylococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainStaphylococcusPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-se', str(TestStaphylococcusPipeline.input_fastq_se),
+            '--input-type', 'ont',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -152,17 +155,17 @@ class TestStaphylococcusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestStaphylococcusPipeline.input_fastq_se),
             '--input-type', 'ont',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'kma'
-        ] + [f"--{a.replace('_', '-')}" for a in MainStaphylococcusPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainStaphylococcusPipeline(args)
-        main.run()
+            '--detection-method', 'kma',
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

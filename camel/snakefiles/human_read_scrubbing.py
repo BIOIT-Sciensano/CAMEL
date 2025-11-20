@@ -40,7 +40,7 @@ def get_reports(config: dict[str, Any]) -> list[str]:
     :param config: Snakemake configuration
     :return: Report path(s)
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
 
     # FASTA input
@@ -77,7 +77,7 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     :param config: Snakemake configuration
     :return: List of informs IO files
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
 
     if 'human_read_scrubbing' not in config['analyses']:
@@ -109,7 +109,7 @@ def get_summaries(config: dict[str, Any], ext: str) -> list[Path]:
     :param ext: Summary format (TSV / JSON)
     :return: Summary file path(s)
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
 
     if 'human_read_scrubbing' not in config['analyses']:
@@ -140,7 +140,7 @@ def get_output_io(config: dict[str, Any]) -> str:
     :param config: Snakemake configuration
     :return: Summary file path(s)
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
 
     # FASTA input
     if (input_type in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses']):

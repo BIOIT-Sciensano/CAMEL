@@ -56,7 +56,7 @@ class CamelTestSuite(unittest.TestCase):
         :return: None
         """
         if os.environ.get('CAMEL_KEEP_TEST_DIRS') == '1':
-            logger.debug("Keeping working directory (CAMEL_KEEP_TEST_DIRS)")
+            logger.debug(f"Keeping working directory (CAMEL_KEEP_TEST_DIRS): {self.running_dir}")
             return
         if Path(self.running_dir).exists():
             logger.debug(f"Removing working directory: {self.running_dir}")

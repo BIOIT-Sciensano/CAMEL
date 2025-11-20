@@ -1,0 +1,154 @@
+####################
+# Pipeline options #
+####################
+citations:
+  main: null
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Li_2009-samtools
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Bortolaia_2020-resfinder_4.0
+    - Roer_2016-spifinder
+    - Wong_2016-genotyphi
+    - Bradley_2015-mykrobe
+    - Sherry_2023-abritamr
+    - Yoshida_2016-sistr
+    - Zhang_2019-seqsero2
+    - Chen_2016-vfdb
+    - Robertson_2018-mob_suite
+    - Feldgarden_2019-ndaro
+    - Zhou_2020-enterobase
+    - Jolley_2010-bigsdb
+
+####################
+# Reference genome #
+####################
+reference:
+  name: <i>Salmonella enterica subsp. enterica</i> serovar Typhimurium str. LT2 (NC_003197.2)
+  fasta: //db/refgenomes/Salmonella_enterica/NC_003197.2.fasta
+  gff3: /db/refgenomes/Salmonella_enterica/NC_003197.2.gff3
+  url: https://www.ncbi.nlm.nih.gov/nuccore/NC_003197.2
+
+#########################
+# Tool specific options #
+#########################
+amrfinder:
+  db: /db/amrfinder/v4/latest
+  species: Salmonella
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+
+confindr:
+  db: /db/confindr/0.8.1
+
+contamination_check:
+  db: /db/kraken2_microbial/latest
+  expected_species: Salmonella enterica
+
+downsampling:
+  coverage_max: {COV_MAX}
+
+mob_suite:
+  db: /db/mob_suite/latest
+
+mykrobe:
+  db: /db/mykrobe/latest/
+  species: typhi
+  show_amr: false
+  title: Lineage determination of <i>S. Typhi</i>
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+
+read_scrubbing: {{}}
+
+read_trimming: {{}}
+
+resfinder4:
+  db: /db/resfinder4
+  species: Salmonella enterica
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering: {{}}
+
+############################
+# Gene detection databases #
+############################
+gene_detection:
+  dbs:
+    resfinder:
+      path: /db/gene_detection/ResFinder
+      metadata:
+        name: Antibiotic(s)
+        key: antibiotics
+
+    ncbi_amr:
+      path: /db/gene_detection/NCBI_AMR
+      perc_identity_cutoff: 90
+      metadata:
+        name: Antibiotic(s)
+        key: subclass
+
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
+
+###################
+# Sequence typing #
+###################
+sequence_typing:
+  dbs:
+    mlst:
+      path: /db/sequence_typing/salmonella/mlst
+    cgmlst:
+      path: /db/sequence_typing/salmonella/cgmlst
+      blastn_task: blastn
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+
+##############
+# Serotyping #
+##############
+serotyping:
+  sistr:
+    path: /db/SISTR/1.1.1/data
+  seqsero2:
+    path: /db/pipelines/salmonella/seqsero2/1.2.1/seqsero2_db
+
+#############
+# SPIFinder #
+#############
+spifinder:
+  path: /db/pipelines/salmonella/spifinder/genomicepidemiology-spifinder_db-db102668b704
+  metadata: /db/pipelines/salmonella/spifinder/genomicepidemiology-spifinder_db-db102668b704/categoryFuncTable.csv
+
+#############
+# abritAMR #
+#############
+abritamr:
+  species: Salmonella
+  amrfinderplus:
+    path: /db/abritamr/amrfinderplus_data

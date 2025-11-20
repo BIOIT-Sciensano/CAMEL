@@ -2,6 +2,7 @@ dependencies:
   - abritamr/1.0.19
   - blast/2.14.0
   - amrfinder/3.12.8
+  - mafft/7.490
 parameters:
   jobs:
     default: true

@@ -33,9 +33,9 @@ rule all:
     This rules ensures that the required output files are generated.
     """
     input:
-        HTML = config['output_report'],
-        TSV = config['output_tabular'],
-        JSON = config['output_json'] if config['output_json'] is not None else []
+        HTML = config['output']['html'],
+        TSV = config['output']['tsv'],
+        JSON = config['output']['json'] if config['output'].get('json') is not None else []
 
 rule link_fasta_to_iterative_mapping:
     """
@@ -46,7 +46,7 @@ rule link_fasta_to_iterative_mapping:
     output:
         FASTA = iterativemapping.INPUT_FASTA_REF
     params:
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         fasta_ref = config['fasta_ref']
     run:
         from camel.app.core.io.tooliofile import ToolIOFile
@@ -76,18 +76,18 @@ rule report_create_command_section:
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_reference_selection = Path('ref_selection') / 'mash_screen' / refselection.get_segments(
-            Path(config['ref_selection']['db']))[0] / 'informs.io' if config['fasta_ref'] is None and config['input_type'] != 'fasta' and config['ref_selection'].get('db') is not None else [],
-        INFORMS_preprocess = preprocess.OUTPUT_INFORMS if config['input_type'] != 'fasta' else [],
-        INFORMS_iterative_mapping = iterativemapping.OUTPUT_INFORMS if config['input_type'] != 'fasta' else [],
-        INFORMS_mash = nextclade3.OUTPUT_INFORMS_MASH if config['nextclade'].get('db_mash') is not None and config['input_type'] != 'fasta' else [],
+            Path(config['ref_selection']['db']))[0] / 'informs.io' if config['fasta_ref'] is None and config['input']['type'] != 'fasta' and config['ref_selection'].get('db') is not None else [],
+        INFORMS_preprocess = preprocess.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],
+        INFORMS_iterative_mapping = iterativemapping.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],
+        INFORMS_mash = nextclade3.OUTPUT_INFORMS_MASH if config['nextclade'].get('db_mash') is not None and config['input']['type'] != 'fasta' else [],
         INFORMS_nextclade = nextclade3.OUTPUT_INFORMS if 'nextclade' in config['analyses'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
-        working_dir = config['working_dir']
+        dir_ = config['working_dir']
     run:
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input, Path(output.HTML), params.working_dir)
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 rule report_combine_all:
     """
@@ -98,53 +98,57 @@ rule report_combine_all:
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
         reports_contamination = contamination_check_kraken.get_reports(config),
-        report_reference_selection = refselection.OUTPUT_REPORT if config['fasta_ref'] is None and config['input_type'] != 'fasta' else refselection.OUTPUT_REPORT_EMPTY,
-        report_preprocess_ampligone = preprocess.OUTPUT_AMPLIGONE_REPORT if 'ampligone' in config['analyses'] and config['input_type'] != 'fasta' else preprocess.OUTPUT_AMPLIGONE_REPORT_EMPTY,
-        report_preprocess_clipping = preprocess.OUTPUT_CLIPPING_REPORT if 'ampligone' in config['analyses'] and config['input_type'] != 'fasta' else preprocess.OUTPUT_CLIPPING_REPORT_EMPTY,
-        report_preprocess = preprocess.OUTPUT_REPORT if config['input_type'] != 'fasta' else [],
-        report_iterative_mapping = iterativemapping.OUTPUT_REPORT if config['input_type'] != 'fasta' else [],
+        report_reference_selection = refselection.OUTPUT_REPORT if config['fasta_ref'] is None and config['input']['type'] != 'fasta' else refselection.OUTPUT_REPORT_EMPTY,
+        report_preprocess_ampligone = preprocess.OUTPUT_AMPLIGONE_REPORT if 'ampligone' in config['analyses'] and config['input']['type'] != 'fasta' else preprocess.OUTPUT_AMPLIGONE_REPORT_EMPTY,
+        report_preprocess_clipping = preprocess.OUTPUT_CLIPPING_REPORT if 'ampligone' in config['analyses'] and config['input']['type'] != 'fasta' else preprocess.OUTPUT_CLIPPING_REPORT_EMPTY,
+        report_preprocess = preprocess.OUTPUT_REPORT if config['input']['type'] != 'fasta' else [],
+        report_iterative_mapping = iterativemapping.OUTPUT_REPORT if config['input']['type'] != 'fasta' else [],
         report_nexclade_subtype = nextclade3.OUTPUT_SUBTYPE_REPORT if (config['nextclade'].get('db') is None) and ('nextclade' in config['analyses']) else nextclade3.OUTPUT_SUBTYPE_REPORT_EMPTY,
         report_nextclade = nextclade3.OUTPUT_REPORT if 'nextclade' in config['analyses'] else nextclade3.OUTPUT_REPORT_EMPTY,
-        report_multi_allelic = multiallelicsites.OUTPUT_REPORT if config['input_type'] != 'fasta' else [],
+        report_multi_allelic = multiallelicsites.OUTPUT_REPORT if config['input']['type'] != 'fasta' else [],
         report_antivirals = antivirals.OUTPUT_REPORT if 'antivirals' in config['analyses'] else antivirals.OUTPUT_REPORT_EMPTY,
         report_commands = 'report/html-commands.iob',
         report_citations = core.OUTPUT_HTML_CITATIONS
     output:
-        HTML = config['output_report']
+        HTML = config['output']['html']
     params:
-        sample_name = config['sample_name'],
         ref_genome = config['fasta_ref'],
-        input_type = config['input_type'],
-        config_input = config['input'],
-        output_dir = config['output_dir'],
-        pipeline_info = config['pipeline']
+        input_dict = config['input'],
+        output_dir = config['output']['dir'],
+        pipeline_info = config['script_info']
     run:
         import datetime
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
+        from camel.app.scriptutils import model
+        from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+        from camel.app.scriptutils.basepipe import basepipeutils
 
         # Add header section
+        script_input = ScriptInput.from_dict(params.input_dict)
         report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         extra_info = [('Reference genome', Path(params.ref_genome).name if params.ref_genome is not None else '-')]
-        input_file_str = ', '.join(f['name'] for _, input_files in params.config_input.items() for f in input_files)
         report.add_html_object(snakepipelineutils.create_input_section(
-            params.sample_name,
-            datetime.datetime.now(),
-            params.pipeline_info['version'], input_file_str, input_type=params.input_type, extra_data=extra_info))
+            sample_name=script_input.name,
+            date=datetime.datetime.now(),
+            pipeline_version=params.pipeline_info['version'],
+            input_files=script_input.input_str,
+            input_type=script_input.type_.value,
+            extra_data=extra_info,
+        ))
 
         # Other sections
         report_structure = []
 
         # Core sections (shared)
-        ReportPipeline.add_content_scrubbing(
-            report_structure, params.input_type, input.reports_scrubbing)
-        ReportPipeline.add_content_trim_basic_qc(
-            report_structure, params.input_type, input.reports_downsampling, input.reports_trimming)
-        ReportPipeline.add_content_contamination_check(
-            report_structure, params.input_type, input.reports_contamination, None)
+        basepipeutils.add_content_scrubbing(
+            report_structure, script_input.type_.value, input.reports_scrubbing)
+        basepipeutils.add_content_trim_basic_qc(
+            report_structure, script_input.type_.value, input.reports_downsampling, input.reports_trimming)
+        basepipeutils.add_content_contamination_check(
+            report_structure, script_input.type_.value, input.reports_contamination, None)
 
         # Add output sections
-        if params.input_type != 'fasta':
+        if script_input.type_ is not model.InputType.FASTA:
             report_structure.extend([
                 ('Reference selection', 'ref_selection', [Path(input.report_reference_selection)]),
                 ('Pre-processing', 'pre_process', [Path(x) for x in (
@@ -170,10 +174,10 @@ rule summary_combine_all:
         lambda wildcards: downsampling.get_summaries(config, wildcards.ext),
         trimming.get_summaries(config),
         lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
-        refselection.OUTPUT_SUMMARY if config['fasta_ref'] is None and config['input_type'] != 'fasta' else [],
-        preprocess.OUTPUT_SUMMARY if config['input_type'] != 'fasta' else [],
-        iterativemapping.OUTPUT_SUMMARY if config['input_type'] != 'fasta' else [],
-        multiallelicsites.OUTPUT_SUMMARY if config['input_type'] != 'fasta' else [],
+        refselection.OUTPUT_SUMMARY if config['fasta_ref'] is None and config['input']['type'] != 'fasta' else [],
+        preprocess.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
+        iterativemapping.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
+        multiallelicsites.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
         nextclade3.OUTPUT_SUMMARY if 'nextclade' in config['analyses'] else [],
         antivirals.OUTPUT_SUMMARY if 'antivirals' in config['analyses'] else []
     output:

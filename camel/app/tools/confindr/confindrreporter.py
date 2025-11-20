@@ -33,7 +33,7 @@ class ConFindrReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('ConFindr', subtitle=self._input_informs['confindr']['_name'])
+        section = HtmlReportSection('ConFindr', subtitle=self._input_informs['confindr']['_name_full'])
 
         # Main table
         section.add_header('Output', 3)

@@ -1,8 +1,9 @@
 import unittest
 from pathlib import Path
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.mockpipeline.mainmockpipeline import MainMockPipeline
+from camel.scripts.mockpipeline.mainmockpipeline import main
 from camel.tests import longRunningTest
 
 
@@ -23,7 +24,7 @@ class TestMockPipeline(CamelTestSuite):
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--input-type', 'illumina',
             '--fastq-pe', *[str(x) for x in TestMockPipeline.input_ilmn_pe],
             '--output-html', str(path_report_out),
@@ -32,11 +33,10 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--trimming-method', 'trimmomatic',
             '--detection-method', 'blast',
-            '--ncbi-amr',
-            '--human-read-scrubbing',
+            '--analyses', 'ncbi-amr,human-read-scrubbing',
             '--threads', '8'
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_mock_pipeline_illumina_fastp(self) -> None:
@@ -47,7 +47,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
         path_fasta_out = Path(self.running_dir) / 'out' / 'assembly.fasta'
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--input-type', 'illumina',
             '--fastq-pe', *[str(x) for x in TestMockPipeline.input_ilmn_pe],
             '--output-html', str(path_report_out),
@@ -57,11 +57,10 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--trimming-method', 'fastp',
             '--detection-method', 'blast',
-            '--ncbi-amr',
-            '--human-read-scrubbing',
+            '--analyses', 'ncbi-amr,human-read-scrubbing',
             '--threads', '8'
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
         self.assertGreater(path_fasta_out.stat().st_size, 0)
 
@@ -73,7 +72,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
         path_json_out = Path(self.running_dir) / 'out' / 'output.json'
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--input-type', 'illumina',
             '--fastq-pe', *[str(x) for x in TestMockPipeline.input_ilmn_pe],
             '--output-html', str(path_report_out),
@@ -83,11 +82,10 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--trimming-method', 'fastp',
             '--detection-method', 'blast',
-            '--ncbi-amr',
-            '--human-read-scrubbing',
+            '--analyses', 'ncbi-amr,human-read-scrubbing',
             '--threads', '8'
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
         self.assertGreater(path_json_out.stat().st_size, 0)
 
@@ -98,7 +96,7 @@ class TestMockPipeline(CamelTestSuite):
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--input-type', 'illumina',
             '--fastq-pe', *[str(x) for x in TestMockPipeline.input_ilmn_pe],
             '--output-html', str(path_report_out),
@@ -106,10 +104,10 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'kma',
-            '--ncbi-amr',
+            '--analyses', 'ncbi-amr',
             '--threads', '8'
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_mock_pipeline_ont(self) -> None:
@@ -120,7 +118,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
 
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestMockPipeline.input_ont_se),
             '--input-type', 'ont',
             '--output-html', str(path_report_out),
@@ -128,11 +126,10 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
-            '--ncbi-amr',
+            '--analyses', 'ncbi-amr,confindr',
             '--threads', '8',
-            '--confindr'
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_mock_pipeline_ont_with_downsampling(self) -> None:
@@ -143,7 +140,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
 
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestMockPipeline.input_ont_se),
             '--input-type', 'ont',
             '--cov-max', '50',
@@ -152,10 +149,10 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
-            '--ncbi-amr',
+            '--analyses', 'ncbi-amr',
             '--threads', '8',
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_mock_pipeline_ont_with_scrubbing_and_filters_params(self) -> None:
@@ -166,7 +163,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
 
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestMockPipeline.input_ont_se),
             '--input-type', 'ont',
             '--cov-max', '50',
@@ -175,13 +172,12 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
-            '--ncbi-amr',
-            '--human-read-scrubbing',
+            '--analyses', 'ncbi-amr,human-read-scrubbing',
             '--ont-min-qual', '11',
             '--ont-min-length', '750',
             '--threads', '8',
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_mock_pipeline_hybrid(self) -> None:
@@ -192,7 +188,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
 
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestMockPipeline.input_ont_se),
             '--fastq-pe', *[str(x) for x in TestMockPipeline.input_ilmn_pe],
             '--input-type', 'hybrid',
@@ -201,11 +197,10 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
-            '--ncbi-amr',
-            '--human-read-scrubbing',
+            '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
             '--threads', '8',
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_mock_pipeline_fasta(self) -> None:
@@ -216,7 +211,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
 
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--fasta', str(TestMockPipeline.input_fasta),
             '--input-type', 'fasta',
             '--output-html', str(path_report_out),
@@ -224,12 +219,10 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
-            '--ncbi-amr',
-            '--snpit',
-            '--human-read-scrubbing',
+            '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
             '--threads', '8',
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -241,7 +234,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
 
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--fasta', str(TestMockPipeline.input_fasta),
             '--input-type', 'fasta',
             '--output-html', str(path_report_out),
@@ -249,12 +242,10 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
-            '--kraken2',
-            '--ncbi-amr',
-            '--human-read-scrubbing',
+            '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
             '--threads', '8',
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_mock_pipeline_fasta_with_vcf(self) -> None:
@@ -265,7 +256,7 @@ class TestMockPipeline(CamelTestSuite):
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
 
-        pipeline = MainMockPipeline([
+        result = cliutils.invoke(main, [
             '--fasta', str(TestMockPipeline.input_fasta),
             '--vcf-unfiltered', str(TestMockPipeline.input_vcf),
             '--input-type', 'fasta_with_vcf',
@@ -274,12 +265,10 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
-            '--ncbi-amr',
-            '--snpit',
-            '--human-read-scrubbing',
+            '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
             '--threads', '8',
         ])
-        pipeline.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

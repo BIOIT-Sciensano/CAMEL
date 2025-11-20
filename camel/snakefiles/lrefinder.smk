@@ -15,7 +15,7 @@ rule run_lrefinder:
         INFORMS = 'lrefinder/tool/informs.io' # lrefinder.OUTPUT_INFORMS
     params:
         dir_ = 'lrefinder/tool',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.lrefinder.lrefinder import LREFinder
@@ -41,7 +41,7 @@ rule lre_finder_report:
         HTML = 'lrefinder/report/html.iob' # lrefinder_workflow.OUTPUT_REPORT
     params:
         dir_ = 'lrefinder/report',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from camel.app.tools.lrefinder.lrefinderreporter import LREFinderReporter
         reporter = LREFinderReporter()

@@ -108,7 +108,7 @@ class SamtoolsView(SamtoolsBasePipeable):
         """
         if 'only works for indexed' in self._command.stderr:
             raise ToolExecutionError(self.name, "Can only extract regions from indexed BAM files")
-        super(SamtoolsView, self)._check_stderr()
+        super()._check_stderr()
 
     def _before_pipe(self, dir_, pipe_in: bool, pipe_out: bool) -> None:
         """

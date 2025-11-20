@@ -19,7 +19,7 @@ rule rd_csb_report:
     params:
         dir_ = 'csb_rd/report',
         detection_method = config['gene_detection']['options']['method'],
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from camel.app.tools.pipelines.mycobacterium.rdcsbreporter import RdCsbReporter
         reporter = RdCsbReporter()

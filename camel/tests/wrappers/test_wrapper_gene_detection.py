@@ -1,6 +1,6 @@
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.wrappers.genedetectionwrapper import GeneDetectionWrapper
 
 

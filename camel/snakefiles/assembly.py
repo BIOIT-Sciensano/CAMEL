@@ -18,17 +18,17 @@ def get_fasta_raw(config: dict[str, Any]) -> str:
     """
     Returns the assembly FASTA output IO object path (before filtering).
     """
-    if (config['input_type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' not in config['analyses']):
+    if (config['input']['type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' not in config['analyses']):
         return human_read_scrubbing.INPUT_FASTA.format(input_format='fasta')
-    if (config['input_type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses']):
+    if (config['input']['type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses']):
         return human_read_scrubbing.OUTPUT_FASTA.format(input_format='fasta')
-    if config['input_type'] == 'illumina':
+    if config['input']['type'] == 'illumina':
         return assembly_spades.OUTPUT_FASTA
-    if config['input_type'] == 'ont':
+    if config['input']['type'] == 'ont':
         return assembly_flye.OUTPUT_FASTA
-    if config['input_type'] == 'hybrid':
+    if config['input']['type'] == 'hybrid':
         return polish_assembly_short.OUTPUT_POLISHING_FASTA.format(assembly_type='flye')
-    raise ValueError(f"Invalid input type: {config['input_type']}")
+    raise ValueError(f"Invalid input type: {config['input']['type']}")
 
 
 def get_command_informs(config: dict[str, Any]) -> list[str]:
@@ -36,20 +36,20 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     Returns the assembly informs output IO object paths.
     :return: Assembly informs path
     """
-    if config['input_type'] in ('fasta', 'fasta_with_vcf'):
+    if config['input']['type'] in ('fasta', 'fasta_with_vcf'):
         return []
-    if config['input_type'] == 'illumina':
+    if config['input']['type'] == 'illumina':
         return [assembly_spades.OUTPUT_INFORMS]
-    if config['input_type'] == 'ont':
+    if config['input']['type'] == 'ont':
         return [assembly_flye.OUTPUT_INFORMS]
-    if config['input_type'] == 'hybrid':
+    if config['input']['type'] == 'hybrid':
         return [
             assembly_flye.OUTPUT_INFORMS,
             polish_assembly_long.OUTPUT_POLISH_MEDAKA_INFORMS.format(assembly_type='flye'),
             polish_assembly_short.OUTPUT_POLYPOLISH_INFORMS.format(assembly_type='flye'),
             polish_assembly_short.OUTPUT_PYPOLCA_INFORMS.format(assembly_type='flye')
         ]
-    raise ValueError(f"Invalid input type: {config['input_type']}")
+    raise ValueError(f"Invalid input type: {config['input']['type']}")
 
 
 def get_mapping_inform(read_key: str) -> Path:

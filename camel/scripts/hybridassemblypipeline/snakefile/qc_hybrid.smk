@@ -116,7 +116,7 @@ rule qc_hybrid_read_mapping_illumina:
         dir_ = lambda wildcards: f'qc_hybrid/{wildcards.name}/read_mapping/illumina'
     threads: 8
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.tools.bwa.bwamap import BWAMap
         bwa_map = BWAMap()
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict), 'illumina')

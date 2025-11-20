@@ -39,7 +39,8 @@ class AbriTAMRReporter(Tool):
         Executes the reporter.
         :rtype: None
         """
-        self._section = HtmlReportSection(AbriTAMRReporter.TITLE, subtitle=self._input_informs['abritamr_run']['_name'])
+        self._section = HtmlReportSection(
+            AbriTAMRReporter.TITLE, subtitle=self._input_informs['abritamr_run']['_name_full'])
         self._species = self._input_informs['abritamr_run']['species']
         self.__add_summaries_tables()
         if self._species == 'Salmonella':

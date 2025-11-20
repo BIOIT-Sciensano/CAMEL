@@ -20,7 +20,7 @@ rule quast_quast:
         INFORMS = 'quast/output/informs.io' # quast.OUTPUT_INFORMS
     params:
         dir_ = 'quast/output',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         fasta = config.get('reference', {}).get('fasta'),
         gff = config.get('reference', {}).get('gff3')
     run:
@@ -55,6 +55,8 @@ rule quast_quast:
         quast_.update_parameters(conserved_genes_finding=False)
         step = Step(rule_name=str(rule), tool=quast_, dir_=dir_out)
         step.run()
+
+        print(quast_.informs)
 
         # Collect output
         snakemakeutils.dump_tool_outputs(quast_, output, ignore_missing_output=True)
@@ -99,7 +101,7 @@ rule quast_report:
         HTML = 'quast/report/html.iob' # quast.OUTPUT_REPORT
     params:
         dir_ = 'quast/report',
-        name = config['sample_name']
+        name = config['input']['sample_name']
     run:
         from camel.app.tools.quast.quastreporter import QuastReporter
         reporter = QuastReporter()

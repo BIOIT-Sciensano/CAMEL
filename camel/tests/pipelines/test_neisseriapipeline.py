@@ -1,12 +1,14 @@
 import unittest
 from pathlib import Path
+
+from camel.app.cli import cliutils
+from camel.app.core import cameltesthelper
 from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
-import yaml
 
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.scripts.neisseriapipeline import CONFIG_DATA
-from camel.scripts.neisseriapipeline.mainneisseriapipeline import MainNeisseriaPipeline
+from camel.scripts.neisseriapipeline.mainneisseriapipeline import main, CUSTOM_ANALYSES
 from camel.tests import longRunningTest
 
 
@@ -30,10 +32,8 @@ class TestNeisseriaPipeline(CamelTestSuite):
         Checks if the databases for the sequence typing are available.
         :return: None
         """
-        with open(CONFIG_DATA) as handle_in:
-            config_data = yaml.safe_load(handle_in)
-
-        for key, scheme_data in config_data['sequence_typing']['dbs'].items():
+        data_typing = cameltesthelper.extract_from_yaml(CONFIG_DATA, 'sequence_typing')
+        for key, scheme_data in data_typing['dbs'].items():
             # Check if scheme exists
             self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
 
@@ -51,15 +51,18 @@ class TestNeisseriaPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestNeisseriaPipeline.input_fastq_pe[0]), str(TestNeisseriaPipeline.input_fastq_pe[1]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestNeisseriaPipeline.input_fastq_pe[0]),
+            str(TestNeisseriaPipeline.input_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainNeisseriaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainNeisseriaPipeline(args)
-        main.run()
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -70,16 +73,19 @@ class TestNeisseriaPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestNeisseriaPipeline.input_fastq_pe[0]), str(TestNeisseriaPipeline.input_fastq_pe[1]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestNeisseriaPipeline.input_fastq_pe[0]),
+            str(TestNeisseriaPipeline.input_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--trimming-method', 'fastp',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainNeisseriaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainNeisseriaPipeline(args)
-        main.run()
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -90,16 +96,19 @@ class TestNeisseriaPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestNeisseriaPipeline.input_fastq_pe[0]), str(TestNeisseriaPipeline.input_fastq_pe[1]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestNeisseriaPipeline.input_fastq_pe[0]),
+            str(TestNeisseriaPipeline.input_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--cov-max', '5.0',
-        ] + [f"--{a.replace('_', '-')}" for a in MainNeisseriaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainNeisseriaPipeline(args)
-        main.run()
+            '--cov-max', '5',
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -110,17 +119,19 @@ class TestNeisseriaPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestNeisseriaPipeline.input_fastq_pe[0]), str(TestNeisseriaPipeline.input_fastq_pe[1]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestNeisseriaPipeline.input_fastq_pe[0]),
+            str(TestNeisseriaPipeline.input_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'kma',
-            '--library', 'TruSeq2'
-        ] + [f"--{a.replace('_', '-')}" for a in MainNeisseriaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainNeisseriaPipeline(args)
-        main.run()
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -131,17 +142,17 @@ class TestNeisseriaPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(TestNeisseriaPipeline.input_fasta),
+            '--input-type', 'fasta',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--input-type', 'fasta',
             '--detection-method', 'blast',
-        ] + [f"--{a.replace('_', '-')}" for a in MainNeisseriaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainNeisseriaPipeline(args)
-        main.run()
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -152,17 +163,17 @@ class TestNeisseriaPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestNeisseriaPipeline.input_fastq_se),
+            '--input-type', 'ont',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--input-type', 'ont',
             '--detection-method', 'blast',
-        ] + [f"--{a.replace('_', '-')}" for a in MainNeisseriaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainNeisseriaPipeline(args)
-        main.run()
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -173,17 +184,17 @@ class TestNeisseriaPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestNeisseriaPipeline.input_fastq_se),
+            '--input-type', 'ont',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--input-type', 'ont',
             '--detection-method', 'kma',
-        ] + [f"--{a.replace('_', '-')}" for a in MainNeisseriaPipeline.CUSTOM_ANALYSES if a != 'cgmlst']
-        main = MainNeisseriaPipeline(args)
-        main.run()
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

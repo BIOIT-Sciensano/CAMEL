@@ -4,7 +4,7 @@ from typing import Optional, Any, Union
 
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.loggers import logger
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
@@ -91,9 +91,8 @@ class Kraken2Wrapper:
                 'db': str(db),
                 'expected_species': expected_species,
                 'level_of_depth': level_of_depth},
-            'sample_name': sample_name,
             'working_dir': str(self._working_dir),
-            'input_type': input_type
+            'input': {'type': input_type, 'sample_name': sample_name}
         }
         config_file = snakepipelineutils.generate_config_file(config_data, self._working_dir)
 

@@ -27,7 +27,7 @@ def get_command_informs(config: dict[str, Any]) -> list[Path]:
     if not any([an for an in config['analyses'] if an in ['straingst', 'gmo']]):
         return []
 
-    input_type = config['input_type']
+    input_type = config['input']['type']
     if input_type in ('illumina', 'hybrid'):
         paths.append(Path(OUTPUT_INFORMS.format(read_type='illumina')))
     if input_type == 'ont':
@@ -42,10 +42,10 @@ def get_reports(config: dict[str, Any]) -> list[Path]:
     :return: List of paths to the straingst reports
     """
     paths = []
-    input_type = config['input_type']
+    input_type = config['input']['type']
 
     # FASTA input
-    if config['input_type'] == 'fasta':
+    if config['input']['type'] == 'fasta':
         return []
 
     # FASTQ input
@@ -74,10 +74,10 @@ def get_summaries(config: dict[str, Any], ext: str) -> list[Path]:
     :param ext: Extension of the summary files
     :return: List of paths to straingst summary files
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
 
     # FASTA input
-    if config['input_type'] == 'fasta':
+    if config['input']['type'] == 'fasta':
         return []
 
     # FASTQ input

@@ -35,7 +35,7 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
         if float(record['% Coverage']) != 100.0:
             return False
         return True
-    elif detection_method == 'rapid':
+    elif detection_method == 'mist':
         if str(record['Allele(s)']) == '-':
             return False
         return True
@@ -55,10 +55,10 @@ def parse_tsv_typing(tsv_path: Path, detection_method: str, use_temp: bool = Tru
     allele_data['is_perfect_hit'] = allele_data.apply(lambda x: is_perfect(x, detection_method), axis=1)
     # When the hashed TSV file is provided -> check for allele id length
     if use_temp is True:
-        if detection_method != 'rapid':
+        if detection_method != 'mist':
             allele_data['is_perfect_hit'] = allele_data.apply(
                 lambda x: x['is_perfect_hit'] or len(str(x['Allele'])) == 6, axis=1)
-    col_allele = 'Allele' if detection_method != 'rapid' else 'Allele(s)'
+    col_allele = 'Allele' if detection_method != 'mist' else 'Allele(s)'
     return {r['Locus']: r[col_allele] if r['is_perfect_hit'] else '-' for _, r in allele_data.iterrows()}
 
 

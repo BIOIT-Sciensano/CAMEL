@@ -1,42 +1,92 @@
 #!/usr/bin/env python
-import argparse
 import ast
+import dataclasses
 import re
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Union
 
+import click
 import humanize
 import pandas as pd
 
+from camel.app.cli import cliutils
 from camel.app.loggers import logger, initialize_logging
+from camel.app.scriptutils.basescript.basescript import BaseScript
+from camel.app.scriptutils.model import BaseInput, BaseOutput, BaseOptions
+
+GENE_FORMATS = {
+    'simple': '{hit[1]}',
+    'locus_with_id': '{hit[1]} ({hit[2]}%)',
+    'locus_with_id_len': '{hit[1]} (id={hit[2]}%, len={hit[3]})',
+}
 
 
-class MainPipelineCombine:
+@dataclasses.dataclass(frozen=True)
+class PipelineCombineInput(BaseInput):
+    """
+    Inputs for the pipeline combine script.
+    """
+    tsv: list[Path]
+
+@dataclasses.dataclass(frozen=True)
+class PipelineCombineOutput(BaseOutput):
+    """
+    Outputs for the pipeline combine script.
+    """
+    output: Path = dataclasses.field(metadata={'help': 'TSV output file'})
+
+@dataclasses.dataclass(frozen=True)
+class PipelineCombineOpts(BaseOptions):
+    """
+    Options for the pipeline combine script.
+    """
+    exclude: str | None = dataclasses.field(default=None, metadata={'help': 'Comma separated list of keys to exclude'})
+    include: str | None = dataclasses.field(default=None, metadata={'help': 'Comma separated list of keys to include'})
+    gene_format: str | None = dataclasses.field(default=None, metadata={
+        'help': 'Format for genes',
+        'choices': list(GENE_FORMATS.keys())
+    })
+    group_genes: str = dataclasses.field(default='cluster', metadata={
+        'help': 'Grouping for the detected genes in the output',
+        'choices': ['cluster', 'gene', 'allele']
+    })
+
+
+class MainPipelineCombine(BaseScript[PipelineCombineInput, PipelineCombineOutput, PipelineCombineOpts]):
     """
     Main script for the pipeline combine tool.
     """
 
-    GENE_FORMATS = {
-        'simple':  '{hit[1]}',
-        'locus_with_id': '{hit[1]} ({hit[2]}%)',
-        'locus_with_id_len': '{hit[1]} (id={hit[2]}%, len={hit[3]})'
-    }
-
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(
+            self,
+            script_in: PipelineCombineInput,
+            script_out: PipelineCombineOutput,
+            opts: PipelineCombineOpts
+    ) -> None:
         """
         Initializes the main script.
+        :param script_in: Script input
+        :param script_out: Script output
+        :param opts: Script options
+        :return: None
         """
-        self._args = MainPipelineCombine._parse_arguments(args)
+        super().__init__(
+            name='Pipeline Combine',
+            version='1.0',
+            script_in=script_in,
+            script_out=script_out,
+            script_opts=opts
+        )
         self._gene_detection_cols = []
 
-    def run(self) -> None:
+    def _execute(self) -> None:
         """
         Runs this tool.
         """
         # Parse input data
+        logger.debug(f'Parsing {len(self._script_in.tsv)} input files')
         records_out = []
-        for path_input in self._args.input:
+        for path_input in self._script_in.tsv:
             isolate_data = self._parse_pipe_out(path_input)
             records_out.append(isolate_data)
         data_out = pd.DataFrame(records_out)
@@ -48,7 +98,7 @@ class MainPipelineCombine:
 
         # Filter columns
         cols_to_keep = data_out.apply(lambda x: MainPipelineCombine._filter_columns(
-            x, self._args.exclude, self._args.include, self._args.gene_format is not None), axis=0)
+            x, self._script_opts.exclude, self._script_opts.include, self._script_opts.gene_format is not None), axis=0)
         data_out_filt = data_out.loc[:, cols_to_keep]
         logger.info(f'Keeping {len(data_out_filt.columns)}/{len(data_out.columns)} columns')
 
@@ -57,10 +107,11 @@ class MainPipelineCombine:
             data_out_filt.columns, key=lambda x: MainPipelineCombine._get_sorting_key(x, self._gene_detection_cols)),
             axis=1)
 
-        # Save output file
-        data_out_filt.to_csv(self._args.output, sep='\t', index=False)
+        # Save the output file
+        path_out = self._script_out.output
+        data_out_filt.to_csv(path_out, sep='\t', index=False)
         logger.info(
-            f'Output file created: {self._args.output} ({humanize.naturalsize(self._args.output.stat().st_size)})')
+            f'Output file created: {path_out} ({humanize.naturalsize(path_out.stat().st_size)})')
 
     def _parse_pipe_out(self, path_in: Path) -> dict[str, Any]:
         """
@@ -77,14 +128,13 @@ class MainPipelineCombine:
 
                 # Gene detection hits
                 m = re.match(r'hits_(.*)', key)
-                if m and (self._args.gene_format is not None):
+                if m and (self._script_opts.gene_format is not None):
                     # Keep track of gene detection columns for sorting
                     self._gene_detection_cols.append(m.group(1))
 
                     # Add detected genes
                     for key, value in MainPipelineCombine._format_gene_detection_hits(
-                            m.group(1), value, MainPipelineCombine.GENE_FORMATS[self._args.gene_format],
-                            self._args.group_genes):
+                            m.group(1), value, GENE_FORMATS[self._script_opts.gene_format], self._script_opts.group_genes):
                         isolate_data[key] = value
 
                 # LREFinder genes
@@ -109,20 +159,24 @@ class MainPipelineCombine:
         """
         # Remove excluded columns
         if keys_exclude is not None:
-            for key in keys_exclude.split(','):
+            for key_excluded in keys_exclude.split(','):
                 # Expand gene detection hits
-                if genes_formatted and key.startswith('hits_'):
-                    key = f"{key.replace('hits_', '')}*"
+                if genes_formatted and key_excluded.startswith('hits_'):
+                    key = f"{key_excluded.replace('hits_', '')}*"
+                else:
+                    key = key_excluded
                 if MainPipelineCombine.key_matches(key, str(column.name)):
                     return False
             return True
 
         # Retain included columns
         elif keys_include is not None:
-            for key in keys_include.split(','):
+            for key_included in keys_include.split(','):
                 # Expand gene detection hits
-                if genes_formatted and key.startswith('hits_'):
-                    key = f"{key.replace('hits_', '')}*"
+                if genes_formatted and key_included.startswith('hits_'):
+                    key = f"{key_included.replace('hits_', '')}*"
+                else:
+                    key = key_included
                 if MainPipelineCombine.key_matches(key, str(column.name)):
                     return True
             return False
@@ -197,26 +251,22 @@ class MainPipelineCombine:
             output_rows.append((key, format_str.format(hit=hit)))
         return output_rows
 
-    @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
-        """
-        Parses the command line arguments.
-        :return: Arguments
-        """
-        parser = argparse.ArgumentParser()
-        parser.add_argument('input', metavar='N', type=Path, nargs='+', help='Input files')
-        parser.add_argument('--output', type=Path, help='Output path')
-        parser.add_argument('--exclude', type=str, help='Comma separated list of keys to exclude')
-        parser.add_argument('--include', type=str, help='Comma separated list of keys to include')
-        parser.add_argument(
-            '--gene-format', type=str, choices=MainPipelineCombine.GENE_FORMATS.keys(), help='Format for genes')
-        parser.add_argument(
-            '--group-genes', type=str, choices=['cluster', 'gene', 'allele'], default='cluster',
-            help='Grouping for the detected genes in the output')
-        return parser.parse_args(args)
+@click.command(name='pipeline_combine', short_help='Combines the output of multiple pipeline runs')
+@click.argument("input", type=click.Path(path_type=Path), nargs=-1, required=True)
+@cliutils.add_click_options_from_dataclass(PipelineCombineOutput)
+@cliutils.add_click_options_from_dataclass(PipelineCombineOpts)
+def main(**kwargs) -> None:
+    """
+    Combines the output of multiple pipeline runs.
+    """
+    script = MainPipelineCombine(
+        script_in=PipelineCombineInput(tsv=[Path(x) for x in kwargs['input']]),
+        script_out=PipelineCombineOutput(**cliutils.from_kwargs(PipelineCombineOutput, kwargs)),
+        opts=PipelineCombineOpts(**cliutils.from_kwargs(PipelineCombineOpts, kwargs))
+    )
+    script.run()
 
 
 if __name__ == '__main__':
     initialize_logging()
-    main = MainPipelineCombine()
-    main.run()
+    main()

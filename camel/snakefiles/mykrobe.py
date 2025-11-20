@@ -17,8 +17,8 @@ def get_input(config: dict[str, Any]) -> str:
     :param config: Snakemake configuration
     :return: Path to the input file
     """
-    if config['input_type'] in ('illumina', 'ont'):
+    if config['input']['type'] in ('illumina', 'ont'):
         return 'fq_dict.io'
-    if config['input_type'] == 'fasta':
+    if config['input']['type'] == 'fasta':
         return assembly.OUTPUT_FASTA
     raise ValueError(f'Unsupported input type: {config["input_type"]}')

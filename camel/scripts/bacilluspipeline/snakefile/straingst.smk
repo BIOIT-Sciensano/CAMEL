@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
@@ -64,7 +64,7 @@ rule straingst_report:
         VAL_HTML = 'straingst/{read_type}/report/html.iob'
     params:
         dir_ = lambda wildcards: f'straingst/{wildcards.read_type}/report/',
-        sample_name = config['sample_name'],
+        sample_name = config['input']['sample_name'],
         read_type = lambda wildcards: wildcards.read_type
     run:
         from camel.app.tools.strainge.straingstreporter import StrainGSTReporter

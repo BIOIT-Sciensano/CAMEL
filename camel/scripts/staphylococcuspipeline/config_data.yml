@@ -1,0 +1,162 @@
+#####################
+# Pipeline settings #
+#####################
+citations:
+  main: Timmermans_2021-enterococcus
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Li_2009-samtools
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Bortolaia_2020-resfinder_4.0
+    - Feldgarden_2019-ndaro
+    - Joensen_2014-virulencefinder
+    - Chen_2016-vfdb
+    - Carattoli_2020-plasmidfinder
+    - Jolley_2010-bigsdb
+    - Hyatt_2010-prodigal
+    - Pal_2014-bacmet
+
+####################
+# Reference genome #
+####################
+reference:
+  name: <i>Staphylococcus aureus subsp. aureus</i> NCTC 8325 (NC_007795.1)
+  fasta: /db/refgenomes/Staphylococcus_aureus/NC_007795.1.fasta
+  gff3: /db/refgenomes/Staphylococcus_aureus/NC_007795.1.gff3
+  url: https://www.ncbi.nlm.nih.gov/nuccore/NC_007795.1
+
+#########################
+# Tool specific options #
+#########################
+amrfinder:
+  db: /db/amrfinder/v4/latest
+  species: Staphylococcus_aureus
+
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+
+bacmet:
+  db: /db/bacmet/latest
+
+confindr:
+  db: /db/confindr/0.8.1
+
+contamination_check:
+  db: /db/kraken2_microbial/latest
+  expected_species: Staphylococcus aureus
+
+downsampling:
+  coverage_max: {COV_MAX}
+  expected_genome_size: 2_821_361
+
+mob_suite:
+  db: /db/mob_suite/latest
+
+sccmec_typing:
+  profiles: /db/pipelines/saureus/SCCmec_genes/profiles.yml
+
+spa_typing:
+  db: /db/pipelines/saureus/spatyping/profiles.fasta
+  profiles: /db/pipelines/saureus/spatyping/spatypes.csv
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+
+read_scrubbing: {{}}
+
+read_trimming: {{}}
+
+resfinder4:
+  db: /db/resfinder4
+  species: Staphylococcus aureus
+  min_identity: 0.90
+  min_cov: 0.60
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering: {{}}
+
+############################
+# Gene detection databases #
+############################
+gene_detection:
+  dbs:
+    vfdb_core:
+      path: /db/gene_detection/VFDB_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
+
+    vf_exoenzyme:
+      path: /db/gene_detection/VirulenceFinder-Saureus-exoenzyme
+      metadata:
+        name: Protein function
+        key: protein_function
+
+    vf_hostimm:
+      path: /db/gene_detection/VirulenceFinder-Saureus-hostimm
+      metadata:
+        name: Protein function
+        key: protein_function
+
+    vf_toxin:
+      path: /db/gene_detection/VirulenceFinder-Saureus-toxin
+      metadata:
+        name: Protein function
+        key: protein_function
+
+    sccmec_genes:
+      path: /db/gene_detection/SCCmec_genes
+
+    sccmec_cassette:
+      path: /db/gene_detection/SCCmec_cassette
+      force_method: kma
+
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-gram_positive
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
+
+    se_toxins:
+      path: /db/gene_detection/saureus_se_toxins
+
+###################
+# Sequence typing #
+###################
+sequence_typing:
+  dbs:
+    mlst:
+      path: /db/sequence_typing/staphylococcus/mlst
+    cgmlst:
+      path: /db/sequence_typing/staphylococcus/cgmlst
+      detection_method: blast
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

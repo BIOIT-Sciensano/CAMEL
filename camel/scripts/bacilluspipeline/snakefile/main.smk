@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.snakefiles import core, assembly, downsampling, quast, confindr, trimming, trimming_illumina, \
     quality_checks, variant_calling, variant_filtering, contamination_check_kraken, sequence_typing, amrfinder, \
     trimming_ont, gene_detection, mobsuite, human_read_scrubbing, read_simulation
@@ -38,8 +38,8 @@ rule all:
     This rules ensures that the required output files are generated.
     """
     input:
-        HTML = config['output_report'],
-        TSV = config['output_tabular']
+        HTML = config['output']['html'],
+        TSV = config['output']['tsv']
 
 #####################################
 # Linking workflow inputs & outputs #
@@ -115,7 +115,7 @@ rule report_create_commands_section:
         INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses'] else [],
         INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
-        INFORMS_assembly_map = assembly.get_qc_informs(config['input_type']),
+        INFORMS_assembly_map = assembly.get_qc_informs(config['input']['type']),
         INFORMS_btyper = btyper.OUTPUT_INFORMS if 'btyper' in config['analyses'] else [],
         INFORMS_fastani = ani.OUTPUT_INFORMS if 'fastani' in config['analyses'] else [],
         INFORMS_straingst = straingst.get_command_informs(config),
@@ -130,8 +130,8 @@ rule report_create_commands_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 rule report_content_cereus:
     """
@@ -144,7 +144,7 @@ rule report_content_cereus:
         report_quast = quast.OUTPUT_REPORT,
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
-        report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input_type']),
+        report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input']['type']),
         report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
         report_btyper = btyper.OUTPUT_REPORT if 'btyper' in config['analyses'] else btyper.OUTPUT_REPORT_EMPTY,
         report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
@@ -160,42 +160,41 @@ rule report_content_cereus:
     output:
         HTML = 'report/report_cereus.html'
     params:
-        sample_name = config['sample_name'],
-        output_dir = config['output_dir'],
-        pipeline_info = config['pipeline'],
+        output_dir = config['output']['dir'],
+        pipeline_info = config['script_info'],
         species = config['species'],
         input_dict = config['input'],
-        input_type = config['input_type'],
         citation_keys = config['citations'],
         detection_method = config['gene_detection']['options']['method']
     run:
         import datetime
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
-        from camel.app.core.snakemake import snakepipelineutils
+        from camel.app.scriptutils.basepipe import basepipeutils
+        from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 
-        # Add the header section
+        # Add the header section+
+        script_input = ScriptInput.from_dict(params.input_dict)
         report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         report.add_html_object(snakepipelineutils.create_input_section(
-            sample_name=params.sample_name,
+            sample_name=script_input.name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
-            input_files=ReportPipeline.format_input_string(params.input_dict),
-            input_type=params.input_type,
+            input_files=script_input.input_str,
+            input_type=script_input.type_.value,
+            detection_method=params.detection_method,
             extra_data=[('Selected species', f'<i>{params.species}</i>')],
             key_citation=params.citation_keys['main'],
-            detection_method=params.detection_method
         ))
         report_structure = []
 
         # Core sections (shared)
-        ReportPipeline.add_content_scrubbing(
-            report_structure, params.input_type, input.reports_scrubbing)
-        ReportPipeline.add_content_trim_basic_qc(
-            report_structure, params.input_type, input.reports_downsampling, input.reports_trimming)
+        basepipeutils.add_content_scrubbing(
+            report_structure, script_input.type_.value, input.reports_scrubbing)
+        basepipeutils.add_content_trim_basic_qc(
+            report_structure, script_input.type_.value, input.reports_downsampling, input.reports_trimming)
         report_structure.append(('Assembly', 'assembly', [Path(input.report_quast)]))
-        ReportPipeline.add_content_contamination_check(
-            report_structure, params.input_type, input.reports_contamination, input.report_confindr)
+        basepipeutils.add_content_contamination_check(
+            report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.append(('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]))
         if 'variant_calling' in config['analyses']:
             report_structure.append(('Variant calling', 'variant', [Path(input.report_variant)]))
@@ -225,7 +224,7 @@ rule report_content_subtilis:
         report_quast = quast.OUTPUT_REPORT,
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
-        report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input_type']),
+        report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input']['type']),
         report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
         report_fastani = ani.OUTPUT_REPORT if 'fastani' in config['analyses'] else ani.OUTPUT_REPORT_EMPTY,
         report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
@@ -243,43 +242,44 @@ rule report_content_subtilis:
     output:
         HTML = 'report/report_subtilis.html'
     params:
-        sample_name = config['sample_name'],
-        output_dir = config['output_dir'],
-        pipeline_info = config['pipeline'],
+        output_dir = config['output']['dir'],
+        pipeline_info = config['script_info'],
         species = config['species'],
         input_dict = config['input'],
-        input_type = config['input_type'],
         citation_keys = config['citations'],
         detection_method = config['gene_detection']['options']['method']
     run:
-        # Init report
         import datetime
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.basepipe import basepipeutils
         from camel.app.core.snakemake import snakepipelineutils
+        from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 
         # Add the header section
+        script_input = ScriptInput.from_dict(params.input_dict)
         report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         report.add_html_object(snakepipelineutils.create_input_section(
-            sample_name=params.sample_name,
+            sample_name=script_input.name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
-            input_files=ReportPipeline.format_input_string(params.input_dict),
-            input_type=params.input_type,
+            input_files=script_input.input_str,
+            input_type=script_input.type_.value,
+            detection_method=params.detection_method,
             extra_data=[('Selected species', f'<i>{params.species}</i>')],
             key_citation=params.citation_keys['main'],
-            detection_method=params.detection_method
         ))
+
+        # Create the report
         report_structure = []
 
         # Core sections
-        ReportPipeline.add_content_scrubbing(
-            report_structure, params.input_type, input.reports_scrubbing)
-        ReportPipeline.add_content_trim_basic_qc(
-            report_structure, params.input_type, input.reports_downsampling, input.reports_trimming)
+        basepipeutils.add_content_scrubbing(
+            report_structure, script_input.type_.value, input.reports_scrubbing)
+        basepipeutils.add_content_trim_basic_qc(
+            report_structure, script_input.type_.value, input.reports_downsampling, input.reports_trimming)
         report_structure.append(('Assembly', 'assembly', [Path(input.report_quast)]))
-        ReportPipeline.add_content_contamination_check(
-            report_structure, params.input_type, input.reports_contamination, input.report_confindr)
+        basepipeutils.add_content_contamination_check(
+            report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.append(('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]))
         if 'variant_calling' in config['analyses']:
             report_structure.append(('Variant calling', 'variant', [Path(input.report_variant)]))
@@ -307,9 +307,9 @@ rule report_select_by_species:
     input:
         HTML = f'report/report_{config["species"]}.html'
     output:
-        HTML = config['output_report']
+        HTML = config['output']['html']
     params:
-        output_dir = config['output_dir']
+        output_dir = config['output']['dir']
     shell:
         """
         cp {input.HTML} {output.HTML}

@@ -67,7 +67,10 @@ class VariantFilteringWrapper:
         """
         for path, destination in [
             (vcf_gz_file, variant_calling.OUTPUT_UNFILTERED_VCF_GZ),
-            (bam_file, variant_calling.get_bam({'working_dir': self._working_dir, 'input_type': input_type}))]:
+            (bam_file, variant_calling.get_bam({
+                'working_dir': self._working_dir,
+                'input': {'type': input_type}}
+            ))]:
             target_file = Path(self._working_dir, destination)
             if not target_file.parent.exists():
                 target_file.parent.mkdir(parents=True)
@@ -95,9 +98,10 @@ class VariantFilteringWrapper:
         config_path = snakepipelineutils.generate_config_file({
             'working_dir': str(self._working_dir),
             'variant_filtering': filtering_options,
-            'input_type': input_type,
+            'input': {'type': input_type},
             'sample_name': sample_name
         }, self._working_dir)
+
 
         # Execute Snakemake
         output_files = {

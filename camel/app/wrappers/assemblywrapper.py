@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional, Any, Union
 
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
 from camel.snakefiles import assembly
 
@@ -127,10 +127,12 @@ class AssemblyWrapper:
         :return: Config data
         """
         config_data: dict[str, Any] = {
-            'sample_name': name,
             'working_dir': str(self._working_dir),
             'assembly': {self.assembler_key: {}},
-            'input_type': self._input_type
+            'input': {
+                'type': self._input_type,
+                'sample_name': name
+            }
         }
 
         # Assembler options

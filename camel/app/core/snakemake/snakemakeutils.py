@@ -268,3 +268,33 @@ def convert_list_to_dict(data: list[list[str]], headers: list[str]) -> list[dict
     df.replace(np.nan, '-', inplace=True)
     # noinspection PyTypeChecker
     return df.to_dict(orient='records')
+
+
+def sanitize_numpy(obj: Any) -> Any:
+    """
+    Recursively convert numpy scalars in nested structures to Python scalars.
+    This method can be used for sanitizing informs before storing then in JSON format.
+    :return: None
+    """
+    # Convert numpy scalars (np.int64, np.float64, np.bool_, etc.)
+    if isinstance(obj, np.generic):
+        return obj.item()
+
+    # Dict → sanitize keys & values
+    elif isinstance(obj, dict):
+        return {sanitize_numpy(k): sanitize_numpy(v) for k, v in obj.items()}
+
+    # List → sanitize each element
+    elif isinstance(obj, list):
+        return [sanitize_numpy(v) for v in obj]
+
+    # Tuple → sanitize then rebuild tuple
+    elif isinstance(obj, tuple):
+        return tuple(sanitize_numpy(v) for v in obj)
+
+    # Set → sanitize then rebuild set
+    elif isinstance(obj, set):
+        return {sanitize_numpy(v) for v in obj}
+
+    # Everything else stays the same
+    return obj

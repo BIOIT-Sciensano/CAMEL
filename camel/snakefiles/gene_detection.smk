@@ -67,7 +67,7 @@ rule gene_detection_map_names:
         TSV = 'gene_detection/{db}/metadata/tsv.io'
     params:
         dir_working = lambda wildcards: f'gene_detection/{wildcards.db}/metadata',
-        sample_name = config['sample_name'],
+        sample_name = config['input']['sample_name'],
         db_config = lambda wildcards: config['gene_detection']['dbs'][wildcards.db]
     run:
         from camel.app.core.io.tooliofile import ToolIOFile
@@ -148,7 +148,7 @@ rule gene_detection_report:
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/report',
         config_data = lambda wildcards: config['gene_detection']['dbs'][wildcards.db],
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         detection_method = lambda wildcards: GeneDetectionUtils.get_detection_method_key(config, wildcards.db)
     run:
         from camel.app.tools.pipelines.genedetection.htmlreportergenedetection import HtmlReporterGeneDetection

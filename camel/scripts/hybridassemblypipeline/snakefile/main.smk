@@ -7,6 +7,7 @@ import pandas as pd
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
+from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.snakefiles import core, downsampling, polish_assembly_long, polish_assembly_short, \
     trimming_illumina, trimming_ont, assembly
 from camel.scripts.hybridassemblypipeline.snakefile import qc_hybrid
@@ -32,7 +33,7 @@ rule all:
     This rules ensures that the required output files are generated.
     """
     input:
-        HTML = config['output_report']
+        HTML = config['output']['html']
 
 rule unicycler:
     """
@@ -47,7 +48,7 @@ rule unicycler:
         dir_ = 'unicycler'
     threads: 16
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.tools.unicycler.unicycler import Unicycler
         unicycler_assembly = Unicycler()
         fq_hybrid = FastqInput.from_fq_dict(Path(input.FQ_dict), 'hybrid')
@@ -210,8 +211,8 @@ rule report_command_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 rule report_create_sections:
     """
@@ -237,15 +238,16 @@ rule report_create_sections:
         VCF_sniffles = [f'qc_hybrid/{key}/sniffles/vcf.io' for key in config['assembly_steps']],
         WIGGLE_ale = [f'qc_hybrid/{key}/ale_illumina/wiggle.io' for key in config['assembly_steps']]
     output:
-        HTML = Path(config['output_report'])
+        HTML = Path(config['output']['html'])
     params:
-        sample_name = config['sample_name'],
+        sample_name = config['input']['sample_name'],
         input = config['input'],
-        pipeline = config['pipeline'],
+        pipeline = config['script_info'],
         dir_ = Path(config['working_dir']),
-        output_dir = config['output_dir']
+        output_dir = config['output']['dir']
     run:
         from camel.scripts.hybridassemblypipeline.reporter.hybridassemblyreporter import HybridAssemblyReporter
+        script_in = ScriptInput.from_dict(params.input)
         reporter = HybridAssemblyReporter()
         reporter.add_input_informs({
             'quast': snakemakeutils.load_object(Path(input.INFORMS_quast)),
@@ -258,7 +260,7 @@ rule report_create_sections:
             'ale': [snakemakeutils.load_object(Path(f)) for f in input.INFORMS_ale],
             'sample_name': params.sample_name,
             'pipeline': params.pipeline,
-            'input': params.input
+            'input_str': script_in.input_str
         })
         reporter.add_input_files({
             'FASTA': [snakemakeutils.load_object(Path(FASTA))[0] for FASTA in input.FASTA],

@@ -5,3 +5,6 @@ dependency_service: conda
 # Resource locations
 dir_db: /db
 dir_testdata: /testdata/camel
+
+# Logging
+dir_error_logs: /logs/camel/camel_logs

@@ -1,8 +1,8 @@
 import unittest
 
-
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.checkv.maincheckv import MainCheckV
+from camel.scripts.checkv.maincheckv import main
 from camel.tests import resourceIntensiveTest, longRunningTest
 
 
@@ -23,14 +23,14 @@ class TestCheckVMain(CamelTestSuite):
         :return: None
         """
         path_report_out = self.running_dir / 'report' / 'report.html'
-        checkv_main = MainCheckV([
+        result = cliutils.invoke(main, [
             '--fasta', str(TestCheckVMain.input_fasta),
             '--working-dir', str(self.running_dir),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--threads', '4'
         ])
-        checkv_main.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

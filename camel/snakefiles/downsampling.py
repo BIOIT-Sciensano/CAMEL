@@ -18,7 +18,7 @@ def get_reports(config: dict[str, Any], input_type: str = None) -> list[Path]:
     :return: Report path(s)
     """
     if input_type is None:
-        input_type = config['input_type']
+        input_type = config['input']['type']
 
     # FASTA input
     if input_type in ('fasta', 'fasta_with_vcf'):
@@ -46,7 +46,7 @@ def get_command_informs(config: dict[str, Any], input_type: str = None) -> list[
     :return: List of informs IO files
     """
     if input_type is None:
-        input_type = config['input_type']
+        input_type = config['input']['type']
 
     # FASTA input
     if input_type in ('fasta', 'fasta_with_vcf'):
@@ -75,7 +75,7 @@ def get_summaries(config: dict[str, Any], ext: str, input_type: str = None) -> l
     :return: Summary file path(s)
     """
     if input_type is None:
-        input_type = config['input_type']
+        input_type = config['input']['type']
 
     # FASTA input
     if input_type in ('fasta', 'fasta_with_vcf'):

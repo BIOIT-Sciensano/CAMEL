@@ -12,7 +12,7 @@ from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.loggers import logger
 
 
-def init_report(path_out: Path, key: str, title: str, dir_out: Path | None) -> HtmlReport:
+def init_report(path_out: Path, key: str, title: str, dir_out: Path | None = None) -> HtmlReport:
     """
     Initializes an empty HTML report.
     :param path_out: Report output path
@@ -29,6 +29,7 @@ def init_report(path_out: Path, key: str, title: str, dir_out: Path | None) -> H
         logger.info(f"Creating directory to store report: {path_out}")
         path_out.parent.mkdir(parents=True)
     report = HtmlReport(path_out, dir_out if dir_out else path_out.parent, [path_jquery])
+    report.output_dir.mkdir(exist_ok=True, parents=True)
     report.initialize(key, path_css)
     report.add_pipeline_header(title)
     return report

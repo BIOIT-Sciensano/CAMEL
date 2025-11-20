@@ -20,7 +20,7 @@ rule ref_selection_mash_screen:
     threads: 8
     params:
         dir_ = lambda wildcards: f'ref_selection/mash_screen/{wildcards.segment}',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         segment = lambda wildcards: wildcards.segment
     run:
         from camel.app.core.io.tooliofile import ToolIOFile

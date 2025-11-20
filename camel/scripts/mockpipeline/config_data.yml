@@ -19,19 +19,22 @@ citations:
     - Gurevich_2013-quast
     - Wood_2019-kraken2
 
-downsampling:
-  coverage_max: {coverage_max}
+##########
+# Assays #
+##########
+assembly:
+  flye:
+    min_overlap: 1000
+
+confindr:
+  db: /db/confindr/0.8.1
 
 contamination_check:
   db: /db/kraken2_microbial/latest
   expected_species: Escherichia coli
 
-confindr:
-  db: /db/confindr/0.8.1
-
-assembly:
-  flye:
-    min_overlap: 1000
+downsampling:
+  coverage_max: {COV_MAX}
 
 quality_checks:
   typing_scheme: null
@@ -43,6 +46,10 @@ gene_detection:
       metadata:
         name: Antibiotic(s)
         key: subclass
+  options:
+    method: blast
+
+read_trimming: {{}}
 
 variant_calling:
   ploidy: 1

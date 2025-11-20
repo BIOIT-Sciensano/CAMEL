@@ -37,7 +37,7 @@ rule gene_detection_kma:
         INFORMS = 'gene_detection/{db}/kma/informs_pre.io'
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/kma',
-        input_type = config.get('input_type', 'illumina'),
+        input_type = config['input'].get('type'),
         ont = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('ont'),
         apm = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('apm'),
         cge = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('cge')

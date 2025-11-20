@@ -1,0 +1,143 @@
+############################################################################################
+# This YAML file contains the additional configuration data for the Mycobacterium pipeline #
+# The values are added to the configuration data constructed by the BasePipeline class.    #
+############################################################################################
+####################
+# Pipeline options #
+####################
+citations:
+  main: Bogaerts_2021-mycobacterium_validation
+  other:
+    - Bolger_2014-trimmomatic
+    - Bankevich_2012-spades
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2009-samtools
+    - Li_2011-bcftools
+    - Kaas_2014-csi_phylogeny
+    - Ezewudo_2018-reseqtb_uvp
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Xia_2016-spotyping
+    - Lipworth_2019-snpit
+    - Coll_2014-myco_snp_lineage
+    - Dai_2011-myco_hsp65
+    - Srilohasin_2014-myco_51snp
+    - Zankari_2017-pointfinder
+    - Danecek_2017-bcftools_csq
+    - Miotto_2017-myco_amr
+    - Jolley_2010-bigsdb
+
+####################
+# Reference genome #
+####################
+reference:
+  expected_gc: 51.5
+  fasta: /db/refgenomes/Mycobacterium_tuberculosis/H37Rv.fasta
+  gff3: /db/refgenomes/Mycobacterium_tuberculosis/H37Rv.gff
+  name: H37Rv
+  tabix: /db/refgenomes/Mycobacterium_tuberculosis/H37Rv.tab.ann.gz
+  url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000195955.2
+
+################
+# Tool options #
+################
+51snp:
+  bed: /db/pipelines/mycobacterium/51snp/51snp_locations.bed
+  profiles: /db/pipelines/mycobacterium/51snp/profiles.tsv
+
+amr:
+  bed_regions: /db/pipelines/mycobacterium/amr/who_2023.6/amr_regions.bed
+  mutation_db: /db/pipelines/mycobacterium/amr/who_2023.6
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+
+confindr:
+  db: /db/confindr/0.8.1
+
+contamination_check:
+  db: /db/kraken2_microbial/latest
+  expected_species: Mycobacterium tuberculosis
+
+downsampling:
+  coverage_max: {COV_MAX}
+  expected_genome_size: 4_411_532
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+  expected_gc_content: 65.6
+  coverage_mode: ref
+
+read_trimming: {{}}
+read_scrubbing: {{}}
+
+sequence_typing:
+  dbs:
+    mlst:
+      path: /db/sequence_typing/mycobacterium/mlst
+    cgmlst:
+      path: /db/sequence_typing/mycobacterium/cgmlst
+      detection_method: blast
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+
+snp_lineage:
+  bed: /db/pipelines/mycobacterium/snp_lineage/tbdb-2024_02_23.bed
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering:
+  region:
+    bed_file: /db/pipelines/mycobacterium/variant_filtering/excluded_regions.bed
+  depth:
+    min_fwd_depth: 1
+    min_rev_depth: 1
+  distance:
+    min_distance: 0
+
+gene_detection:
+  dbs:
+    amr_cds:
+      path: /db/pipelines/mycobacterium/amr/gene_detection/myco_amr_cds
+      force_method: kma
+      params:
+        min_coverage: 20
+      metadata:
+        name: Antibiotics
+        key: antibiotics
+
+    csb_rd:
+      path: /db/pipelines/mycobacterium/csb_rd
+      force_method: kma
+
+    ncbi_16s:
+      path: /db/gene_detection/NCBI_16S
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 90
+      filtering_method: score
+      force_method: blast
+      metadata:
+        name: Species
+        key: species
+
+    hsp65:
+      path: /db/pipelines/mycobacterium/hsp65
+      metadata:
+        name: Species
+        key: species_name
+
+pointfinder:
+  db: mycobacterium_tuberculosis

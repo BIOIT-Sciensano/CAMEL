@@ -232,7 +232,7 @@ class ResFinderReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection(ResFinderReporter.TITLE, subtitle=self._input_informs['resfinder']['_name'])
+        section = HtmlReportSection(ResFinderReporter.TITLE, subtitle=self._input_informs['resfinder']['_name_full'])
 
         # Parameters
         self.__add_parameter_section(section)

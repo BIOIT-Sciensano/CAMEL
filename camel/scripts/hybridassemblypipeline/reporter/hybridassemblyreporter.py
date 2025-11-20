@@ -4,14 +4,13 @@ from typing import Any
 
 import pandas as pd
 
+from camel.app.config import config
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.reports import PATH_JQUERY
 from camel.app.core.reports.htmlelement import HtmlElement
 from camel.app.core.reports.htmlreport import HtmlReport
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.reports.htmltablecell import HtmlTableCell
-from camel.app.scriptutils.reportpipeline import ReportPipeline
-from camel.app.config import config
-from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.tool import Tool
 from camel.resources import CSS_STYLE
 
@@ -53,7 +52,7 @@ class HybridAssemblyReporter(Tool):
 
         # Check informs
         required_informs = [
-            'quast', 'freebayes', 'clair3', 'mapping', 'sniffles', 'ale', 'sample_name', 'pipeline', 'input',
+            'quast', 'freebayes', 'clair3', 'mapping', 'sniffles', 'ale', 'sample_name', 'pipeline', 'input_str',
             'citations']
         for key in required_informs:
             if key not in self._input_informs:
@@ -107,12 +106,11 @@ class HybridAssemblyReporter(Tool):
         Adds the information about the input data.
         :return: None
         """
-        input_files = ReportPipeline.format_input_string(self._input_informs['input'])
         table_data = [
             ['Sample:', self._input_informs['sample_name']],
             ['Analysis date:', datetime.datetime.now().strftime(config.date_fmt)],
             ['Pipeline version:', self._input_informs['pipeline']['version']],
-            ['Input files:', input_files]
+            ['Input files:', self._input_informs['input_str']]
         ]
         section = HtmlReportSection('Input')
         section.add_table(table_data, table_attributes=[('class', 'information')])
@@ -136,7 +134,7 @@ class HybridAssemblyReporter(Tool):
         # Add table with download links
         section.add_table(rows, column_names=['Assembly step', 'Download'], table_attributes=[('class', 'data')])
         section.add_paragraph(
-            "The hybrid assembly pipeline performs long-read first <i>de novo</i> assembly, according to the following" 
+            "The hybrid assembly pipeline performs long-read first <i>de novo</i> assembly, according to the following"
             " steps: (1) Quality control and pre-processing of the long and short reads; (2) Long-reads assembly using "
             "Flye; (3) polishing using Medaka (long-reads), followed by Polypolish and Pypolca (short-reads); (4) "
             "Quality assessment using QUAST and several variant callers. An additional short-read first assembly is "
@@ -215,8 +213,8 @@ class HybridAssemblyReporter(Tool):
             column_names=list(data_sniffles.columns),
             table_attributes=[('class', 'data')])
         section.add_paragraph("""
-            Sniffles detect structural variation by mapping the long reads to the consensus sequence. Long deletions are 
-            listed in the indels column, and all other variants (inversions, duplications, breakpoints) are listed in 
+            Sniffles detect structural variation by mapping the long reads to the consensus sequence. Long deletions are
+            listed in the indels column, and all other variants (inversions, duplications, breakpoints) are listed in
             the structural variation column (SV).""")
         self.report.add_html_object(section)
         section.copy_files(self.report.output_dir)
@@ -274,7 +272,7 @@ class HybridAssemblyReporter(Tool):
             table_attributes=[('class', 'data')]
         )
         section.add_paragraph("""
-            <b>Note:</b> The ALE score provides an indication of the overall quality of an assembly. Larger ALE scores 
+            <b>Note:</b> The ALE score provides an indication of the overall quality of an assembly. Larger ALE scores
             are better (ALE scores are always negative, which means that values closer to 0 are better)""")
         section.add_header('WIGGLE files', 4)
         section.add_table([

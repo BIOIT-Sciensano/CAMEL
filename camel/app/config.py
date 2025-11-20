@@ -13,6 +13,7 @@ class CamelConfig(BaseModel):
     dir_testdata: Optional[Path] = None
     dir_temp: Optional[Path] = None
     dir_db: Path
+    dir_error_logs: Path | None
     timestamp_format: str = '%Y-%d-%m %H:%M:%S'
     dependency_service: str = 'lmod'
     logging_fmt: str = '%(asctime)s - %(module)15s - %(levelname)7s - %(message)s'

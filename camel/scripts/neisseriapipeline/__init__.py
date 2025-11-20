@@ -1,6 +1,5 @@
-import os
+from pathlib import Path
 
-_current_dir = os.path.dirname(__file__)
-CONFIG_DATA = os.path.join(_current_dir, 'config', 'config_data.yml')
-SNAKEFILE_MAIN = os.path.join(_current_dir, 'snakefile', 'main.smk')
-SNAKEFILE_SEROGROUP_DETERMINATION = os.path.join(_current_dir, 'snakefile', 'serogroup_determination.smk')
+_current_dir = Path(__file__).parent.resolve()
+CONFIG_DATA = _current_dir / 'config_data.yml'
+SNAKEFILE_MAIN = _current_dir / 'snakefile' / 'main.smk'

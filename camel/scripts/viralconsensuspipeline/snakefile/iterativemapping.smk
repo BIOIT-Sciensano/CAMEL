@@ -40,12 +40,12 @@ rule iterative_mapping_phase_1_map_reads:
         INFORMS = 'iterative_mapping/iter_{nb_iter}/phase_1-mapping/informs.json'
     params:
         dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_1-mapping',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff'),
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff')
     threads: 16
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
@@ -77,7 +77,7 @@ rule iterative_mapping_phase_1_call_variants_bcftools:
         INFORMS = 'iterative_mapping/iter_{nb_iter}/phase_1-variants/informs-call.json'
     params:
         dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_1-variants',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     threads: 1
     run:
         from camel.app.core.io.tooliofile import ToolIOFile
@@ -137,7 +137,7 @@ rule iterative_mapping_phase_1_apply_variants:
         FASTA = 'iterative_mapping/iter_{nb_iter}/phase_1-variants/fasta.io'
     params:
         dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_1-variants',
-        name = lambda wildcards: config['sample_name'],
+        name = lambda wildcards: config['input']['sample_name'],
         iter_nb = lambda wildcards: wildcards.nb_iter
     run:
         from camel.app.core.io.tooliofile import ToolIOFile
@@ -165,12 +165,12 @@ rule iterative_mapping_phase_2_map_reads:
         JSON = 'iterative_mapping/iter_{nb_iter}/phase_2-mapping/informs.json'
     params:
         dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_2-mapping',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff'),
         gap_len_cutoff = config['low_depth'].get('gap_len_cutoff')
     threads: 16
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
@@ -201,7 +201,7 @@ rule iterative_mapping_phase_2_call_variants_clair3:
         INFORMS= 'iterative_mapping/iter_{nb_iter}/phase_2-variants/informs-call.json'
     params:
         dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_2-variants',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         model_path = config['iterative_mapping'].get('clair3', {}).get('model')
     threads: 4
     run:
@@ -260,7 +260,7 @@ rule iterative_mapping_phase_2_apply_variants:
         INFORMS = 'iterative_mapping/iter_{nb_iter}/phase_2-variants/informs-apply.json'
     params:
         dir_ = lambda wildcards: f'iterative_mapping/iter_{wildcards.nb_iter}/phase_2-variants',
-        name = lambda wildcards: config['sample_name'],
+        name = lambda wildcards: config['input']['sample_name'],
         iter_nb = lambda wildcards: wildcards.nb_iter
     run:
         from camel.app.core.io.tooliofile import ToolIOFile
@@ -454,7 +454,7 @@ rule iterative_mapping_report:
     output:
         VAL_HTML = 'iterative_mapping/report/html.iob' # iterativemapping.OUTPUT_REPORT
     params:
-        name = config['sample_name'],
+        name = config['input']['sample_name'],
         dir_ = 'iterative_mapping/report',
         max_iter = config['iterative_mapping'].get('max_iter', 6),
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff', 50),

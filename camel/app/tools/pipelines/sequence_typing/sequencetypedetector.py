@@ -4,6 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
+from camel.app.core.utils import fileutils
 from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
@@ -44,7 +45,7 @@ class SequenceTypeDetector(Tool):
         :return: None
         """
         # Parse input data
-        hit_by_locus = {hit.locus: hit for hit in [
+        hit_by_locus = {fileutils.make_valid(hit.locus): hit for hit in [
             io.value for io in self._tool_inputs['hits_nucl'] + self._tool_inputs['hits_pept']]}
         profiles = self.__parse_profiles(list(hit_by_locus.keys()))
 
@@ -92,9 +93,10 @@ class SequenceTypeDetector(Tool):
         """
         # Parse input data
         data_in = pd.read_table(self._tool_inputs['TSV'][0].path, dtype=str)
+        data_in.columns = [fileutils.make_valid(col) for col in data_in.columns]
         cols_metadata = [c for c in data_in.columns if c not in gene_names]
         logger.info(f'Metadata columns: {cols_metadata}')
-        cols_alleles = [c for c in data_in.columns if c in gene_names]
+        cols_alleles = [fileutils.make_valid(c) for c in data_in.columns if c in gene_names]
         logger.info(f'Gene columns: {cols_alleles}')
 
         # Construct the profiles
@@ -132,8 +134,7 @@ class SequenceTypeDetector(Tool):
         if 'allele_absent_symbol' in self._parameters:
             self._symbol_allele_absent = self._parameters['allele_absent_symbol'].value
         self._wildcards = self._parameters['allele_wildcards'].value.split(',')
-        logger.debug("Wildcards: [{}]¸ Symbol allele absent: {}".format(
-            ', '.join(self._wildcards), self._symbol_allele_absent))
+        logger.debug(f"Wildcards: [{', '.join(self._wildcards)}]¸ Symbol allele absent: {self._symbol_allele_absent}")
 
         nb_matches_by_profile = {}
         for profile in profiles:

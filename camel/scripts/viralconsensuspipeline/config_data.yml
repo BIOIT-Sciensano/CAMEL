@@ -29,14 +29,13 @@ antivirals:
 
 downsampling:
   disabled: true
-  coverage_max_by_segment: {cov_max_segment}
+  coverage_max_by_segment: {COV_MAX_SEGMENT}
 
-read_trimming:
-  export_fastq: '{export_fastq}'
+read_trimming: {{}}
 
 contamination_check:
   db: /db/kraken2_full/latest/
-  expected_species: {expected_species}
+  expected_species: {EXPECTED_SPECIES}
 
 quality_checks:
   expected_gc_content: 51.5

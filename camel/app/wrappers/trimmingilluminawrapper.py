@@ -6,6 +6,7 @@ from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
+from camel.app.loggers import logger
 from camel.snakefiles import trimming_illumina
 
 
@@ -48,6 +49,8 @@ class TrimmingIlluminaWrapper:
         :param method: Trimming method ('trimmomatic' or 'fastp')
         :return: None
         """
+        logger.info("Running read trimming workflow (Illumina)")
+
         # Create the config file
         config_data: dict[str, Any] = {
             'working_dir': str(self._working_dir),

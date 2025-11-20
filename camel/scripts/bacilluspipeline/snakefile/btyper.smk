@@ -37,7 +37,7 @@ rule btyper_report:
         HTML = 'btyper/report/html.iob'
     params:
         dir_ = 'btyper/report',
-        sample_name = config['sample_name']
+        sample_name = config['input']['sample_name']
     run:
         from camel.app.tools.btyper.btyperreporter import BTyperReporter
         btyper_reporter = BTyperReporter()

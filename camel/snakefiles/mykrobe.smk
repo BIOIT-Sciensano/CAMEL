@@ -20,9 +20,9 @@ rule mykrobe_run:
         dir_ = 'mykrobe/tool',
         species = Path(config['mykrobe']['species']),
         db_dir = Path(config['mykrobe']['db']),
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.tools.mykrobe.mykrobe import Mykrobe
 
         typer = Mykrobe()
@@ -44,7 +44,9 @@ rule mykrobe_run:
         # Run tool
         step = Step(rule_name=str(rule), tool=typer, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(typer, output)
+        snakemakeutils.dump_tool_output(typer, 'CSV', Path(output.CSV))
+        # Informs can contain numpy objects -> sanitize first
+        snakemakeutils.dump_object(snakemakeutils.sanitize_numpy(typer.informs), Path(output.INFORMS))
 
 rule mykrobe_report:
     """

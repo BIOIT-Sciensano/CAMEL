@@ -1,8 +1,9 @@
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.scripts.btyper.mainbtyper import MainBTyper
+from camel.scripts.btyper.mainbtyper import main
 
 
 class TestBTyper3Main(CamelTestSuite):
@@ -21,17 +22,16 @@ class TestBTyper3Main(CamelTestSuite):
         path_out_html = self.running_dir / 'out' / 'report.html'
         path_out_html.parent.mkdir()
         path_out_tsv = self.running_dir / 'out' / 'tabular.tsv'
-        btyper_main = MainBTyper([
+        result = cliutils.invoke(main, [
             '--fasta', str(TestBTyper3Main.FILE_FASTA),
             '--fasta-name', str(TestBTyper3Main.FILE_FASTA),
             '--output-html', str(path_out_html),
             '--output-dir', str(path_out_html.parent),
             '--output-tsv', str(path_out_tsv),
             '--working-dir', str(self.running_dir),
-            '--mlst', '--panc', '--bt', '--virulence',
-            '--threads', '4'
+            '--mlst', '--panc', '--bt', '--virulence'
         ])
-        btyper_main.run()
+        self.assertEqual(result.exit_code, 0)
         self.assertTrue(path_out_html.exists())
         self.assertTrue(path_out_tsv.exists())
 

@@ -5,7 +5,7 @@ from typing import Optional, Any
 
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.toolkits.sequencetyping.sequencetypingutils import SequenceTypingUtils
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.core.snakemake import snakemakeutils
@@ -60,6 +60,7 @@ class SequenceTypingWrapper:
         :param threads: Number of threads to use
         :return: None
         """
+        logger.info("Running sequence typing workflow (blast)")
         if not self._working_dir.exists():
             self._working_dir.mkdir(parents=True)
         if workflow_input.fasta is None:
@@ -141,8 +142,7 @@ class SequenceTypingWrapper:
         """
         data = {
             'working_dir': str(self._working_dir),
-            'sample_name': sample_name,
-            'input_type': input_type,
+            'input': {'type': input_type, 'sample_name': sample_name},
             'sequence_typing': {
                 'dbs': {
                     db_key: {

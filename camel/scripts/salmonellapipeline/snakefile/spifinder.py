@@ -21,7 +21,7 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     :param config: Snakemake configuration
     :return: List of informs IO files
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
 
     if 'spifinder' not in config['analyses']:
@@ -49,7 +49,7 @@ def get_summaries(config: dict[str, Any]) -> list[str]:
     :param config: Snakemake configuration
     :return: Summary file path(s)
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
 
     if 'spifinder' not in config['analyses']:

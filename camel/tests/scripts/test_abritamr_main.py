@@ -1,7 +1,8 @@
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.abritamr.mainabritamr import MainAbriTAMR
+from camel.scripts.abritamr.mainabritamr import main
 
 
 class TestAbriTAMR(CamelTestSuite):
@@ -20,18 +21,16 @@ class TestAbriTAMR(CamelTestSuite):
         path_report_html = self.running_dir / 'out' / 'report.html'
         path_report_tsv = self.running_dir / 'out' / 'report.tsv'
 
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta_file),
             '--output-html', str(path_report_html),
             '--output-dir', str(path_report_html.parent),
             '--working-dir', str(self.running_dir),
             '--output-tsv', str(path_report_tsv),
-            '--input-type', 'fasta',
             '--threads', '2',
             '--species', 'Salmonella'
-        ]
-        main = MainAbriTAMR(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_html.stat().st_size, 0)
 
 

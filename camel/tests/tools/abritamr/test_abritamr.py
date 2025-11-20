@@ -49,7 +49,7 @@ class TestAbriTAMR(CamelTestSuite):
             'TXT_matches': [ToolIOFile(self.summary_matches)],
             'TXT_partials': [ToolIOFile(self.summary_partials)]
         })
-        informs_abritamr = {'_name': 'test', 'species': 'Salmonella'}
+        informs_abritamr = {'_name_full': 'test', 'species': 'Salmonella'}
         abritamr.add_input_informs({'abritamr_run': informs_abritamr})
         abritamr.run(self.running_dir)
         self.verify_output_files(abritamr, 'REPORT_abritamr')

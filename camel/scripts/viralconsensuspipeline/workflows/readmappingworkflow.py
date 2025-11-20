@@ -5,7 +5,7 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
 

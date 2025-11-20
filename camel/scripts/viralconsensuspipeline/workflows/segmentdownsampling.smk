@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from camel.app.core.command import Command
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake import snakemakeutils
 
@@ -210,7 +210,7 @@ rule extract_fq_illumina:
 
         # Split singleton reads
         command = Command(' '.join([
-            'module load java/18.0.1.1; module load bbtools/39.15;'
+            'module load java/18.0.1.1; module load bbtools/38.44;'
             f'demuxbyname.sh in={fq_single_out} out=reads_%U.fastq delimiter="/" prefixmode=f'
         ]))
         command.run(dir_)

@@ -1,8 +1,9 @@
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.utils import fastqutils
-from camel.scripts.ncbihumanreadscrubber.mainncbihumanreadscrubber import MainNcbiHumanReadScrubber
+from camel.scripts.ncbihumanreadscrubber.mainncbihumanreadscrubber import main
 
 
 class TestNcbiHumanReadScrubber(CamelTestSuite):
@@ -18,35 +19,27 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
     files_list = [path_fq_se, path_fq_ont, path_fq_ont_nh]
     output = [True, True, False]
 
-    datasets_pe = [
-        {
-            'fq': ['nh_reads_illumina_1.fastq', 'nh_reads_illumina_2.fastq'],
-            'contains_human': False
-        },
-        {
-            'fq': ['nh_reads_illumina_1.fastq.gz', 'nh_reads_illumina_2.fastq.gz'],
-            'contains_human': False
-        },
-        {
-            'fq': ['reads_illumina_1.fastq', 'reads_illumina_2.fastq'],
-            'contains_human': True
-        },
-        {
-            'fq': ['reads_illumina_1.fastq.gz', 'reads_illumina_2.fastq.gz'],
-            'contains_human': True
-        }
-    ]
+    datasets_pe = [{
+        'fq': ['nh_reads_illumina_1.fastq', 'nh_reads_illumina_2.fastq'],
+        'contains_human': False
+    }, {
+        'fq': ['nh_reads_illumina_1.fastq.gz', 'nh_reads_illumina_2.fastq.gz'],
+        'contains_human': False
+    }, {
+        'fq': ['reads_illumina_1.fastq', 'reads_illumina_2.fastq'],
+        'contains_human': True
+    }, {
+        'fq': ['reads_illumina_1.fastq.gz', 'reads_illumina_2.fastq.gz'],
+        'contains_human': True
+    }]
 
-    datasets_ont = [
-        {
-            'fq': 'minion_reads.fastq',
-            'contains_human': True
-        },
-        {
-            'fq': 'minion_no_human.fastq',
-            'contains_human': False
-        },
-    ]
+    datasets_ont = [{
+        'fq': 'minion_reads.fastq',
+        'contains_human': True
+    }, {
+        'fq': 'minion_no_human.fastq',
+        'contains_human': False
+    }]
 
     def test_scrubbing_illumina(self) -> None:
         """
@@ -62,7 +55,7 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
             path_report = dir_working / 'out' / 'report.html'
 
             # Run the pipeline
-            args = (
+            args = [
                 '--fastq-pe', *(str(TestNcbiHumanReadScrubber.test_file_dir / fq) for fq in dataset['fq']),
                 '--output-html', str(path_report),
                 '--output-dir', str(path_report.parent),
@@ -70,9 +63,9 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 '--output-tsv', "None",
                 '--input-type', 'illumina',
                 '--threads', '2'
-            )
-            main = MainNcbiHumanReadScrubber(args)
-            main.run()
+            ]
+            result = cliutils.invoke(main, args)
+            self.assertEqual(result.exit_code, 0)
 
             # Check the output files
             self.assertGreater(path_report.stat().st_size, 0)
@@ -110,7 +103,7 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
             path_report = dir_working / 'out' / 'report.html'
 
             # Run the pipeline
-            args = (
+            args = [
                 '--fastq-pe', *(str(TestNcbiHumanReadScrubber.test_file_dir / fq) for fq in dataset['fq']),
                 '--output-html', str(path_report),
                 '--output-dir', str(path_report.parent),
@@ -119,9 +112,9 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 '--input-type', 'illumina',
                 '--threads', '2',
                 '--export-removed-reads'
-            )
-            main = MainNcbiHumanReadScrubber(args)
-            main.run()
+            ]
+            result = cliutils.invoke(main, args)
+            self.assertEqual(result.exit_code, 0)
 
             # Check the output files
             for fq_idx in (1, 2):
@@ -150,7 +143,7 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
             path_report = dir_working / 'out' / 'report.html'
 
             # Run the pipeline
-            args = (
+            args = [
                 '--fastq-se', str(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq']),
                 '--output-html', str(path_report),
                 '--output-dir', str(path_report.parent),
@@ -158,9 +151,9 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 '--output-tsv', "None",
                 '--input-type', 'ont',
                 '--threads', '2'
-            )
-            main = MainNcbiHumanReadScrubber(args)
-            main.run()
+            ]
+            result = cliutils.invoke(main, args)
+            self.assertEqual(result.exit_code, 0)
 
             # Check the output files
             self.assertGreater(path_report.stat().st_size, 0)
@@ -197,7 +190,7 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
             path_report = dir_working / 'out' / 'report.html'
 
             # Run the pipeline
-            args = (
+            args = [
                 '--fastq-se', str(TestNcbiHumanReadScrubber.test_file_dir / dataset['fq']),
                 '--output-html', str(path_report),
                 '--output-dir', str(path_report.parent),
@@ -206,9 +199,9 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 '--input-type', 'ont',
                 '--threads', '2',
                 '--export-removed-reads'
-            )
-            main = MainNcbiHumanReadScrubber(args)
-            main.run()
+            ]
+            result = cliutils.invoke(main, args)
+            self.assertEqual(result.exit_code, 0)
 
             # Check the output files
             self.assertGreater(path_report.stat().st_size, 0)
@@ -225,90 +218,6 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                     fastqutils.count_reads(path_fq_scrubbed) + fastqutils.count_reads(path_removed),
                     "Number of reads should match."
                 )
-
-        # def test_scrubbing_paired(self) -> None:
-    #     """
-    #     Tests the NCBI human read scrubbing standalone pipeline with illumina files.
-    #     :return: None
-    #     """
-    #     path_report_out = self.running_dir / 'out' / 'report.html'
-    #     path_removed_reads = self.running_dir / 'out' / 'human_read_scrubbing'
-    #     output_file_1 = self.running_dir / 'human_read_scrubbing' / 'fastq_pe' / 'output' / 'fastq_removed_1.fastq.gz'
-    #     output_file_2 = self.running_dir / 'human_read_scrubbing' / 'fastq_pe' / 'output' / 'fastq_removed_2.fastq.gz'
-    #     # _nh: files without human reads
-    #     hum_reads = ['', 'nh_', '', 'nh_']
-    #     extension = ['', '', '.gz', '.gz']
-    #
-    #     for hr, ext in zip(hum_reads, extension):
-    #         args = [
-    #             '--fastq-pe',
-    #             str(TestNcbiHumanReadScrubber.test_file_dir / f'{hr}reads_illumina_1.fastq{ext}'),
-    #             str(TestNcbiHumanReadScrubber.test_file_dir / f'{hr}reads_illumina_2.fastq{ext}'),
-    #             '--output-html', str(path_report_out),
-    #             '--output-dir', str(path_report_out.parent),
-    #             '--working-dir', str(self.running_dir),
-    #             '--output-tsv', "None",
-    #             '--input-type', 'illumina',
-    #             '--threads', '2',
-    #             '--export-removed-reads'
-    #         ]
-    #         main = MainNcbiHumanReadScrubber(args)
-    #         main.run()
-    #         self.assertGreater(path_report_out.stat().st_size, 0)
-    #         self.assertGreater(output_file_1.stat().st_size, 0) and self.assertGreater(output_file_2.stat().st_size, 0) if hr == '' else not self.assertTrue(path_removed_reads.exists())
-    #
-    # def test_scrubbing_paired_wo_removed_reads(self) -> None:
-    #     """
-    #     Tests the NCBI human read scrubbing standalone pipeline with illumina files.
-    #     :return: None
-    #     """
-    #     path_report_out = self.running_dir / 'out' / 'report.html'
-    #     # _nh: files without human reads
-    #     hum_reads = ['', 'nh_', '', 'nh_']
-    #     extension = ['', '', '.gz', '.gz']
-    #
-    #     for hr, ext in zip(hum_reads, extension):
-    #         args = [
-    #             '--fastq-pe',
-    #             str(TestNcbiHumanReadScrubber.test_file_dir / f'{hr}reads_illumina_1.fastq{ext}'),
-    #             str(TestNcbiHumanReadScrubber.test_file_dir / f'{hr}reads_illumina_2.fastq{ext}'),
-    #             '--output-html', str(path_report_out),
-    #             '--output-dir', str(path_report_out.parent),
-    #             '--working-dir', str(self.running_dir),
-    #             '--output-tsv', "None",
-    #             '--input-type', 'illumina',
-    #             '--threads', '2',
-    #         ]
-    #         main = MainNcbiHumanReadScrubber(args)
-    #         main.run()
-    #         self.assertGreater(path_report_out.stat().st_size, 0)
-    #
-    # def test_scrubbing_fasta(self) -> None:
-    #     """
-    #     Tests the NCBI human read scrubbing standalone pipeline with fasta files.
-    #     :return: None
-    #     """
-    #     path_report_html = self.running_dir / 'out' / 'report.html'
-    #     path_removed_reads = self.running_dir / 'out' / 'human_read_scrubbing'
-    #     human_reads = ['', 'no_']
-    #     output_file = self.running_dir / 'human_read_scrubbing' / 'fasta' / 'output' / 'fastq_removed.fasta'
-    #
-    #     for hum in human_reads:
-    #         args = [
-    #             '--fasta',
-    #             str(TestNcbiHumanReadScrubber.test_file_dir / f'bacteria_seq_{hum}hum.fasta'),
-    #             '--output-html', str(path_report_html),
-    #             '--output-dir', str(path_report_html.parent),
-    #             '--working-dir', str(self.running_dir),
-    #             '--output-tsv', "None",
-    #             '--input-type', 'fasta',
-    #             '--threads', '2',
-    #             '--export-removed-reads'
-    #         ]
-    #         main = MainNcbiHumanReadScrubber(args)
-    #         main.run()
-    #         self.assertGreater(path_report_html.stat().st_size, 0)
-    #         self.assertGreater(output_file.stat().st_size, 0) if hum == '' else not self.assertTrue(path_removed_reads.exists())
 
 
 if __name__ == '__main__':

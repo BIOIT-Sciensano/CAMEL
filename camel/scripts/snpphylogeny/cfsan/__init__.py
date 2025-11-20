@@ -1,5 +1,5 @@
-import os
+from pathlib import Path
 
-_current_dir = os.path.dirname(__file__)
+_current_dir = Path(__file__).parent
 
-CFSAN_TEMPLATE = os.path.join(_current_dir, 'template.conf')
+CFSAN_TEMPLATE = _current_dir / 'template.conf'

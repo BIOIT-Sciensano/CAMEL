@@ -1,8 +1,9 @@
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.scripts.integronfinder.mainintegronfinder import MainIntegronFinder
+from camel.scripts.integronfinder.mainintegronfinder import main
 
 
 class TestIntegronFinder(CamelTestSuite):
@@ -20,7 +21,7 @@ class TestIntegronFinder(CamelTestSuite):
         """
         path_out_html = self.running_dir / 'out' / 'report.html'
         path_out_tsv = self.running_dir / 'out' / 'integrons.tsv'
-        main_integron_finder = MainIntegronFinder([
+        result = cliutils.invoke(main, [
             '--fasta', str(TestIntegronFinder.FILE_FASTA),
             '--working-dir', str(self.running_dir),
             '--output-tsv', str(path_out_tsv),
@@ -28,7 +29,7 @@ class TestIntegronFinder(CamelTestSuite):
             '--output-dir', str(path_out_html.parent),
             '--threads', '4'
         ])
-        main_integron_finder.run()
+        self.assertEqual(result.exit_code, 0)
 
     def test_integron_finder_main_script_ecoli(self) -> None:
         """
@@ -36,7 +37,7 @@ class TestIntegronFinder(CamelTestSuite):
         """
         path_out_html = self.running_dir / 'out' / 'report.html'
         path_out_tsv = self.running_dir / 'out' / 'integrons.tsv'
-        main_integron_finder = MainIntegronFinder([
+        result = cliutils.invoke(main, [
             '--fasta', str(TestIntegronFinder.FILE_FASTA_E_COLI),
             '--working-dir', str(self.running_dir),
             '--output-tsv', str(path_out_tsv),
@@ -44,7 +45,7 @@ class TestIntegronFinder(CamelTestSuite):
             '--output-dir', str(path_out_html.parent),
             '--threads', '4'
         ])
-        main_integron_finder.run()
+        self.assertEqual(result.exit_code, 0)
 
 
 if __name__ == '__main__':

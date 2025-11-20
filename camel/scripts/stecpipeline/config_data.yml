@@ -1,0 +1,146 @@
+####################
+# Pipeline options #
+####################
+citations:
+  main: Bogaerts_2021-stec_pipeline
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Li_2009-samtools
+    - Li_2011-bcftools
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Bortolaia_2020-resfinder_4.0
+    - Feldgarden_2019-ndaro
+    - Joensen_2014-virulencefinder
+    - Joensen_2015-serotypefinder
+    - Carattoli_2020-plasmidfinder
+    - Jaureguy_2008-pasteur
+    - Zhou_2020-enterobase
+    - Jolley_2010-bigsdb
+
+####################
+# Reference genome #
+####################
+reference:
+  name: <i>Escherichia coli</i> O157:H7 (NC_002695.2)
+  fasta: /db/refgenomes/Escherichia_coli/NC_002695.2.fasta
+  gff3: /db/refgenomes/Escherichia_coli/NC_002695.2.gff
+  url: https://www.ncbi.nlm.nih.gov/nuccore/NC_002695.2
+  expected_gc: 50.5
+
+#########################
+# Tool specific options #
+#########################
+amrfinder:
+  db: /db/amrfinder/v4/latest
+  species: Escherichia
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+
+confindr:
+  db: /db/confindr/0.8.1
+
+contamination_check:
+  db: /db/kraken2_microbial/latest
+  expected_species: Escherichia coli
+
+downsampling:
+  coverage_max: {COV_MAX}
+
+mob_suite:
+  db: /db/mob_suite/latest
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+
+read_trimming: {{}}
+
+read_scrubbing: {{}}
+
+resfinder4:
+  db: /db/resfinder4
+  species: Escherichia coli
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering: {{}}
+
+############################
+# Gene detection databases #
+############################
+gene_detection:
+  dbs:
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-entero
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
+    ncbi_stress:
+      path: /db/gene_detection/NCBI_STRESS
+    serotype_o:
+      path: /db/gene_detection/SerotypeFinder-O_type
+      params:
+        blastn:
+          min_percent_identity: 85
+          min_coverage: 60
+      metadata:
+        name: Predicted serotype
+        key: predicted_serotype
+    serotype_h:
+      path: /db/gene_detection/SerotypeFinder-H_type
+      params:
+        blastn:
+          min_percent_identity: 85
+          min_coverage: 60
+      metadata:
+        name: Predicted serotype
+        key: predicted_serotype
+    virulencefinder:
+      path: /db/gene_detection/VirulenceFinder-Ecoli
+      metadata:
+        name: Protein function
+        key: protein_function
+      hidden: true
+    virulencefinder_shiga:
+      path: /db/gene_detection/VirulenceFinder-Shiga
+      metadata:
+        name: stx variant
+        key: stx_variant
+
+###################
+# Sequence typing #
+###################
+sequence_typing:
+  dbs:
+    cgmlst:
+      path: /db/sequence_typing/ecoli/cgmlst
+      blastn_task: blastn
+    innuendo_cgmlst:
+      path: /db/sequence_typing/ecoli/innuendo_cgmlst
+    mlst_pasteur:
+      path: /db/sequence_typing/ecoli/mlst_pasteur
+    mlst_warwick:
+      path: /db/sequence_typing/ecoli/mlst_warwick
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

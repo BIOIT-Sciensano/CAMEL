@@ -36,7 +36,7 @@ rule scrubbing_decompress_fastq_se:
         FASTQ = 'human_read_scrubbing/fastq_se/decompress/fastq.io'
     params:
         dir_ = 'human_read_scrubbing/fastq_se/decompress',
-        name = config['sample_name']
+        name = config['input']['sample_name']
     threads: 4
     run:
         from camel.app.core.utils import fileutils
@@ -107,7 +107,7 @@ rule scrubbing_run_scrubber:
         input_format = lambda wildcards: wildcards.input_format,
         export_removed_reads = config.get('read_scrubbing', {}).get('export_removed_reads'),
         is_interleaved = lambda wildcards: True if wildcards.input_format == 'fastq_pe' else False,
-        input_type = config['input_type']
+        input_type = config['input']['type']
     threads: max(16, workflow.cores * 0.75)
     run:
         from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import NcbiHumanReadScrubber
@@ -215,7 +215,7 @@ rule scrubbing_deinterleave_fastq_pe:
         FASTQ = 'human_read_scrubbing/fastq_pe/output/{group}/fastq.io'
     params:
         dir_ = lambda wildcards: f'human_read_scrubbing/fastq_pe/output/{wildcards.group}',
-        name = config['sample_name']
+        name = config['input']['sample_name']
     threads: 8
     run:
         from camel.app.tools.seqkit.seqkitsplit2 import SeqkitSplit2

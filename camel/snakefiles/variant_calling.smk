@@ -36,7 +36,7 @@ rule variant_calling_map_reads_illumina:
         INFORMS = 'variant_calling/read_mapping/illumina/informs.io'
     params:
         dir_ = 'variant_calling/read_mapping/illumina',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     threads: 4
     priority: 1
     run:
@@ -79,7 +79,7 @@ rule variant_calling_map_reads_ont:
         INFORMS = 'variant_calling/read_mapping/ont/informs.io'
     params:
         dir_ = 'variant_calling/read_mapping/ont',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     threads: 4
     priority: 1
     run:
@@ -181,7 +181,7 @@ rule variant_calling_mpileup:
         min_mapping_quality = config['variant_calling'].get('minimal_mq'),
         min_base_quality = config['variant_calling'].get('minimal_bq'),
         disable_baq = config['variant_calling'].get('disable_baq'),
-        input_type = config['input_type']
+        input_type = config['input']['type']
     threads: 1
     run:
         from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
@@ -288,7 +288,7 @@ rule variant_calling_unzip_vcf:
         VCF = variant_calling.OUTPUT_UNFILTERED_VCF
     params:
         dir_ = 'variant_calling/unzip_vcf',
-        sample_name = config['sample_name']
+        sample_name = config['input']['sample_name']
     run:
         from camel.app.core.utils import fileutils
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
@@ -362,8 +362,8 @@ rule variant_calling_report:
         dir_ = 'variant_calling/report',
         regions_bed_file = variant_filtering.get_filtering_param(config, 'region', 'bed_file'),
         include_bam = config.get('variant_calling').get('report_include_bam', False),
-        sample_name = config['sample_name'],
-        input_type = config['input_type']
+        sample_name = config['input']['sample_name'],
+        input_type = config['input']['type']
     run:
         from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.variant_calling.variantcallingreporter import VariantCallingReporter
@@ -407,7 +407,7 @@ rule variant_calling_collect_command_informs:
     This rule is used to collect the commands that were used.
     """
     input:
-        INFORMS_read_simulation = read_simulation.OUTPUT_INFORMS if config['input_type'] == 'fasta' else [],
+        INFORMS_read_simulation = read_simulation.OUTPUT_INFORMS if config['input']['type'] == 'fasta' else [],
         INFORMS_mapping = variant_calling.get_mapping_informs(config),
         INFORMS_mpileup = rules.variant_calling_mpileup.output.INFORMS,
         INFORMS_calling = rules.variant_calling_bcftools_call.output.INFORMS

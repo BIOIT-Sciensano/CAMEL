@@ -139,7 +139,7 @@ rule downsampling_summary_out:
     params:
         is_paired = lambda wildcards: wildcards.read_key == 'fastq_pe',
         read_key = lambda wildcards: wildcards.read_key,
-        add_read_key_prefix = config['input_type'] == 'hybrid',
+        add_read_key_prefix = config['input']['type'] == 'hybrid',
         ext = lambda wildcards: wildcards.ext
     run:
         # Parse calculation output

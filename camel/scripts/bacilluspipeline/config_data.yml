@@ -1,0 +1,144 @@
+####################
+# Pipeline options #
+####################
+species: {SPECIES}
+citations:
+  main: null
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Li_2009-samtools
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Wick_2022-polypolish
+    - Zimin_2020-polca
+    - Bouras_2024-pypolca
+    - Feldgarden_2019-ndaro
+    - Chen_2016-vfdb
+    - Carattoli_2020-plasmidfinder
+    - Robertson_2018-mob_suite
+    - Carroll_2020a-btyper3
+    - Carroll_2020b-btyper3
+
+####################
+# Reference genome #
+####################
+reference:
+  fasta: {REF_FASTA}
+  gff3: {REF_GFF}
+  name: {REF_NAME}
+  url: {REF_URL}
+
+#########################
+# Tool specific options #
+#########################
+amrfinder:
+  db: /db/amrfinder/v4/latest
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+  canu:
+    minimum_input_coverage: 0
+  flye:
+    nano_raw: True
+    nano_corr: False
+
+confindr:
+  db: /db/confindr/0.8.1
+
+contamination_check:
+  db: /db/kraken2_full/latest
+  expected_species: Bacillus
+  level_of_depth: G
+
+downsampling:
+  coverage_max: {COV_MAX}
+
+fastani:
+  path: /db/pipelines/bacillus/ref_list_complete.txt
+
+mob_suite:
+  db: /db/mob_suite/latest
+  contig_report: {MOBSUITE_CONTIG_REPORT}
+
+straingst:
+  db: /db/pipelines/bacillus/bacillus_straingst/bacillus_database.hdf5
+
+read_trimming: {{}}
+
+read_scrubbing: {{}}
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering: {{}}
+
+##########
+# Typing #
+##########
+sequence_typing:
+  dbs:
+    mlst_cereus:
+      path: /db/sequence_typing/bacillus_cereus/mlst
+    mlst_subtilis:
+      path: /db/sequence_typing/bacillus_subtilis/mlst
+    cgmlst_cereus:
+      path: /db/sequence_typing/bacillus_cereus/cgmlst
+      detection_method: blast
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+
+##################
+# Gene detection #
+##################
+gene_detection:
+  dbs:
+    gmm_genes_vectors:
+      known_gmm_constructs: /db/pipelines/bacillus/list_of_constructs.csv
+      path: /db/gene_detection/GMM/V6/genes-vectors/
+      force__method: kma
+      metadata:
+        name: Additional data
+        key: allele
+    gmm_junctions:
+      path: /db/gene_detection/GMM/V6/junctions/
+      force__method: kma
+      metadata:
+        name: Additional data
+        key: allele
+    vfdb_core:
+        path: /db/gene_detection/VFDB_core
+        perc_identity_cutoff: 90
+        min_coverage: 90
+        metadata:
+          name: Gene
+          key: gene
+    plasmidfinder:
+      path: /db/gene_detection/PlasmidFinder-gram_positive
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: Additional experimental validation should be required to confirm the presence of plasmids.
+        category: warning

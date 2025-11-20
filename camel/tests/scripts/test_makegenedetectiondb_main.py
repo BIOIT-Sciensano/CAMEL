@@ -1,7 +1,8 @@
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.genedetection.mainmakegenedetectiondb import MainMakeGeneDetectionDB
+from camel.scripts.genedetection.mainmakegenedetectiondb import main
 
 
 class TestMakeGeneDetectionDB(CamelTestSuite):
@@ -19,14 +20,13 @@ class TestMakeGeneDetectionDB(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--fasta', str(TestMakeGeneDetectionDB.input_fasta),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainMakeGeneDetectionDB(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_gene_detection_create_db_spaces_in_name(self) -> None:
@@ -35,16 +35,15 @@ class TestMakeGeneDetectionDB(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--fasta', str(TestMakeGeneDetectionDB.input_fasta),
             '--fasta-name', '"spaces in name.fasta"',
             '--working-dir', str(self.running_dir),
             '--threads', '4'
-        ]
-        main = MainMakeGeneDetectionDB(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
 

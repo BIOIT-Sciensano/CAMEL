@@ -1,85 +1,128 @@
 #!/usr/bin/env python
-import argparse
-from collections.abc import Sequence
-from typing import Optional
+import dataclasses
 
+import click
 import yaml
 
 from camel.app.core.snakemake import snakepipelineutils
-from camel.app.scriptutils import mainscriptutils
-from camel.app.scriptutils.reportpipeline import ReportPipeline
 from camel.app.loggers import initialize_logging
-from camel.scripts.neisseriapipeline import CONFIG_DATA, SNAKEFILE_MAIN
+from camel.app.scriptutils.basepipe import basepipeutils
+from camel.app.scriptutils.basepipe.basepipe import BasePipe
+from camel.app.scriptutils.basescript import basescriptutils
+from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
+from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
+from camel.scripts.neisseriapipeline import SNAKEFILE_MAIN, CONFIG_DATA
+
+CUSTOM_ANALYSES = [
+    'amrfinder',
+    'bast',
+    'cgmlst',
+    'confindr',
+    'feta',
+    'fhbp',
+    'gmats',
+    'human_read_scrubbing',
+    'kraken2',
+    'mendevar',
+    'mlst',
+    'pora',
+    'porb',
+    'resfinder4',
+    'resistance_genes',
+    'rmlst',
+    'rplf',
+    'serogroup',
+    'vaccine_targets',
+    'variant_calling'
+]
 
 
-class MainNeisseriaPipeline(ReportPipeline):
+@dataclasses.dataclass(frozen=True)
+class Options:
+    """
+    Pipeline-specific options.
+    """
+    analyses: list[str] = dataclasses.field(default_factory=list)
+
+
+class MainNeisseriaPipeline(BasePipe):
     """
     Main class to run the Neisseria pipeline.
     """
 
-    CUSTOM_ANALYSES = [
-        'kraken2', 'confindr', 'resfinder4', 'amrfinder', 'rmlst', 'mlst', 'rplf', 'bast', 'pora', 'porb', 'feta',
-        'fhbp', 'resistance_genes', 'vaccine_targets', 'cgmlst', 'gmats', 'mendevar', 'serogroup',
-        'human_read_scrubbing', 'variant_calling']
-
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(
+            self,
+            in_: ScriptInput,
+            out: ScriptOutput,
+            opts: ScriptOptions,
+            opts_custom: Options
+    ) -> None:
         """
         Initializes the main class.
-        :param args: Arguments (optional)
         """
-        super().__init__('Neisseria pipeline', '1.4', SNAKEFILE_MAIN, args)
+        super().__init__(
+            name='Neisseria pipeline',
+            version='1.4',
+            script_in=in_,
+            script_out=out,
+            opts=opts,
+            snakefile=SNAKEFILE_MAIN
+        )
+        self._opts_custom = opts_custom
 
-    @property
-    def title(self) -> str:
-        """
-        Returns the title of the pipeline as it appears in the HTML output.
-        :return: Title
-        """
-        return '<i>Neisseria</i> pipeline'
-
-    def run(self) -> None:
+    def _execute(self) -> None:
         """
         Runs the pipeline.
         :return: None
         """
-        input_files = self._symlink_input()
-        self._validate_input_files()
-        config_file = self.__construct_config_file(input_files)
-        self._run_snakemake_main(config_file)
-        self._export_assembly()
+        # Parse template data
+        with CONFIG_DATA.open() as handle:
+            yaml_text = handle.read()
+        yaml_text = yaml_text.format(
+            COV_MAX=self._script_opts.cov_max,
+            QC_SCHEME='cgmlst' if 'cgmlst' in self._opts_custom.analyses else 'mlst',
+        )
+        data_template = yaml.safe_load(yaml_text)
 
-    def __construct_config_file(self, input_files: dict[str, list[dict[str, str]]]) -> str:
-        """
-        Constructs the configuration file.
-        :param input_files: Dictionary with the input files (keys can be FASTQ_PE, FASTQ_SE).
-        :return: Configuration file
-        """
-        config_data = self.get_template_data(input_files)
-        config_data['analyses'] = [key for key in MainNeisseriaPipeline.CUSTOM_ANALYSES if vars(self._args)[key]]
-        with open(CONFIG_DATA) as handle_in:
-            mainscriptutils.dict_merge(
-                config_data, yaml.safe_load(handle_in.read().format(
-                    qc_typing_scheme='cgmlst' if self._args.cgmlst else 'mlst',
-                    export_bam='true' if self._args.report_include_bam else 'false',
-                    coverage_max=self._args.cov_max
-                )))
-        return snakepipelineutils.generate_config_file(config_data, self._args.working_dir)
+        # Add the base config data
+        config_data = self.get_config_data()
+        config_data['analyses'] = self._opts_custom.analyses
+        config_data['sequence_typing'] = {'options': {'method': self._script_opts.detection_method}}
+        config_data['gene_detection'] = {'options': {'method': self._script_opts.detection_method}}
+        basepipeutils.dict_merge(config_data, data_template)
+        path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
 
-    @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
-        """
-        Parses the command line arguments.
-        :param args: Command line arguments
-        :return: Parsed arguments
-        """
-        parser = argparse.ArgumentParser()
-        ReportPipeline.add_common_arguments(parser)
-        for analysis_key in MainNeisseriaPipeline.CUSTOM_ANALYSES:
-            parser.add_argument(f"--{analysis_key.replace('_', '-')}", action='store_true')
-        return parser.parse_args(args)
+        # Run the Snakefile
+        snakepipelineutils.run_snakemake(
+            snakefile=self._snakefile,
+            config_path=path_config,
+            targets=[],
+            working_dir=self._script_opts.working_dir,
+            threads=self._script_opts.threads)
+
+
+@click.command(name='neisseria_pipeline', short_help='Pipeline for the complete characterization of Neisseria meningitidis isolates')
+@basescriptutils.add_input_opts()
+@basescriptutils.add_output_opts
+@basescriptutils.add_general_opts
+@click.option(
+    '--analyses',
+    type=str,
+    help=f"Comma-separated list of analyses to run: {', '.join(CUSTOM_ANALYSES)}")
+def main(**kwargs) -> None:
+    """
+    Pipeline for the complete characterization of Neisseria meningitidis isolates.
+    """
+    BasePipe.check_analyses_option(kwargs['analyses'], CUSTOM_ANALYSES)
+    script_input = basescriptutils.parse_script_input(kwargs)
+    script_out = basescriptutils.parse_script_output(kwargs)
+    script_opts = basescriptutils.parse_script_opts(kwargs)
+    custom_opts = Options(analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [])
+    mock_pipe = MainNeisseriaPipeline(script_input, script_out, script_opts, custom_opts)
+    mock_pipe.run()
 
 
 if __name__ == '__main__':
     initialize_logging()
-    main = MainNeisseriaPipeline()
-    main.run()
+    main()

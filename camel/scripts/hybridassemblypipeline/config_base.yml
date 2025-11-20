@@ -60,3 +60,5 @@ sniffles:
   mapq: {sniffles_mapq}
   min_support: {sniffles_min_support}
   min_svlen: {sniffles_min_svlen}
+
+read_trimming: {{}}

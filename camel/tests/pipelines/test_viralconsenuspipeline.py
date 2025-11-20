@@ -1,12 +1,12 @@
 import unittest
 from pathlib import Path
 
-from Bio import SeqIO
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
-from camel.app.loggers import logger
-from camel.scripts.viralconsensuspipeline.mainviralconsensuspipeline import MainViralConsensusPipeline
+from camel.app.core.utils import fastautils
+from camel.scripts.viralconsensuspipeline.mainviralconsensuspipeline import main
 from camel.tests import longRunningTest
 
 
@@ -30,21 +30,21 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -56,12 +56,13 @@ class TestViralConsensusPipeline(CamelTestSuite):
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
         path_json_out = self.running_dir / 'out' / 'out.json'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
@@ -69,9 +70,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--output-json', str(path_json_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
         self.assertGreater(path_json_out.stat().st_size, 0)
 
@@ -84,12 +84,13 @@ class TestViralConsensusPipeline(CamelTestSuite):
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
         path_fasta_out = self.running_dir / 'out' / 'consensus.fasta'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
@@ -97,13 +98,10 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--output-fasta', str(path_fasta_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
-        with open(path_fasta_out) as handle:
-            seqs = list(SeqIO.parse(handle, 'fasta'))
-            logger.info(f'{len(seqs)} sequences parsed')
+        self.assertGreater(fastautils.count_reads(path_fasta_out), 0)
 
     @longRunningTest()
     def test_viral_consensus_illumina_fasta_ref_influenza_a_h1n1_with_scrubbing(self) -> None:
@@ -113,22 +111,22 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
-            '--human-read-scrubbing',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+            '--working-dir', str(self.running_dir),
+            '--analyses', 'human-read-scrubbing',
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -139,21 +137,21 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H3N2.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.05-H3N2_R1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.05-H3N2_R2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -164,21 +162,21 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_b',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_b-YAM.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.08-B_YAM_R1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.08-B_YAM_R2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -189,21 +187,21 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_b',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_b-VIC.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.29-B_VIC_R1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.29-B_VIC_R2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -214,21 +212,21 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'sars_cov_2',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'sars_cov_2-Wuhan-Hu-1.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS2.01_1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS2.01_2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -239,22 +237,22 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'other',
             '--species-name', 'Respiratory syncytial virus',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'hRSV_A.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'RSV-ERR331022_1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'RSV-ERR331022_2.fastq.gz'),
+            '--input-type', 'illumina',
             '--cov-max', '5000',
             '--cov-max-segment', '500',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -265,7 +263,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'influenza_a-full_genome.fasta'),
@@ -274,9 +272,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_viral_consensus_fasta_ref_fasta_input_with_antivirals(self) -> None:
@@ -286,7 +283,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'influenza_a-h3n2-with_antivirals.fasta'),
@@ -295,9 +292,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     ############################################
@@ -311,11 +307,12 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R2.fastq.gz'),
+            '--input-type', 'illumina',
             '--ref-genome-db', str(TestViralConsensusPipeline.dir_db / 'ref_mash_dbs' / 'influenza_a-gisaid'),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
@@ -323,9 +320,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     ##############################
@@ -339,7 +335,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL1.01-H1N1.fastq.gz'),
@@ -351,9 +347,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -364,7 +359,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL1.01-H1N1.fastq.gz'),
@@ -372,14 +367,13 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--clair3-model', str(Path(config.dir_db, 'clair3', 'models', 'ont')),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
-            '--human-read-scrubbing',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+            '--working-dir', str(self.running_dir),
+            '--analyses', 'human-read-scrubbing',
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -390,7 +384,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_a',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H3N2.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL1.06_H3N2.fastq.gz'),
@@ -402,9 +396,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -417,7 +410,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_b',
             '--fastq-se',
             str(TestViralConsensusPipeline.dir_testdata / 'influenza_b_missing_segments.fastq.gz'),
@@ -429,9 +422,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -442,7 +434,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'sars_cov_2',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'sars_cov_2-Wuhan-Hu-1.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS1.01.fastq.gz'),
@@ -454,9 +446,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -467,7 +458,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'sars_cov_2',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'sars_cov_2-Wuhan-Hu-1.fasta'),
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS1.01.fastq.gz'),
@@ -480,9 +471,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     def test_viral_consensus_fasta_ref_fasta_input_sars_cov_2(self) -> None:
@@ -492,7 +482,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'sars_cov_2',
             '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'sars_cov_2-Wuhan-Hu-1.fasta'),
             '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'sars_cov_2-BS004897.1.fasta'),
@@ -501,9 +491,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     #######################################
@@ -519,7 +508,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'influenza_b',
             '--fastq-se',
             str(TestViralConsensusPipeline.dir_testdata / 'influenza_b_missing_segments.fastq.gz'),
@@ -531,9 +520,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
@@ -544,7 +532,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--species', 'sars_cov_2',
             '--fastq-se', str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.SARS1.01.fastq.gz'),
             '--ref-genome-db', str(TestViralConsensusPipeline.dir_db / 'ref_mash_dbs' / 'sars_cov_2-ncbi'),
@@ -556,9 +544,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir)
-        ]
-        main = MainViralConsensusPipeline(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

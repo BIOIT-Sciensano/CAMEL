@@ -16,10 +16,10 @@ rule confindr_run:
     params:
         dir_ = 'confindr/tool',
         db = config.get('confindr', {}).get('db'),
-        input_type = config['input_type']
+        input_type = config['input']['type']
     threads: 4
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.tools.confindr.confindr import ConFindr
 
         confindr_ = ConFindr()
@@ -60,7 +60,7 @@ rule confindr_report:
     run:
         from camel.app.tools.confindr.confindrreporter import ConFindrReporter
         reporter = ConFindrReporter()
-        reporter.update_parameters(input_type=config['input_type'])
+        reporter.update_parameters(input_type=config['input']['type'])
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         snakemakeutils.add_pickle_inputs(reporter, input)
         step.run()

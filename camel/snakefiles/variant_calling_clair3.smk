@@ -86,28 +86,35 @@ rule clair3_variant_calling:
         INFORMS = 'variant_calling/calling/informs.io'
     params:
         running_dir = 'variant_calling/calling',
-        long_indel = config['variant_calling']['long_indel'],
-        haploid_precise = config['variant_calling']['haploid_precise'],
-        include_ctgs = config['variant_calling']['include_ctgs'],
-        no_phasing = config['variant_calling']['no_phasing'],
-        model_path = config['model_path'],
-        platform = config['variant_calling']['platform']
+        long_indel = config['variant_calling'].get('clair3', {}).get('long_indel', False),
+        haploid_precise = config['variant_calling'].get('clair3', {}).get('haploid_precise', False),
+        include_ctgs = config['variant_calling'].get('clair3', {}).get('include_ctgs', False),
+        no_phasing = config['variant_calling'].get('clair3', {}).get('no_phasing', False),
+        model_path = config['variant_calling'].get('clair3', {}).get('model_path'),
+        platform = config['variant_calling'].get('clair3', {}).get('platform')
     threads: 8
     run:
         from camel.app.tools.clair3.clair3 import Clair3
         clair3 = Clair3()
         snakemakeutils.add_pickle_inputs(clair3,input)
         step = Step(rule_name=str(rule), tool=clair3, dir_=Path(str(params.running_dir)))
-        clair3.update_parameters(model_path=params.model_path, platform=params.platform,
-            output_path=str(params.running_dir), threads=threads)
-        if params.long_indel:
-            clair3.update_parameters(long_indel='')
-        if params.haploid_precise:
-            clair3.update_parameters(haploid_precise='')
-        if params.include_ctgs:
-            clair3.update_parameters(include_ctgs='')
-        if params.no_phasing:
-            clair3.update_parameters(no_phasing='')
+
+        # Update the parameters
+        if params.model_path is None:
+            raise ValueError('"model_path" is required')
+        if params.platform is None:
+            raise ValueError('"platform" is required')
+        clair3.update_parameters(
+            model_path=params.model_path,
+            long_indel=params.long_indel,
+            include_ctgs=params.include_ctgs,
+            no_phasing=params.no_phasing,
+            platform=params.platform,
+            output_path=str(params.running_dir),
+            threads=threads
+        )
+
+        # Run the tool
         step.run()
         snakemakeutils.dump_tool_outputs(clair3, output)
 
@@ -159,7 +166,7 @@ rule clair3_variant_calling_unzip_vcf:
         VCF = variant_calling_clair3.OUTPUT_UNFILTERED_VCF
     params:
         running_dir = 'variant_calling/unzip_vcf',
-        sample_name = config['sample_name']
+        sample_name = config['input']['sample_name']
     run:
         from camel.app.core.utils import fileutils
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView

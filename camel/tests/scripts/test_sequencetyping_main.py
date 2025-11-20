@@ -1,8 +1,9 @@
 import unittest
 from pathlib import Path
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.sequencetyping.mainsequencetyping import MainSequenceTyping
+from camel.scripts.sequencetyping.mainsequencetyping import main
 
 
 class TestSequenceTyping(CamelTestSuite):
@@ -19,7 +20,9 @@ class TestSequenceTyping(CamelTestSuite):
     input_fasta_new_allele = test_file_dir / 'neisseria_mc58_new_allele.fasta'
     input_fasta_multi_perfect = test_file_dir / 'neisseria_multi_perfect.fasta'
     input_typing_reads = {
-        'illumina': [test_file_dir / 'S15BD05018_S58_L001_1.fastq', test_file_dir / 'S15BD05018_S58_L001_2.fastq'],
+        'illumina': [
+            test_file_dir / 'S15BD05018_S58_L001_1.fastq',
+            test_file_dir / 'S15BD05018_S58_L001_2.fastq'],
         'ont': [test_file_dir / 'Z1269_RPB-subset.fastq.gz']
     }
 
@@ -29,18 +32,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta),
             '--input-type', 'fasta',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_fasta_blast_nucl_tsv_out(self) -> None:
@@ -51,19 +53,18 @@ class TestSequenceTyping(CamelTestSuite):
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
         output_file_tsv = Path(self.running_dir) / 'report' / 'typing_out.tsv'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta),
             '--input-type', 'fasta',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--output-tsv', str(output_file_tsv),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
         self.assertGreater(output_file_tsv.stat().st_size, 0)
 
@@ -77,18 +78,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta_new_allele),
             '--input-type', 'fasta',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_fasta_blast_nucl_multi_perfect_hit(self) -> None:
@@ -101,18 +101,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta_multi_perfect),
             '--input-type', 'fasta',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_fasta_blast_peptide(self) -> None:
@@ -121,18 +120,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta),
             '--input-type', 'fasta',
-            '--scheme-dir', str(self.input_db_protein),
+            '--db', str(self.input_db_protein),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
             '--threads', '8',
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_fasta_blast_mixed(self) -> None:
@@ -141,18 +139,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta),
             '--input-type', 'fasta',
-            '--scheme-dir', str(self.input_db_mixed),
+            '--db', str(self.input_db_mixed),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
             '--threads', '8',
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_illumina_kma_nucl(self) -> None:
@@ -161,18 +158,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-pe', str(self.input_typing_reads['illumina'][0]), str(self.input_typing_reads['illumina'][1]),
             '--input-type', 'illumina',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'kma',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_illumina_kma_mixed(self) -> None:
@@ -181,19 +177,18 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta),
             '--fastq-pe', str(self.input_typing_reads['illumina'][0]), str(self.input_typing_reads['illumina'][1]),
             '--input-type', 'illumina',
-            '--scheme-dir', str(self.input_db_mixed),
+            '--db', str(self.input_db_mixed),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'kma',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_ont_blast_nucl(self) -> None:
@@ -203,18 +198,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-se', str(self.input_typing_reads['ont'][0]),
             '--input-type', 'ont',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'blast',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_ont_kma_nucl(self) -> None:
@@ -223,18 +217,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-se', str(self.input_typing_reads['ont'][0]),
             '--input-type', 'ont',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'kma',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_ont_kma_nucl_trim(self) -> None:
@@ -243,19 +236,18 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fastq-se', str(self.input_typing_reads['ont'][0]),
             '--input-type', 'ont',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'kma',
             '--threads', '8',
             '--trim-reads'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_typing_fasta_mist_nucl(self) -> None:
@@ -264,18 +256,17 @@ class TestSequenceTyping(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta),
             '--input-type', 'fasta',
-            '--scheme-dir', str(self.input_db_nucl),
+            '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
             '--working-dir', str(self.running_dir),
             '--detection-method', 'mist',
             '--threads', '8'
-        ]
-        main = MainSequenceTyping(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
 

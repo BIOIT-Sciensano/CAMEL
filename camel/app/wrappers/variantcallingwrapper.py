@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.core.utils import vcfutils
@@ -60,12 +60,11 @@ class VariantCallingWrapper:
             self._working_dir.mkdir(parents=True)
         snakemakeutils.dump_object(fastq_input.to_fq_dict(), self._working_dir / 'fq_dict.io')
         config_data = self.__get_config_data(sample_name, reference_info, options)
-        config_data['input_type'] = input_type
         config_file = snakepipelineutils.generate_config_file(config_data, self._working_dir)
 
         # Execute Snakemake
         output_files = {
-            'BAM': variant_calling.get_bam({'input_type': input_type, 'working_dir': self._working_dir}),
+            'BAM': variant_calling.get_bam({'input': {'type': input_type}, 'working_dir': self._working_dir}),
             'VCF': Path(variant_calling.OUTPUT_UNFILTERED_VCF_GZ),
             'INFORMS_MAPPING': Path(variant_calling.OUTPUT_MAPPING_INFORMS),
             'INFORMS_ALL': Path(variant_calling.OUTPUT_INFORMS_ALL)
@@ -89,13 +88,12 @@ class VariantCallingWrapper:
             'reference': {
                 'name': reference_info['name'],
                 'fasta': reference_info['path'],
-                'url': reference_info.get('url', None)
+                'url': reference_info.get('url', None),
             },
-            'sample_name': sample_name,
             'working_dir': str(self._working_dir),
             'variant_calling': options,
             'variant_filtering': {},
-            'input_type': 'illumina'
+            'input': {'sample_name': sample_name, 'type': 'illumina'},
         }
 
     def __collect_output(self, output_files: dict[str, Path]) -> None:

@@ -1,0 +1,139 @@
+####################
+# Pipeline options #
+####################
+citations:
+  main: Bogaerts_2021-shigella
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Li_2009-samtools
+    - Li_2011-bcftools
+    - Kaas_2014-csi_phylogeny
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Feldgarden_2019-ndaro
+    - Bortolaia_2020-resfinder_4.0
+    - Joensen_2014-virulencefinder
+    - Jaureguy_2008-pasteur
+    - Zhou_2020-enterobase
+    - Jolley_2010-bigsdb
+    - Zhang_2021-shigeifinder
+    - Wu_2019-shigatyper
+    - Wong_2016-genotyphi
+    - Bradley_2015-mykrobe
+
+####################
+# Reference genome #
+####################
+reference:
+  name: <i>Shigella sonnei</i> Ss046 (CP000038.1)
+  fasta: /db/refgenomes/Shigella_sonnei/GCA_000092525.1.fasta
+  gff3: /db/refgenomes/Shigella_sonnei/GCA_000092525.1.gff
+  url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_000092525.1/
+
+#########################
+# Tool specific options #
+#########################
+downsampling:
+  coverage_max: {COV_MAX}
+  expected_genome_size: 4_762_774
+
+contamination_check:
+  db: /db/kraken2_microbial/latest
+  expected_species: Shigella
+  allowed_species:
+    - Escherichia
+  level_of_depth: G
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+  expected_gc_content: 50.5
+
+confindr:
+  db: /db/confindr/0.8.1
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+read_trimming: {{}}
+variant_filtering: {{}}
+read_scrubbing: {{}}
+
+############################
+# Gene detection databases #
+############################
+mykrobe:
+  db: /db/mykrobe/latest/
+  species: sonnei
+  show_amr: false
+  title: Lineage determination of <i>S. sonnei</i>
+
+amrfinder:
+  db: /db/amrfinder/v4/latest
+  species: Escherichia
+
+resfinder4:
+  db: /db/resfinder4
+  species: Escherichia coli
+
+mob_suite:
+  db: /db/mob_suite/latest
+
+gene_detection:
+  dbs:
+    virulencefinder:
+      path: /db/gene_detection/VirulenceFinder-Ecoli
+      metadata:
+        name: Protein function
+        key: protein_function
+      hidden: true
+
+    virulencefinder_shiga:
+      path: /db/gene_detection/VirulenceFinder-Shiga
+      metadata:
+        name: stx variant
+        key: stx_variant
+
+    serotype_o:
+      path: /db/gene_detection/SerotypeFinder-O_type
+      params:
+        blastn:
+          min_percent_identity: 85
+          min_coverage: 60
+      metadata:
+        name: Predicted serotype
+        key: predicted_serotype
+
+###################
+# Sequence typing #
+###################
+sequence_typing:
+  dbs:
+    mlst_pasteur:
+      path: /db/sequence_typing/ecoli/mlst_pasteur
+      hidden: true
+    mlst_warwick:
+      path: /db/sequence_typing/ecoli/mlst_warwick
+    cgmlst:
+      path: /db/sequence_typing/ecoli/cgmlst
+      detection_method: blast
+      blast_task: blastn
+    rmlst:
+      path: /db/sequence_typing/various/rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

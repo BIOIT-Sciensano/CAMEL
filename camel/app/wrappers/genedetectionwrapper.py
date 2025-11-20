@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.scriptutils.fastqinput import FastqInput
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.snakefiles import gene_detection
@@ -115,12 +115,11 @@ class GeneDetectionWrapper:
         """
         return {
             'working_dir': str(self._working_dir),
-            'sample_name': sample_name,
             'gene_detection': {
                 'dbs': {'db': db_data},
                 'options': {'method': detection_method}
             },
-            'input_type': input_type
+            'input': {'type': input_type, 'sample_name': sample_name}
         }
 
     def __set_output(self, output_files: dict[str, str]) -> None:

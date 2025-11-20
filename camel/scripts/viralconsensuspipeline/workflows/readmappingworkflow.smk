@@ -77,7 +77,7 @@ rule bwa_map_reads_se:
         key = lambda wildcards: wildcards.key
     run:
         from camel.app.core.utils import sambamutils
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.tools.bwa.bwamap import BWAMap
 
         fq_dict = FastqInput.from_fq_dict(Path(input.FASTQ), 'illumina')

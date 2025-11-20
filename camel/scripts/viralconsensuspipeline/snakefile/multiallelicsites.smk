@@ -19,7 +19,7 @@ rule multi_allelic_sites_bcftools_pileup:
     params:
         dir_ = 'multi_allelic/pileup',
         max_depth = 25000,
-        config = 'illumina' if config['input_type'] == 'illumina' else 'ont'
+        config = 'illumina' if config['input']['type'] == 'illumina' else 'ont'
     run:
         from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
         mpileup = BcftoolsMpileup()
@@ -133,7 +133,7 @@ rule multi_allelic_sites_report:
         VAL_HTML = 'multi_allelic/report/html.iob' # multiallelic.OUTPUT_REPORT
     params:
         dir_ = 'multi_allelic/report',
-        name = config['sample_name']
+        name = config['input']['sample_name']
     run:
         from camel.app.tools.pipelines.viral_consensus.reportmultiallelic import ReporterMultiAllelic
         reporter = ReporterMultiAllelic()

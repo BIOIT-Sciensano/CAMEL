@@ -90,14 +90,14 @@ rule core_collect_trimmed_fastq_data:
     Other workflows such as 'Kraken' or 'Assembly' rely on this dictionary to get input files (PE or SE).
     """
     input:
-        unpack(lambda _: core.get_fq_input(config['input_type']))
+        unpack(lambda _: core.get_fq_input(config['input']['type']))
     output:
         IO_FASTQ = 'fq_dict.io'
     params:
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
-        ReportPipeline.construct_fq_dict(input, params.input_type, Path(output.IO_FASTQ))
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.construct_fq_dict(input, params.input_type, Path(output.IO_FASTQ))
 
 rule core_link_fasta_scrubbing_input:
     """
@@ -117,11 +117,13 @@ rule core_link_vcf_input:
     Creates the VCF input for the variant filtering.
     """
     params:
-        vcf_in = config.get('input', {}).get('vcf_unfiltered')
+        vcf_in = config['input'].get('vcf')
     output:
         VCF = 'input/vcf.io'
     run:
          from camel.app.core.io.tooliofile import ToolIOFile
+         if params.vcf_in is None:
+             raise ValueError("VCF is missing in input config")
          path_vcf_in = Path(params.vcf_in[0]['path'])
          snakemakeutils.dump_object([ToolIOFile(path_vcf_in)], Path(output.VCF))
 
@@ -185,19 +187,19 @@ rule core_init_summary:
         ext = lambda wildcards: wildcards.ext
     run:
         import datetime
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
         from camel.app.config import config as camel_config
 
         analysis_date = datetime.datetime.now().strftime(camel_config.date_fmt)
         content = [
-            ('pipeline_name', config['pipeline']['name']),
-            ('pipeline_version', config['pipeline']['version']),
-            ('input_type', config['input_type']),
-            ('sample', config['sample_name']),
-            ('input_files', ReportPipeline.format_input_string(config['input'])),
+            ('pipeline_name', config['script_info']['name']),
+            ('pipeline_version', config['script_info']['version']),
+            ('input_type', config['input']['type']),
+            ('sample', config['input']['sample_name']),
+            ('input_files', 'TODO'), # ReportPipeline.format_input_string(config['input'])),
             ('analysis_date', analysis_date),
-            ('detection_method', config['gene_detection']['options']['method'])
         ]
+        if 'gene_detection' in config:
+            content.append(('detection_method', config['gene_detection']['options']['method']))
         snakemakeutils.export_summary(content, Path(output.OUT), str(params.ext))
 
 rule core_report_pickle_citations:
@@ -248,7 +250,7 @@ rule core_select_summary_json:
     input:
         OUT = str(core.OUTPUT_SUMMARY).format(ext='json')
     output:
-        JSON = config['output_json'] if config.get('output_json') is not None else Path(config['working_dir'], 'summary', 'summary.json')
+        JSON = config['output']['json'] if config['output'].get('json') is not None else Path(config['working_dir'], 'summary', 'summary.json')
     shell:
         """
         cp {input.OUT} {output.JSON}
@@ -261,8 +263,8 @@ rule core_select_summary_tsv:
     input:
         OUT = str(core.OUTPUT_SUMMARY).format(ext='tsv')
     output:
-        JSON = config['output_tabular']
+        TSV = config['output']['tsv']
     shell:
         """
-        cp {input.OUT} {output.JSON}
+        cp {input.OUT} {output.TSV}
         """

@@ -40,7 +40,7 @@ rule fastani_report:
         HTML = 'ani/report/html.iob'
     params:
         dir_ = 'ani/report',
-        sample_name = config['sample_name'],
+        sample_name = config['input']['sample_name'],
         species = config['species']
     run:
         from camel.app.tools.fastani.fastanireporter import FastANIReporter

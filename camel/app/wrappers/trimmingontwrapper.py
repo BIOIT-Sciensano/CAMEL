@@ -5,6 +5,7 @@ from typing import Optional, Union, Any
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
+from camel.app.loggers import logger
 from camel.snakefiles import trimming_ont
 from camel.snakefiles.trimming_ont import INPUT_ONT_FASTQ
 
@@ -43,6 +44,7 @@ class TrimmingONTWrapper:
         :param threads: Number of threads to use
         :return: None
         """
+        logger.info("Running read trimming workflow (ONT)")
         path_io = self._working_dir / INPUT_ONT_FASTQ
         path_io.parent.mkdir(exist_ok=True, parents=True)
         snakemakeutils.dump_object([ToolIOFile(se_reads)], path_io)

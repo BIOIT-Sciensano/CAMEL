@@ -25,9 +25,9 @@ rule spifinder_fastq_run:
         from camel.app.tools.pipelines.salmonella.spifinder import SPIFinder
         spifinder_tool = SPIFinder()
         spifinder_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db_path))]})
-        if config['input_type'] == 'illumina':
+        if config['input']['type'] == 'illumina':
             spifinder_tool.add_input_files(snakepipelineutils.extract_fq_input(Path(input.IO), key_pe='FASTQ_PE'))
-        elif config['input_type'] == 'ont':
+        elif config['input']['type'] == 'ont':
             spifinder_tool.add_input_files(snakepipelineutils.extract_fq_input(
                 Path(input.IO), key_se='FASTQ', read_type='SE'))
         step = Step(rule_name=str(rule), tool=spifinder_tool, dir_=Path(params.dir_))
@@ -61,9 +61,9 @@ rule spifinder_create_summary:
     This rule creates a summary output for the hits of SPIFinder in fastq and fasta mode.
     """
     input:
-        JSON_FASTQ = rules.spifinder_fastq_run.output.JSON if config['input_type'] in ('ont', 'illumina') else [],
+        JSON_FASTQ = rules.spifinder_fastq_run.output.JSON if config['input']['type'] in ('ont', 'illumina') else [],
         JSON_FASTA = rules.spifinder_fasta_run.output.JSON,
-        INFORMS_spifinder_fastq = rules.spifinder_fastq_run.output.INFORMS if config['input_type'] in ('ont', 'illumina') else [],
+        INFORMS_spifinder_fastq = rules.spifinder_fastq_run.output.INFORMS if config['input']['type'] in ('ont', 'illumina') else [],
         INFORMS_spifinder_fasta = rules.spifinder_fasta_run.output.INFORMS
     output:
         FILE = 'spifinder/summary/summary_out.{ext}' # spifinder.OUTPUT_SUMMARY
@@ -105,9 +105,9 @@ rule spifinder_report:
     This rule creates a simple output report, combining both SPIFinder tables in one report.
     """
     input:
-        JSON_FASTQ = rules.spifinder_fastq_run.output.JSON if config['input_type'] in ('ont', 'illumina') else [],
+        JSON_FASTQ = rules.spifinder_fastq_run.output.JSON if config['input']['type'] in ('ont', 'illumina') else [],
         JSON_FASTA = rules.spifinder_fasta_run.output.JSON,
-        INFORMS_spifinder_fastq = rules.spifinder_fastq_run.output.INFORMS if config['input_type'] in ('ont', 'illumina') else [],
+        INFORMS_spifinder_fastq = rules.spifinder_fastq_run.output.INFORMS if config['input']['type'] in ('ont', 'illumina') else [],
         INFORMS_spifinder_fasta = rules.spifinder_fasta_run.output.INFORMS,
         CSV_metadata = config['spifinder']['metadata']
     output:

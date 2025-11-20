@@ -68,7 +68,7 @@ rule abritamr_report_run:
         TXT_partials = rules.abritamr_run.output.TXT_partials,
         INFORMS_abritamr_run = rules.abritamr_run.output.INFORMS
     output:
-        REPORT_abritamr ='abritamr/report/report.io',
+        REPORT_abritamr = 'abritamr/report/report.io',
         INFORMS = 'abritamr/report/informs.io'
     params:
         dir_ = 'abritamr/report'

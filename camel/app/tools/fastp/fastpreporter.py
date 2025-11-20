@@ -50,7 +50,8 @@ class FastpReporter(Tool):
         Executes this tool.
         :return: None
         """
-        self._report_section = HtmlReportSection('Read trimming', subtitle=self._input_informs['fastp']['_name'])
+        self._report_section = HtmlReportSection(
+            'Read trimming', subtitle=self._input_informs['fastp']['_name_full'])
         self.__add_fastqc_reports('Pre-trimming', 'pre_trimming', 'HTML_pre')
         self.__add_fastp_section()
         self.__add_fastqc_reports('Post-trimming', 'post_trimming', 'HTML_post')

@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from camel.app.core.snakemake import snakemakeutils
 from camel.snakefiles import human_read_scrubbing
 
@@ -12,7 +13,7 @@ include: human_read_scrubbing.SNAKEFILE
 #########
 rule all:
     input:
-        HTML = config['output_report'],
+        HTML = config['output']['html'],
         OUT = human_read_scrubbing.get_output_io(config)
 
 
@@ -44,8 +45,8 @@ rule report_command_section:
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input,Path(output.HTML), Path(params.dir_))
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 
 rule report_combine_all:
@@ -56,34 +57,34 @@ rule report_combine_all:
         reports_scrubbing = human_read_scrubbing.get_reports(config),
         report_commands = rules.report_command_section.output.HTML
     output:
-        HTML = config['output_report']
+        HTML = config['output']['html']
     params:
-        sample_name = config['sample_name'],
         input_dict = config['input'],
-        output_dir = config['output_dir'],
-        pipeline_info = config['pipeline'],
-        citation_keys = config['citations'],
-        input_type = config['input_type']
+        output_dir = config['output']['dir'],
+        pipeline_info = config['script_info'],
+        citation_keys = config['citations']
     run:
         import datetime
-        from camel.app.scriptutils.reportpipeline import ReportPipeline
+        from camel.app.scriptutils.basepipe import basepipeutils
         from camel.app.core.snakemake import snakepipelineutils
+        from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 
         # Add the header section
+        script_input = ScriptInput.from_dict(params.input_dict)
         report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         report.add_html_object(snakepipelineutils.create_input_section(
-            sample_name=params.sample_name,
+            sample_name=script_input.name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
-            input_files=ReportPipeline.format_input_string(params.input_dict),
-            input_type=params.input_type,
+            input_files=script_input.input_str,
+            input_type=script_input.type_.value,
             key_citation=params.citation_keys['main'],
         ))
 
         # Add report content
         report_structure = []
-        ReportPipeline.add_content_scrubbing(
-            report_structure, params.input_type, input.reports_scrubbing)
+        basepipeutils.add_content_scrubbing(
+            report_structure, script_input.type_.value, input.reports_scrubbing)
         report_structure.extend([('Commands', 'commands', [Path(input.report_commands)])])
         snakepipelineutils.add_report_content(report, report_structure)

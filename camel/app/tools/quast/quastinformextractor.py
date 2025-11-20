@@ -53,6 +53,9 @@ class QuastInformExtractor(Tool):
         :return: None
         """
         self.__set_informs()
+        for key, value in self._input_informs['quast'].items():
+            if key.startswith('_'):
+                self._informs[key] = value
 
     def _check_input(self) -> None:
         """
@@ -61,6 +64,8 @@ class QuastInformExtractor(Tool):
         """
         if 'TSV' not in self._tool_inputs:
             raise InvalidToolInputError("TSV input file is required.")
+        if 'quast' not in self._input_informs:
+            raise InvalidToolInputError("Quast informs are required.")
         super()._check_input()
 
     def __set_informs(self) -> None:

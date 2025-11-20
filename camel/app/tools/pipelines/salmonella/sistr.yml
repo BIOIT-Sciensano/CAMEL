@@ -1,5 +1,16 @@
-dependencies: [blast/2.14.0, mafft/7.490, sistr/1.1.1]
+dependencies:
+  - blast/2.14.0
+  - mafft/7.490
+  - sistr/1.1.1
 parameters:
-  threads: {default: true, mandatory: false, option: --threads, value: '1'}
-  output_filename: {default: true, mandatory: true, option: -o, value: sistr_output.json}
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: '1'
+  output_filename:
+    default: true
+    mandatory: true
+    option: '-o'
+    value: sistr_output.json
 tool_command: sistr

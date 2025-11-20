@@ -64,7 +64,8 @@ class CharacterizeNeisseriaCapsuleReporter(Tool):
         :return: None
         """
         # Create overview table with status
-        section = HtmlReportSection('Capsule characterization', subtitle=self._input_informs['detector']['_name'])
+        section = HtmlReportSection(
+            'Capsule characterization', subtitle=self._input_informs['detector']['_name_full'])
 
         # Add overview table
         section.add_header('Overview', 3)

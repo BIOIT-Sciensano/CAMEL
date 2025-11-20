@@ -1,90 +1,118 @@
 #!/usr/bin/env python
-import argparse
+import dataclasses
 import shutil
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional
 
+import click
+
+from camel.app.cli import cliutils
 from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.reports import reportutils
 from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.scriptutils.fastqinput import FastqInput
-from camel.app.scriptutils import mainscriptutils, absolute_path_by_pathlib
 from camel.app.loggers import initialize_logging
+from camel.app.scriptutils import inputhelper, model
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
+from camel.app.scriptutils.basescript import basescriptutils
+from camel.app.scriptutils.basescript.basescript import BaseScript
+from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+from camel.app.scriptutils.inputhelper import helper_by_input_type
+from camel.app.scriptutils.inputhelper.inputhelperbase import InputHelperBase
+from camel.app.scriptutils.model import BaseOptions, BaseOutput
 from camel.app.toolkits.sequencetyping.sequencetypingutils import SequenceTypingUtils
-from camel.app.wrappers.inputtype import helper_by_input_type
 from camel.app.wrappers.sequencetypingwrapper import (
-    SequenceTypingWrapper,
     SequenceTypingInput,
     SequenceTypingOutput,
+    SequenceTypingWrapper,
 )
 
 
-class MainSequenceTyping:
+@dataclasses.dataclass(frozen=True)
+class Options(BaseOptions):
     """
-    Class to run sequence typing tool, it supports both BLAST+ and SRST2 as detection methods for alleles.
+    Custom options for the sequence typing script.
+    """
+    db: Path = dataclasses.field(default=None, metadata={'help': 'Path to sequence typing database'})
+    detection_method: str = dataclasses.field(default='blast', metadata={
+        'help': 'Sequence typing method',
+        'choices': ['blast', 'kma', 'mist'],
+        'show_default': True})
+    working_dir: Path = dataclasses.field(default=Path('work'), metadata={
+        'help': 'Working directory',
+        'show_default': True})
+    threads: int | None = dataclasses.field(default=1, metadata={'help': 'Number of threads', 'show_default': True})
+    blastn_task: str = dataclasses.field(default='megablast', metadata={
+        'help': 'BLASTn task', "show_default": True, 'choices': ['blastn', 'megablast']})
+
+@dataclasses.dataclass(frozen=True)
+class Output(BaseOutput):
+    """
+    Output for the sequence typing script.
+    """
+    output_html: Path = dataclasses.field(metadata={'help': 'Output HTML file'})
+    output_dir: Path | None = dataclasses.field(metadata={'help': 'Output directory'})
+    output_tsv: Path | None = dataclasses.field(default=None, metadata={'help': 'Output TSV file'})
+    output_fasta: Path | None = dataclasses.field(default=None, metadata={
+        'help': 'Output FASTA file (if reads are assembled)'})
+
+
+class MainSequenceTyping(BaseScript[ScriptInput, Output, Options]):
+    """
+    Main script for the sequence typing workflow.
     """
 
-    def __init__(self, args: Optional[Sequence[str]] = None):
+    def __init__(self, script_in: ScriptInput, helper: InputHelperBase, script_out: Output, script_opts: Options) -> None:
         """
         Initializes the main script.
-        :param args: (Optional) arguments
+        :param script_in: Script input
+        :param helper: Input helper
+        :param script_out: Script output
+        :param script_opts: Script options
         """
-        self._args = MainSequenceTyping._parse_arguments(args)
-        self._sample_name = mainscriptutils.determine_sample_name(self._args)
-        self._helper = helper_by_input_type[self._args.input_type](self._args.working_dir, self._sample_name)
+        super().__init__(
+            name='Sequence typing',
+            version='1.0',
+            script_in=script_in,
+            script_out=script_out,
+            script_opts=script_opts
+        )
+        self._helper: InputHelperBase = helper
 
-    @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
+    def _execute(self) -> None:
         """
-        Parses the command line arguments.
-        :param args: (Optional) arguments
-        :return: Parsed arguments
-        """
-        argument_parser = argparse.ArgumentParser()
-        mainscriptutils.add_common_arguments(argument_parser)
-        mainscriptutils.add_assembly_arguments(argument_parser)
-        mainscriptutils.add_input_files_arguments(argument_parser)
-        argument_parser.add_argument('--scheme-dir', required=True, type=absolute_path_by_pathlib)
-        argument_parser.add_argument(
-            '--detection-method', type=str, choices=['blast', 'kma', 'mist'], default='blast')
-        argument_parser.add_argument(
-            '--output-fasta', type=absolute_path_by_pathlib,
-            help='output path for assembled contigs (only used for BLAST-based detection)')
-        argument_parser.add_argument(
-            '--output-tsv', type=absolute_path_by_pathlib,
-            help='Output path for the tabular output file (does not work with mixed schemes)')
-        argument_parser.add_argument('--blastn-task', type=str, choices=['blastn', 'megablast'], default='megablast')
-        return argument_parser.parse_args(args)
-
-    def run(self) -> None:
-        """
-        Runs the workflow.
+        Runs the main script.
         :return: None
         """
-        mainscriptutils.validate_input_files(self._args)
-
         # Initialize report
-        report = mainscriptutils.init_report(
-            self._args.output_html, self._args.output_dir, 'Sequence typing report',f'Sequence typing {self._args.detection_method}')
-        report.add_html_object(mainscriptutils.generate_analysis_info_section(self._args))
+        report = reportutils.init_report(
+            path_out=self._script_out.output_html,
+            dir_out=self._script_out.output_dir,
+            key='Sequence typing',
+            title=f'Sequence typing {self._script_opts.detection_method}'
+        )
+        report.add_html_object(reportutils.create_overview_section(
+            version=self._version,
+            dataset_name=self._script_in.name,
+            input_file_str=self._script_in.input_str,
+            extra_data=[('Detection method', self._script_opts.detection_method)]
+        ))
         report.save()
 
         # Run script with wrapper
-        db_data = SequenceTypingUtils.parse_scheme_metadata(self._args.scheme_dir)
-        if self._args.detection_method in ('blast', 'mist'):
-            fasta_file = self._helper.prepare_fasta_input(report, self._args)
+        db_data = SequenceTypingUtils.parse_scheme_metadata(self._script_opts.db)
+        if self._script_opts.detection_method in ('blast', 'mist'):
+            path_fasta = self._helper.prepare_fasta_input(self._script_in, report)
             # Save assembly if specified
-            if self._args.output_fasta is not None:
-                shutil.copyfile(str(fasta_file), self._args.output_fasta)
-            if self._args.detection_method == 'blast':
-                output = self.__run_sequence_typing_blast(fasta_file, db_data['name'], self._args.scheme_dir)
+            if self._script_out.output_fasta is not None:
+                shutil.copyfile(str(path_fasta), self._script_out.output_fasta)
+            if self._script_opts.detection_method == 'blast':
+                output = self.__run_sequence_typing_blast(path_fasta, db_data['name'], self._script_opts.db)
             else:
-                output = self.__run_sequence_typing_mist(fasta_file, db_data['name'], self._args.scheme_dir)
-        elif self._args.detection_method == 'kma':
-            fastq_input = self._helper.prepare_fastq_input(report, self._args)
-            output = self.__run_sequence_typing_kma(fastq_input, db_data['name'], self._args.scheme_dir)
+                output = self.__run_sequence_typing_mist(path_fasta, db_data['name'], self._script_opts.db)
+        elif self._script_opts.detection_method == 'kma':
+            fastq_input = self._helper.prepare_fastq_input(self._script_in, report)
+            output = self.__run_sequence_typing_kma(fastq_input, db_data['name'], self._script_opts.db)
         else:
-            raise ValueError(f"Invalid detection method: {self._args.detection_method}")
+            raise ValueError(f"Invalid detection method: {self._script_opts.detection_method}")
         self.__export_output(output, report)
 
     def __run_sequence_typing_blast(self, fasta_file: Path, db_key: str, db_path: Path) -> SequenceTypingOutput:
@@ -95,15 +123,15 @@ class MainSequenceTyping:
         :param db_path: Database directory path
         :return: None
         """
-        wrapper = SequenceTypingWrapper(self._args.working_dir)
+        wrapper = SequenceTypingWrapper(self._script_opts.working_dir)
         workflow_input = SequenceTypingInput(
-            sample_name=self._sample_name,
+            sample_name=self._script_in.name,
             fasta=ToolIOFile(fasta_file),
             input_type='fasta',
             db_path=db_path,
             db_key=db_key
         )
-        wrapper.run_workflow_blast(workflow_input, self._args.blastn_task, self._args.threads)
+        wrapper.run_workflow_blast(workflow_input, self._script_opts.blastn_task, self._script_opts.threads)
         return wrapper.output
 
     def __run_sequence_typing_mist(self, fasta_file: Path, db_key: str, db_path: Path) -> SequenceTypingOutput:
@@ -114,15 +142,15 @@ class MainSequenceTyping:
         :param db_path: Database directory path
         :return: None
         """
-        wrapper = SequenceTypingWrapper(self._args.working_dir)
+        wrapper = SequenceTypingWrapper(self._script_opts.working_dir)
         workflow_input = SequenceTypingInput(
-            sample_name=self._sample_name,
+            sample_name=self._script_in.name,
             fasta=ToolIOFile(fasta_file),
             input_type='fasta',
             db_path=db_path,
             db_key=db_key
         )
-        wrapper.run_workflow_mist(workflow_input, threads=self._args.threads)
+        wrapper.run_workflow_mist(workflow_input, threads=self._script_opts.threads)
         return wrapper.output
 
     def __run_sequence_typing_kma(self, fastq_input: FastqInput, db_key: str, db_path: Path) -> \
@@ -134,16 +162,16 @@ class MainSequenceTyping:
         :param db_path: Database path
         :return: None
         """
-        wrapper = SequenceTypingWrapper(self._args.working_dir)
+        wrapper = SequenceTypingWrapper(self._script_opts.working_dir)
         workflow_input = SequenceTypingInput(
-            fasta=ToolIOFile(self._args.fasta) if self._args.fasta else None,
-            sample_name=self._sample_name,
+            fasta=ToolIOFile(self._script_in.fasta) if self._script_in.fasta else None,
+            sample_name=self._script_in.name,
             fastq=fastq_input,
             db_key=db_key,
             db_path=db_path,
-            input_type=self._args.input_type,
+            input_type=self._script_in.type_.value,
         )
-        wrapper.run_workflow_kma(workflow_input, self._args.threads)
+        wrapper.run_workflow_kma(workflow_input, self._script_opts.threads)
         return wrapper.output
 
     def __export_output(self, output: SequenceTypingOutput, report: HtmlReport) -> None:
@@ -155,22 +183,40 @@ class MainSequenceTyping:
         self._helper.logs['typing'] = output.log_file
         self._helper.informs.extend(output.informs)
         self._helper.export_output_and_commands_section(report, output.report_section)
-        if self._args.output_tsv is not None:
+        if self._script_out.output_tsv is not None:
             if output.tsv is None:
                 raise ValueError("Cannot create TSV output for mixed schemes (DNA + peptide loci)")
-            shutil.copyfile(output.tsv, self._args.output_tsv)
+            shutil.copyfile(output.tsv, self._script_out.output_tsv)
 
 
-def run(args: Sequence[str] | None = None) -> None:
+@click.command(name='sequence_typing', short_help='Sequence typing (MLST, cgMLST, etc)')
+@basescriptutils.add_input_opts(supported=[model.InputType.FASTA, model.InputType.ILLUMINA, model.InputType.ONT])
+@cliutils.add_click_options_from_dataclass(Output)
+@cliutils.add_click_options_from_dataclass(Options)
+@inputhelper.add_helper_opts
+def main(**kwargs) -> None:
     """
-    Entry point for the common interface.
-    :param args: Command line arguments
+    Runs the script.
     :return: None
     """
-    script = MainSequenceTyping(args)
+    # Parse the script input
+    script_input = basescriptutils.parse_script_input(kwargs)
+    script_opts = Options(**cliutils.from_kwargs(Options, kwargs))
+
+    # Initialize the helper class to prepare the input
+    helper = helper_by_input_type[script_input.type_](dir_=script_opts.working_dir, name=script_input.name)
+    helper.set_opts(*helper.opts_from_cli(kwargs))
+
+    # Run the main script
+    script = MainSequenceTyping(
+        script_in=basescriptutils.parse_script_input(kwargs),
+        script_out=Output(**cliutils.from_kwargs(Output, kwargs)),
+        script_opts=script_opts,
+        helper=helper
+    )
     script.run()
 
 
 if __name__ == '__main__':
     initialize_logging()
-    run()
+    main()

@@ -18,7 +18,7 @@ rule spoligotyping_downsample:
         INFORMS_spoligo_param = 'spoligotyping/downsampling/informs-param.io'
     params:
         dir_ = 'spoligotyping/downsampling',
-        read_key = 'SE' if config['input_type'] == 'ont' else 'PE'
+        read_key = 'SE' if config['input']['type'] == 'ont' else 'PE'
     run:
         from camel.app.loggers import logger
         from camel.app.tools.seqtk.seqtksubsample import SeqtkSubsample
@@ -51,9 +51,9 @@ rule spoligotyping_spotyping:
     Runs the SpoTyping tool.
     """
     input:
-        FASTQ = rules.spoligotyping_downsample.output.FASTQ_PE if config['input_type'] == 'illumina' else [],
-        FASTA = assembly.OUTPUT_FASTA if config['input_type'] != 'illumina' else [],
-        INFORMS_spoligo_param = rules.spoligotyping_downsample.output.INFORMS_spoligo_param if config['input_type'] == 'illumina' else []
+        FASTQ = rules.spoligotyping_downsample.output.FASTQ_PE if config['input']['type'] == 'illumina' else [],
+        FASTA = assembly.OUTPUT_FASTA if config['input']['type'] != 'illumina' else [],
+        INFORMS_spoligo_param = rules.spoligotyping_downsample.output.INFORMS_spoligo_param if config['input']['type'] == 'illumina' else []
     output:
         VAL_type_binary = 'spoligotyping/spotyping/VAL_binary.io',
         VAL_type_octal = 'spoligotyping/spotyping/VAL_octal.io',
@@ -61,7 +61,7 @@ rule spoligotyping_spotyping:
         INFORMS = 'spoligotyping/spotyping/informs.io' # spoligotyping.OUTPUT_INFORMS
     params:
         dir_ = 'spoligotyping/spotyping',
-        key = 'FASTQ' if config['input_type'] == 'illumina' else 'FASTA'
+        key = 'FASTQ' if config['input']['type'] == 'illumina' else 'FASTA'
     run:
         from camel.app.tools.spotyping.spotyping import SpoTyping
         spotyping = SpoTyping()
@@ -87,13 +87,13 @@ rule spoligotyping_report:
         VAL_type_octal = rules.spoligotyping_spotyping.output.VAL_type_octal,
         LOG = rules.spoligotyping_spotyping.output.LOG,
         INFORMS_spotyping = rules.spoligotyping_spotyping.output.INFORMS,
-        INFORMS_spoligo_param = rules.spoligotyping_downsample.output.INFORMS_spoligo_param if config['input_type'] == 'illumina' else []
+        INFORMS_spoligo_param = rules.spoligotyping_downsample.output.INFORMS_spoligo_param if config['input']['type'] == 'illumina' else []
     output:
         VAL_HTML = 'spoligotyping/report/html.iob', # spoligotyping.OUTPUT_REPORT
         INFORMS = 'spoligotyping/report/informs-report.io'
     params:
         dir_ = 'spoligotyping/report',
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from camel.app.tools.spotyping.spotypingreporter import SpoTypingReporter
         reporter = SpoTypingReporter()
@@ -101,7 +101,7 @@ rule spoligotyping_report:
         keys = [k for k, path in input.items() if len(path) > 0]
         snakemakeutils.add_pickle_inputs(reporter, input, keys=keys)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
-        step.run_step()
+        step.run()
         snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule spoligotyping_report_empty:

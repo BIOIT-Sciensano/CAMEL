@@ -1,9 +1,10 @@
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.utils import vcfutils
-from camel.scripts.freebayes.mainfreebayes import MainFreebayesCalling
+from camel.scripts.freebayes.mainfreebayes import main
 
 
 class TestFreebayesMain(CamelTestSuite):
@@ -21,16 +22,15 @@ class TestFreebayesMain(CamelTestSuite):
         :return: None
         """
         output_file_vcf = self.running_dir / 'variants.vcf'
-        args = [
+        result = cliutils.invoke(main, [
             '--bam', str(self.FILE_BAM_ILLUMINA),
             '--reference', str(self.FILE_FASTA),
             '--working-dir', str(self.running_dir),
             '--output', str(output_file_vcf),
             '--ploidy', '1',
             '--standard-filters'
-        ]
-        main = MainFreebayesCalling(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(vcfutils.count_variants(output_file_vcf), 0)
 
 

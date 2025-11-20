@@ -45,7 +45,7 @@ class QuastReporter(Tool):
         Execute this tool.
         :return: None
         """
-        subtitle = ', '.join([self._input_informs['quast']['_name'], self._input_informs['busco']['_name']])
+        subtitle = ', '.join([self._input_informs['quast']['_name_full'], self._input_informs['busco']['_name_full']])
         section = HtmlReportSection('Assembly quality', subtitle=subtitle)
 
         # Parse QUAST input file

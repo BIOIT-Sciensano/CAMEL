@@ -76,7 +76,7 @@ rule typing_async:
         detection_method = lambda wildcards: wildcards.detection_method,
         locus_type = lambda wildcards: wildcards.locus_type,
         blastn_task = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme].get('blastn_task', 'megablast'),
-        read_type = 'PE' if config.get('input_type', 'illumina') == 'illumina' else 'SE'
+        read_type = 'PE' if config['input'].get('type', 'illumina') == 'illumina' else 'SE'
     threads: 8
     run:
         from camel.app.core.snakemake import snakepipelineutils
@@ -206,7 +206,7 @@ rule typing_export_tsv:
         TSV = 'typing/{scheme}/export_tsv/{locus_type}/tsv.io' # sequence_typing.OUTPUT_TSV
     params:
         dir_ = lambda wildcards: f'typing/{wildcards.scheme}/export_tsv/{wildcards.locus_type}',
-        output_filename = lambda wildcards: f"typing-{wildcards.scheme}-{wildcards.locus_type}-{config['sample_name']}.tsv"
+        output_filename = lambda wildcards: f"typing-{wildcards.scheme}-{wildcards.locus_type}-{config['input']['sample_name']}.tsv"
     run:
         from camel.app.tools.pipelines.sequence_typing.exporttsv import ExportTSV
         export_tsv = ExportTSV()
@@ -309,7 +309,7 @@ rule typing_create_report:
         VAL_HTML = 'typing/{scheme}/report/html.iob' # sequence_typing.OUTPUT_REPORT
     params:
         dir_ = lambda wildcards: f'typing/{wildcards.scheme}/report',
-        sample_name = config['sample_name'],
+        sample_name = config['input']['sample_name'],
         detection_method = lambda wildcards: sequence_typing.get_detection_method(config, wildcards.scheme, 'DNA'),
         config_data = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]
     run:

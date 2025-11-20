@@ -102,7 +102,7 @@ rule contamination_check_report:
     params:
         dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/report',
         input_format = lambda wildcards: wildcards.input_format,
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from camel.app.tools.pipelines.quality_checks.htmlreportercontamination import HtmlReporterContamination
         reporter = HtmlReporterContamination()
@@ -129,7 +129,7 @@ rule contamination_check_report_empty:
     params:
         dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/report',
         input_format = lambda wildcards: wildcards.input_format,
-        input_type = config['input_type']
+        input_type = config['input']['type']
     run:
         from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.quality_checks.htmlreportercontamination import HtmlReporterContamination
@@ -153,7 +153,7 @@ rule contamination_check_dump_summary_info:
         FILE = 'contamination_check/{input_format}/summary/summary_out.{ext}'
     params:
         dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/summary',
-        input_type = config['input_type'],
+        input_type = config['input']['type'],
         input_format = lambda wildcards: wildcards.input_format,
         allowed_species = config['contamination_check'].get('allowed_species', None),
         ext = lambda wildcards: wildcards.ext

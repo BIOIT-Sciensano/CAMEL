@@ -18,7 +18,7 @@ rule run_variant_calling_workflow:
         sample_name = lambda wildcards: wildcards.sample,
         sample_config = lambda wildcards: config['samples'][wildcards.sample]
     run:
-        from camel.app.scriptutils.fastqinput import FastqInput
+        from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.wrappers.variantcallingwrapper import VariantCallingWrapper
         fastq_input = FastqInput(
             'illumina',

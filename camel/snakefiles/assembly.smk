@@ -178,7 +178,8 @@ rule assembly_quast:
     input:
         FASTA = rules.assembly_filter_contig_length.output.FASTA
     output:
-        TSV = 'assembly/quast/tsv.io'
+        TSV = 'assembly/quast/tsv.io',
+        INFORMS = 'assembly/quast/informs.io',
     params:
         dir_ = 'assembly/quast'
     run:
@@ -194,11 +195,12 @@ rule assembly_quast_extract_informs:
     Extracts the information from the QUAST output file.
     """
     input:
-        TSV = rules.assembly_quast.output.TSV
+        TSV = rules.assembly_quast.output.TSV,
+        INFORMS_quast = rules.assembly_quast.output.INFORMS
     output:
-        INFORMS = 'assembly/quast/informs.io'
+        INFORMS = 'assembly/quast_extract/informs.io'
     params:
-        dir_ = 'assembly/quast'
+        dir_ = 'assembly/quast_extract'
     run:
         from camel.app.tools.quast.quastinformextractor import QuastInformExtractor
         quast_inform_extractor = QuastInformExtractor()
@@ -220,7 +222,7 @@ rule assembly_quast_report:
         VAL_HTML = 'assembly/report/html.iob'
     params:
         dir_ = 'assembly/report',
-        sample_name = config['sample_name']
+        sample_name = config['input']['sample_name']
     run:
         from camel.app.tools.pipelines.assembly.htmlreporterassembly import HtmlReporterAssembly
         from camel.app.core.io.tooliovalue import ToolIOValue

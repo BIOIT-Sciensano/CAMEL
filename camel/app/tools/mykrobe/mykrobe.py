@@ -42,15 +42,15 @@ class Mykrobe(Tool):
         """
         input_types = {'FASTQ_PE', 'FASTA', 'FASTQ_SE'}
 
-        super(Mykrobe, self)._check_input()
+        super()._check_input()
         if 'SPECIES' not in self._tool_inputs:
-            raise InvalidToolInputError("Species (i.e. 'sonnei', 'staph', 'tb' or 'typhi') needs "
-                                                 "to be specified")
+            raise InvalidToolInputError(
+                "Species (i.e. 'sonnei', 'staph', 'tb' or 'typhi') needs to be specified")
         if 'DIR' not in self._tool_inputs:
             raise InvalidToolInputError("Database path needs to be specified")
         if len(input_types.intersection(set(self._tool_inputs))) != 1:
-            raise InvalidToolInputError(f"One input type (i.e. 'FASTQ_PE', 'FASTA' or 'FASTQ_SE') is required "
-                                                 "and accepted")
+            raise InvalidToolInputError(
+                "One input type (i.e. 'FASTQ_PE', 'FASTA' or 'FASTQ_SE') is required and accepted")
 
     @staticmethod
     def __prepare_input_str(input_type: dict) -> str:

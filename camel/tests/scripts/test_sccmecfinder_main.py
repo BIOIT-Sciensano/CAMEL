@@ -1,8 +1,9 @@
 import json
 import unittest
 
+from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.sccmecfinder.mainsccmecfinder import MainSCCmecFinder
+from camel.scripts.sccmecfinder.mainsccmecfinder import main
 
 
 class TestSCCmecFinder(CamelTestSuite):
@@ -19,7 +20,7 @@ class TestSCCmecFinder(CamelTestSuite):
         :return: None
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(TestSCCmecFinder.input_fasta_file),
             '--input-type', 'fasta',
             '--output-html', str(output_file_report),
@@ -27,9 +28,8 @@ class TestSCCmecFinder(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--db-mec-genes', '/db/gene_detection/SCCmec_genes',
             '--profiles-mec-genes', '/db/pipelines/saureus/SCCmec_genes/profiles.yml'
-        ]
-        main = MainSCCmecFinder(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     def test_sccmecfinder_fasta_json_out(self) -> None:
@@ -39,7 +39,7 @@ class TestSCCmecFinder(CamelTestSuite):
         """
         output_file_report = self.running_dir / 'report' / 'report.html'
         output_json = self.running_dir / 'report' / 'informs.json'
-        args = [
+        result = cliutils.invoke(main, [
             '--fasta', str(TestSCCmecFinder.input_fasta_file),
             '--input-type', 'fasta',
             '--output-html', str(output_file_report),
@@ -48,9 +48,8 @@ class TestSCCmecFinder(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--db-mec-genes', '/db/gene_detection/SCCmec_genes',
             '--profiles-mec-genes', '/db/pipelines/saureus/SCCmec_genes/profiles.yml'
-        ]
-        main = MainSCCmecFinder(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
         with output_json.open() as handle:
             informs = json.load(handle)

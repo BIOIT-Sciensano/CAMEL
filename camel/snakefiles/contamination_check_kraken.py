@@ -17,9 +17,9 @@ def get_input(config: dict[str, Any]) -> str:
     :param config: Snakemake configuration
     :return: Path to the input file
     """
-    if config['input_type'] in ('illumina', 'ont', 'hybrid'):
+    if config['input']['type'] in ('illumina', 'ont', 'hybrid'):
         return 'fq_dict.io'
-    if config['input_type'] in ('fasta', 'fasta_with_vcf'):
+    if config['input']['type'] in ('fasta', 'fasta_with_vcf'):
         return assembly.OUTPUT_FASTA
     raise ValueError(f'Invalid input type: {config["input_type"]}')
 
@@ -30,7 +30,7 @@ def get_reports(config: dict[str, Any]) -> list[str]:
     :param config: Snakemake configuration
     :return: Report path(s)
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
 
     # PE reads
@@ -63,7 +63,7 @@ def get_summaries(config: dict[str, Any], ext: str) -> list[Path]:
     :param ext: Summary format (TSV / JSON)
     :return: Report path(s)
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
 
     # PE reads
@@ -86,7 +86,7 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     :param config: config
     :return: Path(s) to the Kraken informs
     """
-    input_type = config['input_type']
+    input_type = config['input']['type']
     paths = []
 
     # Kraken 2 is disabled -> return empty list
