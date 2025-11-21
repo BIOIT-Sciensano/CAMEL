@@ -1,7 +1,23 @@
-dependencies: [ ]
+dependencies: []
 parameters:
-  blastn_task: { default: false, mandatory: false, option: null, value: blastn }
-  detection_method: { default: true, mandatory: true, option: null, value: blast }
-  locus_type: { default: false, mandatory: true, option: null, value: DNA }
-  threads: { default: true, mandatory: true, option: null, value: 4 }
+  blastn_task:
+    default: false
+    mandatory: false
+    option: null
+    value: blastn
+  detection_method:
+    default: true
+    mandatory: true
+    option: null
+    value: blast
+  locus_type:
+    default: false
+    mandatory: true
+    option: null
+    value: DNA
+  threads:
+    default: true
+    mandatory: true
+    option: null
+    value: 4
 tool_command: null
