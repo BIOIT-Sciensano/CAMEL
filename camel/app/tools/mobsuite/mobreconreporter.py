@@ -121,7 +121,7 @@ class MOBReconReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('MOB-recon', subtitle=self._input_informs['mob_recon']['_name'])
+        section = HtmlReportSection('MOB-recon', subtitle=self._input_informs['mob_recon']['_name_full'])
         self._add_overview_table(section)
         if 'contig_report' in self._parameters:
             self._add_contig_report(section)
