@@ -31,7 +31,7 @@ class NcbiHumanReadScrubberReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('Human read removal', subtitle=self._input_informs['SCRUBBER']['_name'])
+        section = HtmlReportSection('Human read removal', subtitle=self._input_informs['SCRUBBER']['_name_full'])
         subject = 'read pairs' if self._parameters['input_format'].value == 'fastq_pe' else 'reads' if self._parameters['input_format'].value == 'fastq_se' else 'contigs'
         count_total = self._input_informs['SCRUBBER']['statistics']['count_total']
         count_removed = self._input_informs['SCRUBBER']['statistics']['count_removed']
