@@ -1,6 +1,6 @@
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Literal
 
 import yaml
 from pydantic import BaseModel
@@ -14,8 +14,10 @@ class CamelConfig(BaseModel):
     dir_temp: Optional[Path] = None
     dir_db: Path
     dir_error_logs: Path | None
+    dir_envs_pixi: Path | None
+    create_missing_envs: bool = False
     timestamp_format: str = '%Y-%d-%m %H:%M:%S'
-    dependency_service: str = 'lmod'
+    dependency_service: Literal['lmod', 'pixi'] = 'lmod'
     logging_fmt: str = '%(asctime)s - %(module)15s - %(levelname)7s - %(message)s'
     date_fmt: str = '%d/%m/%Y - %X'
     # Logging

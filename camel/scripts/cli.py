@@ -57,6 +57,16 @@ def register_dynamic_subcommands() -> None:
 
 register_dynamic_subcommands()
 
+@cli.command(name='install')
+@click.argument("yml", nargs=-1, type=click.Path(exists=True, path_type=Path))
+def install(yml: list[Path]) -> None:
+    """
+    Installs tool dependencies.
+    :param yml: Paths to YAML files to install.
+    :return: None
+    """
+    logger.info("Installing is not supported yet")
+
 
 if __name__ == '__main__':
     initialize_logging()

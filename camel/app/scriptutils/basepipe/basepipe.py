@@ -81,7 +81,7 @@ class BasePipe(BaseScript[ScriptInput, ScriptOutput, ScriptOptions], metaclass=a
             "output": self._script_out.to_dict(),
             "script_info": self.info(),
             "working_dir": str(self._script_opts.working_dir),
-            "read_trimming": {"method": self._script_opts.trimming_method}
+            "read_trimming": {"method": self._script_opts.trimming_method},
         }
 
     def run_snakefile(self, path_config: Path | str) -> None:

@@ -97,7 +97,8 @@ rule scrubbing_run_scrubber:
     Runs the NCBI human read scrubber on the input FASTQ, only accepts single gunzipped FASTQ files.
     """
     input:
-        FASTQ_SE = rules.scrubbing_select_input.output.FASTQ
+        FASTQ_SE = rules.scrubbing_select_input.output.FASTQ,
+        DB = config['read_scrubbing']['db'] if config['read_scrubbing'].get('db') is not None else []
     output:
         FASTQ_SCRUBBED = 'human_read_scrubbing/{input_format}/scrubbing/fastq_scrubbed.io',
         FASTQ_REMOVED = 'human_read_scrubbing/{input_format}/scrubbing/fastq_removed.io',
@@ -108,12 +109,14 @@ rule scrubbing_run_scrubber:
         export_removed_reads = config.get('read_scrubbing', {}).get('export_removed_reads'),
         is_interleaved = lambda wildcards: True if wildcards.input_format == 'fastq_pe' else False,
         input_type = config['input']['type']
-    threads: max(16, workflow.cores * 0.75)
+    threads: 8
     run:
         from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import NcbiHumanReadScrubber
 
         scrubber = NcbiHumanReadScrubber()
         step = Step(rule_name=str(rule), tool=scrubber, dir_=Path(str(params.running_dir)))
+
+        # Parameters
         scrubber.update_parameters(
             interleaved=bool(params.is_interleaved),
             outputfile='reads_kept.fastq',
@@ -124,7 +127,11 @@ rule scrubbing_run_scrubber:
                 export_human_reads=True,
                 outputfile_removed=outputfile_removed_reads
             )
-        snakemakeutils.add_pickle_inputs(scrubber, input)
+
+        # Add input files and run tool
+        snakemakeutils.add_pickle_input(scrubber, 'FASTQ_SE', Path(input.FASTQ_SE))
+        if len(input.DB) > 0:
+            scrubber.add_input_files({'DB': [ToolIOFile(Path(input.DB))]})
         step.run()
 
         # Informs for hybrid input

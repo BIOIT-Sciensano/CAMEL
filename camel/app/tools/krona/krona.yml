@@ -1,5 +1,18 @@
-dependencies: [krona/2.7]
+conda:
+  name: krona
+  packages:
+    - krona=2.7
+dependencies:
+  - krona/2.7
 parameters:
-  depth: {default: false, mandatory: false, option: -d, value: '10'}
-  no_rank: {default: true, mandatory: false, option: -k, value: null}
+  depth:
+    default: false
+    mandatory: false
+    option: '-d'
+    value: '10'
+  no_rank:
+    default: true
+    mandatory: false
+    option: '-k'
+    flag: true
 tool_command: ktImportTaxonomy

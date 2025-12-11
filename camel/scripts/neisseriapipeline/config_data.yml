@@ -50,11 +50,11 @@ confindr:
   db: /db/confindr/0.8.1
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: { K2_DB }
   expected_species: Neisseria meningitidis
 
 downsampling:
-  coverage_max: {COV_MAX}
+  coverage_max: { COV_MAX }
 
 gmats:
   db: /db/pipelines/neisseria/gMATS_DB.txt
@@ -63,7 +63,7 @@ mendevar:
   db: /db/pipelines/neisseria/mendevar_DB.txt
 
 quality_checks:
-  typing_scheme: {QC_SCHEME}
+  typing_scheme: { QC_SCHEME }
 
 read_scrubbing: {{}}
 

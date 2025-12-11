@@ -28,8 +28,17 @@ class Krona(Tool):
         :return: None
         """
         output_path = self.folder / 'krona_out.html'
-        self._command.command = 'cut -f2,3 {} | {} {} -o {} -'.format(
-            self._tool_inputs['TSV'][0].path, self._tool_command, ' '.join(self._build_options()), str(output_path))
+        parts = [
+            f'cut -f2,3 {self._tool_inputs["TSV"][0].path}',
+            '|',
+            self._tool_command,
+            *self._build_options(),
+            f'-o {output_path}',
+            '-'
+        ]
+        if 'DB' in self._tool_inputs:
+            parts.append(f'-tax {self._tool_inputs["DB"][0].path}')
+        self._command.command = ' '.join(parts)
         self._execute_command()
         self._tool_outputs['HTML'] = [ToolIOFile(output_path)]
 

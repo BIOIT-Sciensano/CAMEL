@@ -1,5 +1,9 @@
+conda:
+  name: mist
+  packages:
+    - mist_typing=1.0.0
 dependencies:
-  - mist/0.0.4
+  - mist/1.0.0
   - minimap2/2.26
 parameters:
   threads:

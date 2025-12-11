@@ -7,7 +7,11 @@ from collections import OrderedDict
 import pydantic
 import yaml
 
+from camel.app.config import config
+from camel.app.core import errors
 from camel.app.core.command import Command
+from camel.app.core.dependency import service_by_key
+from camel.app.core.dependency.basedependencyservice import BaseDependencyService
 from camel.app.core.utils import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.errors import InvalidParameterError
@@ -38,6 +42,7 @@ class Tool(metaclass=abc.ABCMeta):
         tool_data = self._read_tool_yml()
         self._tool_command = tool_data['tool_command']
         self._dependencies = tool_data['dependencies']
+        self._tool_data = tool_data
 
         # Command & directory
         self._command = Command()
@@ -157,6 +162,14 @@ class Tool(metaclass=abc.ABCMeta):
         """
         return self._folder
 
+    @property
+    def tool_data(self) -> dict[str, Any]:
+        """
+        Returns the tool data (parsed from the YAML file).
+        :return: tool data
+        """
+        return self._tool_data
+
     def add_input_files(self, input_files: dict[str, list[ToolIO]]) -> None:
         """
         Updates the input files for a tool.
@@ -251,6 +264,7 @@ class Tool(metaclass=abc.ABCMeta):
         Builds the dependencies.
         :return: Command to load dependencies
         """
+        logger.warning('This method is deprecated, use the dependency service instead.')
         return '' if len(self._dependencies) == 0 else 'module load {}; '.format(' '.join(self._dependencies))
 
     def _build_options(self, excluded_parameters: list[str] = None, delimiter: str = ' ') -> list[str]:
@@ -271,12 +285,15 @@ class Tool(metaclass=abc.ABCMeta):
                 options.append(parameter.option + delimiter + str(parameter.value))
         return options
 
-    def _execute_command(self, command: Command | None = None, dir_: Path | None = None, is_version_cmd: bool = False) -> None:
+    def _execute_command(
+            self, command: Command | None = None, dir_: Path | None = None, is_version_cmd: bool = False,
+            env: dict[str, str] | None = None) -> None:
         """
         Executes the given command.
         :param command: Command to execute. Defaults to self._command.
         :param dir_: Directory in which to execute the command.
         :param is_version_cmd: Boolean to indicate is this is a version command
+        :param env: Environment variables to set before executing the command
         :return: None
         """
         # Setup command
@@ -289,10 +306,31 @@ class Tool(metaclass=abc.ABCMeta):
         if dir_ is None:
             dir_ = self._folder if not is_version_cmd else Path.cwd()
 
+        # Load the dependencies
+        service: BaseDependencyService = service_by_key[config.dependency_service]()
+        is_available = service.is_available(self._tool_data)
+        if not is_available:
+            # Create environment if it is missing
+            if config.create_missing_envs:
+                logger.info(f"Create environment from: {self.get_tool_data_path()}")
+                service.setup_environment(self._tool_data)
+                if not service.is_available(self._tool_data):
+                    raise errors.DependencyError(f"Failed to set up environment for {self.get_tool_data_path()}")
+            else:
+                logger.info(f"Create environment for: {self.get_tool_data_path()}")
+                raise errors.DependencyError(f"Missing environment for {self.name_full}")
+
+        # Try to load it
+        try:
+            command.command = service.load_environment(command, self._tool_data)
+        except BaseException as err:
+            logger.warning(f'Error loading dependencies for {self.name_full}: {err}')
+            raise
+
         # Execute the command
         if not is_version_cmd:
-            self._informs['_command'] = self._build_dependencies() + command.command
-        command.run(dir_, prefix=self._build_dependencies())
+            self._informs['_command'] = command.command
+        command.run(dir_, env=env)
         self._check_command_output(command)
 
     def _check_command_output(self, command: Command) -> None:

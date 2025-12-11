@@ -1,3 +1,7 @@
+conda:
+  name: ncbi_amrfinder
+  packages:
+    - ncbi-amrfinderplus=4.0.23-0
 dependencies:
   - amrfinder/4.0.19
   - blast/2.16.0

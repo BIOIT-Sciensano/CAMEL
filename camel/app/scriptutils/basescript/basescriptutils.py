@@ -263,4 +263,5 @@ def parse_script_opts(kwargs) -> ScriptOptions:
         ),
         cov_max=kwargs["cov_max"],
         threads=kwargs.get("threads", 1),
+        kraken2_small_db=kwargs["kraken2_small_db"],
     )

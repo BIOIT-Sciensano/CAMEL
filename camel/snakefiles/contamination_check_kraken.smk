@@ -75,7 +75,8 @@ rule contamination_check_krona:
     Creates an interactive pie chart displaying the Kraken output.
     """
     input:
-        TSV = rules.contamination_check_kraken2_run.output.TSV
+        TSV = rules.contamination_check_kraken2_run.output.TSV,
+        DB = config['contamination_check'].get('db', [])
     output:
         HTML = 'contamination_check/{input_format}/krona/html.iob'
     params:
@@ -83,7 +84,9 @@ rule contamination_check_krona:
     run:
         from camel.app.tools.krona.krona import Krona
         krona = Krona()
-        snakemakeutils.add_pickle_inputs(krona, input)
+        snakemakeutils.add_pickle_input(krona, 'TSV', Path(input.TSV))
+        if len(input.DB) > 0:
+            krona.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
         step = Step(rule_name=str(rule), tool=krona, dir_=Path(str(params.dir_)))
         step.run()
         snakemakeutils.dump_tool_outputs(krona, output)

@@ -1,3 +1,7 @@
+conda:
+  name: bowtie2
+  packages:
+    - bowtie2=2.5.1
 dependencies:
   - bowtie2/2.5.1
 parameters:

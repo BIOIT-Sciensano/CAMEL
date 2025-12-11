@@ -1,3 +1,7 @@
+conda:
+  name: samtools
+  packages:
+    - samtools=1.17
 dependencies:
   - samtools/1.17
 parameters:

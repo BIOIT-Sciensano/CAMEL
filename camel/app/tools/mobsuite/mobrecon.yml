@@ -1,3 +1,8 @@
+conda:
+  name: mob_suite
+  packages:
+    - mob_suite=3.1.8
+    - pandas<1.5.0
 dependencies:
   - mob_suite/3.1.8
   - blast/2.14.0

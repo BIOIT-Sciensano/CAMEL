@@ -82,8 +82,8 @@ class TestYersiniaPipeline(CamelTestSuite):
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
         result = cliutils.invoke(main, [
-            '--fastq-pe', 
-            str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]), 
+            '--fastq-pe',
+            str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]),
             str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
             '--input-type', 'illumina',
             '--output-html', str(path_report_out),
@@ -182,6 +182,7 @@ class TestYersiniaPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst')),
+            '--kraken2-small-db',
             '--threads', '4'
         ])
         self.assertEqual(result.exit_code, 0)

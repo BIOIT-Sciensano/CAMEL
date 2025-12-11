@@ -1,3 +1,7 @@
+conda:
+  name: busco
+  packages:
+    - busco=5.5.0
 dependencies:
   - busco/5.5.0
   - bbtools/39.15

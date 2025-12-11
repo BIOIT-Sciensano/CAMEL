@@ -3,8 +3,9 @@ from typing import Optional
 
 class InvalidToolInputError(BaseException):
     """
-    Error that is raised when the input to a tool is invalid.
+    Error that is0 raised when the input to a tool is invalid.
     """
+
     pass
 
 class ToolExecutionError(RuntimeError):
@@ -24,12 +25,14 @@ class InvalidParameterError(ValueError):
     """
     This is raised when an invalid parameter is supplied to a tool.
     """
+
     pass
 
 class PipelineExecutionError(Exception):
     """
     Error that is raised when a pipeline cannot execute successfully.
     """
+
     pass
 
 
@@ -48,3 +51,10 @@ class SnakemakeExecutionError(RuntimeError):
         self.stdout = stdout
         self.stderr = stderr
         self.failed_rule = failed_rule
+
+class DependencyError(ValueError):
+    """
+    Error that is raised when a dependency is not available..
+    """
+
+    pass

@@ -1,3 +1,7 @@
+conda:
+  name: fastp
+  packages:
+    - fastp=0.23.4
 dependencies:
   - fastp/0.23.4
 parameters:

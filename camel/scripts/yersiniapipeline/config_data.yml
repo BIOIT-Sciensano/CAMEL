@@ -39,7 +39,7 @@ downsampling:
   coverage_max: {COV_MAX}
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: {K2_DB}
   expected_species: 'Yersinia'
   level_of_depth: G
 
@@ -65,7 +65,8 @@ resfinder4:
   db: /db/resfinder4
 
 read_trimming: {{}}
-read_scrubbing: {{}}
+read_scrubbing:
+  db: /db/ncbi_human_read_scrubber/human_filter.db
 species_determination:
   tsv: /db/pipelines/yersinia/cgMLST_taxonomic.tsv
 

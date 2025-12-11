@@ -29,7 +29,7 @@ class NcbiHumanReadScrubber(Tool):
         """
         with tempfile.TemporaryDirectory(prefix='hrrt_', dir=config.dir_temp) as dir_temp:
             self.__build_command(Path(dir_temp))
-            self._execute_command()
+            self._execute_command(env={'TMPDIR': dir_temp})
             self._parse_stderr()
             self.__set_output()
 
@@ -50,12 +50,13 @@ class NcbiHumanReadScrubber(Tool):
         :return: None
         """
         parts = [
-            f'export TMPDIR={dir_temp};',
             self._tool_command,
             *self._build_options(excluded_parameters=['interleaved', 'export_human_reads', 'outputfile_removed']),
             self._parameters['interleaved'].option if 'interleaved' in self._parameters else '',
             '-i', str(self._tool_inputs['FASTQ_SE'][0].path)
         ]
+        if 'DB' in self._tool_inputs:
+            parts.extend(['-d', str(self._tool_inputs['DB'][0].path)])
         if 'export_human_reads' in self._parameters:
             parts.extend([
                 self._parameters['export_human_reads'].option,

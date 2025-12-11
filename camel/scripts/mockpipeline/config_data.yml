@@ -50,6 +50,8 @@ gene_detection:
     method: blast
 
 read_trimming: {{}}
+read_scrubbing:
+  db: /db/ncbi_human_read_scrubber/human_filter.db
 
 variant_calling:
   ploidy: 1

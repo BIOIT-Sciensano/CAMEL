@@ -1,3 +1,7 @@
+conda:
+  name: quast
+  packages:
+    - quast=5.2.0
 dependencies:
   - quast/5.2.0
   - bedtools/2.31.0

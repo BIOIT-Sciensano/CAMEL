@@ -1,3 +1,8 @@
+conda:
+  name: resfinder
+  packages:
+    - python=3.12
+    - resfinder=4.4.2
 dependencies:
   - resfinder/4.4.2
   - blast/2.14.0

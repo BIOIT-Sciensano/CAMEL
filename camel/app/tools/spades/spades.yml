@@ -1,3 +1,8 @@
+conda:
+  name: spades
+  packages:
+    - spades=3.15.5
+    - python=3.10
 dependencies:
   - SPAdes/3.15.5
 parameters:

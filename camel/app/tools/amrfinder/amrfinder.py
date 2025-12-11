@@ -48,13 +48,12 @@ class AMRFinder(Tool):
         output_path = Path(self.folder) / Path(self._parameters['output_path'].value)
         dir_temp = config.dir_temp
         self._command.command = ' '.join([
-            f'export TMPDIR={dir_temp} &&',
             self._tool_command,
             '--nucleotide', str(self._tool_inputs['FASTA'][0].path),
             '--database', str(self._tool_inputs['DIR'][0].path),
             str(self._parameters['output_path'].option), str(output_path)
         ] + self._build_options(['output_path']))
-        self._execute_command()
+        self._execute_command(env={'TMPDIR': str(dir_temp)})
         self._tool_outputs['TSV'] = [ToolIOFile(output_path)]
         self._informs['db_version'] = self._tool_inputs['DIR'][0].path.resolve().name
 

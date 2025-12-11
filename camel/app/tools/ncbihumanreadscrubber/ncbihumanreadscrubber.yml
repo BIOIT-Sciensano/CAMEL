@@ -1,3 +1,7 @@
+conda:
+  name: ncbi_hrrt
+  packages:
+    - sra-human-scrubber=2.2.1
 dependencies:
   - ncbi-sra-human-scrubber/2.2.1
 parameters:
@@ -25,7 +29,7 @@ parameters:
     default: true
     mandatory: false
     option: '-x'
-    value: null
+    flag: true
   threads:
     default: true
     mandatory: false

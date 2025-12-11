@@ -5,6 +5,7 @@ from camel.app.core.utils import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class KMA(Tool):
@@ -17,7 +18,7 @@ class KMA(Tool):
         """
         Initializes this tool.
         """
-        super().__init__('KMA', '1.4.12a')
+        super().__init__('KMA', None)
 
     def _check_input(self) -> None:
         """
@@ -29,6 +30,15 @@ class KMA(Tool):
         if 'DB' not in self._tool_inputs:
             raise InvalidToolInputError('DB input is required')
         super()._check_input()
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command} -v')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split('-')[-1].strip()
 
     def _execute_tool(self) -> None:
         """

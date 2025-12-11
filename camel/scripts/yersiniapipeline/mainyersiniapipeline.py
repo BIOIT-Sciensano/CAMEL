@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import dataclasses
+from pathlib import Path
 
 import click
 import yaml
 
+from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
@@ -83,7 +85,11 @@ class MainYersiniaPipeline(BasePipe):
             yaml_text = handle.read()
         yaml_text = yaml_text.format(
             COV_MAX=self._script_opts.cov_max,
-            QC_SCHEME='cgmlst' if 'cgmlst' in  self._opts_custom.analyses else 'mlst'
+            QC_SCHEME='cgmlst' if 'cgmlst' in  self._opts_custom.analyses else 'mlst',
+            K2_DB=str({
+                'small': Path(config.dir_db, '/scratch/bebog/camel_dbs/kraken2/k2_standard_08_20251015'), # TODO FIX!
+                'full': Path(config.dir_db, 'kraken2_microbial', 'latest')
+            }['small' if self._script_opts.kraken2_small_db else 'full'])
         )
         data_template = yaml.safe_load(yaml_text)
         self._script_out.dir.mkdir(parents=True, exist_ok=True)
@@ -91,6 +97,8 @@ class MainYersiniaPipeline(BasePipe):
         # Add the base config data
         config_data = self.get_config_data()
         config_data['analyses'] = self._opts_custom.analyses
+        if 'cgmlst' in self._opts_custom.analyses:
+            config_data['analyses'].append('species')
         config_data['sequence_typing'] = {'options': {'method': self._script_opts.detection_method}}
         config_data['gene_detection'] = {'options': {'method': self._script_opts.detection_method}}
         basepipeutils.dict_merge(config_data, data_template)

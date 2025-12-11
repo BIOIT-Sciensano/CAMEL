@@ -54,3 +54,6 @@ class ScriptOptions(BaseOptions):
         default=False,
         metadata={"help": "Save logs to the directory specified in the config file"},
     )
+    kraken2_small_db: bool = dataclasses.field(
+        default=False, metadata={"help": "Use the small K2 database"}
+    )

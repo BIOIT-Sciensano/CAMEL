@@ -1,3 +1,7 @@
+conda:
+  name: art
+  packages:
+    - art>=2016.06.05
 dependencies:
   - art/2.5.8
 parameters:

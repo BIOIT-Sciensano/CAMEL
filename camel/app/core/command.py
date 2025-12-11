@@ -1,5 +1,7 @@
+import os
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from camel.app.loggers import logger
 
@@ -69,13 +71,15 @@ class Command:
         """
         self._command = cmd
 
-    def run(self, folder: Path, stderr_handle=subprocess.PIPE, disable_logging: bool = False, prefix: str | None = None) -> None:
+    def run(self, folder: Path, stderr_handle=subprocess.PIPE, disable_logging: bool = False, prefix: str | None = None,
+            env: dict[str, Any] | None = None) -> None:
         """
         Runs the command given at command initialization
         :param folder: Folder where the command is executed
         :param stderr_handle: Handle for the standard error (e.g. PIPE or STDOUT)
         :param disable_logging: If True, logging is disabled
         :param prefix: If given, this prefix will be added to the commands
+        :param env: Environment variables to be set for the command
         :return: None
         """
         command_str = self._command if prefix is None else f'{prefix}{self._command}'
@@ -89,6 +93,7 @@ class Command:
             stderr=stderr_handle,
             shell=True,
             executable='/bin/bash',
+            env={**os.environ, **env} if env is not None else None,
             cwd=folder,
             text=True)
         self._stdout = self._procedure.stdout or ''
