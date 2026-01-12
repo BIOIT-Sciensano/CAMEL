@@ -1,3 +1,7 @@
+conda:
+  name: shigatyper
+  packages:
+    - shigatyper=2.0.5
 dependencies:
   - shigatyper/2.0.5
 parameters:
@@ -5,5 +9,5 @@ parameters:
     default: false
     mandatory: false
     option: '--ont'
-    value: null
+    flag: true
 tool_command: shigatyper

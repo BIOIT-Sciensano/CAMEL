@@ -4,6 +4,7 @@ PyVCF3
 biopython
 bs4
 click
+furl
 humanize
 matplotlib==3.10.1
 openpyxl
@@ -12,6 +13,7 @@ plotnine
 pydantic
 pydotplus
 pysam
+pytest
 scipy
 snakemake
 typing-extensions

@@ -7,8 +7,8 @@ from pathlib import Path
 from camel.app.config import config
 from camel.app.core.reports.htmlreport import HtmlReport
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 from camel.resources import CSS_STYLE
 
 
@@ -42,7 +42,7 @@ class CamelTestSuite(unittest.TestCase):
             raise FileNotFoundError(f"Cannot find reference file directory: {dir_ref}")
         return dir_ref
 
-    def setUp(self):
+    def setUp(self) -> None:
         """
         Sets up the resources before running the test.
         :return: None

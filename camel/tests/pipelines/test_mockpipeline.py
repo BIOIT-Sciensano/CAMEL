@@ -32,7 +32,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--trimming-method', 'trimmomatic',
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'ncbi-amr,human-read-scrubbing',
             '--threads', '8'
         ])
@@ -56,7 +57,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-fasta', str(path_fasta_out),
             '--working-dir', str(self.running_dir),
             '--trimming-method', 'fastp',
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'ncbi-amr,human-read-scrubbing',
             '--threads', '8'
         ])
@@ -81,7 +83,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-json', str(path_json_out),
             '--working-dir', str(self.running_dir),
             '--trimming-method', 'fastp',
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'ncbi-amr,human-read-scrubbing',
             '--threads', '8'
         ])
@@ -103,7 +106,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'kma',
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
             '--analyses', 'ncbi-amr',
             '--threads', '8'
         ])
@@ -125,7 +129,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'ncbi-amr,confindr',
             '--threads', '8',
         ])
@@ -148,7 +153,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'ncbi-amr',
             '--threads', '8',
         ])
@@ -171,7 +177,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'ncbi-amr,human-read-scrubbing',
             '--ont-min-qual', '11',
             '--ont-min-length', '750',
@@ -196,7 +203,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
             '--threads', '8',
         ])
@@ -218,7 +226,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
             '--threads', '8',
         ])
@@ -241,7 +250,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
             '--threads', '8',
         ])
@@ -264,7 +274,8 @@ class TestMockPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
             '--threads', '8',
         ])

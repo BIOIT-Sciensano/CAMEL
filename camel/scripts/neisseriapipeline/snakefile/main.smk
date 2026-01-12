@@ -71,6 +71,7 @@ rule report_create_command_section:
         INFORMS_vaccine = sequence_typing.OUTPUT_INFORMS.format(scheme='vaccine_targets') if 'vaccine_targets' in config['analyses'] else [],
         INFORMS_fhbp = sequence_typing.OUTPUT_INFORMS.format(scheme='fhbp') if 'fhbp' in config['analyses'] else [],
         INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else [],
+        INFORMS_cgmlst_v3 = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_v3') if 'cgmlst_v3' in config['analyses'] else [],
         INFORMS_serogroup = serogroup_determination.OUTPUT_INFORMS if 'serogroup' in config['analyses'] else []
     output:
         HTML = 'report/html-commands.iob'
@@ -127,6 +128,7 @@ rule combine_reports:
         # Sequence typing
         report_mlst = sequence_typing.get_sequence_typing_report('mlst', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
+        report_cgmlst_v3 = sequence_typing.get_sequence_typing_report('cgmlst_v3', config),
         report_pora = sequence_typing.get_sequence_typing_report('pora', config),
         report_porb = sequence_typing.get_sequence_typing_report('porb', config),
         report_feta = sequence_typing.get_sequence_typing_report('feta', config),
@@ -147,7 +149,7 @@ rule combine_reports:
         output_dir = config['output']['dir'],
         pipeline_info = config['script_info'],
         input_dict = config['input'],
-        detection_method = config['gene_detection']['options']['method'],
+        typing_method = config['sequence_typing']['options']['method'],
         citation_keys = config['citations']
     run:
         import datetime
@@ -164,7 +166,7 @@ rule combine_reports:
             pipeline_version=params.pipeline_info['version'],
             input_files=script_input.input_str,
             input_type=script_input.type_.value,
-            detection_method=params.detection_method,
+            extra_data=[('Typing method', params.typing_method)],
             key_citation=params.citation_keys['main'],
         ))
 
@@ -186,7 +188,8 @@ rule combine_reports:
                 input.report_amrfinder, input.report_resfinder4)]),
             ('Sequence typing', 'st', [Path(x) for x in (
                 input.report_mlst, input.report_rplf, input.report_pora, input.report_porb, input.report_feta,
-                input.report_resistance_genes, input.report_vaccine_targets, input.report_fhbp, input.report_cgmlst)]),
+                input.report_resistance_genes, input.report_vaccine_targets, input.report_fhbp, input.report_cgmlst,
+                input.report_cgmlst_v3)]),
             ('Antigen typing', 'at', [Path(x) for x in (input.report_bast, input.report_gmats, input.report_mendevar)]),
             ('Serogroup determination', 'serogroup', [Path(
                 input.report_serogroup), Path(input.report_serogroup_legacy)]),
@@ -222,6 +225,7 @@ rule combine_summary_files:
         lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='resistance_genes', ext=wildcards.ext) if 'resistance_genes' in config['analyses'] else [],
         lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='vaccine_targets', ext=wildcards.ext) if 'vaccine_targets' in config['analyses'] else [],
         lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst_v3', ext=wildcards.ext) if 'cgmlst_v3' in config['analyses'] else [],
         gmats.OUTPUT_SUMMARY if 'gmats' in config['analyses'] else [],
         mendevar.OUTPUT_SUMMARY if 'mendevar' in config['analyses'] else [],
         serogroup_determination.OUTPUT_SUMMARY if 'serogroup' in config['analyses'] else []

@@ -1,11 +1,15 @@
 import abc
+import dataclasses
+import sys
 from pathlib import Path
 from typing import Any, TypeVar
 
 import click
 
 from camel.app.core.utils import fastautils
+from camel.app.dbs.dbutils import DBEntry
 from camel.app.scriptutils.basepipe import basepipeutils
+from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
@@ -139,3 +143,42 @@ class BasePipe(BaseScript[ScriptInput, ScriptOutput, ScriptOptions], metaclass=a
         """
         basepipeutils.prepare_galaxy_output(self._script_out.dir, self._script_out.html)
         super()._execute()
+
+    def check_dbs(self, data_template: dict) -> None:
+        """
+        Checks if the required databases are available.
+        :param data_template: Template data
+        :return: None
+        """
+        dbs = {key: DBEntry(**data) for key, data in data_template['dbs'].items()}
+        if not basescriptutils.check_dbs(dbs):
+            logger.info("Essential databases are missing, aborting pipeline")
+            sys.exit(1)
+
+    def prepare_input(self) -> None:
+        """
+        Prepares the script input by creating symlinks.
+        :return: None
+        """
+        # Create the directory for the symlinks
+        dir_links = self._script_opts.working_dir / 'input'
+        dir_links.mkdir(parents=True, exist_ok=True)
+
+        to_replace = {}
+        for key, path, link_name in self._script_in.get_symlinks():
+            # Create the symlink
+            path_link_out = dir_links / link_name
+            if path_link_out.is_symlink():
+                logger.debug(f'Symlink already exists: {path_link_out}')
+            else:
+                ((dir_links / link_name).absolute()).symlink_to(path.resolve().absolute())
+
+            # Save the updated path
+            if key not in to_replace:
+                to_replace[key] = path_link_out
+            else:
+                to_replace[key] = [to_replace[key], path_link_out]
+
+        # Update the script input
+        script_in_updated = dataclasses.replace(self._script_in, **to_replace)
+        self._script_in = script_in_updated

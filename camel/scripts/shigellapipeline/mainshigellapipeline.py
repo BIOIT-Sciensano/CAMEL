@@ -4,6 +4,7 @@ import dataclasses
 import click
 import yaml
 
+from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
@@ -64,9 +65,9 @@ class MainShigellaPipeline(BasePipe):
         :return: None
         """
         super().__init__(
-            name='Shigella pipeline pipeline',
+            name='Shigella pipeline',
             title='<i>Shigella</i> pipeline',
-            version='1.2',
+            version='1.3.0',
             script_in=in_,
             script_out=out,
             opts=opts,
@@ -84,6 +85,7 @@ class MainShigellaPipeline(BasePipe):
             yaml_text = handle.read()
         yaml_text = yaml_text.format(
             COV_MAX=self._script_opts.cov_max,
+            DB_ROOT=config.dir_db,
             QC_SCHEME='cgmlst' if 'cgmlst' in  self._opts_custom.analyses else 'mlst_warwick',
             EXPORT_BAM=self._script_opts.include_bam
         )
@@ -93,8 +95,8 @@ class MainShigellaPipeline(BasePipe):
         # Add the base config data
         config_data = self.get_config_data()
         config_data['analyses'] = self._opts_custom.analyses
-        config_data['sequence_typing'] = {'options': {'method': self._script_opts.detection_method}}
-        config_data['gene_detection'] = {'options': {'method': self._script_opts.detection_method}}
+        config_data['sequence_typing'] = {'options': {'method': self._script_opts.typing_method}}
+        config_data['gene_detection'] = {'options': {'method': self._script_opts.gene_detection_method}}
         basepipeutils.dict_merge(config_data, data_template)
         path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
 
@@ -114,9 +116,7 @@ def main(**kwargs) -> None:
     script_input = basescriptutils.parse_script_input(kwargs)
     script_out = basescriptutils.parse_script_output(kwargs)
     script_opts = basescriptutils.parse_script_opts(kwargs)
-    custom_opts = Options(
-        analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
-    )
+    custom_opts = Options(analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [])
     pipeline = MainShigellaPipeline(script_input, script_out, script_opts, custom_opts)
     pipeline.run()
 

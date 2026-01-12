@@ -1,3 +1,80 @@
+#############
+# Databases #
+#############
+dbs:
+  ampc:
+    location: &db_ampc {DB_ROOT}/pipelines/yersinia/gene_detection-ampc
+    required: false
+    method: ftp
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  mobsuite:
+    location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  taxonomic:
+    location: &db_taxonomic {DB_ROOT}/pipelines/yersinia/cgMLST_taxonomic.tsv
+    is_file: true
+    required: false
+    method: ftp
+  typing_cgmlst_enterobase:
+    location: &db_typing_cgmlst_enterobase {DB_ROOT}/sequence_typing/yersinia/cgmlst_enterobase
+    required: false
+    method: mist
+  typing_cgmlst_ye:
+    location: &db_typing_cgmlst_ye {DB_ROOT}/sequence_typing/yersinia/cgmlst_yersinia_enterocolitica
+    required: false
+    method: mist
+  typing_cgmlst_yersinia_spp:
+    location: &db_typing_cgmlst_yersinia_spp {DB_ROOT}/sequence_typing/yersinia/cgmlst_yersinia_spp
+    required: false
+    method: mist
+  typing_cgmlst_yp:
+    location: &db_typing_cgmlst_yp {DB_ROOT}/sequence_typing/yersinia/cgmlst_yersinia_pseudotuberculosis
+    required: false
+    method: mist
+  typing_mlst_achtman:
+    location: &db_typing_mlst_achtman {DB_ROOT}/sequence_typing/yersinia/mlst_achtman
+    is_file: false
+    method: mist
+  typing_mlst_mcnally:
+    location: &db_typing_mlst_mcnally {DB_ROOT}/sequence_typing/yersinia/mlst_mcnally
+    is_file: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+  vfdb_core:
+    location: &db_vfdb_core {DB_ROOT}/gene_detection/VFDB_core
+    required: false
+    method: ftp
+
 ####################
 # Pipeline options #
 ####################
@@ -27,13 +104,13 @@ citations:
 # Reference genome #
 ####################
 reference:
-  name: <i>Neisseria meningitidis</i> (NZ_CP021520.1)
-  fasta: /db/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.fasta
-  gff3: /db/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.gff3
+  name: <i>Y. enterolitica</i> NW56 (GCF_025758635.1)
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_025758635.1/
 
 #########################
-# Tool specific options #
+# Tool-specific options #
 #########################
 downsampling:
   coverage_max: {COV_MAX}
@@ -52,37 +129,39 @@ assembly:
   min_contig_length: 1000
 
 amrfinder:
-  db: /db/amrfinder/v4/latest
+  db: *db_amrfinder
 
 mob_suite:
-  db: /db/mob_suite/latest
+  db: *db_mobsuite
 
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 resfinder4:
   point: False
-  db: /db/resfinder4
+  db: *db_resfinder4
 
 read_trimming: {{}}
-read_scrubbing:
-  db: /db/ncbi_human_read_scrubber/human_filter.db
-species_determination:
-  tsv: /db/pipelines/yersinia/cgMLST_taxonomic.tsv
 
-############################
-# Gene detection databases #
-############################
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
+
+species_determination:
+  tsv: *db_taxonomic
+
+##################
+# Gene detection #
+##################
 gene_detection:
   dbs:
     vfdb_core:
-      path: /db/gene_detection/VFDB_core
+      path: *db_vfdb_core
       metadata:
         name: Gene
         key: gene
       hidden: true
     ampc:
-      path: /db/pipelines/yersinia/gene_detection-ampc
+      path: *db_ampc
       params:
         blastn:
           min_percent_identity: 95
@@ -100,22 +179,22 @@ gene_detection:
 sequence_typing:
   dbs:
     cgmlst:
-      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_spp'
+      path: *db_typing_cgmlst_yersinia_spp
       detection_method: blast
       write_all_matches: True
     mlst:
-      path: '/db/sequence_typing/yersinia/mlst_achtman'
+      path: *db_typing_mlst_achtman
     mlst_mcnally:
-      path: '/db/sequence_typing/yersinia/mlst_mcnally'
+      path: *db_typing_mlst_mcnally
     cgmlst_ye:
-      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_enterocolitica'
+      path: *db_typing_cgmlst_ye
       detection_method: blast
     cgmlst_yp:
-      path: '/db/sequence_typing/yersinia/cgmlst_yersinia_pseudotuberculosis'
+      path: *db_typing_cgmlst_yp
     cgmlst_enterobase:
-      path: '/db/sequence_typing/yersinia/cgmlst_enterobase'
+      path: *db_typing_cgmlst_enterobase
     rmlst:
-      path: '/db/sequence_typing/various/rmlst'
+      path: *db_typing_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info

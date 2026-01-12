@@ -1,3 +1,79 @@
+#############
+# Databases #
+#############
+dbs:
+  abritamr:
+    location: &db_abritamr {DB_ROOT}/abritamr/amrfinderplus_data
+    required: false
+    method: ftp
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gene_detection_vfdb_core:
+    location: &db_gd_vfdb_core {DB_ROOT}/gene_detection/VFDB_core
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mobsuite:
+    location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  mykrobe:
+    location: &db_mykrobe {DB_ROOT}/mykrobe/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Salmonella_enterica/NC_003197.2.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Salmonella_enterica/NC_003197.2.gff3
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  sistr:
+    location: &db_sistr {DB_ROOT}/SISTR/1.1.1/data
+    required: false
+    method: ftp
+  seqsero:
+    location: &db_seqsero2 {DB_ROOT}/pipelines/salmonella/seqsero2/1.2.1/seqsero2_db
+    required: false
+    method: ftp
+  spifinder:
+    location: &db_spifinder {DB_ROOT}/pipelines/salmonella/spifinder/genomicepidemiology-spifinder_db-db102668b704
+    required: false
+    method: ftp
+  typing_cgmlst:
+    location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/salmonella/cgmlst
+    is_file: false
+    method: mist
+  typing_mlst:
+    location: &db_typing_mlst {DB_ROOT}/sequence_typing/salmonella/mlst
+    is_file: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+
 ####################
 # Pipeline options #
 ####################
@@ -35,15 +111,15 @@ citations:
 ####################
 reference:
   name: <i>Salmonella enterica subsp. enterica</i> serovar Typhimurium str. LT2 (NC_003197.2)
-  fasta: //db/refgenomes/Salmonella_enterica/NC_003197.2.fasta
-  gff3: /db/refgenomes/Salmonella_enterica/NC_003197.2.gff3
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/nuccore/NC_003197.2
 
 #########################
 # Tool specific options #
 #########################
 amrfinder:
-  db: /db/amrfinder/v4/latest
+  db: *db_amrfinder
   species: Salmonella
 
 assembly:
@@ -52,20 +128,20 @@ assembly:
   min_contig_length: 1000
 
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: *db_kraken2
   expected_species: Salmonella enterica
 
 downsampling:
   coverage_max: {COV_MAX}
 
 mob_suite:
-  db: /db/mob_suite/latest
+  db: *db_mobsuite
 
 mykrobe:
-  db: /db/mykrobe/latest/
+  db: *db_mykrobe
   species: typhi
   show_amr: false
   title: Lineage determination of <i>S. Typhi</i>
@@ -73,12 +149,13 @@ mykrobe:
 quality_checks:
   typing_scheme: {QC_SCHEME}
 
-read_scrubbing: {{}}
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 read_trimming: {{}}
 
 resfinder4:
-  db: /db/resfinder4
+  db: *db_resfinder4
   species: Salmonella enterica
 
 variant_calling:
@@ -92,21 +169,8 @@ variant_filtering: {{}}
 ############################
 gene_detection:
   dbs:
-    resfinder:
-      path: /db/gene_detection/ResFinder
-      metadata:
-        name: Antibiotic(s)
-        key: antibiotics
-
-    ncbi_amr:
-      path: /db/gene_detection/NCBI_AMR
-      perc_identity_cutoff: 90
-      metadata:
-        name: Antibiotic(s)
-        key: subclass
-
     vfdb_core:
-      path: /db/gene_detection/VFDB_core
+      path: *db_gd_vfdb_core
       perc_identity_cutoff: 90
       metadata:
         name: Gene
@@ -119,12 +183,12 @@ gene_detection:
 sequence_typing:
   dbs:
     mlst:
-      path: /db/sequence_typing/salmonella/mlst
+      path: *db_typing_mlst
     cgmlst:
-      path: /db/sequence_typing/salmonella/cgmlst
+      path: *db_typing_cgmlst
       blastn_task: blastn
     rmlst:
-      path: /db/sequence_typing/various/rmlst
+      path: *db_typing_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info
@@ -134,16 +198,15 @@ sequence_typing:
 ##############
 serotyping:
   sistr:
-    path: /db/SISTR/1.1.1/data
+    path: *db_sistr
   seqsero2:
-    path: /db/pipelines/salmonella/seqsero2/1.2.1/seqsero2_db
+    path: *db_seqsero2
 
 #############
 # SPIFinder #
 #############
 spifinder:
-  path: /db/pipelines/salmonella/spifinder/genomicepidemiology-spifinder_db-db102668b704
-  metadata: /db/pipelines/salmonella/spifinder/genomicepidemiology-spifinder_db-db102668b704/categoryFuncTable.csv
+  path: *db_spifinder
 
 #############
 # abritAMR #
@@ -151,4 +214,4 @@ spifinder:
 abritamr:
   species: Salmonella
   amrfinderplus:
-    path: /db/abritamr/amrfinderplus_data
+    path: *db_abritamr

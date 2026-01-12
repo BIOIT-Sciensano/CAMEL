@@ -28,7 +28,7 @@ class SistrReporter(Tool):
         :return: None
         """
         self._section = HtmlReportSection(
-            SistrReporter.TITLE, subtitle=self._input_informs['serotyping_sistr']['_name'])
+            SistrReporter.TITLE, subtitle=self._input_informs['serotyping_sistr']['_name_full'])
         self.__add_section_sistr()
         self.__add_file_output()
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._section)]

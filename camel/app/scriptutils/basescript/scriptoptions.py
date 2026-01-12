@@ -13,9 +13,13 @@ class ScriptOptions(BaseOptions):
     """
 
     working_dir: Path = dataclasses.field(default=Path.cwd(), metadata={"help": "Working directory"})
-    detection_method: str | None = dataclasses.field(
-        default="blast",
+    typing_method: str | None = dataclasses.field(
+        default="mist",
         metadata={"choices": ["blast", "mist", "kma"], "show_default": True},
+    )
+    gene_detection_method: str | None = dataclasses.field(
+        default="blast",
+        metadata={"choices": ["blast", "kma"], "show_default": True},
     )
     trimming_method: str | None = dataclasses.field(
         default="fastp",

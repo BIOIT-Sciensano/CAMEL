@@ -122,7 +122,10 @@ rule resfinder4_create_summary:
         if params.point:
             data_mutations = pd.read_table(tsv_point)
             if params.ext == 'tsv':
-                summary_data.append(('resfinder4_mutations', ', '.join(list(data_mutations['Mutation'])) if not data_mutations.empty else '-'))
+                summary_data.insert(2, ('resfinder4_mutations', ', '.join(list(data_mutations['Mutation'])) if not data_mutations.empty else '-'))
             elif params.ext == 'json':
-                summary_data.append(('resfinder4_mutations', {mutation['Mutation']: mutation['Resistance'].split(', ') for _, mutation in data_mutations.iterrows()} if not data_mutations.empty else '-'))
+                summary_data.append(('resfinder4_mutations', {
+                    mutation['Mutation']: mutation['Resistance'].split(', ')
+                    for _, mutation in data_mutations.iterrows()}
+                if not data_mutations.empty else '-'))
         snakemakeutils.export_summary(summary_data, Path(output.FILE), str(params.ext), 'resfinder4')

@@ -1,10 +1,33 @@
+#############
+# Databases #
+#############
+dbs:
+  db_confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+  db_gene_detection_ncbi_amr:
+    location: &db_gene_detection_ncbi_amr {DB_ROOT}/gene_detection/NCBI_AMR/
+    required: true
+  db_kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+  db_hrrt:
+    location: &db_hrrt {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.fasta
+    is_file: true
+    required: true
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.gff
+    is_file: true
+    required: true
+
 ####################
 # Reference genome #
 ####################
 reference:
   name: NC_002695.2
-  fasta: /db/refgenomes/Escherichia_coli/NC_002695.2.fasta
-  gff3: /db/refgenomes/Escherichia_coli/NC_002695.2.gff
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/nuccore/NC_002695.2/
   expected_size: 10_000
 
@@ -27,10 +50,10 @@ assembly:
     min_overlap: 1000
 
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: *db_kraken2
   expected_species: Escherichia coli
 
 downsampling:
@@ -42,7 +65,7 @@ quality_checks:
 gene_detection:
   dbs:
     ncbi_amr:
-      path: /db/gene_detection/NCBI_AMR/
+      path: *db_gene_detection_ncbi_amr
       metadata:
         name: Antibiotic(s)
         key: subclass
@@ -51,7 +74,7 @@ gene_detection:
 
 read_trimming: {{}}
 read_scrubbing:
-  db: /db/ncbi_human_read_scrubber/human_filter.db
+  db: *db_hrrt
 
 variant_calling:
   ploidy: 1

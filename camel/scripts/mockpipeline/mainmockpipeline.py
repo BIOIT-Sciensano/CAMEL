@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import dataclasses
 from importlib.resources import files
+from typing import Any
 
 import click
 import yaml
 
+from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
@@ -71,8 +73,13 @@ class MainMockPipeline(BasePipe):
         # Parse template data
         with open(str(files('camel').joinpath('scripts/mockpipeline/config_data.yml'))) as handle:
             yaml_text = handle.read()
-        yaml_text = yaml_text.format(COV_MAX=self._script_opts.cov_max)
-        data_template = yaml.safe_load(yaml_text)
+        yaml_text = yaml_text.format(
+            COV_MAX=self._script_opts.cov_max,
+            DB_ROOT=config.dir_db
+        )
+        data_template: dict[str, Any] = yaml.safe_load(yaml_text)
+        self.check_dbs(data_template)
+
         self._script_out.dir.mkdir(parents=True, exist_ok=True)
 
         # Add the base config data

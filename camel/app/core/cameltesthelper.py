@@ -88,16 +88,21 @@ def export_report_section(report_section, dir_out: Path) -> Path:
     logger.info(f"Report section exported to: {path_out}")
     return path_out
 
-def extract_from_yaml(path_in: Path, key: str) -> dict:
+def extract_from_yaml(path_in: Path, key: str, placeholders: dict[str, str] | None = None) -> dict:
     """
     Extracts the given top-level section from the input YAML file.
     :param path_in: Input YAML file
     :param key: Section key
+    :param placeholders: Placeholders to replace in the YAML file
     :return: Parsed section data
     """
     with open(path_in) as handle:
         lines = handle.read().splitlines()
-    start = next(i for i, l in enumerate(lines) if l.startswith(f'{key}:'))
+
+    try:
+        start = next(i for i, l in enumerate(lines) if l.startswith(f'{key}:'))
+    except StopIteration:
+        raise ValueError(f"Key '{key}' not found in YAML file: {path_in}")
 
     # End is the next top-level key after start
     pattern = re.compile(r'^[A-Za-z0-9_]+:')
@@ -109,4 +114,5 @@ def extract_from_yaml(path_in: Path, key: str) -> dict:
         end = len(lines)
 
     yaml_region = '\n'.join(lines[start:end])
+    yaml_region = yaml_region.format(**placeholders if placeholders is not None else {})
     return yaml.safe_load(yaml_region)[key]

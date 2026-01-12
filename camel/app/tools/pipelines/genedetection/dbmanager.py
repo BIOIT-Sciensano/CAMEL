@@ -56,7 +56,7 @@ class DBManager(Tool):
         if 'DIR' not in self._tool_inputs:
             raise InvalidToolInputError("No 'DIR' input found.")
         if not isinstance(self._tool_inputs['DIR'][0], ToolIODirectory):
-            raise InvalidToolInputError("'{}' is not a directory".format(self._tool_inputs['DIR'][0]))
+            raise InvalidToolInputError(f"'{self._tool_inputs['DIR'][0]}' is not a directory")
         super()._check_input()
 
     def __add_informs(self, input_folder: Path) -> None:

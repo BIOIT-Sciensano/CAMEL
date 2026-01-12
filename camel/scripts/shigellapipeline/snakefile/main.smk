@@ -120,7 +120,8 @@ rule combine_reports:
         output_dir=config['output']['dir'],
         pipeline_info=config['script_info'],
         input_dict=config['input'],
-        detection_method=config['gene_detection']['options']['method'],
+        gene_detection_method = config['gene_detection']['options']['method'],
+        typing_method = config['sequence_typing']['options']['method'],
         citation_keys=config['citations']
     run:
         import datetime
@@ -137,7 +138,10 @@ rule combine_reports:
             pipeline_version=params.pipeline_info['version'],
             input_files=script_input.input_str,
             input_type=script_input.type_.value,
-            detection_method=params.detection_method,
+            extra_data=[
+                ('Gene detection method', params.gene_detection_method),
+                ('Typing method', params.typing_method),
+            ],
             key_citation=params.citation_keys['main']
         ))
 

@@ -7,7 +7,7 @@ import yaml
 
 from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
-from camel.app.loggers import initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipe import BasePipe
@@ -67,7 +67,7 @@ class MainYersiniaPipeline(BasePipe):
         super().__init__(
             name='Yersinia pipeline',
             title='<i>Yersinia</i> pipeline',
-            version='1.0',
+            version='1.2',
             script_in=in_,
             script_out=out,
             opts=opts,
@@ -85,6 +85,7 @@ class MainYersiniaPipeline(BasePipe):
             yaml_text = handle.read()
         yaml_text = yaml_text.format(
             COV_MAX=self._script_opts.cov_max,
+            DB_ROOT=config.dir_db,
             QC_SCHEME='cgmlst' if 'cgmlst' in  self._opts_custom.analyses else 'mlst',
             K2_DB=str({
                 'small': Path(config.dir_db, '/scratch/bebog/camel_dbs/kraken2/k2_standard_08_20251015'), # TODO FIX!
@@ -92,6 +93,7 @@ class MainYersiniaPipeline(BasePipe):
             }['small' if self._script_opts.kraken2_small_db else 'full'])
         )
         data_template = yaml.safe_load(yaml_text)
+        self.check_dbs(data_template)
         self._script_out.dir.mkdir(parents=True, exist_ok=True)
 
         # Add the base config data
@@ -99,8 +101,8 @@ class MainYersiniaPipeline(BasePipe):
         config_data['analyses'] = self._opts_custom.analyses
         if 'cgmlst' in self._opts_custom.analyses:
             config_data['analyses'].append('species')
-        config_data['sequence_typing'] = {'options': {'method': self._script_opts.detection_method}}
-        config_data['gene_detection'] = {'options': {'method': self._script_opts.detection_method}}
+        config_data['sequence_typing'] = {'options': {'method': self._script_opts.typing_method}}
+        config_data['gene_detection'] = {'options': {'method': self._script_opts.gene_detection_method}}
         basepipeutils.dict_merge(config_data, data_template)
         path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
 
@@ -125,6 +127,7 @@ def main(**kwargs) -> None:
         analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
     )
     pipeline = MainYersiniaPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline.prepare_input()
     pipeline.run()
 
 

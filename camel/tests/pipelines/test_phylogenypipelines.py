@@ -2,8 +2,8 @@ from pathlib import Path
 
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.snpphylogeny.maincfsanphylo import MainCfsanPhylo
-from camel.scripts.snpphylogeny.mainsamtoolsphylo import MainSamtoolsPhylo, main
+from camel.scripts.snpphylogeny.mainsamtoolsphylo import main as main_samtools
+from camel.scripts.snpphylogeny.maincfsanphylo import main as main_cfsan
 from camel.tests import longRunningTest
 
 
@@ -36,7 +36,7 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
         output_file_fasta = Path(self.running_dir) / 'report' / 'snps.fasta'
-        result = cliutils.invoke(main, TestSnpPhylogenyPipelines.__get_samples() + [
+        result = cliutils.invoke(main_samtools, TestSnpPhylogenyPipelines.__get_samples() + [
             '--reference', str(TestSnpPhylogenyPipelines.reference_fasta),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
@@ -60,7 +60,7 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = TestSnpPhylogenyPipelines.__get_samples() + [
+        result = cliutils.invoke(main_samtools, TestSnpPhylogenyPipelines.__get_samples() + [
             '--reference', str(TestSnpPhylogenyPipelines.reference_fasta),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
@@ -71,9 +71,8 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
             '--min-rev-depth', '0',
             '--min-distance', '2',
             '--soft-filter'
-        ]
-        main = MainSamtoolsPhylo(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     @longRunningTest()
@@ -84,7 +83,7 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
         output_file_fasta = Path(self.running_dir) / 'report' / 'snps.fasta'
-        args = TestSnpPhylogenyPipelines.__get_samples() + [
+        result = cliutils.invoke(main_cfsan, TestSnpPhylogenyPipelines.__get_samples() + [
             '--reference', str(TestSnpPhylogenyPipelines.reference_fasta),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
@@ -95,9 +94,8 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
             '--branch-swap', 'none',
             '--site-cov-cutoff', '50',
             '--bootstraps', '10'
-        ]
-        main = MainCfsanPhylo(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
     @longRunningTest()
@@ -107,7 +105,7 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
         :return: None
         """
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
-        args = TestSnpPhylogenyPipelines.__get_samples(True) + [
+        result = cliutils.invoke(main_cfsan, TestSnpPhylogenyPipelines.__get_samples() + [
             '--reference', str(TestSnpPhylogenyPipelines.reference_fasta),
             '--output-html', str(output_file_report),
             '--output-dir', str(output_file_report.parent),
@@ -116,7 +114,6 @@ class TestSnpPhylogenyPipelines(CamelTestSuite):
             '--ml-method', 'spr3',
             '--site-cov-cutoff', '50',
             '--bootstraps', '10'
-        ]
-        main = MainCfsanPhylo(args)
-        main.run()
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)

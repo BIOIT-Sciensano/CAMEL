@@ -5,6 +5,8 @@ import click
 
 from camel.app.cli import cliutils
 from camel.app.core.utils import fastqutils, fileutils
+from camel.app.dbs.dbutils import DBEntry
+from camel.app.loggers import logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
@@ -255,7 +257,8 @@ def parse_script_opts(kwargs) -> ScriptOptions:
     Parses the script options.
     """
     return ScriptOptions(
-        detection_method=kwargs["detection_method"],
+        typing_method=kwargs["typing_method"],
+        gene_detection_method=kwargs["gene_detection_method"],
         working_dir=(
             Path(kwargs["working_dir"]).absolute()
             if kwargs.get("working_dir")
@@ -265,3 +268,51 @@ def parse_script_opts(kwargs) -> ScriptOptions:
         threads=kwargs.get("threads", 1),
         kraken2_small_db=kwargs["kraken2_small_db"],
     )
+
+
+def check_dbs(dbs: dict[str, DBEntry]) -> bool:
+    """
+    Checks if the provided database specification is valid.
+    :param dbs: Database specification
+    :return: True if valid, False otherwise, missing databases
+    """
+    missing_required: list[str] = []
+    missing_optional: list[str] = []
+
+    for name, entry in dbs.items():
+        # Check if the DB exists
+        try:
+            path = entry.location.resolve(strict=True)
+            type_ok = path.is_file() if entry.is_file else path.is_dir()
+        except FileNotFoundError:
+            path = entry.location
+            type_ok = False
+
+        # Log the message
+        if not type_ok:
+            level = logger.error if entry.required else logger.warning
+            prefix = "Required" if entry.required else "Optional"
+
+            if not path.exists():
+                msg = f"{prefix} DB '{name}' missing: {path}"
+            else:
+                expected = "file" if entry.is_file else "directory"
+                msg = f"{prefix} DB '{name}': expected a {expected}, but got: {path}"
+            level(msg)
+
+            # Save the database
+            if entry.required:
+                missing_required.append(name)
+            else:
+                missing_optional.append(name)
+
+    if missing_required:
+        logger.error(f"{len(missing_required)} required DB(s) missing: {', '.join(missing_required)}")
+        return False
+
+    if missing_optional:
+        logger.warning(f"{len(missing_optional)} optional DB(s) missing and the corresponding assays will not work: {', '.join(missing_optional)}")
+
+    if not missing_required and not missing_optional:
+        logger.info("All databases are available")
+    return True

@@ -209,7 +209,7 @@ def store_log_file(log_file: Path, basename: str, is_error_log: bool = False, di
     if not is_error_log:
         raise ValueError("Only error logs can be stored.")
 
-    dir_out = dir_ if dir_ is not None else config.dir_logs
+    dir_out = dir_ if dir_ is not None else config.dir_error_logs
     if dir_out is None:
         logger.warning('No directory specified for storing error logs, not copying log file')
         return None
@@ -218,7 +218,7 @@ def store_log_file(log_file: Path, basename: str, is_error_log: bool = False, di
 
     # Determine output file
     prefix = 'error' if is_error_log else 'camel'
-    output_path = dir_ / '{}.txt.gz'.format('__'.join([
+    output_path = dir_out / '{}.txt.gz'.format('__'.join([
         prefix,
         fileutils.make_valid(basename).lower(),
         fileutils.make_valid(socket.gethostname()),

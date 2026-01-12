@@ -27,15 +27,17 @@ reference: {{}}
 antivirals:
   db: /db/pipelines/viral_consensus/version_1.1/antivirals
 
+contamination_check:
+  db: /db/kraken2_microbial/latest
+  expected_species: {EXPECTED_SPECIES}
+
 downsampling:
   disabled: true
   coverage_max_by_segment: {COV_MAX_SEGMENT}
 
-read_trimming: {{}}
+read_scrubbing: {{}}
 
-contamination_check:
-  db: /db/kraken2_full/latest/
-  expected_species: {EXPECTED_SPECIES}
+read_trimming: {{}}
 
 quality_checks:
   expected_gc_content: 51.5

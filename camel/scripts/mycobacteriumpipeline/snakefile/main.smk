@@ -111,14 +111,16 @@ rule report_combine_all:
         pipeline_info = config['script_info'],
         input_dict = config['input'],
         citation_keys = config['citations'],
-        detection_method = config['gene_detection']['options']['method']
+        gene_detection_method = config['gene_detection']['options']['method'],
+        typing_method = config['sequence_typing']['options']['method']
     run:
         import datetime
         from camel.app.scriptutils.basepipe import basepipeutils
         from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+        from camel.app.scriptutils.model import InputType
 
         # Add the header section
-        script_input = ScriptInput.from_dict(params.input_dict)
+        script_input: ScriptInput = ScriptInput.from_dict(params.input_dict)
         report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         section = snakepipelineutils.create_input_section(
@@ -127,10 +129,13 @@ rule report_combine_all:
             pipeline_version=params.pipeline_info['version'],
             input_files=script_input.input_str,
             input_type=script_input.type_.value,
-            detection_method=params.detection_method,
-            key_citation=params.citation_keys['main']
+            key_citation=params.citation_keys['main'],
+            extra_data=[
+                ('Gene detection method', params.gene_detection_method),
+                ('Typing method', params.typing_method),
+            ]
         )
-        if script_input.type_ == 'fasta':
+        if script_input.type_ == InputType.FASTA:
             section.add_warning_message(
                 'SNP-based assays are run on simulated reads from the assembled contigs, which may differ from the '
                 'original reads.')

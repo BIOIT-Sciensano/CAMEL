@@ -25,6 +25,7 @@ from camel.app.scriptutils.inputhelper.onthelper import ONTTrimmingOpts, ONTAsse
 @basescriptutils.add_input_opts()
 @click.option('--working-dir', type=click.Path(exists=True, path_type=Path), default=Path.cwd(), help='Working directory')
 @click.option('--prepare', type=click.Choice(['fasta', 'fastq']), required=True, help='Target file type')
+@click.option('--out', type=click.Path(path_type=Path), required=False, help='Output file')
 @click.option('--threads', type=int, default=1, help='Nb. of threads')
 @cliutils.add_click_options_from_dataclass(IlluminaTrimmingOpts)
 @cliutils.add_click_options_from_dataclass(ONTTrimmingOpts, skip=[f.name for f in dataclasses.fields(TrimmingOpts)])
@@ -55,7 +56,9 @@ def cli_test_helper(**kwargs: dict[str, Any]) -> None:
         fastq = helper.prepare_fastq_input(script_input, report)
         data_out['fastq'] = fastq.to_fq_dict()
     data_out['informs'] = helper.informs
-    click.echo(json.dumps(data_out, indent=2, cls=IOEncoder))
+
+    with Path(str(kwargs['out'])).open('w') as handle:
+        json.dump(data_out, handle, indent=2, cls=IOEncoder)
 
 base_opts_ont = [
     '--fastq-se', str(Path(config.dir_testdata, 'input_helper/reads_ont.fastq.gz')),
@@ -77,6 +80,7 @@ def test_ont_helper_fastq_trim(running_dir: Path) -> None:
     :param running_dir: Running directory
     :return: None
     """
+    path_out = running_dir / 'helper_out.json'
     min_qual = 12
     min_len = 750
     result = cliutils.invoke(
@@ -87,11 +91,13 @@ def test_ont_helper_fastq_trim(running_dir: Path) -> None:
             '--trim-reads',
             '--ont-min-len', str(min_len),
             '--ont-min-qual', str(min_qual),
+            '--out', str(path_out)
         ],
     )
     # Check the output
     assert result.exit_code == 0
-    data_out = json.loads(result.stdout, object_hook=io_hook)
+    with path_out.open() as handle:
+        data_out = json.load(handle, object_hook=io_hook)
 
     # Check if the reads were trimmed
     bases_in = fastqutils.count_bases(Path(config.dir_testdata, 'input_helper/reads_ont.fastq.gz'))
@@ -108,14 +114,17 @@ def test_ont_helper_fastq_no_trim(running_dir: Path) -> None:
     :param running_dir: Running directory
     :return: None
     """
+    path_out = running_dir / 'helper_out.json'
     result = cliutils.invoke(cli_test_helper, [
         *base_opts_ont,
         '--working-dir', str(running_dir),
-        '--prepare', 'fastq'
+        '--prepare', 'fastq',
+        '--out', path_out,
     ])
     # Check the output
     assert result.exit_code == 0
-    data_out = json.loads(result.stdout, object_hook=io_hook)
+    with path_out.open() as handle:
+        data_out = json.load(handle, object_hook=io_hook)
 
     # Check that the reads were not trimmed
     bases_in = fastqutils.count_bases(Path(config.dir_testdata, 'input_helper/reads_ont.fastq.gz'))
@@ -128,14 +137,17 @@ def test_illumina_helper_fastq_trim(running_dir: Path) -> None:
     :param running_dir: Running directory
     :return: None
     """
+    path_out = running_dir / 'helper_out.json'
     result = cliutils.invoke(cli_test_helper, [
         *base_opts_illumina,
         '--working-dir', str(running_dir),
         '--prepare', 'fastq',
         '--trim-reads',
+        '--out', path_out,
     ])
     assert result.exit_code == 0
-    data_out = json.loads(result.stdout, object_hook=io_hook)
+    with path_out.open() as handle:
+        data_out = json.load(handle, object_hook=io_hook)
 
     # Check if the reads were trimmed
     for idx, ori in enumerate(['1', '2']):
@@ -165,6 +177,7 @@ def test_ont_helper_fasta_trim(running_dir: Path) -> None:
     :param running_dir: Running directory
     :return: None
     """
+    path_out = running_dir / 'helper_out.json'
     min_qual = 12
     min_len = 750
     result = cliutils.invoke(
@@ -175,15 +188,16 @@ def test_ont_helper_fasta_trim(running_dir: Path) -> None:
             '--trim-reads',
             '--ont-min-len', str(min_len),
             '--ont-min-qual', str(min_qual),
+            '--out', path_out,
         ],
     )
     # Check the output
     assert result.exit_code == 0
-    data_out = json.loads(result.stdout, object_hook=io_hook)
+    with path_out.open() as handle:
+        data_out = json.load(handle, object_hook=io_hook)
 
     # Check if the assembly succeeded
     assert fastautils.count_reads(Path(data_out['fasta'])), "Assembly failed"
-
 
 def test_ont_helper_fasta_no_trim(running_dir: Path) -> None:
     """
@@ -191,14 +205,17 @@ def test_ont_helper_fasta_no_trim(running_dir: Path) -> None:
     :param running_dir: Running directory
     :return: None
     """
+    path_out = running_dir / 'helper_out.json'
     result = cliutils.invoke(cli_test_helper, [
         *base_opts_ont,
         '--working-dir', str(running_dir),
-        '--prepare', 'fasta'
+        '--prepare', 'fasta',
+        '--out', path_out,
     ])
     # Check the output
     assert result.exit_code == 0
-    data_out = json.loads(result.stdout, object_hook=io_hook)
+    with path_out.open() as handle:
+        data_out = json.load(handle, object_hook=io_hook)
 
     # Check if the assembly succeeded
     assert fastautils.count_reads(Path(data_out['fasta'])), "Assembly failed"
@@ -209,14 +226,17 @@ def test_illumina_helper_fasta_trim(running_dir: Path) -> None:
     :param running_dir: Running directory
     :return: None
     """
+    path_out = running_dir / 'helper_out.json'
     result = cliutils.invoke(cli_test_helper, [
         *base_opts_illumina,
         '--working-dir', str(running_dir),
         '--prepare', 'fasta',
         '--trim-reads',
+        '--out', path_out,
     ])
     assert result.exit_code == 0
-    data_out = json.loads(result.stdout, object_hook=io_hook)
+    with path_out.open() as handle:
+        data_out = json.load(handle, object_hook=io_hook)
 
     # Check if the assembly succeeded
     assert fastautils.count_reads(Path(data_out['fasta'])), "Assembly failed"
@@ -227,13 +247,16 @@ def test_illumina_helper_fasta_no_trim(running_dir: Path) -> None:
     :param running_dir: Running directory
     :return: None
     """
+    path_out = running_dir / 'helper_out.json'
     result = cliutils.invoke(cli_test_helper, [
         *base_opts_illumina,
         '--working-dir', str(running_dir),
         '--prepare', 'fasta',
+        '--out', path_out,
     ])
     assert result.exit_code == 0
-    data_out = json.loads(result.stdout, object_hook=io_hook)
+    with path_out.open() as handle:
+        data_out = json.load(handle, object_hook=io_hook)
 
     # Check if the assembly succeeded
     assert fastautils.count_reads(Path(data_out['fasta'])), "Assembly failed"

@@ -41,18 +41,21 @@ checkpoint typing_extract_schema_info:
     """
     Extracts the metadata for a scheme.
     """
-    input:
-        DIR = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]['path']
     output:
         INFORMS = 'typing/{scheme}/scheme_info/informs.iob', # sequence_typing.OUTPUT_DB_INFORMS
         TSV = 'typing/{scheme}/scheme_info/tsv-profiles.io'
     params:
+        db = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]['path'],
         dir_ = lambda wildcards: f'typing/{wildcards.scheme}/scheme_info'
     run:
         from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
         db_loader = TypingDBLoader()
-        db_loader.add_input_files({'DIR': [ToolIODirectory(Path(str(input.DIR)))]})
+        path_db = Path(str(params.db))
+        if path_db.exists():
+            db_loader.add_input_files({'DIR': [ToolIODirectory(Path(str(params.db)))]})
+        else:
+            db_loader.update_parameters(db_name=path_db.name)
         step = Step(rule_name=str(rule), tool=db_loader, dir_=Path(str(params.dir_)), wildcards=wildcards)
         step.run()
         snakemakeutils.dump_object(db_loader.informs, Path(output.INFORMS))

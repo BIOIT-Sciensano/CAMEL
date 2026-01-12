@@ -82,11 +82,12 @@ rule contamination_check_krona:
     params:
         dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/krona'
     run:
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.krona.krona import Krona
         krona = Krona()
         snakemakeutils.add_pickle_input(krona, 'TSV', Path(input.TSV))
         if len(input.DB) > 0:
-            krona.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
+            krona.add_input_files({'DB': [ToolIODirectory(Path(input.DB, 'krona'))]})
         step = Step(rule_name=str(rule), tool=krona, dir_=Path(str(params.dir_)))
         step.run()
         snakemakeutils.dump_tool_outputs(krona, output)
@@ -174,7 +175,7 @@ rule contamination_check_dump_summary_info:
         if params.allowed_species is not None:
             summary_data.append((f'kraken2{suffix}_allowed', str(informs['allowed'])))
         summary_data.extend([
-            (f'kraken2{suffix}_tool_version', informs_kraken2['_name']),
+            (f'kraken2{suffix}_tool_version', informs_kraken2['_name_full']),
             (f'kraken2{suffix}_db', informs_kraken2['database']['name']),
             (f'kraken2{suffix}_last_update', informs_kraken2['database']['last_update'])
         ])

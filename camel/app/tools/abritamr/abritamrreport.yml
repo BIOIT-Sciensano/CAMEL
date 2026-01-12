@@ -1,3 +1,7 @@
+conda:
+  name: abritamr
+  packages:
+    - abritamr=1.0.19
 dependencies:
   - abritamr/1.0.19
   - blast/2.14.0

@@ -25,7 +25,7 @@ class SeqSero2Reporter(Tool):
         :return: None
         """
         self._section = HtmlReportSection(
-            SeqSero2Reporter.TITLE,subtitle=self._input_informs['serotyping_seqsero2']['_name'])
+            SeqSero2Reporter.TITLE,subtitle=self._input_informs['serotyping_seqsero2']['_name_full'])
         self.__add_section_seqsero()
         self.__add_file_output()
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._section)]

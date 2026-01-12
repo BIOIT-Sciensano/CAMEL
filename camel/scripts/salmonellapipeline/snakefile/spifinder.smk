@@ -109,7 +109,7 @@ rule spifinder_report:
         JSON_FASTA = rules.spifinder_fasta_run.output.JSON,
         INFORMS_spifinder_fastq = rules.spifinder_fastq_run.output.INFORMS if config['input']['type'] in ('ont', 'illumina') else [],
         INFORMS_spifinder_fasta = rules.spifinder_fasta_run.output.INFORMS,
-        CSV_metadata = config['spifinder']['metadata']
+        DB = config['spifinder']['path']
     output:
         VAL_HTML = 'spifinder/report/html.iob' # spifinder.OUTPUT_REPORT
     params:
@@ -119,13 +119,16 @@ rule spifinder_report:
         from camel.app.tools.pipelines.salmonella.spifinderreporter import SPIFinderReporter
 
         # Export documentation
-        file = pd.read_csv(input.CSV_metadata, delimiter=';')
+        path_csv = Path(input.DB, 'categoryFuncTable.csv')
+        if not path_csv.exists():
+            raise FileNotFoundError(f'SPIFinder metadata file not found: {path_csv}')
+        file = pd.read_csv(path_csv, delimiter=';')
         path_doc = Path(params.dir_, 'documentation.tsv')
         file.to_csv(path_doc, sep='\t')
 
         # Create the report
         reporter = SPIFinderReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['JSON_FASTQ', 'INFORMS_spifinder_fastq', 'CSV_metadata'])
+        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['JSON_FASTQ', 'INFORMS_spifinder_fastq', 'DB'])
         reporter.add_input_files({'TSV_documentation': [ToolIOFile(path_doc)]})
         if input.JSON_FASTQ:
             snakemakeutils.add_pickle_input(reporter, 'JSON_FASTQ', Path(input.JSON_FASTQ))

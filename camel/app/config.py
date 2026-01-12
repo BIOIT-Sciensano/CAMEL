@@ -14,12 +14,13 @@ class CamelConfig(BaseModel):
     dir_temp: Optional[Path] = None
     dir_db: Path
     dir_error_logs: Path | None
-    dir_envs_pixi: Path | None
+    dir_envs_pixi: Path | None = None
     create_missing_envs: bool = False
     timestamp_format: str = '%Y-%d-%m %H:%M:%S'
     dependency_service: Literal['lmod', 'pixi'] = 'lmod'
     logging_fmt: str = '%(asctime)s - %(module)15s - %(levelname)7s - %(message)s'
     date_fmt: str = '%d/%m/%Y - %X'
+    ftp_server: str | None = None
     # Logging
     dir_configs: Optional[Path] = None
     dir_logs: Optional[Path] = None
@@ -35,6 +36,6 @@ def load_yaml_config(config_path: Path) -> dict:
         return yaml.safe_load(file)
 
 
-config_path_ = files('camel').joinpath('config/camel.yml')
+config_path_ = files('camel').joinpath('config/main.yml')
 config_yaml = yaml.safe_load(config_path_.read_text())
 config = CamelConfig(**config_yaml)

@@ -1,10 +1,9 @@
 import json
 
-from camel.app.toolkits.sequencetyping.sequencetypingutils import LocusMetadataHolder
-from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.errors import ToolExecutionError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
+from camel.app.toolkits.sequencetyping.sequencetypingutils import LocusMetadataHolder
 
 
 class TypingDBLoader(Tool):
@@ -24,24 +23,19 @@ class TypingDBLoader(Tool):
         """
         super().__init__('Typing: Locus Set Manager', '0.1')
 
-    def _check_input(self) -> None:
-        """
-        Checks if the specified input is correct.
-        :return: None
-        """
-        if 'DIR' not in self._tool_inputs:
-            raise InvalidToolInputError("DIR input is required")
-        super()._check_input()
-
     def _execute_tool(self) -> None:
         """
         Executes this tool.
         :return: None
         """
-        path_dir_scheme = self._tool_inputs['DIR'][0].path
+        # If the database input is not present, a dummy title is stored for the report
+        if 'DIR' not in self._tool_inputs:
+            self._informs['title'] = self.get_param_value('db_name')
+            return
 
         # Parse metadata
-        path_metadata = path_dir_scheme / 'scheme_metadata.txt'
+        path_dir_scheme = self._tool_inputs['DIR'][0].path
+        path_metadata = path_dir_scheme / 'scheme_metadata.json'
         if not path_metadata.exists():
             raise ToolExecutionError(self.name, f"No scheme metadata found in '{path_metadata}'")
         with open(path_metadata) as handle:

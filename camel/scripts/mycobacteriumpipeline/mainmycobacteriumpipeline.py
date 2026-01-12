@@ -99,10 +99,10 @@ class MainMycobacteriumPipeline(BasePipe):
 
         # Add the base config data
         config_data = self.get_config_data()
-        config_data['analyses'] = self._opts_custom.analyses
-        config_data['gene_detection'] = {'options': {'method': self._script_opts.detection_method}}
-        config_data['sequence_typing'] = {'options': {'method': self._script_opts.detection_method}}
         basepipeutils.dict_merge(config_data, data_template)
+        config_data['analyses'] = self._opts_custom.analyses
+        config_data['sequence_typing']['options'] = {'method': self._script_opts.typing_method}
+        config_data['gene_detection']['options'] = {'method': self._script_opts.gene_detection_method}
 
         # Map to reference genome instead of assembly
         if self._script_in.type_ is model.InputType.ILLUMINA:

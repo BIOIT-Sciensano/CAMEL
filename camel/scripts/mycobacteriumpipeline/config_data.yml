@@ -2,6 +2,11 @@
 # This YAML file contains the additional configuration data for the Mycobacterium pipeline #
 # The values are added to the configuration data constructed by the BasePipeline class.    #
 ############################################################################################
+#############
+# Databases #
+#############
+dbs: {{}}
+
 ####################
 # Pipeline options #
 ####################

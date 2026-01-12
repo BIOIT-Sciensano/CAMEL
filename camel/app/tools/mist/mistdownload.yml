@@ -1,0 +1,32 @@
+conda:
+  name: mist
+  packages:
+    - mist_typing=1.0.0
+dependencies:
+  - mist/1.0.0
+parameters:
+  debug:
+    default: false
+    mandatory: false
+    option: --debug
+    flag: true
+  downloader:
+    default: false
+    mandatory: true
+    option: --downloader
+    value: null
+  output:
+    default: false
+    mandatory: true
+    option: --output
+  include_profiles:
+    default: false
+    mandatory: false
+    option: --include-profiles
+    flag: true
+  url:
+    default: false
+    mandatory: false
+    option: --url
+    value: null
+tool_command: mist download

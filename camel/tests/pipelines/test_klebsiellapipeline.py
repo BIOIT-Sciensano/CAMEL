@@ -1,13 +1,11 @@
 import unittest
-from pathlib import Path
-
-import yaml
 
 from camel.app.cli import cliutils
+from camel.app.config import config
 from camel.app.core import cameltesthelper
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
+from camel.app.dbs.dbutils import DBEntry
+from camel.app.scriptutils.basescript import basescriptutils
 from camel.scripts.klebsiellapipeline import CONFIG_DATA
 from camel.scripts.klebsiellapipeline.mainklebsiellapipeline import (
     CUSTOM_ANALYSES, main,
@@ -30,21 +28,15 @@ class TestKlebsiellaPipeline(CamelTestSuite):
     input_fastq_se = test_file_dir / 'Kpneumoniae-FAZ63816_ont-ds.fastq.gz'
     input_fasta = test_file_dir / 'Kpneumoniae-SRR4046826-ds.fasta'
 
-    def test_klebsiella_pipeline_typing_db(self) -> None:
+    def test_dbs(self) -> None:
         """
-        Checks if the databases for the sequence typing are available.
+        Checks if the databases for the pipeline are available.
         :return: None
         """
-        data_typing = cameltesthelper.extract_from_yaml(CONFIG_DATA, 'sequence_typing')
-        for key, scheme_data in data_typing['dbs'].items():
-            # Check if scheme exists
-            self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
-
-            # Check if metadata can be loaded
-            manager = TypingDBLoader()
-            manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
-            manager.run(self.running_dir)
-            self.assertGreater(len(manager.informs), 0)
+        data_dbs = cameltesthelper.extract_from_yaml(
+            CONFIG_DATA, 'dbs', placeholders={'DB_ROOT': config.dir_db})
+        dbs = {key: DBEntry(**data) for key, data in data_dbs.items()}
+        self.assertEqual(basescriptutils.check_dbs(dbs), True)
 
     @longRunningTest()
     def test_klebsiella_pipeline_blast(self) -> None:
@@ -63,7 +55,8 @@ class TestKlebsiellaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst')),
             '--threads', '8'
         ])
@@ -87,7 +80,8 @@ class TestKlebsiellaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'kma',
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst')),
             '--threads', '8'
         ])
@@ -109,7 +103,8 @@ class TestKlebsiellaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a not in ('cgmlst', 'scgmlst')),
             '--threads', '8'
        ])
@@ -131,7 +126,8 @@ class TestKlebsiellaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a not in ('cgmlst', 'scgmlst')),
             '--threads', '8'
         ])
@@ -153,7 +149,8 @@ class TestKlebsiellaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'kma',
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a not in ('cgmlst', 'scgmlst')),
             '--threads', '8'
         ])

@@ -58,7 +58,7 @@ class TypeAsync(Tool):
         Executes this tool.
         """
         # Parse scheme metadata
-        with (self._tool_inputs['DIR'][0].path / 'scheme_metadata.txt').open() as handle:
+        with (self._tool_inputs['DIR'][0].path / 'scheme_metadata.json').open() as handle:
             metadata = json.load(handle)
         logger.info(f"{len(metadata['loci'])} loci found")
 

@@ -114,7 +114,7 @@ class SequenceTypingUtils:
         :param scheme_dir: Scheme directory
         :return: Metadata
         """
-        with (scheme_dir / 'scheme_metadata.txt').open() as handle:
+        with (scheme_dir / 'scheme_metadata.json').open() as handle:
             return json.load(handle)
 
     @staticmethod

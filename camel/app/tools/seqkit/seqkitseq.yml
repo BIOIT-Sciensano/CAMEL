@@ -1,7 +1,7 @@
 conda:
   name: seqkit
   packages:
-    seqkit=2.3.1
+    - seqkit=2.3.1
 dependencies:
   - seqkit/2.3.1
 parameters:

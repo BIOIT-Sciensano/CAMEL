@@ -2,7 +2,8 @@ import dataclasses
 from pathlib import Path
 from typing import Any
 
-from camel.app.core.utils import fastautils
+from camel.app.core.utils import fastautils, fastqutils, fileutils
+from camel.app.loggers import logger
 from camel.app.scriptutils import model
 
 
@@ -139,3 +140,42 @@ class ScriptInput(model.BaseInput):
         if self.type_ == model.InputType.FASTA:
             if fastautils.has_duplicates(self.fasta):
                 raise ValueError('Input FASTA file has duplicate sequence IDs.')
+            nb_seqs = fastautils.count_reads(self.fasta)
+            logger.info(f'FASTA input is valid ({nb_seqs:,} sequences)')
+            logger.info(f'FASTA hash: {fileutils.hash_file(self.fasta)}')
+        elif self.type_ == model.InputType.ONT:
+            nb_reads = fastqutils.count_reads(self.fastq_se)
+            logger.info(f'SE FASTQ input is valid: {nb_reads:,} reads')
+            logger.info(f'SE FASTQ hash: {fileutils.hash_file(self.fastq_se)}')
+        elif self.type_ == model.InputType.ILLUMINA:
+            nb_reads_fwd = fastqutils.count_reads(self.fastq_pe[0])
+            nb_reads_rev = fastqutils.count_reads(self.fastq_pe[1])
+            if not nb_reads_fwd == nb_reads_rev:
+                raise ValueError(
+                    f'The number of forward ({nb_reads_fwd:,}) and reverse ({nb_reads_rev:,}) reads should be equal.')
+            logger.info('FASTQ input is valid')
+            logger.info(f'PE forward FASTQ hash: {fileutils.hash_file(self.fastq_pe[0])}')
+            logger.info(f'PE reverse FASTQ hash: {fileutils.hash_file(self.fastq_pe[1])}')
+        else:
+            logger.info(f"Input validation not implemented for {self.type_.value}")
+
+    def get_symlinks(self) -> list[tuple[str, Path, str]]:
+        """
+        Returns the symlinks that should be created for the input files.
+        :return: List of symlinks (key, input path, symlink name)
+        """
+        links = []
+        if self.type_ in {model.InputType.FASTA, model.InputType.FASTA_WITH_VCF}:
+            links.append(('fasta', self.fasta, self.fasta_name if self.fasta_name else self.fasta.name))
+        if self.type_ in {model.InputType.FASTA_WITH_VCF}:
+            links.append(('vcf_unfiltered', self.vcf_unfiltered, self.vcf_unfiltered.name if self.vcf_unfiltered.name else self.vcf_unfiltered.name))
+        if self.type_ in {model.InputType.ILLUMINA, model.InputType.HYBRID}:
+            links.extend([
+                ('fastq_pe', self.fastq_pe[0], self.fastq_pe_names[0] if self.fastq_pe_names else self.fastq_pe[0].name),
+                ('fastq_pe', self.fastq_pe[1], self.fastq_pe_names[1] if self.fastq_pe_names else self.fastq_pe[1].name)
+            ])
+        if self.type_ in {model.InputType.ONT, model.InputType.HYBRID}:
+            links.append(('fastq_se', self.fastq_se, self.fastq_se_name if self.fastq_se_name else self.fastq_se.name))
+        if len(links) == 0:
+            raise ValueError(f"No symlinks found for input type {self.type_.value}.")
+        return links

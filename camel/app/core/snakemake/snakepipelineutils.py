@@ -32,7 +32,7 @@ def init_pipeline_report(output_path: Path, output_dir: Path, pipeline_info: dic
     path_jquery = Path(str(files('camel').joinpath('resources/reports/jquery-3.2.1.min.js')))
     report = HtmlReport(output_path, output_dir, [path_jquery])
     report.initialize(pipeline_info['name'], path_css)
-    report.add_pipeline_header(f"{pipeline_info['title']} {pipeline_info['version']}")
+    report.add_pipeline_header(pipeline_info['title'])
     return report
 
 
@@ -99,8 +99,7 @@ def run_snakemake(
 
 def create_input_section(
         sample_name: str, date: datetime, pipeline_version: str, input_files: str, input_type: str,
-        detection_method: Optional[str] = None, extra_data: Optional[list[tuple[str, str]]] = None,
-        key_citation: str = None) -> HtmlReportSection:
+        extra_data: Optional[list[tuple[str, str]]] = None, key_citation: str = None) -> HtmlReportSection:
     """
     Creates the input section for the HTML report.
     :param sample_name: Sample name
@@ -108,7 +107,6 @@ def create_input_section(
     :param pipeline_version: Pipeline version
     :param input_files: Input files
     :param input_type: Input type
-    :param detection_method: Detection method
     :param extra_data: Extra data to include in the input section
     :param key_citation: Citation for the pipeline.
     :return: Input report section
@@ -120,8 +118,6 @@ def create_input_section(
         ['Input files:', input_files],
         ['Input type:', input_type]
     ]
-    if detection_method is not None:
-        table_data.append(['Detection method:', detection_method])
     if extra_data is not None:
         for key, value in extra_data:
             table_data.append([f'{key}:', value])
@@ -251,7 +247,7 @@ def create_empty_report_section(title: str, output_file: Path, header_level: int
     :return: None
     """
     section = HtmlReportSection(title, header_level)
-    section.add_paragraph('Analysis disabled')
+    section.add_paragraph('Analysis disabled.')
     snakemakeutils.dump_object([ToolIOValue(section)], output_file)
 
 def generate_config_file(config_data: dict[str, Any], output_dir: Path, output_basename: str = 'config.yml') -> str:

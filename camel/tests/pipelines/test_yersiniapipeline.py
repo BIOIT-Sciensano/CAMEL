@@ -1,11 +1,11 @@
 import unittest
-from pathlib import Path
 
 from camel.app.cli import cliutils
+from camel.app.config import config
 from camel.app.core import cameltesthelper
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
+from camel.app.dbs.dbutils import DBEntry
+from camel.app.scriptutils.basescript import basescriptutils
 from camel.scripts.yersiniapipeline import CONFIG_DATA
 from camel.scripts.yersiniapipeline.mainyersiniapipeline import CUSTOM_ANALYSES, main
 from camel.tests import longRunningTest
@@ -33,24 +33,18 @@ class TestYersiniaPipeline(CamelTestSuite):
     input_enterocolitica_fasta = test_file_dir / 'Yersinia-enterocolitica-S23BD07911_NG_A0183-ds.fasta'
     input_pseudotuberculosis_fasta = test_file_dir / 'Yersinia_pseudotuberculosis-S23BD09896_NG_A0586-ds.fasta'
 
-    def test_yersinia_pipeline_typing_db(self) -> None:
+    def test_dbs(self) -> None:
         """
-        Checks if the databases for the sequence typing are available.
+        Checks if the databases for the pipeline are available.
         :return: None
         """
-        data_typing = cameltesthelper.extract_from_yaml(CONFIG_DATA, 'sequence_typing')
-        for key, scheme_data in data_typing['dbs'].items():
-            # Check if scheme exists
-            self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
-
-            # Check if metadata can be loaded
-            manager = TypingDBLoader()
-            manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
-            manager.run(self.running_dir)
-            self.assertGreater(len(manager.informs), 0)
+        data_dbs = cameltesthelper.extract_from_yaml(
+            CONFIG_DATA, 'dbs', placeholders={'DB_ROOT': config.dir_db})
+        dbs = {key: DBEntry(**data) for key, data in data_dbs.items()}
+        self.assertEqual(basescriptutils.check_dbs(dbs), True)
 
     @longRunningTest()
-    def test_yersinia_pipeline_blast_with_downsampling(self) -> None:
+    def test_illumina_blast_with_downsampling(self) -> None:
         """
         Tests the Yersinia pipeline with all assays, except for cgMLST, with downsampling.
         :return: None
@@ -74,7 +68,7 @@ class TestYersiniaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_blast(self) -> None:
+    def test_illumina_enterocolitica_blast(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST.
         :return: None
@@ -97,7 +91,7 @@ class TestYersiniaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_kma(self) -> None:
+    def test_illumina_enterocolitica_kma(self) -> None:
         """
         Tests the Neisseria pipeline with all assays, except for cgMLST,
         with the kma detection method and the TruSeq2 library.
@@ -114,14 +108,15 @@ class TestYersiniaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'kma',
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_blast(self) -> None:
+    def test_illumina_pseudotuberculosis_blast(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST.
         :return: None
@@ -143,7 +138,7 @@ class TestYersiniaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_kma(self) -> None:
+    def test_illumina_pseudotuberculosis_kma(self) -> None:
         """
         Tests the Yersinia pipeline with all assays, except for cgMLST,
         with the kma detection method and the TruSeq2 library.
@@ -160,14 +155,15 @@ class TestYersiniaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'kma',
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_fasta(self) -> None:
+    def test_fasta_enterocolitica(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using FASTA as input.
         :return: None
@@ -189,7 +185,7 @@ class TestYersiniaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_fasta(self) -> None:
+    def test_fasta_pseudotuberculosis(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using FASTA as input.
         :return: None
@@ -210,7 +206,7 @@ class TestYersiniaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_ont(self) -> None:
+    def test_ont_enterocolitica(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input.
         :return: None
@@ -230,7 +226,7 @@ class TestYersiniaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_ont(self) -> None:
+    def test_ont_pseudotuberculosis(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input.
         :return: None
@@ -250,7 +246,7 @@ class TestYersiniaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_kma_ont(self) -> None:
+    def test_ont_enterocolitica_kma(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma as detection
         :return: None
@@ -264,14 +260,15 @@ class TestYersiniaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'kma',
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_kma_ont(self) -> None:
+    def test_ont_pseudotuberculosis_kma(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma dectetion
         :return: None
@@ -285,7 +282,8 @@ class TestYersiniaPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'kma',
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
         ])
         self.assertEqual(result.exit_code, 0)

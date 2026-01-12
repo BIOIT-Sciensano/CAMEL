@@ -57,7 +57,7 @@ confindr:
   db: /db/confindr/0.8.1
 
 contamination_check:
-  db: /db/kraken2_full/latest
+  db: /db/kraken2_microbial/latest
   expected_species: Bacillus
   level_of_depth: G
 

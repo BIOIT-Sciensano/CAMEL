@@ -127,7 +127,8 @@ rule report_combine_all:
         pipeline_info = config['script_info'],
         input_dict = config['input'],
         citation_keys = config['citations'],
-        detection_method = config['gene_detection']['options']['method']
+        gene_detection_method = config['gene_detection']['options']['method'],
+        typing_method = config['sequence_typing']['options']['method']
     run:
         import datetime
         from camel.app.scriptutils.basepipe import basepipeutils
@@ -143,7 +144,10 @@ rule report_combine_all:
             pipeline_version=params.pipeline_info['version'],
             input_files=script_input.input_str,
             input_type=script_input.type_.value,
-            detection_method=params.detection_method,
+            extra_data=[
+                ('Gene detection method', params.gene_detection_method),
+                ('Typing method', params.typing_method),
+            ],
             key_citation=params.citation_keys['main'],
         ))
 

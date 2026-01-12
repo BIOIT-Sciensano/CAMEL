@@ -5,6 +5,8 @@ import gzip
 import hashlib
 import pickle
 import re
+import shutil
+import tarfile
 from pathlib import Path
 from typing import Any
 
@@ -150,3 +152,32 @@ def concatenate_files(output_path: Path, input_files: list[Path]):
         for line in fin:
             handle.write(line)
     fin.close()
+
+def extract_tgz(archive_path: Path, out_dir: Path) -> None:
+    """
+    Extracts a .tgz / .tar.gz archive.
+    :param archive_path: Path to the archive file
+    :param out_dir: Output directory
+    :return: None
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(archive_path, 'r:gz') as tar:
+        tar.extractall(path=out_dir)
+
+
+def move_directory_contents(dir_in: Path, dir_out: Path, overwrite: bool = False) -> None:
+    """
+    Moves the contents of src_dir into dst_dir.
+    Creates the target directory if needed.
+    :param dir_in: Source directory
+    :param dir_out: Destination directory
+    :param overwrite: If True, existing files are overwritten
+    :return: None
+    """
+    dir_out.mkdir(parents=True, exist_ok=True)
+    for item in dir_in.iterdir():
+        path_target = dir_out / item.name
+        if path_target.exists() and overwrite:
+            logger.warning(f"File '{item.name}' already exists, overwriting")
+            path_target.unlink()
+        shutil.move(str(item), str(dir_out))

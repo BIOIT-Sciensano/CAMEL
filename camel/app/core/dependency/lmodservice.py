@@ -29,7 +29,7 @@ class LmodService(BaseDependencyService):
         logger.debug('Loading environment using LMOD')
         if len(tool_data.get('dependencies', [])) == 0:
             return command.command
-        return ' '.join(['module load', *tool_data.get('dependencies', [])]) + '; '
+        return ' '.join(['module load', *tool_data.get('dependencies', [])]) + f'; {command.command}'
 
     def is_available(self, tool_data: dict[str, Any]) -> bool:
         """

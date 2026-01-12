@@ -50,7 +50,7 @@ class MykrobeReporter(Tool):
         :return: None
         """
         section = HtmlReportSection(MykrobeReporter.TITLE,
-                                    subtitle=self._input_informs['mykrobe']['_name'])
+                                    subtitle=self._input_informs['mykrobe']['_name_full'])
         # Antibiotic sensitivity
         if 'show_amr' in self._parameters:
             section.add_header('Antibiotic susceptibility', 3)

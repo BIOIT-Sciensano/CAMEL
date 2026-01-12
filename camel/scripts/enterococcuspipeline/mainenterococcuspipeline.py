@@ -150,8 +150,8 @@ class MainEnterococcusPipeline(BasePipe):
         basepipeutils.dict_merge(config_data, data_template)
         config_data['analyses'] = self._opts_custom.analyses
         config_data['species'] = self._opts_custom.species
-        config_data['sequence_typing']['options'] = {'method': self._script_opts.detection_method}
-        config_data['gene_detection']['options'] = {'method': self._script_opts.detection_method}
+        config_data['sequence_typing']['options'] = {'method': self._script_opts.typing_method}
+        config_data['gene_detection']['options'] = {'method': self._script_opts.gene_detection_method}
 
         # Additional MLST scheme for E. faecium
         if (self._opts_custom.species == 'faecium') and ('mlst' in self._opts_custom.analyses):

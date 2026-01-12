@@ -18,7 +18,7 @@ class TestMLSTPhylogeny(CamelTestSuite):
     dir_dataset_large_blast = test_file_dir / 'dataset_large_blast'
     dir_dataset_large_kma = test_file_dir / 'dataset_large_kma'
     dir_dataset_small_blast = test_file_dir / 'dataset_small_blast'
-    dir_dataset_small_mist = test_file_dir / 'dataset_small_rapid'
+    dir_dataset_small_mist = test_file_dir / 'dataset_small_mist'
     dir_dataset_small_blast_html = test_file_dir / 'dataset_html_small_blast'
     dir_dataset_small_blast_novel_alleles = test_file_dir / 'dataset_small_blast-novel_alleles'
 

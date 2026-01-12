@@ -1,3 +1,30 @@
+#######
+# DBs #
+#######
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  mobsuite:
+    location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.gff
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+
 ####################
 # Pipeline options #
 ####################
@@ -32,8 +59,8 @@ citations:
 ####################
 reference:
   name: <i>Escherichia coli</i> O157:H7 (NC_002695.2)
-  fasta: /db/refgenomes/Escherichia_coli/NC_002695.2.fasta
-  gff3: /db/refgenomes/Escherichia_coli/NC_002695.2.gff
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/nuccore/NC_002695.2
   expected_gc: 50.5
 
@@ -41,7 +68,7 @@ reference:
 # Tool specific options #
 #########################
 amrfinder:
-  db: /db/amrfinder/v4/latest
+  db: *db_amrfinder
   species: Escherichia
 
 assembly:
@@ -60,7 +87,7 @@ downsampling:
   coverage_max: {COV_MAX}
 
 mob_suite:
-  db: /db/mob_suite/latest
+  db: *db_mobsuite
 
 quality_checks:
   typing_scheme: {QC_SCHEME}
@@ -70,7 +97,7 @@ read_trimming: {{}}
 read_scrubbing: {{}}
 
 resfinder4:
-  db: /db/resfinder4
+  db: *db_resfinder4
   species: Escherichia coli
 
 variant_calling:

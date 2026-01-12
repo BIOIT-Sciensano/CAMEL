@@ -1,14 +1,65 @@
-dependencies: [flye/2.9.4]
+conda:
+  name: flye
+  packages:
+    - flye=2.9.4
+dependencies:
+  - flye/2.9.4
 parameters:
-  genome_size: {default: false, mandatory: false, option: --genome-size, p_index: 0, value: '4.8g'}
-  keep_haplotypes: {default: false, mandatory: false, option: --keep-haplotypes, value: None}
-  meta: {default: false, mandatory: false, option: --meta, value: None}
-  min_overlap: {default: false, mandatory: false, option: --min-overlap, value: None}
-  nano_corr: {default: true, mandatory: false, option: --nano-corr, value: ''}
-  nano_hq: {default: false, mandatory: false, option: --nano-hq, value: ''}
-  nano_raw: {default: false, mandatory: false, option: --nano-raw, value: ''}
-  no_alt_contigs: {default: false, mandatory: false, option: --no-alt-contigs, value: None}
-  output_directory: {default: true, mandatory: true, option: --out-dir, p_index: 0, value: assembly_out}
-  read_error: {default: false, mandatory: false, option: --read-error, value: None}
-  threads: {default: true, mandatory: false, option: --threads, value: '4'}
+  genome_size:
+    default: false
+    mandatory: false
+    option: '--genome-size'
+    p_index: 0
+    value: 4.8g
+  keep_haplotypes:
+    default: false
+    mandatory: false
+    option: '--keep-haplotypes'
+    value: None
+  meta:
+    default: false
+    mandatory: false
+    option: '--meta'
+    value: None
+  min_overlap:
+    default: false
+    mandatory: false
+    option: '--min-overlap'
+    value: None
+  nano_corr:
+    default: true
+    mandatory: false
+    option: '--nano-corr'
+    value: ''
+  nano_hq:
+    default: false
+    mandatory: false
+    option: '--nano-hq'
+    value: ''
+  nano_raw:
+    default: false
+    mandatory: false
+    option: '--nano-raw'
+    value: ''
+  no_alt_contigs:
+    default: false
+    mandatory: false
+    option: '--no-alt-contigs'
+    value: None
+  output_directory:
+    default: true
+    mandatory: true
+    option: '--out-dir'
+    p_index: 0
+    value: assembly_out
+  read_error:
+    default: false
+    mandatory: false
+    option: '--read-error'
+    value: None
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: '4'
 tool_command: flye

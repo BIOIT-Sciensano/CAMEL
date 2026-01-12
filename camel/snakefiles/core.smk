@@ -184,10 +184,14 @@ rule core_init_summary:
     output:
         OUT = 'summary/summary-init.{ext}'
     params:
-        ext = lambda wildcards: wildcards.ext
+        ext = lambda wildcards: wildcards.ext,
+        input_dict = config['input']
     run:
         import datetime
         from camel.app.config import config as camel_config
+        from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+
+        script_input = ScriptInput.from_dict(params.input_dict)
 
         analysis_date = datetime.datetime.now().strftime(camel_config.date_fmt)
         content = [
@@ -195,7 +199,7 @@ rule core_init_summary:
             ('pipeline_version', config['script_info']['version']),
             ('input_type', config['input']['type']),
             ('sample', config['input']['sample_name']),
-            ('input_files', 'TODO'), # ReportPipeline.format_input_string(config['input'])),
+            ('input_files', script_input.input_str),
             ('analysis_date', analysis_date),
         ]
         if 'gene_detection' in config:

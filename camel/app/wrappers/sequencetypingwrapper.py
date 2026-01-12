@@ -184,7 +184,7 @@ class SequenceTypingWrapper:
         }
 
         # Check if all loci are of the same type (DNA, peptide), otherwise tabular output cannot be created
-        with (workflow_input.db_path / 'scheme_metadata.txt').open() as handle:
+        with (workflow_input.db_path / 'scheme_metadata.json').open() as handle:
             data_scheme = json.load(handle)
         locus_type = data_scheme['loci'][0]['type']
         if all(locus['type'] == locus_type for locus in data_scheme['loci']):

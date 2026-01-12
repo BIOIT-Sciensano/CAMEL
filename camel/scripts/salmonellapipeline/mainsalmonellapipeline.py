@@ -4,6 +4,7 @@ import dataclasses
 import click
 import yaml
 
+from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
@@ -65,7 +66,7 @@ class MainSalmonellaPipeline(BasePipe):
         super().__init__(
             name='Salmonella pipeline',
             title='<i>Salmonella</i> pipeline',
-            version='1.0',
+            version='1.1.0',
             script_in=in_,
             script_out=out,
             opts=opts,
@@ -83,8 +84,9 @@ class MainSalmonellaPipeline(BasePipe):
             yaml_text = handle.read()
         yaml_text = yaml_text.format(
             COV_MAX=self._script_opts.cov_max,
+            DB_ROOT=config.dir_db,
+            EXPORT_BAM=self._script_opts.include_bam,
             QC_SCHEME='cgmlst' if 'cgmlst' in  self._opts_custom.analyses else 'mlst',
-            EXPORT_BAM=self._script_opts.include_bam
         )
         data_template = yaml.safe_load(yaml_text)
         self._script_out.dir.mkdir(parents=True, exist_ok=True)
@@ -92,8 +94,8 @@ class MainSalmonellaPipeline(BasePipe):
         # Add the base config data
         config_data = self.get_config_data()
         config_data['analyses'] = self._opts_custom.analyses
-        config_data['sequence_typing'] = {'options': {'method': self._script_opts.detection_method}}
-        config_data['gene_detection'] = {'options': {'method': self._script_opts.detection_method}}
+        config_data['sequence_typing'] = {'options': {'method': self._script_opts.typing_method}}
+        config_data['gene_detection'] = {'options': {'method': self._script_opts.gene_detection_method}}
         basepipeutils.dict_merge(config_data, data_template)
         path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
 
@@ -118,6 +120,7 @@ def main(**kwargs) -> None:
         analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
     )
     pipeline = MainSalmonellaPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline.prepare_input()
     pipeline.run()
 
 

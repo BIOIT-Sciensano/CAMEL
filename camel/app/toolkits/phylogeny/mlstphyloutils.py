@@ -7,6 +7,19 @@ import pandas as pd
 from camel.app.loggers import logger
 
 
+ALLELE_COL_BY_METHOD = {
+    'blast': 'Allele',
+    'mist': 'allele',
+    'kma': 'Allele'
+}
+
+LOCUS_COL_BY_METHOD = {
+    'blast': 'Locus',
+    'mist': 'locus',
+    'kma': 'Locus'
+}
+
+
 def is_perfect(record: pd.Series, detection_method: str) -> bool:
     """
     Determines if the given hit is perfect.
@@ -36,30 +49,29 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
             return False
         return True
     elif detection_method == 'mist':
-        if str(record['Allele(s)']) == '-':
+        if str(record['allele']) == '-':
             return False
         return True
     else:
         raise ValueError(f"Invalid detection method: {detection_method}")
 
 
-def parse_tsv_typing(tsv_path: Path, detection_method: str, use_temp: bool = True) -> dict[str, str]:
+def parse_tsv_typing(tsv_path: Path, method: str, use_temp: bool = True) -> dict[str, str]:
     """
     Parses a tabular output file for the sequence typing assay.
     :param tsv_path: Typing output file
-    :param detection_method: Allele detection method
+    :param method: Allele detection method
     :param use_temp: If enabled, temporary allele ids are used
     :return: Parsed alleles (key: locus, value: allele as a string)
     """
     allele_data = pd.read_table(tsv_path)
-    allele_data['is_perfect_hit'] = allele_data.apply(lambda x: is_perfect(x, detection_method), axis=1)
+    allele_data['is_perfect_hit'] = allele_data.apply(lambda x: is_perfect(x, method), axis=1)
     # When the hashed TSV file is provided -> check for allele id length
     if use_temp is True:
-        if detection_method != 'mist':
+        if method != 'mist':
             allele_data['is_perfect_hit'] = allele_data.apply(
                 lambda x: x['is_perfect_hit'] or len(str(x['Allele'])) == 6, axis=1)
-    col_allele = 'Allele' if detection_method != 'mist' else 'Allele(s)'
-    return {r['Locus']: r[col_allele] if r['is_perfect_hit'] else '-' for _, r in allele_data.iterrows()}
+    return {r[LOCUS_COL_BY_METHOD[method]]: r[ALLELE_COL_BY_METHOD[method]] if r['is_perfect_hit'] else '-' for _, r in allele_data.iterrows()}
 
 
 def parse_tsv_typing_list(tsv_in: list[tuple[Path, str]], detection_method: Optional[str] = 'blast',

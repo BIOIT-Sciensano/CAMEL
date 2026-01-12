@@ -1,0 +1,25 @@
+conda:
+  name: mist
+  packages:
+    - mist_typing=1.0.0
+dependencies:
+  - mist/1.0.0
+  - minimap2/2.26
+  - CD-HIT/4.6.8
+  - mummer/4.0.0rc1
+parameters:
+  debug:
+    default: false
+    mandatory: false
+    option: --debug
+    flag: true
+  output:
+    default: false
+    mandatory: false
+    option: --output
+  threads:
+    default: false
+    mandatory: false
+    option: --threads
+    value: 4
+tool_command: mist index

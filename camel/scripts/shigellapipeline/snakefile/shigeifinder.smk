@@ -69,4 +69,5 @@ rule shigeifinder_create_summary:
         informs = snakemakeutils.load_object(Path(input.INFORMS_shigeifinder))
         keys = ['species', 'serotype', 'O_antigen', 'H_antigen', 'cluster']
         data_summary = [(f'shigeifinder_{key}', informs[key]) for key in keys]
+        data_summary.append(('shigeifinder_tool_version', informs['_name_full']))
         snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'shigeifinder')

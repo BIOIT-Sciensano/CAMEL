@@ -1,3 +1,8 @@
+conda:
+  name: checkm
+  packages:
+    - checkm-genome=1.2.2
+    - setuptools
 dependencies:
   - CheckM/1.2.2
   - pplacer/1.1.alpha19

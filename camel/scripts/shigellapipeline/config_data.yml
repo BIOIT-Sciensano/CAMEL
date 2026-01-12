@@ -1,3 +1,73 @@
+#############
+# Databases #
+#############
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gene_detection_serotype_o:
+    location: &db_gd_serotype_o {DB_ROOT}/gene_detection/SerotypeFinder-O_type
+    required: false
+    method: ftp
+  gene_detection_virulencefinder_ecoli:
+    location: &db_gd_virulencefinder_ecoli {DB_ROOT}/gene_detection/VirulenceFinder-Ecoli
+    required: false
+    method: ftp
+  gene_detection_virulencefinder_shiga:
+    location: &db_gd_virulencefinder_shiga {DB_ROOT}/gene_detection/VirulenceFinder-Shiga
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mobsuite:
+    location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  mykrobe:
+    location: &db_mykrobe {DB_ROOT}/mykrobe/latest
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Shigella_sonnei/GCA_000092525.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Shigella_sonnei/GCA_000092525.1.gff
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  typing_cgmlst:
+    location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/ecoli/cgmlst
+    required: false
+  typing_mlst_pasteur:
+    location: &db_typing_mlst_pasteur {DB_ROOT}/sequence_typing/ecoli/mlst_pasteur
+    required: false
+    method: mist
+  typing_mlst_warwick:
+    location: &db_typing_mlst_warwick {DB_ROOT}/sequence_typing/ecoli/mlst_warwick
+    required: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+
 ####################
 # Pipeline options #
 ####################
@@ -35,81 +105,84 @@ citations:
 ####################
 reference:
   name: <i>Shigella sonnei</i> Ss046 (CP000038.1)
-  fasta: /db/refgenomes/Shigella_sonnei/GCA_000092525.1.fasta
-  gff3: /db/refgenomes/Shigella_sonnei/GCA_000092525.1.gff
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_000092525.1/
 
 #########################
-# Tool specific options #
+# Tool-specific options #
 #########################
-downsampling:
-  coverage_max: {COV_MAX}
-  expected_genome_size: 4_762_774
+amrfinder:
+  db: *db_amrfinder
+  species: Escherichia
+
+assembly:
+  spades:
+    cov_cutoff: 'off'
+  min_contig_length: 1000
+
+confindr:
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: *db_kraken2
   expected_species: Shigella
   allowed_species:
     - Escherichia
   level_of_depth: G
 
+downsampling:
+  coverage_max: {COV_MAX}
+  expected_genome_size: 4_762_774 # To check if needed (obtained from ref genome?)
+
+mob_suite:
+  db: *db_mobsuite
+
+mykrobe:
+  db: *db_mykrobe
+  species: sonnei
+  show_amr: false
+  title: Lineage determination of <i>S. sonnei</i>
+
 quality_checks:
   typing_scheme: {QC_SCHEME}
   expected_gc_content: 50.5
 
-confindr:
-  db: /db/confindr/0.8.1
+read_trimming: {{}}
 
-assembly:
-  spades:
-    cov_cutoff: 10
-  min_contig_length: 1000
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
+
+resfinder4:
+  db: *db_resfinder4
+  species: Escherichia coli
 
 variant_calling:
   ploidy: 1
   report_include_bam: {EXPORT_BAM}
 
-read_trimming: {{}}
 variant_filtering: {{}}
-read_scrubbing: {{}}
 
 ############################
 # Gene detection databases #
 ############################
-mykrobe:
-  db: /db/mykrobe/latest/
-  species: sonnei
-  show_amr: false
-  title: Lineage determination of <i>S. sonnei</i>
-
-amrfinder:
-  db: /db/amrfinder/v4/latest
-  species: Escherichia
-
-resfinder4:
-  db: /db/resfinder4
-  species: Escherichia coli
-
-mob_suite:
-  db: /db/mob_suite/latest
-
 gene_detection:
   dbs:
     virulencefinder:
-      path: /db/gene_detection/VirulenceFinder-Ecoli
+      path: *db_gd_virulencefinder_ecoli
       metadata:
         name: Protein function
         key: protein_function
       hidden: true
 
     virulencefinder_shiga:
-      path: /db/gene_detection/VirulenceFinder-Shiga
+      path: *db_gd_virulencefinder_shiga
       metadata:
         name: stx variant
         key: stx_variant
 
     serotype_o:
-      path: /db/gene_detection/SerotypeFinder-O_type
+      path: *db_gd_serotype_o
       params:
         blastn:
           min_percent_identity: 85
@@ -124,16 +197,16 @@ gene_detection:
 sequence_typing:
   dbs:
     mlst_pasteur:
-      path: /db/sequence_typing/ecoli/mlst_pasteur
+      path: *db_typing_mlst_pasteur
       hidden: true
     mlst_warwick:
-      path: /db/sequence_typing/ecoli/mlst_warwick
+      path: *db_typing_mlst_warwick
     cgmlst:
-      path: /db/sequence_typing/ecoli/cgmlst
+      path: *db_typing_cgmlst
       detection_method: blast
       blast_task: blastn
     rmlst:
-      path: /db/sequence_typing/various/rmlst
+      path: *db_typing_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info

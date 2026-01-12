@@ -3,6 +3,7 @@ from pathlib import Path
 from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
+from camel.app.loggers import logger as camel_logger
 from camel.snakefiles import assembly
 
 
@@ -49,14 +50,12 @@ rule quast_quast:
                 'GFF3_Ref': [ToolIOFile(Path(params.gff))],
             })
         else:
-            logger.warning(f'No reference genome provided, skipping analysis for QUAST')
+            camel_logger.warning(f'No reference genome provided, skipping analysis for QUAST')
 
         # Run tool
         quast_.update_parameters(conserved_genes_finding=False)
         step = Step(rule_name=str(rule), tool=quast_, dir_=dir_out)
         step.run()
-
-        print(quast_.informs)
 
         # Collect output
         snakemakeutils.dump_tool_outputs(quast_, output, ignore_missing_output=True)
@@ -108,7 +107,7 @@ rule quast_report:
         reporter.update_parameters(name=params.name)
         snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['INFORMS_assembler'])
         reporter.add_input_informs({
-            'assembler': ', '.join(snakemakeutils.load_object(Path(x))['_name'] for x in input.INFORMS_assembler)
+            'assembler': ', '.join(snakemakeutils.load_object(Path(x))['_name_full'] for x in input.INFORMS_assembler)
             if input.INFORMS_assembler else 'n/a'
         })
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))

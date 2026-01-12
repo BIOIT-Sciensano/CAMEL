@@ -18,6 +18,7 @@ CUSTOM_ANALYSES = [
     'amrfinder',
     'bast',
     'cgmlst',
+    'cgmlst_v3',
     'confindr',
     'feta',
     'fhbp',
@@ -87,10 +88,9 @@ class MainNeisseriaPipeline(BasePipe):
 
         # Add the base config data
         config_data = self.get_config_data()
-        config_data['analyses'] = self._opts_custom.analyses
-        config_data['sequence_typing'] = {'options': {'method': self._script_opts.detection_method}}
-        config_data['gene_detection'] = {'options': {'method': self._script_opts.detection_method}}
         basepipeutils.dict_merge(config_data, data_template)
+        config_data['analyses'] = self._opts_custom.analyses
+        config_data['sequence_typing']['options'] = {'method': self._script_opts.typing_method}
         path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
 
         # Run the Snakefile
