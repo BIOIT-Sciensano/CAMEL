@@ -64,7 +64,8 @@ class MainNeisseriaPipeline(BasePipe):
         """
         super().__init__(
             name='Neisseria pipeline',
-            version='1.4',
+            title='<i>Neisseria</i> pipeline',
+            version='1.5.0',
             script_in=in_,
             script_out=out,
             opts=opts,
