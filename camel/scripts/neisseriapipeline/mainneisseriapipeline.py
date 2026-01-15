@@ -94,12 +94,7 @@ class MainNeisseriaPipeline(BasePipe):
         path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
 
         # Run the Snakefile
-        snakepipelineutils.run_snakemake(
-            snakefile=self._snakefile,
-            config_path=path_config,
-            targets=[],
-            working_dir=self._script_opts.working_dir,
-            threads=self._script_opts.threads)
+        self.run_snakefile(path_config)
 
 
 @click.command(name='neisseria_pipeline', short_help='Pipeline for the complete characterization of Neisseria meningitidis isolates')
@@ -119,8 +114,9 @@ def main(**kwargs) -> None:
     script_out = basescriptutils.parse_script_output(kwargs)
     script_opts = basescriptutils.parse_script_opts(kwargs)
     custom_opts = Options(analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [])
-    mock_pipe = MainNeisseriaPipeline(script_input, script_out, script_opts, custom_opts)
-    mock_pipe.run()
+    pipeline = MainNeisseriaPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline.prepare_input()
+    pipeline.run()
 
 
 if __name__ == '__main__':

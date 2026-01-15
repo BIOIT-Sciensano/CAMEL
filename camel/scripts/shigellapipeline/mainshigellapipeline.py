@@ -118,6 +118,7 @@ def main(**kwargs) -> None:
     script_opts = basescriptutils.parse_script_opts(kwargs)
     custom_opts = Options(analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [])
     pipeline = MainShigellaPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline.prepare_input()
     pipeline.run()
 
 
