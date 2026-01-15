@@ -60,10 +60,10 @@ class LREFinder(Tool):
         """
         info = {}
         soup = bs4.BeautifulSoup(html_code, 'html.parser')
-        info['species'] = soup.find('b', string='Species identified:').findNext('table').find('th').text
-        info['genes'] = LREFinder.__parse_html_table(soup.find('b', string='Genes Identified:').findNext('table'))
+        info['species'] = soup.find('b', string='Species identified:').find_next('table').find('th').text
+        info['genes'] = LREFinder.__parse_html_table(soup.find('b', string='Genes Identified:').find_next('table'))
         info['mutations'] = LREFinder.__parse_html_table(
-            soup.find('b', string='Identified mutations in 23s:').findNext('table'))
+            soup.find('b', string='Identified mutations in 23s:').find_next('table'))
         return info
 
     @staticmethod
@@ -74,12 +74,12 @@ class LREFinder(Tool):
         :return: Parsed information
         """
         # noinspection PyUnresolvedReferences
-        rows = html_table.findAll('tr')
-        header = [th.text.replace('_', ' ') for th in rows[0].findAll('th')]
+        rows = html_table.find_all('tr')
+        header = [th.text.replace('_', ' ') for th in rows[0].find_all('th')]
         header = [re.sub(r'\[(.*)]', r'(\g<1>)', value) for value in header]
         table_data = [{
-            col: td.text for col, td in zip(header, row.findAll('td'))} for row in rows[1:] if
-            len(row.findAll('td')) > 0]
+            col: td.text for col, td in zip(header, row.find_all('td'))} for row in rows[1:] if
+            len(row.find_all('td')) > 0]
 
         # Convert numeric values to float
         for info_dict in table_data:
