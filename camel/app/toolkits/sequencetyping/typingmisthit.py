@@ -63,9 +63,9 @@ class TypingMiSTHit(TypingHitBase):
             self.locus,
             self.allele_id,
             ', '.join(self._tags) if len(self._tags) > 0 else '-',
-            ' '.join(r['alignment']['seq_id'] for r in self._allele_results),
-            ' '.join(f"{r['alignment']['start']}-{r['alignment']['end']}" for r in self._allele_results),
-            ' '.join(r['alignment']['strand'] for r in self._allele_results),
+            ' '.join(r['alignment']['seq_id'] for r in self._allele_results) if len(self._allele_results) > 0 else '-',
+            ' '.join(f"{r['alignment']['start']}-{r['alignment']['end']}" for r in self._allele_results) if len(self._allele_results) > 0 else '-',
+            ' '.join(r['alignment']['strand'] for r in self._allele_results)  if len(self._allele_results) > 0 else '-',
         ]
 
     def to_dict(self, include_hashing: bool = False) -> dict[str, Any]:
