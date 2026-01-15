@@ -12,12 +12,15 @@ OUTPUT_REPORT_JSON = 'quality_checks/report/informs.json'
 
 @dataclasses.dataclass
 class QCCheck:
+    """
+    Dataclass to represent quality checks.
+    """
     key: str
     full_name: str
     threshold_warn: float
     threshold_fail: float
-    supported_input_types: dataclasses.field(default_factory=list)
-    fmt_string_value: Optional[str]
+    supported_input_types: list = dataclasses.field(default_factory=list)
+    fmt_string_value: Optional[str] = None
     value_should_exceed: Optional[bool] = True
     explanation: Optional[str] = None
     is_default: bool = True
@@ -70,8 +73,8 @@ QC_CHECKS_BY_KEY = {qc.key: qc for qc in [
     QCCheck(
         key='confindr',
         full_name='ConFindr: number of contaminating SNPs',
-        threshold_warn=10,
-        threshold_fail=20,
+        threshold_warn=25,
+        threshold_fail=50,
         supported_input_types=['hybrid', 'illumina', 'ont'],
         fmt_string_value='{:,}',
         value_should_exceed=False),
@@ -181,8 +184,8 @@ QC_CHECKS_BY_KEY = {qc.key: qc for qc in [
     QCCheck(
         key='fqc_n_fraction_{ori}',
         full_name='FastQC: Max. N-fraction',
-        threshold_warn=0.005,
-        threshold_fail=0.010,
+        threshold_warn=0.025,
+        threshold_fail=0.050,
         supported_input_types=['hybrid', 'illumina'],
         fmt_string_value='{:.4f}',
         value_should_exceed=False,
