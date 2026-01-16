@@ -75,7 +75,7 @@ QC_CHECKS_BY_KEY = {qc.key: qc for qc in [
         full_name='ConFindr: number of contaminating SNPs',
         threshold_warn=25,
         threshold_fail=50,
-        supported_input_types=['hybrid', 'illumina', 'ont'],
+        supported_input_types=['hybrid', 'illumina'],
         fmt_string_value='{:,}',
         value_should_exceed=False),
     QCCheck(
