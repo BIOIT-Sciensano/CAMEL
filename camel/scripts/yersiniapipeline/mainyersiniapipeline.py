@@ -7,7 +7,7 @@ import yaml
 
 from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
-from camel.app.loggers import initialize_logging, logger
+from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipe import BasePipe
@@ -67,7 +67,7 @@ class MainYersiniaPipeline(BasePipe):
         super().__init__(
             name='Yersinia pipeline',
             title='<i>Yersinia</i> pipeline',
-            version='1.2',
+            version='1.2.0',
             script_in=in_,
             script_out=out,
             opts=opts,
