@@ -1,3 +1,4 @@
+import re
 from datetime import date
 
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
@@ -39,6 +40,8 @@ class ConFindrReporter(Tool):
         section.add_header('Output', 3)
         if self._input_informs['confindr']['Genus'] == 'Error processing sample':
             section.add_alert('Error processing sample, species might be missing from rMLST database', 'warning')
+        elif re.match(r'^\d+$', str(self._input_informs['confindr']['NumContamSNVs'])) is None:
+            section.add_alert('Error processing sample with ConFindr', 'warning')
         else:
             cell = HtmlTableCell('No', 'green') if \
                     self._input_informs['confindr']['NumContamSNVs'] < 20 else HtmlTableCell('Yes', 'red')
