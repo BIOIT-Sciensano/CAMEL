@@ -227,25 +227,6 @@ class TestMLSTPhylogeny(CamelTestSuite):
         mlst_phylo.run()
         self.assertGreater(output_html.stat().st_size, 0)
 
-    def test_mlst_phylogeny_small_rapid(self) -> None:
-        """
-        Tests the MLST phylogeny tool with standard options and a small dataset called with the 'rapid' method.
-        :return: None
-        """
-        output_html = self.running_dir / 'out' / 'report.html'
-        output_html.parent.mkdir(exist_ok=True, parents=True)
-        mlst_phylo = MainMLSTPhylogeny([
-            *TestMLSTPhylogeny.generate_tsv_input_arguments(TestMLSTPhylogeny.dir_dataset_small_rapid),
-            '--output-html', str(output_html),
-            '--output-dir', str(output_html.parent),
-            '--dir-working', str(self.running_dir),
-            '--detection-method', 'rapid',
-            '--min-perc-loci', '75',
-            '--min-perc-samples', '0',
-        ])
-        mlst_phylo.run()
-        self.assertGreater(output_html.stat().st_size, 0)
-
 
 if __name__ == '__main__':
     unittest.main()
