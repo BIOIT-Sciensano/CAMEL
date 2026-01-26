@@ -1,5 +1,5 @@
 dependencies:
-  - nextclade/3.1.1
+  - nextclade/3.18.1
 parameters:
   min_length:
     default: false

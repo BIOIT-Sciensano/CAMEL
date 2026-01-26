@@ -229,7 +229,8 @@ rule nextclade3_create_summary:
     """
     input:
         TSV_nextclade = lambda wildcards: nextclade3.get_nextclade_output(wildcards, checkpoints, 'TSV', config),
-        INFORMS_nextclade = lambda wildcards: nextclade3.get_nextclade_output(wildcards,checkpoints, 'INFORMS', config),
+        INFORMS_nextclade = rules.nextclade_dump_informs.output.INFORMS,
+        INFORMS_nextclade_all = lambda wildcards: nextclade3.get_nextclade_output(wildcards, checkpoints, 'INFORMS', config),
         INFORMS_subtype_determination = 'nextclade/subtype_determination/report/informs.io' if (config['nextclade'].get('db') is None) and ('nextclade' in config['analyses']) else []
     output:
         FILE = 'nextclade/summary_nextclade.{ext}' # nextclade3.OUTPUT_SUMMARY
@@ -241,6 +242,11 @@ rule nextclade3_create_summary:
         # create the results dictionary:
         assay = 'nextclade'
         data_summary = []
+
+        # Add tool version
+        # noinspection PyUnresolvedReferences
+        informs_first = snakemakeutils.load_object(Path(input.INFORMS_nextclade))
+        data_summary.append((f'{assay}_version', informs_first['_version']))
 
         # Add subtype determination informs (if available)
         if input.INFORMS_subtype_determination:
@@ -260,7 +266,7 @@ rule nextclade3_create_summary:
         # noinspection PyTypeChecker
         for path_io, path_informs in zip(
                 [Path(x) for x in input.TSV_nextclade],
-                [Path(x) for x in input.INFORMS_nextclade]):
+                [Path(x) for x in input.INFORMS_nextclade_all]):
 
             # Determine prefix
             path_tsv = snakemakeutils.load_object(path_io)[0].path

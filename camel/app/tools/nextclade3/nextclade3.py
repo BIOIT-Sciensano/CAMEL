@@ -25,7 +25,16 @@ class Nextclade3(Tool):
         Initializes this tool.
         :return: None
         """
-        super().__init__('Nextclade', '3.1.1')
+        super().__init__('Nextclade', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f"{self._tool_command} --version")
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _check_input(self) -> None:
         """
@@ -60,7 +69,7 @@ class Nextclade3(Tool):
         :param command: Command to check
         :return: None
         """
-        toolutils.check_tool_execution(self, self._command, exit_code=0)
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _parse_output_tsv(self, path_tsv: Path) -> None:
         """
