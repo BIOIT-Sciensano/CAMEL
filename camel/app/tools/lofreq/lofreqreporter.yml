@@ -1,23 +1,4 @@
 dependencies: []
 parameters:
-  export_bam:
-    default: true
-    mandatory: false
-    option: null
-    value: 'false'
-  sample_name:
-    default: false
-    mandatory: false
-    option: null
-    value: null
-  min_af:
-    default: false
-    mandatory: false
-    option: null
-    value: 0
-  csq:
-    default: false
-    mandatory: false
-    option: null
-    value: null
+  sample_name: {default: false, mandatory: false, option: null, value: null}
 tool_command: null
