@@ -1,0 +1,24 @@
+dependencies:
+  - lofreq_star/2.1.3.1
+parameters:
+  uniform:
+    default: false
+    mandatory: false
+    option: '--uniform'
+    value: null
+  dindel:
+    default: true
+    mandatory: false
+    option: '--dindel'
+    flag: true
+  reference:
+    default: true
+    mandatory: false
+    option: '--ref'
+    value: null
+  output_filename:
+    default: true
+    mandatory: true
+    option: '--out'
+    value: alignment_indel_qual.bam
+tool_command: lofreq indelqual
