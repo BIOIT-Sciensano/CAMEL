@@ -1,7 +1,7 @@
 from pathlib import Path
 
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.utils import toolutils
 from camel.app.tools.lofreq.lofreq import Lofreq
 
 
@@ -16,14 +16,17 @@ class LofreqIndelqual(Lofreq):
         Initializes Lofreq indelqual.
         :return: None
         """
-        super().__init__('Lofreq indelqual', None)
+        super().__init__('Lofreq indelqual', '2.1.3.1')
 
     def _check_input(self) -> None:
         """
         Checks that the input is correct.
         :return: None
         """
-        toolutils.check_input(self, keys_required=['FASTA', 'BAM'])
+        if 'FASTA' not in self._tool_inputs:
+            raise InvalidToolInputError('FASTA reference is required')
+        if 'BAM' not in self._tool_inputs:
+            raise InvalidToolInputError('BAM alignment file is required')
         if len(self._tool_inputs['BAM']) != 1:
             raise ValueError("Exactly one BAM input file expected")
         super()._check_input()
@@ -33,8 +36,8 @@ class LofreqIndelqual(Lofreq):
         Executes Lofreq indelqual.
         :return: None
         """
-        fasta_input = self._tool_inputs['FASTA'][0].path
-        bam_input = self._tool_inputs['BAM'][0].path
+        fasta_input = Path(str(self._tool_inputs['FASTA'][0]))
+        bam_input = Path(str(self._tool_inputs['BAM'][0]))
         self.__build_command(fasta_input, bam_input)
         self._execute_command()
         self.__set_output()
@@ -48,7 +51,7 @@ class LofreqIndelqual(Lofreq):
         """
         self._command.command = ' '.join([
             self._tool_command, f'--ref {fasta_input}',
-            *self._build_options(),
+            *self._build_options(excluded_parameters=['reference']),
             str(bam_input)
         ])
 
