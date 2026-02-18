@@ -31,7 +31,7 @@ class Input(BaseInput):
     Defines the script input.
     """
 
-    input_tsv: list[Path] | None
+    input_tsv: list[tuple[Path, str]] | None
     input_html: list[Path] | None
     html_key: str | None = None
     detection_method: str = dataclasses.field(default='blast', metadata={"choices": ["blast", "mist", "kma"]})
@@ -175,7 +175,7 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
             title='MLST phylogeny report',
             dir_out=self._script_out.output_dir)
         if self._script_in.input_tsv is not None:
-            input_file_str = ', '.join([Path(name).name for _, name in self._script_in.input_tsv])
+            input_file_str = f'Sequence typing output ({len(self._script_in.input_tsv)} datasets)'
         else:
             input_file_str = f'Sequence typing output ({len(self._script_in.input_html)} datasets)'
 
