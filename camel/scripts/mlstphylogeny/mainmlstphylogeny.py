@@ -1,27 +1,28 @@
 #!/usr/bin/env python
 import dataclasses
-import itertools
 import shutil
 import tempfile
 from importlib.resources import files
 from pathlib import Path
 
 import click
+import numpy as np
 import pandas as pd
+from scipy.spatial.distance import pdist, squareform
 
+from camel.app.cli import cliutils
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.reports import reportutils
 from camel.app.core.reports.htmlelement import HtmlElement
 from camel.app.core.reports.htmlreport import HtmlReport
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger, initialize_logging
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.model import BaseOptions, BaseOutput, BaseInput
-from camel.app.tools.figtree.figtree import FigTree
-from camel.app.tools.grapetree.grapetree import GrapeTree
 from camel.app.toolkits.phylogeny import mlstphyloutils
 from camel.app.toolkits.phylogeny.newickutils import NewickUtils
-from camel.app.cli import cliutils
+from camel.app.tools.figtree.figtree import FigTree
+from camel.app.tools.grapetree.grapetree import GrapeTree
 
 
 @dataclasses.dataclass(frozen=True)
@@ -82,7 +83,6 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
             script_in=in_,
             script_out=out,
             script_opts=opts
-
         )
 
     def _execute(self) -> None:
@@ -100,7 +100,7 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
             report, path_allele_matrix, allele_data, allele_data_filtered, cutoff_loci, cutoff_datasets)
 
         # Calculate the distance matrix
-        data_dist_matrix = self.__calculate_distance_matrix(allele_data_filtered)
+        data_dist_matrix = self.pdist_calc_distance_matrix(allele_data_filtered)
         self.__report_add_section_distance_matrix(report, data_dist_matrix)
 
         # Check the distance matrix
@@ -122,20 +122,46 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
                 self.__report_add_section_phylogeny(report, grapetree, figtree)
 
     @staticmethod
-    def calculate_distance(alleles_a: pd.Series, alleles_b: pd.Series) -> int:
+    def encode_alleles_global(df: pd.DataFrame) -> pd.DataFrame:
         """
-        Calculates the number of different alleles.
-        :param alleles_a: Alleles a
-        :param alleles_b: Alleles b
-        :return: Number of allelic differences
+        Converts allele ids from string to integers for faster comparison.
+        :param df: Input dataframe
+        :return: Encoded dataframe
         """
-        total_dist = 0
-        for allele_a, allele_b in zip(alleles_a, alleles_b):
-            if allele_a == '-' and allele_b == '-':
-                continue
-            else:
-                total_dist += 0 if allele_a == allele_b else 1
-        return total_dist
+        df = df.replace('-', -1)
+        flat = pd.factorize(df.values.ravel())[0]
+        return pd.DataFrame(
+            flat.reshape(df.shape), index=df.index, columns=df.columns, dtype=np.int32
+        )
+
+    @staticmethod
+    def pdist_allele_distance(u: np.ndarray, v: np.ndarray) -> np.int32:
+        """
+        Calculates the allele distance between two arrays.
+        :param u: Array A (allele calls for a dataset)
+        :param v: Array B (allele calls for a dataset)
+        :return: The total distance
+        """
+        both_missing = (u == -1) & (v == -1)
+        diff = u != v
+        # noinspection PyUnresolvedReferences
+        diff[both_missing] = False
+        return np.sum(diff)
+
+    @staticmethod
+    def pdist_calc_distance_matrix(df_alleles: pd.DataFrame) -> pd.DataFrame:
+        """
+        Uses pdist to calculate the pairwise distances.
+        :param df_alleles: Input dataframe with alleles (encoded as integers)
+        :return: Pairwise distance matrix
+        """
+        dists = pdist(df_alleles.to_numpy(), metric=MainMLSTPhylogeny.pdist_allele_distance)
+        return pd.DataFrame(
+            squareform(dists),
+            index=df_alleles.index,
+            columns=df_alleles.index,
+            dtype=int
+        )
 
     def __initialize_report(self) -> HtmlReport:
         """
@@ -256,29 +282,6 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
         section_filtering.copy_files(report.output_dir)
         report.save()
         return path_allele_matrix
-
-    def __calculate_distance_matrix(self, allele_data_filtered: pd.DataFrame) -> pd.DataFrame:
-        """
-        Calculates the pairwise distance matrix
-        :param allele_data_filtered: Filtered allele matrix
-        :return: Distance matrix
-        """
-        # Calculate pair-wise distances
-        distance_by_dataset_pair = {}
-        for dataset_a, dataset_b in itertools.combinations(allele_data_filtered.index, r=2):
-            key = tuple(sorted([dataset_a, dataset_b]))
-            dist = MainMLSTPhylogeny.calculate_distance(
-                allele_data_filtered.loc[dataset_a], allele_data_filtered.loc[dataset_b])
-            distance_by_dataset_pair[key] = dist
-
-        # Create data frame with pairwise distances
-        records_out = []
-        for dataset_a in allele_data_filtered.index:
-            records_out.append({
-                dataset_b: distance_by_dataset_pair.get(tuple(sorted([dataset_a, dataset_b])), 0) for
-                dataset_b in allele_data_filtered.index
-            })
-        return pd.DataFrame(records_out, index=allele_data_filtered.index)
 
     def __report_add_section_distance_matrix(self, report: HtmlReport, data_dist_matrix: pd.DataFrame) -> None:
         """

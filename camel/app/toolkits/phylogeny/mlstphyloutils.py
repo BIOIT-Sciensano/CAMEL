@@ -7,19 +7,6 @@ import pandas as pd
 from camel.app.loggers import logger
 
 
-ALLELE_COL_BY_METHOD = {
-    'blast': 'Allele',
-    'mist': 'allele',
-    'kma': 'Allele'
-}
-
-LOCUS_COL_BY_METHOD = {
-    'blast': 'Locus',
-    'mist': 'locus',
-    'kma': 'Locus'
-}
-
-
 def is_perfect(record: pd.Series, detection_method: str) -> bool:
     """
     Determines if the given hit is perfect.
@@ -49,9 +36,9 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
             return False
         return True
     elif detection_method == 'mist':
-        if str(record['allele']) == '-':
-            return False
-        return True
+        if str(record['Tag(s)']) == 'EXACT':
+            return True
+        return False
     else:
         raise ValueError(f"Invalid detection method: {detection_method}")
 
@@ -71,7 +58,7 @@ def parse_tsv_typing(tsv_path: Path, method: str, use_temp: bool = True) -> dict
         if method != 'mist':
             allele_data['is_perfect_hit'] = allele_data.apply(
                 lambda x: x['is_perfect_hit'] or len(str(x['Allele'])) == 6, axis=1)
-    return {r[LOCUS_COL_BY_METHOD[method]]: r[ALLELE_COL_BY_METHOD[method]] if r['is_perfect_hit'] else '-' for _, r in allele_data.iterrows()}
+    return {r['Locus']: r['Allele'] if r['is_perfect_hit'] else '-' for _, r in allele_data.iterrows()}
 
 
 def parse_tsv_typing_list(tsv_in: list[tuple[Path, str]], detection_method: Optional[str] = 'blast',
