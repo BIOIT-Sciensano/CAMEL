@@ -16,11 +16,10 @@ def count_reads(infile: Path) -> int:
     :return: number of reads in fastq file
     """
     cat = 'zcat' if fileutils.is_gzipped(infile) else 'cat'
-    cmd = f"{cat} {infile} | paste - - - - | wc -l"
-    command = Command()
-    command.command = cmd
+    cmd = f"{cat} {infile.name} | paste - - - - | wc -l"
+    command = Command(cmd)
     command.run(infile.resolve().parent)
-    if command.stderr != '':
+    if command.stderr != '' or command.exit_code != 0:
         raise RuntimeError(command.stderr, cmd)
     return int(command.stdout.rstrip())
 
