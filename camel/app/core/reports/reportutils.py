@@ -37,8 +37,8 @@ def init_report(path_out: Path, key: str, title: str, dir_out: Path | None = Non
 
 def create_overview_section(
         version: str,
-        dataset_name: str,
         input_file_str: str,
+        dataset_name: str | None = None,
         date: datetime | None = None,
         input_type: str | None = None,
         extra_data: list[Sequence[str]] | None = None,
@@ -59,11 +59,12 @@ def create_overview_section(
     """
     # Main information
     table_data = [
-        ['Dataset:', dataset_name],
         ['Analysis date:', (date if not date is None else datetime.now()).strftime(config.date_fmt)],
-        ['Version:', version],
-        ['Input files:', input_file_str],
+        ['Version:', version]
     ]
+    if dataset_name is not None:
+        table_data.append(['Dataset:', dataset_name])
+    table_data.append(['Input files:', input_file_str])
 
     # Additional info
     if input_type is not None:

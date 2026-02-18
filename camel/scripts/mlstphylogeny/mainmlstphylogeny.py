@@ -174,7 +174,7 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
             key='MLST phylogeny',
             title='MLST phylogeny report',
             dir_out=self._script_out.output_dir)
-        if self._script_in.input_tsv is not None:
+        if len(self._script_in.input_tsv) > 0:
             input_file_str = f'Sequence typing output ({len(self._script_in.input_tsv)} datasets)'
         else:
             input_file_str = f'Sequence typing output ({len(self._script_in.input_html)} datasets)'
@@ -182,7 +182,6 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
         # Analysis info section
         report.add_html_object(reportutils.create_overview_section(
             version=self._version,
-            dataset_name=input_file_str,
             input_file_str=input_file_str,
             extra_data=[
                 ['Allele detection method', self._script_in.detection_method],
