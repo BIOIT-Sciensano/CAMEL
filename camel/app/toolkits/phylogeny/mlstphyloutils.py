@@ -36,7 +36,7 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
             return False
         return True
     elif detection_method == 'mist':
-        if str(record['Tag(s)']) == 'EXACT':
+        if 'EXACT' in str(record['Tag(s)']):
             return True
         return False
     else:
