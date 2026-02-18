@@ -101,6 +101,10 @@ class Fastp(Tool):
         with self._tool_outputs['JSON'][0].path.open() as handle:
             data = json.load(handle)
         self._informs['summary'] = data['summary']
+        total_read_pairs_before = self._informs['summary']['before_filtering']['total_reads'] // 2
+        total_read_pairs_after = self._informs['summary']['after_filtering']['total_reads'] // 2
+        self._informs['summary']['before_filtering']['total_read_pairs'] = total_read_pairs_before
+        self._informs['summary']['after_filtering']['total_read_pairs'] = total_read_pairs_after
         self._informs['duplication'] = data['duplication']
 
     def _execute_tool(self) -> None:

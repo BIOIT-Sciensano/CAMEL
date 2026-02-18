@@ -221,8 +221,8 @@ rule trimming_illumina_summary_fastp:
     run:
         informs_fastp = snakemakeutils.load_object(Path(input.INFORMS))
         summary_data = [
-            ('trim_ilmn_pairs_in', informs_fastp['summary']['before_filtering']['total_reads']),
-            ('trim_ilmn_pairs_out', informs_fastp['summary']['after_filtering']['total_reads']),
+            ('trim_ilmn_pairs_in', informs_fastp['summary']['before_filtering']['total_read_pairs']),
+            ('trim_ilmn_pairs_out', informs_fastp['summary']['after_filtering']['total_read_pairs']),
             ('trim_ilmn_bases_in', informs_fastp['summary']['before_filtering']['total_bases']),
             ('trim_ilmn_bases_out', informs_fastp['summary']['after_filtering']['total_bases']),
             ('trim_ilmn_q30_rate_in', informs_fastp['summary']['before_filtering']['q30_rate']),

@@ -21,7 +21,7 @@ class FastpReporter(Tool):
         {'key': 'read1_mean_length', 'name': 'Fwd. mean length', 'fmt': lambda x: f'{x:,}'},
         {'key': 'read2_mean_length', 'name': 'Rev. mean length', 'fmt': lambda x: f'{x:,}'},
         {'key': 'total_bases', 'name': 'Total bases', 'fmt': lambda x: f'{x:,}'},
-        {'key': 'total_reads', 'name': 'Total reads', 'fmt': lambda x: f'{x:,}'}
+        {'key': 'total_read_pairs', 'name': 'Total read pairs', 'fmt': lambda x: f'{x:,}'}
     ]
 
     def __init__(self) -> None:
