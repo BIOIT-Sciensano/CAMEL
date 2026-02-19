@@ -85,7 +85,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         snakepipelineutils.run_snakemake(
             snakefile=SNAKEFILE,
             config_path=config_file,
-            targets=[Path(self._script_out.html)],
+            targets=[Path(variant_calling_lofreq.OUTPUT_REPORT)],
             working_dir=self._script_opts.working_dir,
             threads=self._script_opts.threads)
 
@@ -94,6 +94,9 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         output_vcf_path = snakemakeutils.load_object(self._script_opts.working_dir /
                                                      variant_calling_lofreq.OUTPUT_UNFILTERED_VCF)[0].path
         shutil.copyfile(output_vcf_path, self._script_out.output)
+        if not self._script_out.html.parent.exists():
+            self._script_out.html.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(self._script_opts.working_dir/variant_calling_lofreq.OUTPUT_REPORT, self._script_out.html)
 
     def __create_snakemake_config_data(self) -> dict:
         """

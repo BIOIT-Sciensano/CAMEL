@@ -150,10 +150,9 @@ rule generate_report:
         report_lofreq=variant_calling_lofreq.OUTPUT_REPORT_LOFREQ,
         report_commands=rules.report_create_commands_section.output.HTML
     output:
-        HTML=config['output']['html']
+        HTML='variant_calling/report.html'
     params:
         output_dir=config['output']['dir'],
-        html=config['output']['html'],
         name=config['script_info']['name'],
         version=config['script_info']['version'],
         input_dict=config['input']
@@ -164,7 +163,7 @@ rule generate_report:
 
         # Initialize report
         report = reportutils.init_report(
-            path_out=Path(params.html),
+            path_out=Path(output.HTML),
             key=params.name,
             title=params.name,
         )
