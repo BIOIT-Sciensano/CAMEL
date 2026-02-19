@@ -47,7 +47,7 @@ class Options(model.BaseOptions):
     working_dir: Path = dataclasses.field(default=Path.cwd(), metadata={'help': 'Working directory'})
     call_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call indels'})
     only_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call only indels'})
-    threads: int = dataclasses.field(default=1, metadata={'help': 'Number of threads'})
+    threads: int = dataclasses.field(default=8, metadata={'help': 'Number of threads'})
 
 
 class MainCalling(BaseScript[ScriptInput, Output, Options]):
