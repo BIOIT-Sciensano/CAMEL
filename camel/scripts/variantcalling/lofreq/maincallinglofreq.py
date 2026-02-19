@@ -110,10 +110,12 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         Runs the variant calling Snakefile to call the variants.
         :return: None
         """
+        # Symlink the fastq input
+        self._symlink_input_fastq()
+
         # Create the config file
         config_data = self.__create_snakemake_config_data()
         config_file = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
-        self._symlink_input_fastq()
 
         # Run Snakemake to generate the output file
         snakepipelineutils.run_snakemake(
