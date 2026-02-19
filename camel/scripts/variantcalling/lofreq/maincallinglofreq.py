@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import dataclasses
 import shutil
 from pathlib import Path
