@@ -1,10 +1,11 @@
 from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.tools.lofreq.lofreqreporter import LofreqReporter
-from camel.snakefiles import trimming_illumina, trimming
+from camel.snakefiles import trimming_illumina, trimming, variant_calling
 from camel.scripts.variantcalling.lofreq.snakefile import variant_calling_lofreq
 from camel.app.core.reports import reportutils
 
 include: trimming_illumina.SNAKEFILE
+include: variant_calling.SNAKEFILE
 
 rule all:
     input:
@@ -25,27 +26,7 @@ rule link_fastq_to_trimming_input:
         snakemakeutils.dump_object([ToolIOFile(Path(x['path'])) for x in
                                     params.input_dict['fastq_pe']],Path(output.FASTQ_PE))
 
-rule variant_calling_prep_reference:
-    """
-    Converts the reference to a Snakemake / CAMEL compatible format. Creates the reference metadata.
-    """
-    output:
-        INDEX_GENOME_PREFIX='variant_calling/reference/genome_prefix.io',
-        FASTA='variant_calling/reference/fasta.io',
-        INFORMS='variant_calling/reference/informs.io'
-    params:
-        ref_fasta=config['reference'].get('fasta'),
-        ref_url=config['reference'].get('url'),
-        ref_name=config['reference'].get('name')
-    run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
-        from camel.app.core.io.tooliofile import ToolIOFile
-
-        snakemakeutils.dump_object([ToolIOValue(params.ref_fasta)],Path(output.INDEX_GENOME_PREFIX))
-        snakemakeutils.dump_object([ToolIOFile(Path(params.ref_fasta))],Path(output.FASTA))
-        snakemakeutils.dump_object({'name': params.ref_name, 'url': params.ref_url},Path(output.INFORMS))
-
-rule variant_calling_map_reads_illumina:
+rule variant_calling_map_reads_illumina_lofreq:
     """
     Maps the trimmed illumina reads to the reference sequence.
     """
@@ -84,7 +65,7 @@ rule variant_calling_map_reads_illumina:
 
 rule lofreq_indel_qualities:
     input:
-        BAM=rules.variant_calling_map_reads_illumina.output.BAM,
+        BAM=rules.variant_calling_map_reads_illumina_lofreq.output.BAM,
         FASTA=rules.variant_calling_prep_reference.output.FASTA
     output:
         BAM='variant_calling/read_mapping/illumina/bam-indelqual.io',
@@ -103,7 +84,7 @@ rule lofreq_indel_qualities:
 rule variant_calling_with_lofreq:
     input:
         BAM=rules.lofreq_indel_qualities.output.BAM if config['variant_calling']['call_indels'] is True
-        else rules.variant_calling_map_reads_illumina.output.BAM,
+        else rules.variant_calling_map_reads_illumina_lofreq.output.BAM,
         FASTA=rules.variant_calling_prep_reference.output.FASTA
     output:
         VCF='variant_calling/vcf.io',
@@ -123,13 +104,18 @@ rule variant_calling_with_lofreq:
 rule lofreq_reporter:
     input:
         VCF=rules.variant_calling_with_lofreq.output.VCF,
-        INFORMS_reference=rules.variant_calling_prep_reference.output.INFORMS
+        INFORMS_reference=rules.variant_calling_prep_reference.output.INFORMS,
+        INFORMS_mapping= variant_calling.get_mapping_informs(config),
+        INFORMS_map_rate= rules.variant_calling_calculate_mapping_rate.output.INFORMS,
+        INFORMS_depth = rules.variant_calling_calculate_depth.output.INFORMS,
+        BAM='variant_calling/read_mapping/illumina/bam.io'
     output:
         VAL_HTML=variant_calling_lofreq.OUTPUT_REPORT_LOFREQ,
         INFORMS='variant_calling/report/informs.io'
     params:
         dir_='variant_calling/report',
-        sample_name=config['input']['sample_name']
+        sample_name=config['input']['sample_name'],
+        include_bam= config.get('variant_calling', {}).get('report_include_bam', False)
     run:
         from camel.app.core.io.tooliovalue import ToolIOValue
 
@@ -137,6 +123,7 @@ rule lofreq_reporter:
         step = Step(rule_name=str(rule),tool=reporter,dir_=Path(params.dir_))
         snakemakeutils.add_pickle_inputs(reporter,input)
         reporter.add_input_files({'VAL_Sample': [ToolIOValue(params.sample_name)]})
+        reporter.update_parameters(export_bam='true' if params.include_bam else 'false')
         step.run()
         snakemakeutils.dump_tool_outputs(reporter,output)
 
