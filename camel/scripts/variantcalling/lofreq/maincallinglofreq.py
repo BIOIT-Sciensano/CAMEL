@@ -72,6 +72,39 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
             script_opts=opts
         )
 
+    def _symlink_input_fastq(self):
+        """
+        symlink input fastq
+        :return: None
+        """
+        input_symlink_dir = self._script_opts.working_dir / 'input'
+        input_symlink_dir.mkdir(parents=True, exist_ok=True)
+
+        if self._script_in.fastq_pe_names:
+            links = list(zip(self._script_in.fastq_pe, self._script_in.fastq_pe_names))
+        else:
+            fastq_names = [k.name for k in self._script_in.fastq_pe]
+            links = list(zip(self._script_in.fastq_pe, fastq_names))
+
+        to_replace = {}
+        for origin, target in links:
+            key = 'fastq_pe'
+            path_out = input_symlink_dir / target
+            if path_out.is_symlink():
+                logger.debug(f'Symlink already exists: {path_out}')
+            else:
+                ((input_symlink_dir / target).absolute()).symlink_to(origin.resolve().absolute())
+
+            # Save the updated path
+            if key not in to_replace:
+                to_replace[key] = path_out
+            else:
+                to_replace[key] = [to_replace[key], path_out]
+
+        # Update the script input
+        script_in_updated = dataclasses.replace(self._script_in, **to_replace)
+        self._script_in = script_in_updated
+
     def _execute(self) -> None:
         """
         Runs the variant calling Snakefile to call the variants.
@@ -80,6 +113,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         # Create the config file
         config_data = self.__create_snakemake_config_data()
         config_file = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
+        self._symlink_input_fastq()
 
         # Run Snakemake to generate the output file
         snakepipelineutils.run_snakemake(
@@ -96,7 +130,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         shutil.copyfile(output_vcf_path, self._script_out.output)
         if not self._script_out.html.parent.exists():
             self._script_out.html.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(self._script_opts.working_dir/variant_calling_lofreq.OUTPUT_REPORT, self._script_out.html)
+        shutil.copyfile(self._script_opts.working_dir / variant_calling_lofreq.OUTPUT_REPORT, self._script_out.html)
 
     def __create_snakemake_config_data(self) -> dict:
         """
