@@ -26,13 +26,31 @@ rule link_fastq_to_trimming_input:
         snakemakeutils.dump_object([ToolIOFile(Path(x['path'])) for x in
                                     params.input_dict['fastq_pe']],Path(output.FASTQ_PE))
 
+rule bt2_index:
+    """
+    Creates a bowtie2 index for the reference genome.
+    """
+    input:
+        FASTA_REF = rules.variant_calling_prep_reference.output.FASTA
+    output:
+        INDEX_GENOME_PREFIX = 'variant_calling/reference/genome_prefix_index.io'
+    params:
+        dir_ = 'variant_calling/reference'
+    run:
+        from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
+        bowtie2_index = Bowtie2Index()
+        step = Step(rule_name=str(rule), tool=bowtie2_index, dir_=Path(params.dir_))
+        snakemakeutils.add_pickle_inputs(bowtie2_index, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(bowtie2_index, output)
+
 rule variant_calling_map_reads_illumina_lofreq:
     """
     Maps the trimmed illumina reads to the reference sequence.
     """
     input:
         IO=trimming_illumina.select_fastq_output(config),
-        INDEX_GENOME_PREFIX=rules.variant_calling_prep_reference.output.INDEX_GENOME_PREFIX
+        INDEX_GENOME_PREFIX=rules.bt2_index.output.INDEX_GENOME_PREFIX
     output:
         BAM='variant_calling/read_mapping/illumina/bam.io',
         INFORMS='variant_calling/read_mapping/illumina/informs.io'

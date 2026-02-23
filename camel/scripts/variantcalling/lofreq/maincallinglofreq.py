@@ -89,7 +89,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         links.extend([('fastq_pe', self._script_in.fastq_pe[1],
                        self._script_in.fastq_pe_names[1] if self._script_in.fastq_pe_names else
                        self._script_in.fastq_pe[1].name)])
-        links.extend([('fasta', self._script_opts.reference,
+        links.extend([('reference', self._script_opts.reference,
                        self._script_opts.reference_name if self._script_opts.reference_name else
                        self._script_opts.reference.name)])
 
@@ -106,10 +106,15 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
                 to_replace[key] = path_out
             else:
                 to_replace[key] = [to_replace[key], path_out]
+        to_replace_in = to_replace.copy()
+        to_replace_in.pop('reference')
+        to_replace.pop('fastq_pe')
 
         # Update the script input
-        script_in_updated = dataclasses.replace(self._script_in, **to_replace)
+        script_in_updated = dataclasses.replace(self._script_in, **to_replace_in)
+        script_opts_updated = dataclasses.replace(self._script_opts, **to_replace)
         self._script_in = script_in_updated
+        self._script_opts = script_opts_updated
 
     def _execute(self) -> None:
         """
