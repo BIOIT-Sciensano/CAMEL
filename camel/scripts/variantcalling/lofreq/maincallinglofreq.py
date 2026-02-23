@@ -63,6 +63,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         :param in_: Input files
         :param out_: Output VCF file
         :param opts: Additional options
+        :return: None
         """
         super().__init__(
             name='Variant calling (LoFreq)',
@@ -72,23 +73,28 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
             script_opts=opts
         )
 
-    def _symlink_input_fastq(self):
+    def _symlink_input_data(self):
         """
-        symlink input fastq
+        Symlinks input data (fastq and fasta)
         :return: None
         """
         input_symlink_dir = self._script_opts.working_dir / 'input'
         input_symlink_dir.mkdir(parents=True, exist_ok=True)
 
-        if self._script_in.fastq_pe_names:
-            links = list(zip(self._script_in.fastq_pe, self._script_in.fastq_pe_names))
-        else:
-            fastq_names = [k.name for k in self._script_in.fastq_pe]
-            links = list(zip(self._script_in.fastq_pe, fastq_names))
+        links = []
+
+        links.extend([('fastq_pe', self._script_in.fastq_pe[0],
+                       self._script_in.fastq_pe_names[0] if self._script_in.fastq_pe_names else
+                       self._script_in.fastq_pe[0].name)])
+        links.extend([('fastq_pe', self._script_in.fastq_pe[1],
+                       self._script_in.fastq_pe_names[1] if self._script_in.fastq_pe_names else
+                       self._script_in.fastq_pe[1].name)])
+        links.extend([('fasta', self._script_opts.reference,
+                       self._script_opts.reference_name if self._script_opts.reference_name else
+                       self._script_opts.reference.name)])
 
         to_replace = {}
-        for origin, target in links:
-            key = 'fastq_pe'
+        for key, origin, target in links:
             path_out = input_symlink_dir / target
             if path_out.is_symlink():
                 logger.debug(f'Symlink already exists: {path_out}')
@@ -111,7 +117,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         :return: None
         """
         # Symlink the fastq input
-        self._symlink_input_fastq()
+        self._symlink_input_data()
 
         # Create the config file
         config_data = self.__create_snakemake_config_data()
