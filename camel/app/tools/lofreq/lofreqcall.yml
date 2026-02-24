@@ -14,12 +14,12 @@ parameters:
     default: false
     mandatory: false
     option: '--call-indels'
-    value: null
+    flag: true
   only_indels:
     default: false
     mandatory: false
     option: '--only-indels'
-    value: null
+    flag: true
   output_filename:
     default: true
     mandatory: true

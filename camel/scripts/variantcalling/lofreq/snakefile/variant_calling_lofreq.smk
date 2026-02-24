@@ -95,7 +95,7 @@ rule lofreq_indel_qualities:
 
         lofreq_indelqual = LofreqIndelqual()
         snakemakeutils.add_pickle_inputs(lofreq_indelqual,input)
-        step = Step(rule_name=str(rule),tool=lofreq_indelqual,dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=lofreq_indelqual, dir_=Path(str(params.dir_)))
         step.run()
         snakemakeutils.dump_tool_outputs(lofreq_indelqual,output)
 
@@ -108,14 +108,16 @@ rule variant_calling_with_lofreq:
         VCF='variant_calling/vcf.io',
         INFORMS='variant_calling/informs.io',
     params:
-        dir_=lambda wildcards: 'variant_calling/'
+        dir_=lambda wildcards: 'variant_calling/',
+        call_indels = config.get('variant_calling', {}).get('call_indels', None)
     threads: 8
     run:
         from camel.app.tools.lofreq.lofreqcall import LofreqCall
 
         lofreq_call = LofreqCall()
         snakemakeutils.add_pickle_inputs(lofreq_call,input)
-        step = Step(rule_name=str(rule),tool=lofreq_call,dir_=Path(str(params.dir_)))
+        lofreq_call.update_parameters(call_indels=True if params.call_indels else False)
+        step = Step(rule_name=str(rule), tool=lofreq_call, dir_=Path(str(params.dir_)))
         step.run()
         snakemakeutils.dump_tool_outputs(lofreq_call,output)
 
@@ -133,15 +135,16 @@ rule lofreq_reporter:
     params:
         dir_='variant_calling/report',
         sample_name=config['input']['sample_name'],
-        include_bam= config.get('variant_calling', {}).get('report_include_bam', False)
+        include_bam= config.get('variant_calling', {}).get('report_include_bam', False),
+        min_af = config.get('variant_calling', {}).get('min_af', 0)
     run:
         from camel.app.core.io.tooliovalue import ToolIOValue
 
         reporter = LofreqReporter()
-        step = Step(rule_name=str(rule),tool=reporter,dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         snakemakeutils.add_pickle_inputs(reporter,input)
         reporter.add_input_files({'VAL_Sample': [ToolIOValue(params.sample_name)]})
-        reporter.update_parameters(export_bam='true' if params.include_bam else 'false')
+        reporter.update_parameters(export_bam='true' if params.include_bam else 'false', min_af=params.min_af)
         step.run()
         snakemakeutils.dump_tool_outputs(reporter,output)
 

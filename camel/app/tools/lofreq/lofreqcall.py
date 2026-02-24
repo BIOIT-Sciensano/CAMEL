@@ -14,6 +14,7 @@ class LofreqCall(Lofreq):
     def __init__(self) -> None:
         """
         Initializes Lofreq call.
+        :return: None
         """
         super().__init__('Lofreq call', '2.1.5')
 

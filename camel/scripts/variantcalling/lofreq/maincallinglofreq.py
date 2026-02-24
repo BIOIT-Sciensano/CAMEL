@@ -50,6 +50,7 @@ class Options(model.BaseOptions):
     call_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call indels'})
     only_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call only indels'})
     threads: int = dataclasses.field(default=8, metadata={'help': 'Number of threads'})
+    min_af: float = dataclasses.field(default=0.0, metadata={'help': 'Minimum allele frequency'})
 
 
 class MainCalling(BaseScript[ScriptInput, Output, Options]):
@@ -66,7 +67,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         :return: None
         """
         super().__init__(
-            name='Variant calling (LoFreq)',
+            name='Viral Low-Frequency Variants pipeline',
             version='1.0',
             script_in=in_,
             script_out=out_,
@@ -175,7 +176,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
             'variant_filtering': {},
             'working_dir': str(self._script_opts.working_dir),
         }
-        for k in ['call_indels', 'only_indels']:
+        for k in ['call_indels', 'only_indels', 'min_af']:
             if self._script_opts.__getattribute__(k) is not None:
                 config_data['variant_calling'][k] = self._script_opts.__getattribute__(k)
         return config_data

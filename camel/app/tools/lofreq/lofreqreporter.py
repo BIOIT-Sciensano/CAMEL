@@ -80,8 +80,7 @@ class LofreqReporter(Tool):
         Adds a table containing the output files.
         :return: None
         """
-        self._section.add_header('Output VCF', 4)
-        self._section.add_paragraph('Number of variants detected.')
+        self._section.add_header('Variant statistics', 4)
         self.__add_vcf_table_summary(self._tool_inputs['VCF'][0].path)
 
     def __add_reference_link(self) -> None:
@@ -109,40 +108,53 @@ class LofreqReporter(Tool):
         self._section.add_file(path, relative_path)
         return HtmlTableCell('Download', link=str(relative_path))
 
-    def __retrieve_vars_at_specific_af(self, var_list: list, af_list: list) -> list:
+    @staticmethod
+    def __retrieve_vars_at_specific_af(var_list: list, af_threshold: float, af_list: list) -> list:
         """
         From a list of vcf record, extracts variants at specific allele frequencies.
-        :param var_list: variants list
+        :param var_list: Variants list (SNPs and Indels)
+        :param af_threshold: Allele frequency threshold used as filter
         :param af_list: list of allele frequencies categories
-        :return: list of categories and count
+        :return: List of categories and count
         """
-        all_vars_af = [k.INFO['AF'] for k in var_list]
-        dic = dict()
-        for k in range(len(af_list)):
-            if k == 0:
-                count = len([j for j in all_vars_af if j <= af_list[k]])
-                label = f"AF <= {af_list[k]:.2f}"
-            else:
-                count = len([j for j in all_vars_af if af_list[k - 1] < j <= af_list[k]])
-                label = f"{af_list[k - 1]:.2f} < AF <= {af_list[k]:.2f}"
-            dic[label] = count
-        af_variant_lists = list(dic.items())
-        return af_variant_lists
+        af_variants_list = []
+        if var_list:
+            all_indels_af = [k.INFO['AF'] for k in var_list if k.INFO.get('INDEL', False) is True]
+            all_snps_af = [k.INFO['AF'] for k in var_list if k.INFO.get('INDEL', False) is False]
+            for k in range(len(af_list)):
+                if af_list[k] > af_threshold:
+                    if k == 0:
+                        count_snp = len([snp_af for snp_af in all_snps_af if snp_af <= af_list[k]])
+                        count_indel = len([indel_af for indel_af in all_indels_af if indel_af <= af_list[k]])
+                        label = f"AF <= {af_list[k]:.2f}"
+                    else:
+                        count_snp = len([snp_af for snp_af in all_snps_af if af_list[k - 1] < snp_af <= af_list[k]])
+                        count_indel = len(
+                            [indel_af for indel_af in all_indels_af if af_list[k - 1] < indel_af <= af_list[k]])
+                        label = f"{af_list[k - 1]:.2f} < AF <= {af_list[k]:.2f}"
+                    af_variants_list.append([label, count_snp, count_indel])
+        return af_variants_list
 
     def __add_vcf_table_summary(self, path: Path) -> None:
         """
         Parses the VCF file for summary statistics.
+        :param path: Path to the VCF file
         :return: None
         """
-        all_snps = retrieve_variants(path, types=['snp'])
-        all_indels = retrieve_variants(path, types=['indel'])
+        all_variants = retrieve_variants(path, types=['snp', 'indel'])
+        minimum_allele_frequency = self._parameters['min_af'].value if self._parameters['min_af'] else 0
+        all_variants = [x for x in all_variants if x.INFO.get('AF', 0) >= minimum_allele_frequency]
+        all_indels = [x for x in all_variants if x.INFO.get('INDEL', False) is True]
 
         vcf_cell = self.__create_vcf_download_cell(self._tool_inputs['VCF'][0].path, 'all')
         variant_table_summary = [
-            [len(all_snps), len(all_indels), vcf_cell],
+            [len(all_variants) - len(all_indels), len(all_indels), vcf_cell],
         ]
-        variant_table_afs = self.__retrieve_vars_at_specific_af(all_snps, LofreqReporter.AF_TO_REPORT)
+        variant_table_afs = self.__retrieve_vars_at_specific_af(all_variants, minimum_allele_frequency,
+                                                                LofreqReporter.AF_TO_REPORT)
 
-        self._section.add_table(variant_table_summary, ['SNPs', 'indels', 'VCF file'], [('class', 'data')])
-        self._section.add_paragraph('Number of SNPs detected per allele frequency categories.')
-        self._section.add_table(variant_table_afs, ['AF', 'no. of SNPs'], [('class', 'data')])
+        self._section.add_paragraph('Number of variants detected (min AF = {:.2f})'.format(minimum_allele_frequency))
+        self._section.add_table(variant_table_summary, ['Total # SNPs', 'Total # Indels', 'VCF file'],
+                                [('class', 'data')])
+        self._section.add_paragraph('Number of variants detected per allele frequency categories.')
+        self._section.add_table(variant_table_afs, ['AF', '# SNPs', '# Indels'], [('class', 'data')])
