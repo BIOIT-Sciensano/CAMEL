@@ -144,7 +144,8 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         shutil.copyfile(output_vcf_path, self._script_out.output)
         if not self._script_out.html.parent.exists():
             self._script_out.html.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(self._script_opts.working_dir / variant_calling_lofreq.OUTPUT_REPORT, self._script_out.html)
+        shutil.copytree(Path(self._script_opts.working_dir / variant_calling_lofreq.OUTPUT_REPORT).parent,
+                        self._script_out.html.parent, dirs_exist_ok=True)
 
     def __create_snakemake_config_data(self) -> dict:
         """
