@@ -97,7 +97,7 @@ rule lofreq_indel_qualities:
         snakemakeutils.add_pickle_inputs(lofreq_indelqual,input)
         step = Step(rule_name=str(rule), tool=lofreq_indelqual, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(lofreq_indelqual,output)
+        snakemakeutils.dump_tool_outputs(lofreq_indelqual, output)
 
 rule variant_calling_with_lofreq:
     input:
@@ -128,7 +128,8 @@ rule lofreq_reporter:
         INFORMS_mapping= variant_calling.get_mapping_informs(config),
         INFORMS_map_rate= rules.variant_calling_calculate_mapping_rate.output.INFORMS,
         INFORMS_depth = rules.variant_calling_calculate_depth.output.INFORMS,
-        BAM='variant_calling/read_mapping/illumina/bam.io'
+        BAM='variant_calling/read_mapping/illumina/bam.io',
+        TSV=rules.variant_calling_calculate_depth.output.TSV
     output:
         VAL_HTML=variant_calling_lofreq.OUTPUT_REPORT_LOFREQ,
         INFORMS='variant_calling/report/informs.io'
@@ -142,7 +143,7 @@ rule lofreq_reporter:
 
         reporter = LofreqReporter()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
-        snakemakeutils.add_pickle_inputs(reporter,input)
+        snakemakeutils.add_pickle_inputs(reporter, input)
         reporter.add_input_files({'VAL_Sample': [ToolIOValue(params.sample_name)]})
         reporter.update_parameters(export_bam='true' if params.include_bam else 'false', min_af=params.min_af)
         step.run()
@@ -171,7 +172,7 @@ rule generate_report:
         report_lofreq=variant_calling_lofreq.OUTPUT_REPORT_LOFREQ,
         report_commands=rules.report_create_commands_section.output.HTML
     output:
-        HTML='variant_calling/report.html'
+        HTML='variant_calling/output/report.html'
     params:
         output_dir=config['output']['dir'],
         name=config['script_info']['name'],
