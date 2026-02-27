@@ -251,6 +251,7 @@ class LofreqReporter(Tool):
         div.add_html_object(img)
         table_data = [
             [HtmlElement('th', 'Legend', [('colspan', '2')])],
+            [HtmlTableCell('', attributes=[('style', 'background-color: #000000')]), 'Coverage'],
             [HtmlTableCell('', attributes=[('style', 'background-color: #b2182b')]), 'AF >= 0.05'],
             [HtmlTableCell('', attributes=[('style', 'background-color: #ef8a62')]), 'AF >= 0.1'],
             [HtmlTableCell('', attributes=[('style', 'background-color: #fddbc7')]), 'AF >= 0.25'],
