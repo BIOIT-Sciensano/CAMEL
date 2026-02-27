@@ -21,7 +21,7 @@ class LofreqReporter(Tool):
     """
 
     SUB_FOLDER = 'output/variant_calling'
-    AF_TO_REPORT = [0.05, 0.1, 0.25, 0.5, 0.75, 1]
+    AF_TO_REPORT_AND_COLOR = {0.05: '#b2182b', 0.1: '#ef8a62', 0.25: '#fddbc7', 0.5: '#d1e5f0', 0.75: '#67a9cf', 1: '#2166ac'}
     COVERAGE_THRESHOLDS_FOR_BREADTH = [1, 5, 10, 50]
 
     def __init__(self) -> None:
@@ -179,7 +179,7 @@ class LofreqReporter(Tool):
             [len(self._all_variants) - len(all_indels), len(all_indels), vcf_cell],
         ]
         variant_table_afs = self.__retrieve_vars_at_specific_af(self._all_variants, minimum_allele_frequency,
-                                                                LofreqReporter.AF_TO_REPORT)
+                                                                list(LofreqReporter.AF_TO_REPORT_AND_COLOR.keys()))
 
         self._section.add_paragraph('Number of variants detected (min AF = {:.2f})'.format(minimum_allele_frequency))
         self._section.add_table(variant_table_summary, ['Total # SNPs', 'Total # Indels', 'VCF file'],
@@ -192,36 +192,46 @@ class LofreqReporter(Tool):
         Creates the coverage variant plot.
         :return: None
         """
-        test_table = pd.DataFrame(self._coverage_table[['position', 'depth']])
-        test_table['position'] = test_table['position'].apply(pd.to_numeric)
-        test_table['depth'] = test_table['depth'].apply(pd.to_numeric)
-        for af in LofreqReporter.AF_TO_REPORT:
+        # Generate the depth and variants table
+        # For each AF threshold in the AF_TO_REPORT table, associate them in the depth table
+        depth_table = pd.DataFrame(self._coverage_table[['position', 'depth']])
+        depth_table['position'] = depth_table['position'].apply(pd.to_numeric)
+        depth_table['depth'] = depth_table['depth'].apply(pd.to_numeric)
+        for af in list(LofreqReporter.AF_TO_REPORT_AND_COLOR.keys())[::-1]:
             var_of_interest = [k.POS for k in self._all_variants if k.INFO['AF'] >= af]
-            test_table[f'AF={af}'] = 0
-            test_table[f'AF={af}'][test_table['position'].isin(var_of_interest)] = 1
-        bins = np.arange(test_table['position'].min(), test_table['position'].max() + 500, 500)
-        test_table2 = test_table.copy()
-        test_table2['position_bin'] = pd.cut(test_table2['position'], bins=bins)
+            depth_table[f'AF={af}'] = 0
+            depth_table[f'AF={af}'][depth_table['position'].isin(var_of_interest)] = 1
 
-        binned_df_1 = test_table2.groupby('position_bin')['AF=0.05'].agg(['sum', 'count'])
-        binned_df_1['proportion'] = binned_df_1['sum'] / binned_df_1['count']
-        binned_df_1 = binned_df_1.reset_index()
-        binned_df_1['position'] = binned_df_1['position_bin'].apply(lambda x: int(x.mid))
-        binned_df_1['x_width'] = binned_df_1['position_bin'].apply(lambda x: x.right - x.left)
-        binned_df_1['position'] = binned_df_1['position'].apply(pd.to_numeric)
-        binned_df_1['position'] = binned_df_1['position'].astype(float)
-        binned_df_1['x_width'] = binned_df_1['x_width'].astype(float)
-        binned_df_1['sum'] = binned_df_1['sum'].apply(pd.to_numeric)
-
-        melted = pd.melt(test_table, 'position', test_table.columns)
-        melted['value'] = melted['value'].apply(pd.to_numeric)
-        sub_melted = melted[melted['variable'] == 'depth']
+        # Melt the depth table on the position for plotting later
+        melted_depth_table = pd.melt(depth_table, 'position', depth_table.columns)
+        melted_depth_table['value'] = melted_depth_table['value'].apply(pd.to_numeric)
+        sub_melted = melted_depth_table[melted_depth_table['variable'] == 'depth']
         sub_melted['position'] = sub_melted['position'].apply(pd.to_numeric)
         sub_melted['value'] = sub_melted['value'].apply(pd.to_numeric)
 
         p = plotnine.ggplot()
         p += plotnine.geom_line(plotnine.aes(x='position', y='value'), data=sub_melted)
-        p += plotnine.geom_bar(plotnine.aes(x='position', y='sum'), data=binned_df_1, stat='identity')
+
+        # Generate the bins to plot the amount of LFV per binned genome position
+        bins = np.arange(depth_table['position'].min(), depth_table['position'].max() + 250, 250)
+        depth_table_binned_positions = depth_table.copy()
+        depth_table_binned_positions['position_bin'] = pd.cut(depth_table_binned_positions['position'], bins=bins)
+
+        # For all threshold in the AF_TO_REPORT table, add to the plot with a specific color
+        for af in LofreqReporter.AF_TO_REPORT_AND_COLOR.keys():
+            binned_df = depth_table_binned_positions.groupby('position_bin')[f'AF={af}'].agg(['sum', 'count'])
+            binned_df['proportion'] = binned_df['sum'] / binned_df['count']
+            binned_df = binned_df.reset_index()
+            binned_df['position'] = binned_df['position_bin'].apply(lambda x: int(x.mid))
+            binned_df['x_width'] = binned_df['position_bin'].apply(lambda x: x.right - x.left)
+            binned_df['position'] = binned_df['position'].apply(pd.to_numeric)
+            binned_df['position'] = binned_df['position'].astype(float)
+            binned_df['x_width'] = binned_df['x_width'].astype(float)
+            binned_df['sum'] = binned_df['sum'].apply(pd.to_numeric)
+
+            p += plotnine.geom_bar(plotnine.aes(x='position', y='sum'), data=binned_df, stat='identity',
+                                   fill=LofreqReporter.AF_TO_REPORT_AND_COLOR[af])
+        p += plotnine.scale_y_log10()
         p.draw(show=True)
         p.save(f'{self._folder}/test.png', dpi=300)
         self.__add_visualization(Path(f'{self._folder}/test.png'))
@@ -237,12 +247,15 @@ class LofreqReporter(Tool):
         relative_path = Path(LofreqReporter.SUB_FOLDER, 'figure.png')
         self._section.add_file(image_path, relative_path)
         img = HtmlElement('img', attributes=[
-            ('src', str(relative_path)), ('alt', 'visualization'), ('height', '960'), ('width', '960')])
+            ('src', str(relative_path)), ('alt', 'visualization'), ('height', '960'), ('width', '1180')])
         div.add_html_object(img)
         table_data = [
             [HtmlElement('th', 'Legend', [('colspan', '2')])],
-            [HtmlTableCell('', color="#ff0000"), 'Coverage'],
-            [HtmlTableCell('', color="#ff0000"), 'Test'],
+            [HtmlTableCell('', attributes=[('style', 'background-color: #b2182b')]), 'AF >= 0.05'],
+            [HtmlTableCell('', attributes=[('style', 'background-color: #ef8a62')]), 'AF >= 0.1'],
+            [HtmlTableCell('', attributes=[('style', 'background-color: #fddbc7')]), 'AF >= 0.25'],
+            [HtmlTableCell('', attributes=[('style', 'background-color: #d1e5f0')]), 'AF >= 0.5'],
+            [HtmlTableCell('', attributes=[('style', 'background-color: #67a9cf')]), 'AF >= 0.75']
         ]
         div.add_table(table_data, table_attributes=[('class', 'data')])
         self._section.add_html_object(div)
