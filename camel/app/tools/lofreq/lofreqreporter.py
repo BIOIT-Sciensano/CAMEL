@@ -213,7 +213,7 @@ class LofreqReporter(Tool):
         p += plotnine.geom_line(plotnine.aes(x='position', y='value'), data=sub_melted)
 
         # Generate the bins to plot the amount of LFV per binned genome position
-        bins = np.arange(depth_table['position'].min(), depth_table['position'].max() + 250, 250)
+        bins = np.arange(depth_table['position'].min(), depth_table['position'].max() + 1000, 1000)
         depth_table_binned_positions = depth_table.copy()
         depth_table_binned_positions['position_bin'] = pd.cut(depth_table_binned_positions['position'], bins=bins)
 
