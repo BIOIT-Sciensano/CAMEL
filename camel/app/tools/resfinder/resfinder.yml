@@ -1,4 +1,4 @@
-dependencies: [resfinder/4.4.2, blast/2.14.0, kma/1.4.12a]
+dependencies: [resfinder/4.7.2, blast/2.14.0, kma/1.4.12a]
 parameters:
   acquired: {default: false, mandatory: false, option: --acquired, value: ''}
   blast_path: {default: false, mandatory: false, option: --blastPath, value: ''}

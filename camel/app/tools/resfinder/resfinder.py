@@ -17,8 +17,9 @@ class ResFinder(Tool):
         """
         Initializes this tool
         :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('ResFinder', '4.4.2', camel)
+        super().__init__('ResFinder', '4.7.2', camel)
 
     def _check_input(self) -> None:
         """
