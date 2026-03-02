@@ -17,7 +17,7 @@ class ResFinder(Tool):
         """
         Initializes this tool
         """
-        super().__init__('ResFinder', '4.4.2')
+        super().__init__('ResFinder', '4.7.2')
 
     def _check_input(self) -> None:
         """
