@@ -16,6 +16,7 @@ class ResFinder(Tool):
     def __init__(self) -> None:
         """
         Initializes this tool
+        :return: None
         """
         super().__init__('ResFinder', '4.7.2')
 
