@@ -222,10 +222,11 @@ class AMRReporter(Tool):
                 row['name'],
                 ', '.join([str(x) for x in self._actg_counts_by_pos.get(row['position'], ['-'])]) if
                 row['variant_type'] == 'snp' else 'n/a',
+                f"{row['af']:.2f}",
                 ab_str,
                 conf_str
             ])
-        header = ['Locus', 'Position', 'Ref', 'Alt', 'Mutation', 'ACTG counts', 'Antibiotic', 'Level']
+        header = ['Locus', 'Position', 'Ref', 'Alt', 'Mutation', 'ACTG counts', 'AF', 'Antibiotic', 'Level']
 
         if len(table_data) == 0:
             div.add_paragraph('No mutations found.')

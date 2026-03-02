@@ -63,7 +63,8 @@ rule report_command_section:
         INFORMS_16s = str(gene_detection.OUTPUT_INFORMS).format(db='ncbi_16s') if 'ncbi_16s' in config['analyses'] else [],
         INFORMS_csb_rd = str(gene_detection.OUTPUT_INFORMS).format(db='csb_rd') if 'csb_rd' in config['analyses'] else [],
         INFORMS_hsp65 = str(gene_detection.OUTPUT_INFORMS).format(db='hsp65') if 'hsp65' in config['analyses'] else [],
-        INFORMS_spoligo = spoligotyping.OUTPUT_INFORMS if 'spoligotyping' in config['analyses'] else []
+        INFORMS_spoligo = spoligotyping.OUTPUT_INFORMS if 'spoligotyping' in config['analyses'] else [],
+        INFORMS_amr = amrdetection.OUTPUT_INFORMS if 'amr' in config['analyses'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:

@@ -1,16 +1,19 @@
+import collections
 import json
+import re
 from pathlib import Path
 from typing import Union
 
 import pandas as pd
 import vcf
+from Bio.SeqUtils import seq3
+# noinspection PyProtectedMember
+from vcf.model import _Record as VcfRecord
 
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
-# noinspection PyProtectedMember
-from vcf.model import _Record as VcfRecord
+from camel.app.loggers import logger
 
 
 class AMRScreen(Tool):
@@ -66,13 +69,18 @@ class AMRScreen(Tool):
         :param full: Full name (including region name)
         :return: Mutation name
         """
+        # Set up the prefix and the suffix
+        prefix = f"{row['region']['locus']}_" if full is True else ''
+        suffix = '*' if row['passes_filt'] is False else ''
+
+        # No entry in the database
         if len(row['associations']) == 0:
-            return f'unknown'
+            effect = row['effect'] if row['effect'] is not None else f'unknown{suffix}'
+            return f"{prefix}{effect}{suffix}" if row['effect'] is not None else f'unknown{suffix}'
+
+        # Present in the database
         unique_muts = set([x['mutation'] for x in row['associations']])
-        if not full:
-            return ';'.join(unique_muts) + ('*' if row['passes_filt'] is False else '')
-        region_name = row['region']['locus']
-        return ';'.join([f'{region_name}_{m}' + ('*' if row['passes_filt'] is False else '') for m in unique_muts])
+        return ';'.join(f'{prefix}{m}{suffix}' for m in unique_muts)
 
     def __parse_db_files(self, path_to_db: Path) -> None:
         """
@@ -89,10 +97,8 @@ class AMRScreen(Tool):
 
         # Parse the database with AMR associations
         data_amr_association = pd.read_table(path_to_db / 'amr_associations_all.tsv')
-        self._association_by_variant = {}
+        self._association_by_variant = collections.defaultdict(list)
         for r in data_amr_association.to_dict('records'):
-            if r['variant'] not in self._association_by_variant:
-                self._association_by_variant[r['variant']] = []
             self._association_by_variant[r['variant']].append(r)
         logger.info(f'{len(data_amr_association):,} AMR associations parsed')
 
@@ -131,7 +137,31 @@ class AMRScreen(Tool):
         parts = vcf_record.INFO['BCSQ'][0].split('|')
         if parts[0].startswith('&'):
             return None
+
+        # Frameshift -> change into WHO format
+        parts[0] = parts[0].lstrip('*')
+        if parts[0] == 'frameshift':
+            m = re.search('^(\d+)([A-Z])', parts[5])
+            return f'p.{seq3(m.group(2))}{m.group(1)}fs' if m else 'frameshift'
+
+        # AA change -> change into WHO format
+        if parts[0] == 'missense':
+            m = re.search('^(\d+)([A-Z])>\d+([A-Z])', parts[5])
+            return f'p.{seq3(m.group(2))}{m.group(1)}{seq3(m.group(3))}' if m else 'missense'
         return parts[0]
+
+    @staticmethod
+    def __extract_af(vcf_record: VcfRecord) -> float | None:
+        """
+        Extracts the allele frequency from the VCF record.
+        :param vcf_record: Input VCF record
+        :return: Allele frequency
+        """
+        if 'AF' in vcf_record.INFO:
+            return vcf_record.INFO['AF']
+        if 'DP4' in vcf_record.INFO:
+            return (vcf_record.INFO['DP4'][2] + vcf_record.INFO['DP4'][3]) / sum(vcf_record.INFO['DP4'])
+        return None
 
     def __cross_check_muts_to_db(self, vcf_input: Path, is_lofreq: bool = False) -> list[dict]:
         """
@@ -147,12 +177,17 @@ class AMRScreen(Tool):
 
             for vcf_record in variants:
                 effect = AMRScreen.__parse_effect(vcf_record)
+
+                # Retrieve the corresponding region
                 try:
                     region = AMRScreen.__get_matching_region(vcf_record.POS, self._data_regions)
                 except ValueError:
                     logger.info(f'No matching region for mutation at position {vcf_record.POS}, retrying affected end')
                     region = AMRScreen.__get_matching_region(vcf_record.affected_end, self._data_regions)
+
+                # Create output record
                 record = {
+                    'af': AMRScreen.__extract_af(vcf_record),
                     'alt': ';'.join(str(x) for x in vcf_record.ALT),
                     'effect': effect,
                     'associations': [],
@@ -163,11 +198,11 @@ class AMRScreen(Tool):
                     'lofreq': is_lofreq,
                     'passes_filt': False,
                 }
+
+                # Add AMR association
                 for alt in vcf_record.ALT:
                     # Query the database
                     key = (vcf_record.POS, str(vcf_record.REF), str(alt))
-                    if (key not in self._variant_by_key) and effect == 'frameshift':
-                        key = f'{region}_LoF'
                     variant = self._variant_by_key.get(key)
                     if variant is None:
                         continue

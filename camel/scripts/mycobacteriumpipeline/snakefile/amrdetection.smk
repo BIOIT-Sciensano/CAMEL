@@ -16,7 +16,8 @@ rule amr_lofreq:
         BAM = variant_calling.get_bam(config),
         FASTA = 'variant_calling/reference/fasta.io'
     output:
-        VCF = 'amr/lofreq/vcf/vcf.io'
+        VCF = 'amr/lofreq/vcf/vcf.io',
+        INFORMS = 'amr/lofreq/vcf/informs.io' # amrdetection.OUTPUT_INFORMS_LOFREQ
     params:
         dir_ = 'amr/lofreq/vcf',
         bed_regions = config['amr']['bed_regions']
@@ -24,7 +25,7 @@ rule amr_lofreq:
         from camel.app.tools.lofreq.lofreqcall import LofreqCall
         lofreq_call = LofreqCall()
         snakemakeutils.add_pickle_inputs(lofreq_call, input)
-        lofreq_call.update_parameters(bed=params.bed_regions)
+        lofreq_call.update_parameters(bed=params.bed_regions, no_default_filter=False)
         step = Step(rule_name=str(rule), tool=lofreq_call, dir_=Path(str(params.dir_)))
         step.run()
         snakemakeutils.dump_tool_outputs(lofreq_call, output)
@@ -306,7 +307,7 @@ rule amr_check_completeness_cds:
         VAL_HITS = str(gene_detection.OUTPUT_ALL_HITS).format(db='amr_cds')
     output:
         VAL_HTML = 'amr/cds/html.iob',
-        INFORMS = 'amr/cds/informs.io'
+        INFORMS = 'amr/cds/informs.io' # amrdetection.OUTPUT_INFORMS_LOFREQ
     params:
         dir_ = 'amr/cds'
     run:
@@ -334,6 +335,7 @@ rule amr_dump_summary_info:
     # TODO: Add DB version!
     """
     input:
+        JSON_screening = rules.amr_screen_mutations.output.JSON,
         INFORMS_screening = rules.amr_screen_mutations.output.INFORMS,
         INFORMS_type = rules.amr_determine_resistance_type.output.JSON,
         INFORMS_pheno = rules.amr_predict_phenotype.output.JSON,
@@ -363,14 +365,26 @@ rule amr_dump_summary_info:
         # Detected mutations
         with open(snakemakeutils.load_object(Path(input.INFORMS_pheno))[0].path) as handle:
             data_pheno = json.load(handle)
+
         for row in data_pheno:
             data_summary.append([f"amr_pheno_{row['abbreviation']}", row['phenotype']])
             for level in amrutils.ConfidenceLevel:
+                # This list is always empty
+                if level is amrutils.ConfidenceLevel.NOT_IN_DB:
+                    continue
                 mutations = row['mutations'].get(level.value, [])
                 data_summary.append([
                     f"amr_mutations_{row['abbreviation']}_{level.value.replace(' ', '_')}",
                     ', '.join([f"{m['name_full']}" for m in mutations]) if len(mutations) > 0 else '-']
                 )
+
+        # Add mutations not in the database
+        with open(snakemakeutils.load_object(Path(input.JSON_screening))[0].path) as handle:
+            data_in = json.load(handle)
+        data_summary.append([
+            'amr_mutations_not_in_db',
+            ', '.join(m['name_full'] for m in data_in if len(m['associations']) == 0 and m['effect'] != 'synonymous')
+        ])
 
         # Incomplete CDSs
         informs_cds = snakemakeutils.load_object(Path(input.INFORMS_cds))

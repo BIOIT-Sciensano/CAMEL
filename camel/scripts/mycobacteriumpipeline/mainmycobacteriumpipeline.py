@@ -73,7 +73,7 @@ class MainMycobacteriumPipeline(BasePipe):
         super().__init__(
             name='Mycobacterium pipeline',
             title='<i>Mycobacterium</i> pipeline',
-            version='1.3',
+            version='1.4.0',
             script_in=in_,
             script_out=out,
             opts=opts,
@@ -160,6 +160,7 @@ def main(**kwargs) -> None:
         output_bam=kwargs['output_bam']
     )
     pipeline = MainMycobacteriumPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline.prepare_input()
     pipeline.run()
 
 
