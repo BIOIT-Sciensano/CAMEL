@@ -21,7 +21,8 @@ class LofreqReporter(Tool):
     """
 
     SUB_FOLDER = 'output/variant_calling'
-    AF_TO_REPORT_AND_COLOR = {0.05: '#b2182b', 0.1: '#ef8a62', 0.25: '#fddbc7', 0.5: '#d1e5f0', 0.75: '#67a9cf', 1: '#2166ac'}
+    AF_TO_REPORT_AND_COLOR = {0.05: '#b2182b', 0.1: '#ef8a62', 0.25: '#fddbc7', 0.5: '#d1e5f0', 0.75: '#67a9cf',
+                              1: '#2166ac'}
     COVERAGE_THRESHOLDS_FOR_BREADTH = [1, 5, 10, 50]
 
     def __init__(self) -> None:
@@ -109,8 +110,7 @@ class LofreqReporter(Tool):
             self._coverage_table = pd.DataFrame(coverage_list, columns=['reference', 'position', 'depth'])
             self._coverage_table['depth'] = self._coverage_table['depth'].apply(pd.to_numeric)
             for cov in LofreqReporter.COVERAGE_THRESHOLDS_FOR_BREADTH:
-                res[f'{cov}X'] = \
-                    f'{len(self._coverage_table[self._coverage_table["depth"] >= cov]) / len(self._coverage_table) * 100:.2f}'
+                res[f'{cov}X'] = f'{len(self._coverage_table[self._coverage_table["depth"] >= cov]) / len(self._coverage_table) * 100:.2f}'
             self._section.add_paragraph('Breadth of coverage at different thresholds.')
             self._section.add_table(list(res.items()), ['Coverage threshold', '% covered'], [('class', 'data')])
         else:
@@ -187,12 +187,40 @@ class LofreqReporter(Tool):
         self._section.add_paragraph('Number of variants detected per allele frequency categories.')
         self._section.add_table(variant_table_afs, ['AF', '# SNPs', '# Indels'], [('class', 'data')])
 
+    @staticmethod
+    def __bin_and_cut_table(df: pd.DataFrame, column: str, window_size: int,
+                            column_for_binning: str = 'position') -> pd.DataFrame:
+        """
+        Bin the table given as input based on the positions in column_for_binning.
+        :param df: pandas DataFrame
+        :param column: Column to bin
+        :param window_size: Window size
+        :param column_for_binning: Column to base the binning on
+        :return: Binned df
+        """
+        column_binned_renamed = f'{column_for_binning}_bin'
+        bins = np.arange(df[column_for_binning].min(), df[column_for_binning].max() + window_size, window_size)
+        table_binned = df.copy()
+        table_binned[column_binned_renamed] = pd.cut(table_binned[column_for_binning], bins=bins)
+        final_binned_df = table_binned.groupby(column_binned_renamed)[column].agg(['sum', 'count'])
+        final_binned_df['proportion'] = final_binned_df['sum'] / final_binned_df['count']
+        final_binned_df = final_binned_df.reset_index()
+
+        # Set the midpoint of the bin as the X-position (important for plotting)
+        final_binned_df[column_for_binning] = final_binned_df[column_binned_renamed].apply(lambda x: int(x.mid))
+        final_binned_df['x_width'] = final_binned_df[column_binned_renamed].apply(lambda x: x.right - x.left)
+
+        # Set the columns as numerical (again important for plotting)
+        columns_to_numerical = [column_for_binning, 'sum', 'proportion', 'x_width']
+        final_binned_df[columns_to_numerical] = final_binned_df[columns_to_numerical].apply(pd.to_numeric)
+        final_binned_df[column_for_binning] = final_binned_df[column_for_binning].astype(float)
+        return final_binned_df
+
     def __create_coverage_variant_plot(self) -> None:
         """
         Creates the coverage variant plot.
         :return: None
         """
-        # Generate the depth and variants table
         # For each AF threshold in the AF_TO_REPORT table, associate them in the depth table
         depth_table = pd.DataFrame(self._coverage_table[['position', 'depth']])
         depth_table['position'] = depth_table['position'].apply(pd.to_numeric)
@@ -202,39 +230,22 @@ class LofreqReporter(Tool):
             depth_table[f'AF={af}'] = 0
             depth_table[f'AF={af}'][depth_table['position'].isin(var_of_interest)] = 1
 
-        # Melt the depth table on the position for plotting later
-        melted_depth_table = pd.melt(depth_table, 'position', depth_table.columns)
-        melted_depth_table['value'] = melted_depth_table['value'].apply(pd.to_numeric)
-        sub_melted = melted_depth_table[melted_depth_table['variable'] == 'depth']
-        sub_melted['position'] = sub_melted['position'].apply(pd.to_numeric)
-        sub_melted['value'] = sub_melted['value'].apply(pd.to_numeric)
-
         p = plotnine.ggplot()
-        p += plotnine.geom_line(plotnine.aes(x='position', y='value'), data=sub_melted)
 
-        # Generate the bins to plot the amount of LFV per binned genome position
-        bins = np.arange(depth_table['position'].min(), depth_table['position'].max() + 1000, 1000)
-        depth_table_binned_positions = depth_table.copy()
-        depth_table_binned_positions['position_bin'] = pd.cut(depth_table_binned_positions['position'], bins=bins)
+        # Generate the bins to plot the average depth per binned genome position
+        binned_df_depth = self.__bin_and_cut_table(depth_table, 'depth', 10)
+        p += plotnine.geom_line(plotnine.aes(x='position', y='proportion'), data=binned_df_depth)
 
         # For all threshold in the AF_TO_REPORT table, add to the plot with a specific color
         for af in LofreqReporter.AF_TO_REPORT_AND_COLOR.keys():
-            binned_df = depth_table_binned_positions.groupby('position_bin')[f'AF={af}'].agg(['sum', 'count'])
-            binned_df['proportion'] = binned_df['sum'] / binned_df['count']
-            binned_df = binned_df.reset_index()
-            binned_df['position'] = binned_df['position_bin'].apply(lambda x: int(x.mid))
-            binned_df['x_width'] = binned_df['position_bin'].apply(lambda x: x.right - x.left)
-            binned_df['position'] = binned_df['position'].apply(pd.to_numeric)
-            binned_df['position'] = binned_df['position'].astype(float)
-            binned_df['x_width'] = binned_df['x_width'].astype(float)
-            binned_df['sum'] = binned_df['sum'].apply(pd.to_numeric)
-
-            p += plotnine.geom_bar(plotnine.aes(x='position', y='sum'), data=binned_df, stat='identity',
+            binned_df_af = self.__bin_and_cut_table(depth_table, f'AF={af}', 1500)
+            p += plotnine.geom_bar(plotnine.aes(x='position', y='sum'), data=binned_df_af, stat='identity',
                                    fill=LofreqReporter.AF_TO_REPORT_AND_COLOR[af])
         p += plotnine.scale_y_log10()
+        p += plotnine.labs(x='Position', y='Value (log-scale)')
         p.draw(show=True)
-        p.save(f'{self._folder}/test.png', dpi=300)
-        self.__add_visualization(Path(f'{self._folder}/test.png'))
+        p.save(f'{self._folder}/figure_coverage_and_variants.png', dpi=300)
+        self.__add_visualization(Path(f'{self._folder}/figure_coverage_and_variants.png'))
 
     def __add_visualization(self, image_path: Path) -> None:
         """
