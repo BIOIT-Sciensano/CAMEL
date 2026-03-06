@@ -49,6 +49,8 @@ class FastpReporter(Tool):
         self.__add_fastqc_reports('Pre-trimming', 'pre_trimming', 'HTML_pre')
         self.__add_fastp_section()
         self.__add_fastqc_reports('Post-trimming', 'post_trimming', 'HTML_post')
+        if 'export_fastq' in self._parameters and self._parameters['export_fastq'].value is True:
+            self.__add_trimmed_read_files()
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._report_section, False)]
 
     def _check_input(self) -> None:
@@ -146,23 +148,23 @@ class FastpReporter(Tool):
         Saves the PE trimmed reads in the output directory and adds them to the report.
         :return: None
         """
+        self._report_section.add_header('Downloads', 3)
         for trimmed_reads_paired, orientation in zip(self._tool_inputs['FASTQ_PE'], ('forward', 'reverse')):
-            filename = f'trimmed_reads_paired_{orientation}.fastq'
-            relative_path = self.__sub_folder / 'read_trimming' / filename
+            relative_path = self.__sub_folder / 'read_trimming' / trimmed_reads_paired.path.name
             self._report_section.add_file(trimmed_reads_paired.path, relative_path)
-            self._report_section.add_link_to_file(f'Trimmed reads paired ({orientation})', relative_path)
+            self._report_section.add_link_to_file(f'Trimmed {orientation} paired reads (FASTQ.GZ)', relative_path)
         self._report_section.add_line_break()
 
-        if 'FASTQ_SE_FORWARD' in self._tool_inputs and len(self._tool_inputs['FASTQ_SE_FORWARD']) > 0:
-            relative_path = self.__sub_folder / 'read_trimming' / 'trimmed_reads_unpaired_forward.fastq'
-            self._report_section.add_file(self._tool_inputs['FASTQ_SE_FORWARD'][0].path, relative_path)
-            self._report_section.add_link_to_file('Trimmed reads unpaired (forward)', relative_path)
+        if 'FASTQ_SE_FWD' in self._tool_inputs and len(self._tool_inputs['FASTQ_SE_FWD']) > 0:
+            relative_path = self.__sub_folder / 'read_trimming' / self._tool_inputs['FASTQ_SE_FWD'][0].path.name
+            self._report_section.add_file(self._tool_inputs['FASTQ_SE_FWD'][0].path, relative_path)
+            self._report_section.add_link_to_file('Trimmed unpaired forwards reads (FASTQ.GZ)', relative_path)
         else:
-            self._report_section.add_link_to_file('Trimmed reads unpaired (forward)', None)
+            self._report_section.add_link_to_file('Trimmed unpaired forwards reads', None)
 
-        if 'FASTQ_SE_REVERSE' in self._tool_inputs and len(self._tool_inputs['FASTQ_SE_REVERSE']) > 0:
-            relative_path = self.__sub_folder / 'read_trimming' / 'trimmed_reads_unpaired_reverse.fastq'
-            self._report_section.add_file(self._tool_inputs['FASTQ_SE_REVERSE'][0].path, relative_path)
-            self._report_section.add_link_to_file('Trimmed reads unpaired (reverse)', relative_path)
+        if 'FASTQ_SE_REV' in self._tool_inputs and len(self._tool_inputs['FASTQ_SE_REV']) > 0:
+            relative_path = self.__sub_folder / 'read_trimming' / self._tool_inputs['FASTQ_SE_REV'][0].path.name
+            self._report_section.add_file(self._tool_inputs['FASTQ_SE_REV'][0].path, relative_path)
+            self._report_section.add_link_to_file('Trimmed unpaired reverse reads (FASTQ.GZ)', relative_path)
         else:
-            self._report_section.add_link_to_file('Trimmed reads unpaired (reverse)', None)
+            self._report_section.add_link_to_file('Trimmed unpaired reverse reads', None)
