@@ -17,7 +17,7 @@ rule link_fastq_to_trimming_input:
     Creates the FASTQ input for the human read scrubbing step.
     """
     output:
-        FASTQ_PE=trimming_illumina.INPUT_FASTQ,
+        FASTQ_PE=trimming_illumina.INPUT_FASTQ
     params:
         input_dict=config['input']
     run:
@@ -106,7 +106,7 @@ rule variant_calling_with_lofreq:
         FASTA=rules.variant_calling_prep_reference.output.FASTA
     output:
         VCF='variant_calling/vcf.io',
-        INFORMS='variant_calling/informs.io',
+        INFORMS='variant_calling/informs.io'
     params:
         dir_=lambda wildcards: 'variant_calling/',
         call_indels = config.get('variant_calling', {}).get('call_indels', None)
@@ -172,7 +172,7 @@ rule generate_report:
         report_lofreq=variant_calling_lofreq.OUTPUT_REPORT_LOFREQ,
         report_commands=rules.report_create_commands_section.output.HTML
     output:
-        HTML='variant_calling/output/report.html'
+        HTML=config['output']['html']
     params:
         output_dir=config['output']['dir'],
         name=config['script_info']['name'],
