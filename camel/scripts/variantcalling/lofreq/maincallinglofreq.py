@@ -11,6 +11,7 @@ from camel.app.cli import cliutils
 from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
 from camel.app.loggers import logger, initialize_logging
 from camel.app.scriptutils import model
+from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipeutils import dict_merge
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
@@ -116,6 +117,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         """
         # Symlink the fastq input
         self._symlink_input_data()
+        basepipeutils.prepare_galaxy_output(self._script_out.dir, self._script_out.html)
 
         # Create the config file
         config_data = self.__create_snakemake_config_data()
