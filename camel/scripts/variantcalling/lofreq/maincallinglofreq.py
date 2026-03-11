@@ -15,18 +15,9 @@ from camel.app.scriptutils.basepipe.basepipeutils import dict_merge
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.scripts.variantcalling.lofreq.snakefile import variant_calling_lofreq
 from camel.scripts.variantcalling.lofreq.snakefile.variant_calling_lofreq import SNAKEFILE
-
-
-@dataclasses.dataclass(frozen=True)
-class Output(model.BaseOutput):
-    """
-    Defines the script output.
-    """
-    output: Path = dataclasses.field(metadata={'help': 'Output VCF file'})
-    html: Path = dataclasses.field(metadata={'help': 'Output HTML report'})
-    dir: Path = dataclasses.field(metadata={'help': 'Output directory'})
 
 
 @dataclasses.dataclass(frozen=True)
@@ -35,6 +26,7 @@ class Options(model.BaseOptions):
     Defines the custom options for the script.
     """
     reference: Path = dataclasses.field(metadata={'help': 'Reference FASTA file'})
+    output_vcf: Path = dataclasses.field(metadata={'help': 'Output VCF file'})
     reference_name: str | None = dataclasses.field(default=None, metadata={'help': 'Reference genome name'})
 
     @property
@@ -53,12 +45,12 @@ class Options(model.BaseOptions):
     min_af: float = dataclasses.field(default=0.0, metadata={'help': 'Minimum allele frequency'})
 
 
-class MainCalling(BaseScript[ScriptInput, Output, Options]):
+class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
     """
     Class to perform variant calling from a BAM file.
     """
 
-    def __init__(self, in_: ScriptInput, out_: Output, opts: Options) -> None:
+    def __init__(self, in_: ScriptInput, out_: ScriptOutput, opts: Options) -> None:
         """
         Initializes the main script.
         :param in_: Input files
@@ -128,12 +120,13 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         # Create the config file
         config_data = self.__create_snakemake_config_data()
         config_file = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
 
         # Run Snakemake to generate the output file
         snakepipelineutils.run_snakemake(
             snakefile=SNAKEFILE,
             config_path=config_file,
-            targets=[Path(variant_calling_lofreq.OUTPUT_REPORT)],
+            targets=[Path(self._script_out.html)],
             working_dir=self._script_opts.working_dir,
             threads=self._script_opts.threads)
 
@@ -141,12 +134,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
         logger.info("Collecting Snakemake output file")
         output_vcf_path = snakemakeutils.load_object(self._script_opts.working_dir /
                                                      variant_calling_lofreq.OUTPUT_UNFILTERED_VCF)[0].path
-        shutil.copyfile(output_vcf_path, self._script_out.output)
-        if not self._script_out.html.parent.exists():
-            self._script_out.html.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(Path(self._script_opts.working_dir / variant_calling_lofreq.OUTPUT_REPORT).parent,
-                        self._script_out.html.parent, dirs_exist_ok=True)
-        shutil.copyfile(Path(self._script_opts.working_dir / variant_calling_lofreq.OUTPUT_REPORT), self._script_out.html)
+        shutil.copyfile(output_vcf_path, self._script_opts.output_vcf)
 
     def __create_snakemake_config_data(self) -> dict:
         """
@@ -186,7 +174,7 @@ class MainCalling(BaseScript[ScriptInput, Output, Options]):
 
 @click.command(name='variant_calling_lofreq', short_help='Call variants from FASTQ files using LoFreq')
 @basescriptutils.add_input_opts()
-@cliutils.add_click_options_from_dataclass(Output)
+@basescriptutils.add_output_opts
 @cliutils.add_click_options_from_dataclass(Options)
 def main(**kwargs) -> None:
     """
@@ -195,10 +183,11 @@ def main(**kwargs) -> None:
     :return: None
     """
     script_input = basescriptutils.parse_script_input(kwargs)
+    script_out = basescriptutils.parse_script_output(kwargs)
 
     script = MainCalling(
         in_=script_input,
-        out_=Output(**cliutils.from_kwargs(Output, kwargs)),
+        out_=script_out,
         opts=Options(**cliutils.from_kwargs(Options, kwargs))
     )
     script.run()
