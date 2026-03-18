@@ -66,7 +66,7 @@ class LofreqReporter(Tool):
         self.__add_reference_link()
         self.__add_mapping_info()
         self.__add_breadth_of_coverage()
-        self.__add_output_files_table()
+        self.__add_summary_variants_section()
         self.__create_coverage_variant_plot()
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._section)]
 
@@ -120,14 +120,6 @@ class LofreqReporter(Tool):
             self._section.add_table(list(res.items()), ['Coverage threshold', '% covered'], [('class', 'data')])
         else:
             self._section.add_paragraph('Assay deactivated.')
-
-    def __add_output_files_table(self) -> None:
-        """
-        Adds a table containing the output files.
-        :return: None
-        """
-        self._section.add_header('Variant statistics', 4)
-        self.__add_vcf_table_summary(self._tool_inputs['VCF'][0].path)
 
     def __create_vcf_download_cell(self, path: Path, suffix: str) -> HtmlTableCell:
         """
@@ -208,31 +200,33 @@ class LofreqReporter(Tool):
             output_dictionary[k][3] = output_dictionary[v][3]
         return [v for k, v in output_dictionary.items()]
 
-    def __add_vcf_table_summary(self, path: Path) -> None:
+    def __add_summary_variants_section(self) -> None:
         """
         Parses the VCF file for summary statistics.
-        :param path: Path to the VCF file
         :return: None
         """
-        self._all_variants = retrieve_variants(path, types=['snp', 'indel'])
+        self._section.add_header('Variant statistics summary', 4)
+
+        # First: retrieve all variants from the VCF file
+        self._all_variants = retrieve_variants(self._tool_inputs['VCF'][0].path, types=['snp', 'indel'])
         minimum_allele_frequency = self._parameters['min_af'].value if self._parameters['min_af'] else 0
         self._all_variants = [var for var in self._all_variants if var.INFO.get('AF', 0) >= minimum_allele_frequency]
         all_indels = [var for var in self._all_variants if var.INFO.get('INDEL', False) is True]
 
-        # Section: Total number of variants detected
+        # Subsection: Total number of variants detected
         vcf_cell = self.__create_vcf_download_cell(self._tool_inputs['VCF'][0].path, 'all')
         variant_table_summary = [[len(self._all_variants) - len(all_indels), len(all_indels), vcf_cell], ]
         self._section.add_paragraph('Number of variants detected (min AF = {:.2f})'.format(minimum_allele_frequency))
         self._section.add_table(variant_table_summary, ['Total # SNPs', 'Total # Indels', 'VCF file'],
                                 [('class', 'data')])
 
-        # Section: Variants detected by AF categories
+        # Subsection: Variants detected by AF categories
         variant_table_afs = self.__retrieve_vars_at_specific_af(self._all_variants, minimum_allele_frequency,
                                                                 list(LofreqReporter.AF_TO_REPORT_AND_COLOR.keys()))
         self._section.add_paragraph('Number of variants detected per allele frequency categories.')
         self._section.add_table(variant_table_afs, ['AF', '# SNPs', '# Indels'], [('class', 'data')])
 
-        # Section: Complete table of variants with effect and allele frequency
+        # Subsection: Complete table of variants with effect and allele frequency
         complete_table = self.__parse_variants_for_output_table(self._all_variants)
         header_complete_table = ['Position', 'Type', 'Variant', 'Effect', 'AF']
         div = HtmlExpandableDiv('varlist', 'Complete list of variants detected.')
