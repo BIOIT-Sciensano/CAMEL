@@ -28,6 +28,7 @@ class Options(model.BaseOptions):
     """
     reference: Path = dataclasses.field(metadata={'help': 'Reference FASTA file'})
     output_vcf: Path = dataclasses.field(metadata={'help': 'Output VCF file'})
+    gff: Path = dataclasses.field(default=None, metadata={'help': 'GFF file'})
     reference_name: str | None = dataclasses.field(default=None, metadata={'help': 'Reference genome name'})
 
     @property
@@ -87,6 +88,9 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
                        self._script_opts.reference_name if self._script_opts.reference_name else
                        self._script_opts.reference.name)])
 
+        if self._script_opts.gff is not None:
+            links.extend([('gff', self._script_opts.gff, self._script_opts.gff.name)])
+
         to_replace = {}
         for key, origin, target in links:
             path_out = input_symlink_dir / target
@@ -102,6 +106,8 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
                 to_replace[key] = [to_replace[key], path_out]
         to_replace_in = to_replace.copy()
         to_replace_in.pop('reference')
+        if self._script_opts.gff is not None:
+            to_replace_in.pop('gff')
         to_replace.pop('fastq_pe')
 
         # Update the script input
@@ -163,6 +169,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
             'reference': {
                 'name': self._script_opts.reference.name,
                 'fasta': str(self._script_opts.reference),
+                'gff': str(self._script_opts.gff)
             },
             'variant_calling': {},
             'variant_filtering': {},
@@ -171,6 +178,8 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         for k in ['call_indels', 'only_indels', 'min_af']:
             if self._script_opts.__getattribute__(k) is not None:
                 config_data['variant_calling'][k] = self._script_opts.__getattribute__(k)
+        if self._script_opts.__getattribute__('gff') is not None:
+            config_data['variant_calling']['csq'] = True
         return config_data
 
 

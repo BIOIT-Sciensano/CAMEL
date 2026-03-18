@@ -4,15 +4,19 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotnine
+from vcf.model import _Record as VcfRecord
 
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.tool import Tool
 from camel.app.core.utils import fileutils
 from camel.app.core.utils.vcfutils import retrieve_variants
+from camel.app.loggers import logger
+from camel.app.toolkits.export.tsvexporter import TsvExporter
 
 
 class LofreqReporter(Tool):
@@ -110,7 +114,8 @@ class LofreqReporter(Tool):
             self._coverage_table = pd.DataFrame(coverage_list, columns=['reference', 'position', 'depth'])
             self._coverage_table['depth'] = self._coverage_table['depth'].apply(pd.to_numeric)
             for cov in LofreqReporter.COVERAGE_THRESHOLDS_FOR_BREADTH:
-                res[f'{cov}X'] = f'{len(self._coverage_table[self._coverage_table["depth"] >= cov]) / len(self._coverage_table) * 100:.2f}'
+                res[
+                    f'{cov}X'] = f'{len(self._coverage_table[self._coverage_table["depth"] >= cov]) / len(self._coverage_table) * 100:.2f}'
             self._section.add_paragraph('Breadth of coverage at different thresholds.')
             self._section.add_table(list(res.items()), ['Coverage threshold', '% covered'], [('class', 'data')])
         else:
@@ -147,8 +152,8 @@ class LofreqReporter(Tool):
         """
         af_variants_list = []
         if var_list:
-            all_indels_af = [k.INFO['AF'] for k in var_list if k.INFO.get('INDEL', False) is True]
-            all_snps_af = [k.INFO['AF'] for k in var_list if k.INFO.get('INDEL', False) is False]
+            all_indels_af = [var.INFO['AF'] for var in var_list if var.INFO.get('INDEL', False) is True]
+            all_snps_af = [var.INFO['AF'] for var in var_list if var.INFO.get('INDEL', False) is False]
             for k in range(len(af_list)):
                 if af_list[k] > af_threshold:
                     if k == 0:
@@ -163,6 +168,46 @@ class LofreqReporter(Tool):
                     af_variants_list.append([label, count_snp, count_indel])
         return af_variants_list
 
+    @staticmethod
+    def __parse_effect(vcf_record: VcfRecord) -> str | None:
+        """
+        Parses the mutation effect from the CSQ annotation.
+        Note: only extracts it for protein coding regions
+        :param vcf_record: Input record
+        :return: Mutation effect
+        """
+        # Check if BCSQ annotation is present
+        if 'BCSQ' not in vcf_record.INFO:
+            logger.warning(f'BCSQ info missing for: {vcf_record.CHROM}:{vcf_record.POS}')
+            return None
+
+        # Parse annotation
+        parts = vcf_record.INFO['BCSQ'][0].split('|')
+        if parts[0].startswith('&'):
+            return None
+        return parts[0]
+
+    def __parse_variants_for_output_table(self, var_list: list) -> list:
+        """
+        Parses the variants list for the summary variant table in the report.
+        :param var_list: all variants detected
+        :return: list of variants for report table
+        """
+        output_dictionary = {}
+        positions_to_check_at_the_end = {}
+        for var in var_list:
+            effect = self.__parse_effect(var)
+            variant = f'{var.REF}->{var.ALT[0]}'
+            type_of_var = 'Indel' if var.INFO.get('INDEL', False) is True else 'SNP'
+            if effect is None:
+                effect = 'Unknown'
+            output_dictionary[var.POS] = [var.POS, type_of_var, variant, effect, var.INFO.get('AF', 0)]
+            if effect.startswith('@'):
+                positions_to_check_at_the_end[var.POS] = int(effect[1:])
+        for k, v in positions_to_check_at_the_end.items():
+            output_dictionary[k][3] = output_dictionary[v][3]
+        return [v for k, v in output_dictionary.items()]
+
     def __add_vcf_table_summary(self, path: Path) -> None:
         """
         Parses the VCF file for summary statistics.
@@ -171,27 +216,42 @@ class LofreqReporter(Tool):
         """
         self._all_variants = retrieve_variants(path, types=['snp', 'indel'])
         minimum_allele_frequency = self._parameters['min_af'].value if self._parameters['min_af'] else 0
-        self._all_variants = [x for x in self._all_variants if x.INFO.get('AF', 0) >= minimum_allele_frequency]
-        all_indels = [x for x in self._all_variants if x.INFO.get('INDEL', False) is True]
+        self._all_variants = [var for var in self._all_variants if var.INFO.get('AF', 0) >= minimum_allele_frequency]
+        all_indels = [var for var in self._all_variants if var.INFO.get('INDEL', False) is True]
 
+        # Section: Total number of variants detected
         vcf_cell = self.__create_vcf_download_cell(self._tool_inputs['VCF'][0].path, 'all')
-        variant_table_summary = [
-            [len(self._all_variants) - len(all_indels), len(all_indels), vcf_cell],
-        ]
-        variant_table_afs = self.__retrieve_vars_at_specific_af(self._all_variants, minimum_allele_frequency,
-                                                                list(LofreqReporter.AF_TO_REPORT_AND_COLOR.keys()))
-
+        variant_table_summary = [[len(self._all_variants) - len(all_indels), len(all_indels), vcf_cell], ]
         self._section.add_paragraph('Number of variants detected (min AF = {:.2f})'.format(minimum_allele_frequency))
         self._section.add_table(variant_table_summary, ['Total # SNPs', 'Total # Indels', 'VCF file'],
                                 [('class', 'data')])
+
+        # Section: Variants detected by AF categories
+        variant_table_afs = self.__retrieve_vars_at_specific_af(self._all_variants, minimum_allele_frequency,
+                                                                list(LofreqReporter.AF_TO_REPORT_AND_COLOR.keys()))
         self._section.add_paragraph('Number of variants detected per allele frequency categories.')
         self._section.add_table(variant_table_afs, ['AF', '# SNPs', '# Indels'], [('class', 'data')])
+
+        # Section: Complete table of variants with effect and allele frequency
+        complete_table = self.__parse_variants_for_output_table(self._all_variants)
+        header_complete_table = ['Position', 'Type', 'Variant', 'Effect', 'AF']
+        div = HtmlExpandableDiv('varlist', 'Complete list of variants detected.')
+        div.add_table(complete_table, header_complete_table, [('class', 'data')])
+        self._section.add_html_object(div)
+        table_path = self._folder / 'all_variants-{}.tsv'.format(
+            fileutils.make_valid(self._tool_inputs['VAL_Sample'][0].value))
+        TsvExporter.export(complete_table, header_complete_table, table_path)
+        relative_path = Path(LofreqReporter.SUB_FOLDER) / table_path.name
+        self._section.add_file(table_path, relative_path)
+        self._section.add_link_to_file('Download (TSV)', relative_path)
+        self._section.add_paragraph(
+            "This table contains all the variants detected by LoFreq with their associated effect and allele frequency.")
 
     @staticmethod
     def __bin_and_cut_table(df: pd.DataFrame, column: str, window_size: int,
                             column_for_binning: str = 'position') -> pd.DataFrame:
         """
-        Bin the table given as input based on the positions in column_for_binning.
+        Bins the table given as input based on the positions in column_for_binning. Necessary for a cleaner figure.
         :param df: pandas DataFrame
         :param column: Column to bin
         :param window_size: Window size
@@ -226,7 +286,7 @@ class LofreqReporter(Tool):
         depth_table['position'] = depth_table['position'].apply(pd.to_numeric)
         depth_table['depth'] = depth_table['depth'].apply(pd.to_numeric)
         for af in list(LofreqReporter.AF_TO_REPORT_AND_COLOR.keys())[::-1]:
-            var_of_interest = [k.POS for k in self._all_variants if k.INFO['AF'] >= af]
+            var_of_interest = [var.POS for var in self._all_variants if var.INFO['AF'] >= af]
             depth_table[f'AF={af}'] = 0
             depth_table[f'AF={af}'][depth_table['position'].isin(var_of_interest)] = 1
 
@@ -267,7 +327,11 @@ class LofreqReporter(Tool):
             [HtmlTableCell('', attributes=[('style', 'background-color: #ef8a62')]), 'AF >= 0.1'],
             [HtmlTableCell('', attributes=[('style', 'background-color: #fddbc7')]), 'AF >= 0.25'],
             [HtmlTableCell('', attributes=[('style', 'background-color: #d1e5f0')]), 'AF >= 0.5'],
-            [HtmlTableCell('', attributes=[('style', 'background-color: #67a9cf')]), 'AF >= 0.75']
+            [HtmlTableCell('', attributes=[('style', 'background-color: #67a9cf')]), 'AF >= 0.75'],
+            [HtmlTableCell('', attributes=[('style', 'background-color: #2166ac')]), 'AF = 1']
         ]
         div.add_table(table_data, table_attributes=[('class', 'data')])
         self._section.add_html_object(div)
+        self._section.add_paragraph('This graph shows the coverage along the reference genome provided (black).')
+        self._section.add_paragraph('Additionally, the graph displays the proportion of variants per bin with '
+                                    'associated allele frequencies.')

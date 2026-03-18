@@ -121,9 +121,33 @@ rule variant_calling_with_lofreq:
         step.run()
         snakemakeutils.dump_tool_outputs(lofreq_call,output)
 
+rule annotate_variants_csq:
+    """
+    Determines the consequence of the mutation using bcftools csq.
+    """
+    input:
+        VCF = rules.variant_calling_with_lofreq.output.VCF,
+        FASTA = rules.variant_calling_prep_reference.output.FASTA
+    output:
+        VCF = 'variant_calling/vcf_csq.io',
+        INFORMS = 'variant_calling/csq_informs.io'
+    params:
+        dir_ = lambda wildcards: 'variant_calling/',
+        gff = config['reference']['gff']
+    run:
+        from camel.app.tools.bcftools.bcftoolscsq import BcftoolsCsq
+        from camel.app.core.io.tooliofile import ToolIOFile
+
+        csq = BcftoolsCsq()
+        snakemakeutils.add_pickle_inputs(csq, input)
+        csq.add_input_files({'GFF': [ToolIOFile(Path(params.gff))]})
+        step = Step(rule_name=str(rule), tool=csq, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(csq, output)
+
 rule lofreq_reporter:
     input:
-        VCF=rules.variant_calling_with_lofreq.output.VCF,
+        VCF=rules.annotate_variants_csq.output.VCF if config['variant_calling'].get('csq', False) is True else rules.variant_calling_with_lofreq.output.VCF,
         INFORMS_reference=rules.variant_calling_prep_reference.output.INFORMS,
         INFORMS_mapping= variant_calling.get_mapping_informs(config),
         INFORMS_map_rate= rules.variant_calling_calculate_mapping_rate.output.INFORMS,
@@ -137,7 +161,8 @@ rule lofreq_reporter:
         dir_='variant_calling/report',
         sample_name=config['input']['sample_name'],
         include_bam= config.get('variant_calling', {}).get('report_include_bam', False),
-        min_af = config.get('variant_calling', {}).get('min_af', 0)
+        min_af = config.get('variant_calling', {}).get('min_af', 0),
+        csq = config.get('variant_calling', {}).get('csq', False)
     run:
         from camel.app.core.io.tooliovalue import ToolIOValue
 
@@ -201,5 +226,5 @@ rule generate_report:
         report_structure.append(('Trimming', 'trimming', [Path(input.report_trimming[0])]))
         report_structure.append(('Variant Calling', 'var_calling', [Path(input.report_lofreq)]))
         report_structure.append(('Commands', 'commands', [Path(input.report_commands)]))
-        snakepipelineutils.add_report_content(report,report_structure)
+        snakepipelineutils.add_report_content(report, report_structure)
         report.save()
