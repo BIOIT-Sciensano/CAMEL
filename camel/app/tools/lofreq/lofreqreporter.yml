@@ -15,4 +15,9 @@ parameters:
     mandatory: false
     option: null
     value: 0
+  csq:
+    default: false
+    mandatory: false
+    option: null
+    value: null
 tool_command: null
