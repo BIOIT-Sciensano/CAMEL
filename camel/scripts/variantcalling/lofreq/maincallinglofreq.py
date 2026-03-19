@@ -63,6 +63,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         super().__init__(
             name='Viral Low-Frequency Variants pipeline',
             version='1.0',
+            title=None,
             script_in=in_,
             script_out=out_,
             script_opts=opts

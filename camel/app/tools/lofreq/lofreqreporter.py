@@ -243,6 +243,7 @@ class LofreqReporter(Tool):
         self._section.add_paragraph(
             'The Quality value is a phred-scaled p-value describing how likely a reported SNV is a false positive. '
             'LoFreq will only report SNVs with a p-value < 5% (i.e., quality of 13) after multiple testing correction.')
+        self._section.copy_files(self._folder)
 
     @staticmethod
     def __bin_and_cut_table(df: pd.DataFrame, column: str, window_size: int,
