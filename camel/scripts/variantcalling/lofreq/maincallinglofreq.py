@@ -166,6 +166,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
             'script_info': {
                 'name': self.name,
                 'version': self.version,
+                'title': self.title
             },
             'reference': {
                 'name': self._script_opts.reference.name,
