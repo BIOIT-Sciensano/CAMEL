@@ -193,7 +193,7 @@ class LofreqReporter(Tool):
             type_of_var = 'Indel' if var.INFO.get('INDEL', False) is True else 'SNP'
             if effect is None:
                 effect = 'Unknown'
-            output_dictionary[var.POS] = [var.POS, type_of_var, variant, effect, var.INFO.get('AF', 0)]
+            output_dictionary[var.POS] = [var.POS, type_of_var, variant, effect, var.INFO.get('AF', 0), var.QUAL]
             if effect.startswith('@'):
                 positions_to_check_at_the_end[var.POS] = int(effect[1:])
         for k, v in positions_to_check_at_the_end.items():
@@ -228,7 +228,7 @@ class LofreqReporter(Tool):
 
         # Subsection: Complete table of variants with effect and allele frequency
         complete_table = self.__parse_variants_for_output_table(self._all_variants)
-        header_complete_table = ['Position', 'Type', 'Variant', 'Effect', 'AF']
+        header_complete_table = ['Position', 'Type', 'Variant', 'Effect', 'AF', 'Quality']
         div = HtmlExpandableDiv('varlist', 'Complete list of variants detected.')
         div.add_table(complete_table, header_complete_table, [('class', 'data')])
         self._section.add_html_object(div)
@@ -240,6 +240,9 @@ class LofreqReporter(Tool):
         self._section.add_link_to_file('Download (TSV)', relative_path)
         self._section.add_paragraph(
             "This table contains all the variants detected by LoFreq with their associated effect and allele frequency.")
+        self._section.add_paragraph(
+            'The Quality value is a phred-scaled p-value describing how likely a reported SNV is a false positive. '
+            'LoFreq will only report SNVs with a p-value < 5% (i.e., quality of 13) after multiple testing correction.')
 
     @staticmethod
     def __bin_and_cut_table(df: pd.DataFrame, column: str, window_size: int,
