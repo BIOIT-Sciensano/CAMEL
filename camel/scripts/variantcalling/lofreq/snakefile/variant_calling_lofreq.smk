@@ -202,18 +202,14 @@ rule generate_report:
         output_dir=config['output']['dir'],
         name=config['script_info']['name'],
         version=config['script_info']['version'],
-        input_dict=config['input']
+        input_dict=config['input'],
+        pipeline_info=config['script_info']
     run:
         import datetime
-        from camel.app.scriptutils.basepipe import basepipeutils
-        from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 
         # Initialize report
-        report = reportutils.init_report(
-            path_out=Path(output.HTML),
-            key=params.name,
-            title=params.name,
-        )
+        report = snakepipelineutils.init_pipeline_report(
+            Path(output.HTML), Path(params.output_dir), params.pipeline_info)
         report.add_html_object(reportutils.create_overview_section(
             version=params.version,
             dataset_name=params.input_dict['name'],
