@@ -3,7 +3,7 @@
 #############
 dbs:
   abritamr:
-    location: &db_abritamr {DB_ROOT}/abritamr/amrfinderplus_data
+    location: &db_abritamr {DB_ROOT}/amrfinder/v4/latest
     required: false
     method: ftp
   amrfinder:

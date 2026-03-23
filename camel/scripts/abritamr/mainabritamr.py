@@ -55,6 +55,7 @@ class Options(BaseOptions):
         'show_default': True})
     working_dir: Path = dataclasses.field(default=Path('working'), metadata={'help': 'Working directory'})
 
+
 @dataclasses.dataclass(frozen=True)
 class Output(BaseOutput):
     """
@@ -64,16 +65,17 @@ class Output(BaseOutput):
     output_dir: Path | None = dataclasses.field(metadata={'help': 'Output directory'})
     output_tsv: Path | None = dataclasses.field(default=None, metadata={'help': 'Output TSV file'})
 
+
 class MainAbriTAMR(BaseScript[FastaInput, Output, Options]):
     """
     Main class to run the AbriTAMR standalone pipeline.
     """
 
     def __init__(
-        self,
-        in_: FastaInput,
-        out: BaseOutput,
-        opts: Options,
+            self,
+            in_: FastaInput,
+            out: BaseOutput,
+            opts: Options,
     ) -> None:
         """
         Initializes the main class.

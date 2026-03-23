@@ -14,10 +14,10 @@ class AbriTAMRReport(Tool):
 
     def __init__(self) -> None:
         """
-        Initialize tool.
+        Initializes tool.
         :return: None
         """
-        super().__init__('AbriTAMR report', '1.0.19')
+        super().__init__('AbriTAMR report', '1.1.0')
         self._species = None
 
     def _execute_tool(self) -> None:

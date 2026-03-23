@@ -9,7 +9,6 @@ from camel.app.tools.abritamr.abritamrreporter import AbriTAMRReporter
 from camel.app.tools.abritamr.abritamrrun import AbriTAMRRun
 
 
-
 class TestAbriTAMR(CamelTestSuite):
     """
     Tests the three AbriTAMR components; the tool called run, the tool called report, and the reporter.
@@ -59,7 +58,7 @@ class TestAbriTAMR(CamelTestSuite):
         abritamrreporter.add_input_files({
             'TXT_matches': [ToolIOFile(self.summary_matches)],
             'TXT_partials': [ToolIOFile(self.summary_partials)],
-            'REPORT_abritamr':  abritamr.tool_outputs['REPORT_abritamr']
+            'REPORT_abritamr': abritamr.tool_outputs['REPORT_abritamr']
         })
         abritamrreporter.add_input_informs({'abritamr_run': informs_abritamr})
         abritamrreporter.run(self.running_dir)
