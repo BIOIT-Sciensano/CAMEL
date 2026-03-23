@@ -1,4 +1,4 @@
-dependencies: [abritamr/1.0.19, blast/2.14.0, amrfinder/3.12.8]
+dependencies: [abritamr/1.1.0, blast/2.16.0, amrfinder/4.0.19]
 parameters:
    jobs: {default: true, mandatory: false, option: --jobs, value: '1'}
    species: {default: false, mandatory: true, option: --species, value: null}
