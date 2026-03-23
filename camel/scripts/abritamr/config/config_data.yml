@@ -10,4 +10,4 @@ citations:
 #############
 abritamr:
   amrfinderplus:
-    path: /db/abritamr/amrfinderplus_data
+    path: /db/amrfinder/v4/latest
