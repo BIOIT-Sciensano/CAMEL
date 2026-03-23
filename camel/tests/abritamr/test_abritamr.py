@@ -30,7 +30,7 @@ class TestAbriTAMR(CamelTestSuite):
         abritamr = AbriTAMRRun(self.camel)
         abritamr.add_input_files({
             'FASTA': [ToolIOFile(Path(self.input_fasta_file))],
-            'DIR_AMRF': [ToolIODirectory(Path('/db/amrfinder/v4/latest'))]
+            'DIR_AMRF': [ToolIODirectory(Path('/db/abritamr/amrfinderplus_data'))]
         })
         abritamr.update_parameters(species='Salmonella')
         abritamr.run(self.running_dir)

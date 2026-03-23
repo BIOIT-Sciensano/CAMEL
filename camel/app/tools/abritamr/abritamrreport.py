@@ -16,11 +16,11 @@ class AbriTAMRReport(Tool):
 
     def __init__(self, camel: Camel) -> None:
         """
-        Initializes tool.
+        Initialize tool.
         :param camel: Camel instance
         :return: None
         """
-        super().__init__('AbriTAMR report', '1.1.0', camel)
+        super().__init__('AbriTAMR report', '1.0.19', camel)
         self._species = None
 
     def _execute_tool(self) -> None:
