@@ -73,7 +73,7 @@ rule report_create:
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
         report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input']['type']),
-        report_ncbi_amr = gene_detection.get_gene_detection_report('ncbi_amr', config, mixed_strategy=True),
+        report_ncbi_amr = gene_detection.get_gene_detection_report('ncbi_amr', config),
         report_snpit = snpit.OUTPUT_REPORT if 'snpit' in config['analyses'] else snpit.OUTPUT_REPORT_EMPTY,
         report_commands = rules.report_create_command_section.output.HTML
     output:

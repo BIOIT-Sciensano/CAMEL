@@ -7,8 +7,32 @@ from camel.snakefiles import gene_detection
 
 # Include workflows for the different detection methods
 # include: gene_detection.SNAKEFILE
-# include: gene_detection.SNAKEFILE_KMA
-# include: gene_detection.SNAKEFILE_BLAST
+include: gene_detection.SNAKEFILE_KMA
+include: gene_detection.SNAKEFILE_BLAST
+
+rule gene_detection_db_manager:
+    """
+    Retrieves the FASTA file and the metadata from a database folder.
+    """
+    output:
+        FASTA = 'gene_detection/{db}/db_manager/fasta.io',
+        FASTA_clustered = 'gene_detection/{db}/db_manager/fasta-clust.io',
+        INFORMS = 'gene_detection/{db}/db_manager/informs.iob' # gene_detection.OUTPUT_DB_INFORMS
+    params:
+        db_path = lambda wildcards: config['gene_detection']['dbs'][wildcards.db]['path'],
+        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}'
+    run:
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camel.app.tools.pipelines.genedetection.dbmanager import DBManager
+        db_manager = DBManager()
+        db_manager.add_input_files({'DIR': [ToolIODirectory(Path(str(params.db_path)))]})
+        step = Step(
+            rule_name=str(rule),
+            tool=db_manager,
+            dir_=Path(str(params.dir_)),
+            wildcards=wildcards)
+        step.run()
+        snakemakeutils.dump_tool_outputs(db_manager, output)
 
 rule gene_detection_get_hits_mixed:
     """
@@ -108,3 +132,52 @@ rule gene_detection_get_column_names_mixed:
         columns = empty_hit.html_column_names
         snakemakeutils.dump_object(columns, Path(output.INFORMS_columns))
 
+rule reporter_mixed:
+    input:
+        INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS,
+        INFORMS_columns_k = 'gene_detection/{db}/report/kma/informs-columns.io',
+        INFORMS_columns_b = 'gene_detection/{db}/report/blast/informs-columns.io',
+        HITS_k = 'gene_detection/{db}/hit_selection/kma/selected-hits.iob',
+        HITS_b = 'gene_detection/{db}/hit_selection/blast/selected-hits.iob',
+        TSV_k='gene_detection/{db}/metadata/kma/tsv.io',
+        TSV_b='gene_detection/{db}/metadata/blast/tsv.io'
+    output:
+        VAL_HTML='gene_detection/{db}/report/mixed_report_html.iob'
+    params:
+        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/report',
+        config_data = lambda wildcards: config['gene_detection']['dbs'][wildcards.db],
+        input_type = config['input']['type'],
+        detection_method = lambda wildcards: GeneDetectionUtils.get_detection_method_key(config, wildcards.db)
+    run:
+        from camel.app.core.reports.htmlreportsection import HtmlReportSection
+        from camel.app.core.io.tooliovalue import ToolIOValue
+
+        db_info = snakemakeutils.load_object(Path(input.INFORMS_db_info))
+        section = HtmlReportSection(db_info['title'],3)
+        section.add_paragraph('Analysis for mixed genes is included in the report.')
+        snakemakeutils.dump_object([ToolIOValue(section)],Path(output.VAL_HTML))
+
+        # from camel.app.tools.pipelines.genedetection.htmlreportergenedetection import HtmlReporterGeneDetection
+        #
+        # # Create step
+        # reporter = HtmlReporterGeneDetection()
+        # step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)), wildcards=wildcards)
+        #
+        # # Parameters
+        # if 'force_detection_method' in params.config_data:
+        #     reporter.update_parameters(forced_detection_method = params.config_data['force_detection_method'])
+        # if params.config_data.get('hidden', False) is True:
+        #     reporter.update_parameters(hidden=True)
+        # if params.input_type == 'fasta' and params.detection_method in ('kma',):
+        #     reporter.update_parameters(pseudo_reads=True)
+        #
+        # # Optional message
+        # if 'message' in params.config_data:
+        #     reporter.update_parameters(message=params.config_data['message']['content'])
+        # if ('message' in params.config_data) and ('category' in params.config_data['message']):
+        #     reporter.update_parameters(message_category=params.config_data['message']['category'])
+        #
+        # # Run tool
+        # snakemakeutils.add_pickle_inputs(reporter, input)
+        # step.run()
+        # snakemakeutils.dump_tool_outputs(reporter, output)
