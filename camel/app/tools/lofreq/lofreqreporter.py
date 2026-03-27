@@ -161,23 +161,25 @@ class LofreqReporter(Tool):
         return af_variants_list
 
     @staticmethod
-    def __parse_effect(vcf_record: VcfRecord) -> str | None:
+    def __parse_effect(vcf_record: VcfRecord) -> tuple[str | None, str | None]:
         """
         Parses the mutation effect from the CSQ annotation.
         Note: only extracts it for protein coding regions
         :param vcf_record: Input record
-        :return: Mutation effect
+        :return: Mutation effect and Gene
         """
         # Check if BCSQ annotation is present
         if 'BCSQ' not in vcf_record.INFO:
             logger.warning(f'BCSQ info missing for: {vcf_record.CHROM}:{vcf_record.POS}')
-            return None
+            return None, None
 
         # Parse annotation
         parts = vcf_record.INFO['BCSQ'][0].split('|')
         if parts[0].startswith('&'):
-            return None
-        return parts[0]
+            return None, None
+        if parts[0].startswith('@'):
+            return parts[0], '-'
+        return parts[0], parts[1]
 
     def __parse_variants_for_output_table(self, var_list: list) -> list:
         """
@@ -188,16 +190,17 @@ class LofreqReporter(Tool):
         output_dictionary = {}
         positions_to_check_at_the_end = {}
         for var in var_list:
-            effect = self.__parse_effect(var)
+            effect, gene = self.__parse_effect(var)
             variant = f'{var.REF}->{var.ALT[0]}'
             type_of_var = 'Indel' if var.INFO.get('INDEL', False) is True else 'SNP'
             if effect is None:
-                effect = 'Unknown'
-            output_dictionary[var.POS] = [var.POS, type_of_var, variant, effect, var.INFO.get('AF', 0), var.QUAL]
+                effect, gene = 'Unknown', 'Unknown'
+            output_dictionary[var.POS] = [var.POS, type_of_var, variant, effect, gene, var.INFO.get('AF', 0), var.QUAL]
             if effect.startswith('@'):
                 positions_to_check_at_the_end[var.POS] = int(effect[1:])
         for k, v in positions_to_check_at_the_end.items():
             output_dictionary[k][3] = output_dictionary[v][3]
+            output_dictionary[k][4] = output_dictionary[v][4]
         return [v for k, v in output_dictionary.items()]
 
     def __add_summary_variants_section(self) -> None:
@@ -228,7 +231,7 @@ class LofreqReporter(Tool):
 
         # Subsection: Complete table of variants with effect and allele frequency
         complete_table = self.__parse_variants_for_output_table(self._all_variants)
-        header_complete_table = ['Position', 'Type', 'Variant', 'Effect', 'AF', 'Quality']
+        header_complete_table = ['Position', 'Type', 'Variant', 'Effect', 'Gene', 'AF', 'Quality']
         div = HtmlExpandableDiv('varlist', 'Complete list of variants detected.')
         div.add_table(complete_table, header_complete_table, [('class', 'data')])
         self._section.add_html_object(div)
