@@ -304,7 +304,6 @@ class LofreqReporter(Tool):
                                    fill=LofreqReporter.AF_TO_REPORT_AND_COLOR[af])
         p += plotnine.scale_y_log10()
         p += plotnine.labs(x='Position', y='Value (log-scale)')
-        p.draw(show=True)
         p.save(f'{self._folder}/figure_coverage_and_variants.png', dpi=300)
         self.__add_visualization(Path(f'{self._folder}/figure_coverage_and_variants.png'))
 
