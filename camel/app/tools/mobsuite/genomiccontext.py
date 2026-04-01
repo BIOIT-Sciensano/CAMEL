@@ -78,7 +78,7 @@ class GenomicContext(Tool):
                     continue
 
                 # Parse hits
-                data_hits = pd.read_table(self._tool_inputs['TSV'][db['idx']].path)
+                data_hits = pd.read_table(self._tool_inputs['TSV'][db['idx']].path, dtype={db['contig']: str})
                 if len(data_hits) == 0:
                     section.add_paragraph('No hits found.')
                     continue
