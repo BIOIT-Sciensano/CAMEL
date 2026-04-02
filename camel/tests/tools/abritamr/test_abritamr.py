@@ -1,6 +1,7 @@
 import unittest
 from pathlib import Path
 
+from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.core.io.tooliofile import ToolIOFile
@@ -19,6 +20,7 @@ class TestAbriTAMR(CamelTestSuite):
     summary_matches = test_file_dir / 'summary_matches.txt'
     summary_partials = test_file_dir / 'summary_partials.txt'
     input_fasta_file = test_file_dir / 'assembly_filtered.fasta'
+    dir_db = Path(config.dir_db, 'amrfinder', 'v4', 'latest')
 
     def test_abritamr_run(self) -> None:
         """
@@ -28,7 +30,7 @@ class TestAbriTAMR(CamelTestSuite):
         abritamr = AbriTAMRRun()
         abritamr.add_input_files({
             'FASTA': [ToolIOFile(Path(self.input_fasta_file))],
-            'DIR_AMRF': [ToolIODirectory(Path('/db/amrfinder/v4/latest'))]
+            'DIR_AMRF': [ToolIODirectory(TestAbriTAMR.dir_db)]
         })
         abritamr.update_parameters(species='Salmonella')
         abritamr.run(self.running_dir)
