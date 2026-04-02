@@ -2,6 +2,7 @@ from pathlib import Path
 
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.utils import toolutils
 from camel.app.tools.lofreq.lofreq import Lofreq
 
 
@@ -23,10 +24,7 @@ class LofreqIndelqual(Lofreq):
         Checks that the input is correct.
         :return: None
         """
-        if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError('FASTA reference is required')
-        if 'BAM' not in self._tool_inputs:
-            raise InvalidToolInputError('BAM alignment file is required')
+        toolutils.check_input(self, keys_required=['FASTA', 'BAM'])
         if len(self._tool_inputs['BAM']) != 1:
             raise ValueError("Exactly one BAM input file expected")
         super()._check_input()
@@ -51,7 +49,7 @@ class LofreqIndelqual(Lofreq):
         """
         self._command.command = ' '.join([
             self._tool_command, f'--ref {fasta_input}',
-            *self._build_options(excluded_parameters=['reference']),
+            *self._build_options(),
             str(bam_input)
         ])
 

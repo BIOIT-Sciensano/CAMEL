@@ -5,17 +5,12 @@ parameters:
     default: false
     mandatory: false
     option: '--uniform'
-    value: null
+    value: 0
   dindel:
     default: true
     mandatory: false
     option: '--dindel'
     flag: true
-  reference:
-    default: true
-    mandatory: false
-    option: '--ref'
-    value: null
   output_filename:
     default: true
     mandatory: true

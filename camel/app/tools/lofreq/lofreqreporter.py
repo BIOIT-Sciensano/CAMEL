@@ -13,7 +13,7 @@ from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.tool import Tool
-from camel.app.core.utils import fileutils
+from camel.app.core.utils import fileutils, toolutils
 from camel.app.core.utils.vcfutils import retrieve_variants
 from camel.app.loggers import logger
 from camel.app.toolkits.export.tsvexporter import TsvExporter
@@ -25,8 +25,14 @@ class LofreqReporter(Tool):
     """
 
     SUB_FOLDER = 'output/variant_calling'
-    AF_TO_REPORT_AND_COLOR = {0.05: '#b2182b', 0.1: '#ef8a62', 0.25: '#fddbc7', 0.5: '#d1e5f0', 0.75: '#67a9cf',
-                              1: '#2166ac'}
+    AF_THRESHOLDS = [
+        {"af": 0.05, "color": "#b2182b"},
+        {"af": 0.1, "color": "#ef8a62"},
+        {"af": 0.25, "color": "#fddbc7"},
+        {"af": 0.5, "color": "#d1e5f0"},
+        {"af": 0.75, "color": "#67a9cf"},
+        {"af": 1, "color": "#2166ac"},
+    ]
     COVERAGE_THRESHOLDS_FOR_BREADTH = [1, 5, 10, 50]
 
     def __init__(self) -> None:
@@ -44,12 +50,7 @@ class LofreqReporter(Tool):
         Checks if the provided input is valid.
         :return: None
         """
-        if 'VCF' not in self._tool_inputs:
-            raise InvalidToolInputError("VCF input is required")
-        if 'VAL_Sample' not in self._tool_inputs:
-            raise InvalidToolInputError("Sample name is required")
-        if 'BAM' not in self._tool_inputs:
-            raise InvalidToolInputError("BAM file required")
+        toolutils.check_input(self, keys_required=['VCF', 'VAL_SAMPLE', 'BAM'])
         if 'mapping' not in self._input_informs:
             raise InvalidToolInputError("Mapping informs are required")
         if 'reference' not in self._input_informs:
@@ -94,7 +95,7 @@ class LofreqReporter(Tool):
             f"{self._input_informs['depth']['median_depth']:.0f}"
         ]]
         self._section.add_table(table_data, ['Mapping rate (%)', 'Median depth'], [('class', 'data')])
-        if bool(strtobool(self._parameters['export_bam'].value)) is True:
+        if self.get_param_value('export_bam') is True:
             relative_path = Path('variant_calling', 'alignment-{}.bam'.format(
                 fileutils.make_valid(self._tool_inputs['VAL_Sample'][0].value)))
             self._section.add_file(self._tool_inputs['BAM'][0].path, relative_path)
