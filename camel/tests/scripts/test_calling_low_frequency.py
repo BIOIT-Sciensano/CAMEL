@@ -1,11 +1,8 @@
-import traceback
-import unittest
-
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.utils import vcfutils
 
-from camel.scripts.variantcalling.lofreq.maincallinglofreq import main
+from camel.scripts.lfvpipeline.maincallinglfv import main
 
 
 class TestVariantCalling(CamelTestSuite):

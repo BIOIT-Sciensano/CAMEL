@@ -27,7 +27,7 @@ class Options(model.BaseOptions):
     Defines the custom options for the script.
     """
     reference: Path = dataclasses.field(metadata={'help': 'Reference FASTA file'})
-    output_vcf: Path = dataclasses.field(default='output.vcf', metadata={'help': 'Output VCF file'})
+    output_vcf: Path = dataclasses.field(metadata={'help': 'Output VCF file'})
     gff: Path = dataclasses.field(default=None, metadata={'help': 'GFF file'})
     reference_name: str | None = dataclasses.field(default=None, metadata={'help': 'Reference genome name'})
 
@@ -52,8 +52,6 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
     Class to perform variant calling from a BAM file.
     """
 
-    VARIANT_CALLING_OPTS = ['call_indels', 'only_indels', 'min_af']
-
     def __init__(self, in_: ScriptInput, out_: ScriptOutput, opts: Options) -> None:
         """
         Initializes the main script.
@@ -63,7 +61,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         :return: None
         """
         super().__init__(
-            name='Low-frequency variant detection pipeline',
+            name='Viral Low-Frequency Variants pipeline',
             version='1.0',
             title=None,
             script_in=in_,
@@ -71,31 +69,53 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
             script_opts=opts
         )
 
-    def _symlink_input_data(self) -> None:
+    def _symlink_input_data(self):
         """
         Symlinks input data (fastq and fasta)
         :return: None
         """
-        dir_symlinks = self._script_opts.working_dir / 'input'
-        dir_symlinks.mkdir(parents=True, exist_ok=True)
+        input_symlink_dir = self._script_opts.working_dir / 'input'
+        input_symlink_dir.mkdir(parents=True, exist_ok=True)
 
-        # Script input
-        self._script_in = self._script_in.symlink(dir_symlinks)
+        links = []
 
-        # Reference genome
-        path_ref = dir_symlinks / f'{self._script_opts.name}'
-        to_replace = {'reference': path_ref}
-        if not path_ref.is_symlink():
-            path_ref.symlink_to(self._script_opts.reference.resolve().absolute())
+        links.extend([('fastq_pe', self._script_in.fastq_pe[0],
+                       self._script_in.fastq_pe_names[0] if self._script_in.fastq_pe_names else
+                       self._script_in.fastq_pe[0].name)])
+        links.extend([('fastq_pe', self._script_in.fastq_pe[1],
+                       self._script_in.fastq_pe_names[1] if self._script_in.fastq_pe_names else
+                       self._script_in.fastq_pe[1].name)])
+        links.extend([('reference', self._script_opts.reference,
+                       self._script_opts.reference_name if self._script_opts.reference_name else
+                       self._script_opts.reference.name)])
 
-        # GFF file (if provided)
         if self._script_opts.gff is not None:
-            to_replace['gff'] = dir_symlinks / self._script_opts.gff.name
-            gff_link = to_replace['gff']
-            if not gff_link.is_symlink():
-                gff_link.symlink_to(self._script_opts.gff.resolve().absolute())
+            links.extend([('gff', self._script_opts.gff, self._script_opts.gff.name)])
 
-        self._script_opts = dataclasses.replace(self._script_opts, **to_replace)
+        to_replace = {}
+        for key, origin, target in links:
+            path_out = input_symlink_dir / target
+            if path_out.is_symlink():
+                logger.debug(f'Symlink already exists: {path_out}')
+            else:
+                ((input_symlink_dir / target).absolute()).symlink_to(origin.resolve().absolute())
+
+            # Save the updated path
+            if key not in to_replace:
+                to_replace[key] = path_out
+            else:
+                to_replace[key] = [to_replace[key], path_out]
+        to_replace_in = to_replace.copy()
+        to_replace_in.pop('reference')
+        if self._script_opts.gff is not None:
+            to_replace_in.pop('gff')
+        to_replace.pop('fastq_pe')
+
+        # Update the script input
+        script_in_updated = dataclasses.replace(self._script_in, **to_replace_in)
+        script_opts_updated = dataclasses.replace(self._script_opts, **to_replace)
+        self._script_in = script_in_updated
+        self._script_opts = script_opts_updated
 
     def _execute(self) -> None:
         """
@@ -115,14 +135,14 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         snakepipelineutils.run_snakemake(
             snakefile=SNAKEFILE,
             config_path=config_file,
-            targets=[Path(self._script_out.html), Path(variant_calling_lofreq.OUTPUT_UNFILTERED_VCF)],
+            targets=[Path(self._script_out.html)],
             working_dir=self._script_opts.working_dir,
             threads=self._script_opts.threads)
 
         # Copy output
         logger.info("Collecting Snakemake output file")
-        output_vcf_path = snakemakeutils.load_object(
-            self._script_opts.working_dir / variant_calling_lofreq.OUTPUT_UNFILTERED_VCF)[0].path
+        output_vcf_path = snakemakeutils.load_object(self._script_opts.working_dir /
+                                                     variant_calling_lofreq.OUTPUT_UNFILTERED_VCF)[0].path
         shutil.copyfile(output_vcf_path, self._script_opts.output_vcf)
 
     def __create_snakemake_config_data(self) -> dict:
@@ -157,12 +177,9 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
             'variant_filtering': {},
             'working_dir': str(self._script_opts.working_dir),
         }
-        variant_calling_config = {
-            k: getattr(self._script_opts, k)
-            for k in MainCalling.VARIANT_CALLING_OPTS
-            if getattr(self._script_opts, k, None) is not None
-        }
-        config_data['variant_calling'].update(variant_calling_config)
+        for k in ['call_indels', 'only_indels', 'min_af']:
+            if self._script_opts.__getattribute__(k) is not None:
+                config_data['variant_calling'][k] = self._script_opts.__getattribute__(k)
         if self._script_opts.__getattribute__('gff') is not None:
             config_data['variant_calling']['csq'] = True
         return config_data
