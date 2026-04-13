@@ -17,8 +17,8 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.scripts.variantcalling.lofreq.snakefile import variant_calling_lofreq
-from camel.scripts.variantcalling.lofreq.snakefile.variant_calling_lofreq import SNAKEFILE
+from camel.scripts.lfvpipeline.snakefile import variant_calling_lofreq
+from camel.scripts.lfvpipeline.snakefile.variant_calling_lofreq import SNAKEFILE
 
 
 @dataclasses.dataclass(frozen=True)
@@ -185,7 +185,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         return config_data
 
 
-@click.command(name='variant_calling_lofreq', short_help='Call variants from FASTQ files using LoFreq')
+@click.command(name='LFV_pipeline', short_help='Detection of low frequency variants.')
 @basescriptutils.add_input_opts()
 @basescriptutils.add_output_opts
 @cliutils.add_click_options_from_dataclass(Options)

@@ -5,6 +5,7 @@ from camelcore.app.utils import vcfutils
 
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.tools.lofreq.lofreqcall import LofreqCall
+from camel.app.tools.lofreq.lofreqindelqual import LofreqIndelqual
 
 
 class TestLofreq(CamelTestSuite):
@@ -26,6 +27,16 @@ class TestLofreq(CamelTestSuite):
         lofreq.run(self.running_dir)
         self.verify_output_files(lofreq, 'VCF')
         self.assertGreater(vcfutils.count_variants(lofreq.tool_outputs['VCF'][0].path), 0)
+
+    def test_lofreq_indelqual(self) -> None:
+        """
+        Testing Lofreq indelqual command on illumina BAM file
+        :return: None
+        """
+        lofreq_indelqual = LofreqIndelqual()
+        lofreq.add_input_files({'FASTA': [TestLofreq.FILE_FASTA], 'BAM': [TestLofreq.FILE_BAM]})
+        lofreq.run(self.running_dir)
+        self.verify_output_files(lofreq_indelqual, 'BAM')
 
 
 if __name__ == '__main__':
