@@ -1,11 +1,9 @@
-from distutils.util import strtobool
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import plotnine
 import vcf
-from vcf.model import _Record as VcfRecord
 
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliovalue import ToolIOValue
@@ -16,7 +14,6 @@ from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.tool import Tool
 from camel.app.core.utils import fileutils, toolutils
 from camel.app.core.utils.vcfutils import retrieve_variants
-from camel.app.loggers import logger
 from camel.app.toolkits.export.tsvexporter import TsvExporter
 
 
@@ -70,7 +67,7 @@ class LofreqReporter(Tool):
         self._section = HtmlReportSection("LoFreq Variant calling", subtitle=tool_version)
         self.__add_reference_link()
         self.__add_mapping_info()
-        self.__add_breadth_of_coverage()
+        self.__add_breadth_of_coverage_table()
         self.__add_summary_variants_section()
         self.__create_coverage_variant_plot()
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._section)]
@@ -107,9 +104,9 @@ class LofreqReporter(Tool):
         else:
             self._section.add_text("BAM file not exported, change pipeline options to include it.")
 
-    def __add_breadth_of_coverage(self) -> None:
+    def __add_breadth_of_coverage_table(self) -> None:
         """
-        Adds a table with breadth of coverage
+        Adds a table with breadth of coverage.
         :return: None
         """
         self._section.add_header('Breadth of coverage', 4)
@@ -118,9 +115,11 @@ class LofreqReporter(Tool):
             coverage_list = [x.strip().split() for x in open(self._tool_inputs['TSV_depth'][0].path).readlines()]
             self._coverage_table = pd.DataFrame(coverage_list, columns=['reference', 'position', 'depth'])
             self._coverage_table['depth'] = self._coverage_table['depth'].apply(pd.to_numeric)
+            len_genome = len(self._coverage_table)
             for cov in LofreqReporter.COVERAGE_THRESHOLDS_FOR_BREADTH:
+                cov_fraction_above_thresh = len(self._coverage_table[self._coverage_table["depth"] >= cov]) / len_genome
                 res[
-                    f'{cov}X'] = f'{len(self._coverage_table[self._coverage_table["depth"] >= cov]) / len(self._coverage_table) * 100:.2f}'
+                    f'{cov}X'] = f'{cov_fraction_above_thresh * 100:.2f}'
             self._section.add_paragraph('Breadth of coverage at different thresholds.')
             self._section.add_table(list(res.items()), ['Coverage threshold', '% covered'], [('class', 'data')])
         else:
@@ -138,17 +137,14 @@ class LofreqReporter(Tool):
         self._section.add_file(path, relative_path)
         return HtmlTableCell('Download', link=str(relative_path))
 
-    def __retrieve_vars_at_specific_af(self, var_list: list, af_threshold: float, af_list: list) -> list:
+    def __retrieve_vars_at_specific_af(self) -> pd.DataFrame:
         """
         From a list of vcf record, extracts variants at specific allele frequencies.
-        :param var_list: Variants list (SNPs and Indels)
-        :param af_threshold: Allele frequency threshold used as filter
-        :param af_list: list of allele frequencies categories
-        :return: List of categories and count
+        :return: Pandas DF of allele frequency categories and variant counts for each category
         """
         with open(self._tool_inputs['VCF'][0].path) as handle:
             variants = list(vcf.Reader(handle))
-        df = pd.DataFrame({'AF': v.INFO['AF'], 'var_type': v.var_type} for v in variants)
+        af_and_variants_df = pd.DataFrame({'AF': v.INFO['AF'], 'var_type': v.var_type} for v in variants)
         # Construct the labels
         af_labels = [
             (f"{LofreqReporter.AF_THRESHOLDS[i - 1]['af']:.2f} <= " if i > 0 else '')
@@ -157,18 +153,18 @@ class LofreqReporter(Tool):
         ]
 
         # Assign to bins
-        df["AF_bin"] = pd.cut(
-            df["AF"],
+        af_and_variants_df["AF_bin"] = pd.cut(
+            af_and_variants_df["AF"],
             bins=[0] + [row['af'] for row in LofreqReporter.AF_THRESHOLDS],
             labels=af_labels,
             include_lowest=True,
         )
-        df2 = df.groupby(['AF_bin']).count().reset_index('AF_bin')
-        return df2
+        dataframe_with_counts = af_and_variants_df.groupby(['AF_bin']).count().reset_index('AF_bin')
+        return dataframe_with_counts
 
     def __add_complete_list_variants_table(self) -> None:
         """
-        Adds the complete list of variants to the report as a div HTML.
+        Adds the complete list of variants to the report as a div HTML object.
         :return: None
         """
         complete_table = self._tool_inputs['TSV_list'][0].value
@@ -201,21 +197,23 @@ class LofreqReporter(Tool):
         self._section.add_header('Variant statistics summary', 4)
 
         # First: retrieve all variants from the VCF file
-        self._all_variants = retrieve_variants(self._tool_inputs['VCF'][0].path, types=['snp', 'indel'])
+        self._all_variants = retrieve_variants(self._tool_inputs['VCF'][0].path)
         minimum_allele_frequency = self._parameters['min_af'].value if self._parameters['min_af'] else 0
         self._all_variants = [var for var in self._all_variants if var.INFO.get('AF', 0) >= minimum_allele_frequency]
         all_indels = [var for var in self._all_variants if var.INFO.get('INDEL', False) is True]
+        all_snps = [var for var in self._all_variants if var.var_type == 'snp']
 
         # Subsection: Total number of variants detected
         vcf_cell = self.__create_vcf_download_cell(self._tool_inputs['VCF'][0].path, 'all')
-        variant_table_summary = [[len(self._all_variants) - len(all_indels), len(all_indels), vcf_cell], ]
+        variant_table_summary = [
+            [len(all_snps), len(all_indels), len(self._all_variants) - len(all_snps) - len(all_indels), vcf_cell],
+        ]
         self._section.add_paragraph('Number of variants detected (min AF = {:.2f})'.format(minimum_allele_frequency))
-        self._section.add_table(variant_table_summary, ['Total # SNPs', 'Total # Indels', 'VCF file'],
+        self._section.add_table(variant_table_summary, ['Total # SNPs', 'Total # Indels', 'Other variants', 'VCF file'],
                                 [('class', 'data')])
 
         # Subsection: Variants detected by AF categories
-        variant_table_afs = self.__retrieve_vars_at_specific_af(self._all_variants, minimum_allele_frequency,
-                                                                [x['af'] for x in LofreqReporter.AF_THRESHOLDS])
+        variant_table_afs = self.__retrieve_vars_at_specific_af()
         self._section.add_paragraph('Number of variants detected per allele frequency categories.')
         self._section.add_table(variant_table_afs.values.tolist(), ['AF', '# SNPs', '# Indels'], [('class', 'data')])
 
