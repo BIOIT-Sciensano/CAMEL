@@ -34,8 +34,8 @@ class TestLofreq(CamelTestSuite):
         :return: None
         """
         lofreq_indelqual = LofreqIndelqual()
-        lofreq.add_input_files({'FASTA': [TestLofreq.FILE_FASTA], 'BAM': [TestLofreq.FILE_BAM]})
-        lofreq.run(self.running_dir)
+        lofreq_indelqual.add_input_files({'FASTA': [TestLofreq.FILE_FASTA], 'BAM': [TestLofreq.FILE_BAM]})
+        lofreq_indelqual.run(self.running_dir)
         self.verify_output_files(lofreq_indelqual, 'BAM')
 
 

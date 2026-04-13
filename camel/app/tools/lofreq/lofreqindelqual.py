@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.utils import toolutils
 from camel.app.tools.lofreq.lofreq import Lofreq
@@ -17,7 +16,7 @@ class LofreqIndelqual(Lofreq):
         Initializes Lofreq indelqual.
         :return: None
         """
-        super().__init__('Lofreq indelqual', '2.1.3.1')
+        super().__init__('Lofreq indelqual', '2.1.5')
 
     def _check_input(self) -> None:
         """

@@ -149,7 +149,7 @@ rule annotate_variants_csq:
         step.run()
         snakemakeutils.dump_tool_outputs(csq,output)
 
-rule extract_variants_from_vcf:
+rule extract_variants_effect_from_vcf:
     input:
         VCF = rules.annotate_variants_csq.output.VCF if config[
                                                     'variant_calling'].get('csq',False) is True else rules.variant_calling_with_lofreq.output.VCF
@@ -158,8 +158,8 @@ rule extract_variants_from_vcf:
     params:
         dir_ = 'variant_calling/variants_list'
     run:
-        from camel.app.tools.pipelines.variant_calling.extractvariantsfromvcf import ExtractVariantsFromVCF
-        extract_variants = ExtractVariantsFromVCF()
+        from camel.app.tools.pipelines.variant_calling.extractvariantsandeffectfromvcf import ExtractVariantsAndEffectFromVCF
+        extract_variants = ExtractVariantsAndEffectFromVCF()
         step = Step(rule_name=str(rule), tool=extract_variants, dir_=Path(params.dir_))
         snakemakeutils.add_pickle_inputs(extract_variants, input)
         step.run()
@@ -176,9 +176,9 @@ rule lofreq_reporter:
         INFORMS_lofreq=rules.variant_calling_with_lofreq.output.INFORMS,
         BAM='variant_calling/read_mapping/illumina/bam.io',
         TSV_depth=rules.variant_calling_calculate_depth.output.TSV,
-        TSV_list=rules.extract_variants_from_vcf.output.TSV
+        TSV_list=rules.extract_variants_effect_from_vcf.output.TSV
     output:
-        VAL_HTML='variant_calling/report/html-lofreq.iob',# variant_calling_lofreq.OUTPUT_REPORT_LOFREQ
+        VAL_HTML='variant_calling/report/html-lofreq.iob',  # variant_calling_lofreq.OUTPUT_REPORT_LOFREQ
         INFORMS='variant_calling/report/informs.io'
     params:
         dir_='variant_calling/report',
