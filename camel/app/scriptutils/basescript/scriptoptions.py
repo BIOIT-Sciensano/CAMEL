@@ -19,7 +19,7 @@ class ScriptOptions(BaseOptions):
     )
     gene_detection_method: str | None = dataclasses.field(
         default="blast",
-        metadata={"choices": ["blast", "kma"], "show_default": True},
+        metadata={"choices": ["blast", "kma", "mixed"], "show_default": True},
     )
     trimming_method: str | None = dataclasses.field(
         default="fastp",

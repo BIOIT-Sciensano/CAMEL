@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
@@ -34,20 +35,25 @@ rule gene_detection_db_manager:
         step.run()
         snakemakeutils.dump_tool_outputs(db_manager, output)
 
-rule aggregate_tsv_hits:
+rule aggregate_and_filter_hits:
     input:
-        TSV_KMA = rules.gene_detection_kma.output.TSV,
-        TSV_BLAST = rules.gene_detection_blast.output.TSV
+        KMA_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='kma'),
+        BLAST_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='blast')
     output:
-        VAL_hits = 'gene_detection/{db}/mixed/hits.iob'  # gene_detection.OUTPUT_HITS_METHOD
+        VAL_hits = 'gene_detection/{db}/mixed/hits.iob',  # gene_detection.OUTPUT_HITS_METHOD
+        INFORMS = 'gene_detection/{db}/mixed/informs.io',
+        TSV_summary = 'gene_detection/{db}/mixed/summary.iob'
     params:
-        dir_=lambda wildcards: f'gene_detection/{wildcards.db}/mixed',
-        min_identity=lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_percent_identity', 90),
-        min_coverage=lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_coverage', 60)
+        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/mixed',
+        min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_percent_identity', 90),
+        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_coverage', 60)
     run:
-        from camel.app.tools.pipelines.genedetection.mixedhitfiltering import MixedHitFiltering
-        # Parse variants from blast and KMA - output a hits table with a "mixed" tag so that the reporter knows what to do
-        #
+        from camel.app.tools.pipelines.genedetection.mixedhitaggregatingandfiltering import MixedHitAggregatingAndFiltering
+        mixed_hit = MixedHitAggregatingAndFiltering()
+        snakemakeutils.add_pickle_inputs(mixed_hit, input)
+        step = Step(rule_name=str(rule), tool=mixed_hit, dir_=Path(str(params.dir_)))
+        step.run()
+        snakemakeutils.dump_tool_outputs(mixed_hit, output)
 
 rule gene_detection_get_hits:
     """
@@ -55,18 +61,27 @@ rule gene_detection_get_hits:
     """
     input:
         INFORMS_DB = rules.gene_detection_db_manager.output.INFORMS,
+        TSV_summary = lambda wildcards: rules.aggregate_and_filter_hits.output.TSV_summary if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
         VAL_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db)),
         INFORMS_hits = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db))
     output:
         VAL_hits = 'gene_detection/{db}/hit_selection/hits-standardized.iob',
-        INFORMS = 'gene_detection/{db}/hit_selection/informs.io' # gene_detection.OUTPUT_INFORMS
+        INFORMS = 'gene_detection/{db}/hit_selection/informs.io',  # gene_detection.OUTPUT_INFORMS
+        TSV_summary = 'gene_detection/{db}/hit_selection/summary.iob'
     run:
         import shutil
         shutil.copyfile(str(input.VAL_hits), output.VAL_hits)
         # Add a tag for the database to distinguish commands in the output
         informs = snakemakeutils.load_object(Path(str(input.INFORMS_hits)))
         informs['_tag'] = snakemakeutils.load_object(Path(str(input.INFORMS_DB)))['title']
+        if not '_command' in informs:
+            informs['_command'] = 'test'
         snakemakeutils.dump_object(informs, Path(output.INFORMS))
+        if input.TSV_summary:
+            shutil.copyfile(str(input.TSV_summary), output.TSV_summary)
+        else:
+            empty_df = pd.DataFrame()
+            snakemakeutils.dump_object(empty_df, Path(output.TSV_summary))
 
 rule gene_detection_map_names:
     """
@@ -130,12 +145,15 @@ rule gene_detection_get_column_names:
         from camel.app.toolkits.blast.blasthitstatistics import BlastHitStatistics
         from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
         from camel.app.toolkits.genedetection.genedetectionkmahit import GeneDetectionKMAHit
+        from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 
         # Create empty hit
         if params.detection_method == 'blast':
             empty_hit = GeneDetectionBlastHit('Locus', None, BlastHitStatistics('subject', 0, '', 'query', 0, 0, '', 0.0, '+'))
         elif params.detection_method == 'kma':
             empty_hit = GeneDetectionKMAHit('DB_cluster', 'Locus', None, '', 0, 0, 0.0, 0.0, 0.0)
+        elif params.detection_method == 'mixed':
+            empty_hit = GeneDetectionMixedHit('A', 'B', None, None)
         else:
             raise ValueError(f"Invalid detection method: {params.detection_method}")
 
@@ -154,6 +172,7 @@ rule gene_detection_report:
     input:
         VAL_Hits = rules.gene_detection_map_names.output.HITS,
         TSV = rules.gene_detection_map_names.output.TSV,
+        TSV_summary = rules.gene_detection_get_hits.output.TSV_summary,
         INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS,
         INFORMS_detection = rules.gene_detection_get_hits.output.INFORMS
     output:
