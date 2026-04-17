@@ -279,7 +279,7 @@ gene_detection:
 # Citations #
 #############
 citations:
-  main: null
+  main: Godfroid_2026-bacillus
   other:
     - Chen_2023-fastp
     - Shen_2024-seqkit2
