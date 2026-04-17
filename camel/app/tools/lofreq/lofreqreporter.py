@@ -177,7 +177,7 @@ class LofreqReporter(Tool):
                 table_attributes=[('class', 'data')])
             self._section.add_html_object(div)
             table_path = self._folder / f'all_variants-{fileutils.make_valid(self.get_param_value("sample_name"))}.tsv'
-            TsvExporter.export(complete_table, header_complete_table, table_path)
+            TsvExporter.export(complete_table.values.tolist(), header_complete_table, table_path)
             relative_path = Path(LofreqReporter.SUB_FOLDER) / table_path.name
             self._section.add_file(table_path, relative_path)
             self._section.add_link_to_file('Download (TSV)', relative_path)
