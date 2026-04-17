@@ -21,10 +21,10 @@ rule btyper_run:
     run:
         from camel.app.tools.btyper.btyper import BTyper
         btyper = BTyper()
-        snakemakeutils.add_pickle_inputs(btyper, input)
+        snakemakeutils.add_io_inputs(btyper, input)
         step = Step(rule_name=str(rule), tool=btyper, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(btyper, output)
+        snakemakeutils.dump_io_outputs(btyper, output)
 
 rule btyper_report:
     """
@@ -41,11 +41,11 @@ rule btyper_report:
     run:
         from camel.app.tools.btyper.btyperreporter import BTyperReporter
         btyper_reporter = BTyperReporter()
-        snakemakeutils.add_pickle_inputs(btyper_reporter, input)
+        snakemakeutils.add_io_inputs(btyper_reporter, input)
         btyper_reporter.update_parameters(sample_name=params.sample_name)
         step = Step(rule_name=str(rule), tool=btyper_reporter, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(btyper_reporter, output)
+        snakemakeutils.dump_io_outputs(btyper_reporter, output)
 
 rule btyper_report_empty:
     """

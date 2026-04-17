@@ -55,21 +55,21 @@ rule report_command_section:
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_assembly_map = assembly.get_qc_informs(config, config['input']['type']),
-        INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses'] else [],
-        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
-        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses'] else [],
-        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses'] else [],
-        INFORMS_ncbi_stress = str(gene_detection.OUTPUT_INFORMS).format(db='ncbi_stress') if 'ncbi_stress' in config['analyses'] else [],
-        INFORMS_virulence = str(gene_detection.OUTPUT_INFORMS).format(db='virulencefinder') if 'virulencefinder' in config['analyses'] else [],
-        INFORMS_virulence_shiga = str(gene_detection.OUTPUT_INFORMS).format(db='virulencefinder_shiga') if 'virulencefinder' in config['analyses'] else [],
-        INFORMS_serotype_h = str(gene_detection.OUTPUT_INFORMS).format(db='serotype_h') if 'serotype' in config['analyses'] else [],
-        INFORMS_serotype_o = str(gene_detection.OUTPUT_INFORMS).format(db='serotype_o') if 'serotype' in config['analyses'] else [],
-        INFORMS_plasmidfinder = str(gene_detection.OUTPUT_INFORMS).format(db='plasmidfinder') if 'plasmidfinder' in config['analyses'] else [],
-        INFORMS_mlst_pasteur = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_pasteur') if 'mlst_pasteur' in config['analyses'] else [],
-        INFORMS_mlst_warwick = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_warwick') if 'mlst_warwick' in config['analyses'] else [],
-        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else [],
-        INFORMS_innuendo = sequence_typing.OUTPUT_INFORMS.format(scheme='innuendo_cgmlst') if 'innuendo_cgmlst' in config['analyses'] else [],
-        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses'] else []
+        INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses_selected'] else [],
+        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses_selected'] else [],
+        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses_selected'] else [],
+        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses_selected'] else [],
+        INFORMS_ncbi_stress = str(gene_detection.OUTPUT_INFORMS).format(db='ncbi_stress') if 'ncbi_stress' in config['analyses_selected'] else [],
+        INFORMS_virulence = str(gene_detection.OUTPUT_INFORMS).format(db='virulencefinder') if 'virulencefinder' in config['analyses_selected'] else [],
+        INFORMS_virulence_shiga = str(gene_detection.OUTPUT_INFORMS).format(db='virulencefinder_shiga') if 'virulencefinder' in config['analyses_selected'] else [],
+        INFORMS_serotype_h = str(gene_detection.OUTPUT_INFORMS).format(db='serotype_h') if 'serotype' in config['analyses_selected'] else [],
+        INFORMS_serotype_o = str(gene_detection.OUTPUT_INFORMS).format(db='serotype_o') if 'serotype' in config['analyses_selected'] else [],
+        INFORMS_plasmidfinder = str(gene_detection.OUTPUT_INFORMS).format(db='plasmidfinder') if 'plasmidfinder' in config['analyses_selected'] else [],
+        INFORMS_mlst_pasteur = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_pasteur') if 'mlst_pasteur' in config['analyses_selected'] else [],
+        INFORMS_mlst_warwick = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_warwick') if 'mlst_warwick' in config['analyses_selected'] else [],
+        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses_selected'] else [],
+        INFORMS_innuendo = sequence_typing.OUTPUT_INFORMS.format(scheme='innuendo_cgmlst') if 'innuendo_cgmlst' in config['analyses_selected'] else [],
+        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -90,14 +90,14 @@ rule report_combine_all:
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
         report_adv_qc = quality_checks.OUTPUT_REPORT,
-        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
+        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses_selected'] else [],
         # Species identification
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst',config),
         # Serotype
         report_serotype = serotype_detection.OUTPUT_REPORT,
         # AMR
-        report_amrfinder = (amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY),
-        report_resfinder4 = (resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses'] else resfinder4.OUTPUT_REPORT_EMPTY),
+        report_amrfinder = (amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses_selected'] else amrfinder.OUTPUT_REPORT_EMPTY),
+        report_resfinder4 = (resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses_selected'] else resfinder4.OUTPUT_REPORT_EMPTY),
         report_ncbi_stress = gene_detection.get_gene_detection_report('ncbi_stress', config),
         # Gene detection
         report_virulence = gene_detection.get_gene_detection_report('virulencefinder', config),
@@ -106,8 +106,8 @@ rule report_combine_all:
         report_serotype_h_type = gene_detection.get_gene_detection_report('serotype_h', config, 'serotype'),
         # Plasmid characterization
         report_plasmidfinder = gene_detection.get_gene_detection_report('plasmidfinder', config),
-        report_mob_suite = (mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_REPORT_EMPTY),
-        report_genomic_context = (mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY),
+        report_mob_suite = (mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY),
+        report_genomic_context = (mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY),
         # Typing
         report_mlst_warwick = sequence_typing.get_sequence_typing_report('mlst_warwick', config),
         report_mlst_pasteur = sequence_typing.get_sequence_typing_report('mlst_pasteur', config),
@@ -157,7 +157,7 @@ rule report_combine_all:
         basepipeutils.add_content_contamination_check(
             report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.append(('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]))
-        if 'variant_calling' in config['analyses']:
+        if 'variant_calling' in config['analyses_selected']:
             report_structure.append(('Variant calling', 'variant', [Path(input.report_variant)]))
         # Add content
         report_structure.extend([
@@ -190,27 +190,27 @@ rule summary_combine_all:
         lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
         quality_checks.OUTPUT_SUMMARY,
-        variant_calling.get_summaries(config) if 'variant_calling' in config['analyses'] else [],
+        variant_calling.get_summaries(config) if 'variant_calling' in config['analyses_selected'] else [],
         # AMR detection
-        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses'] else [],
-        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses'] else [],
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='ncbi_stress', ext=wildcards.ext) if 'ncbi_stress' in config['analyses'] else [],
+        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses_selected'] else [],
+        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses_selected'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='ncbi_stress', ext=wildcards.ext) if 'ncbi_stress' in config['analyses_selected'] else [],
         # Virulence gene detection
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='virulencefinder', ext=wildcards.ext) if 'virulencefinder' in config['analyses'] else [],
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='virulencefinder_shiga', ext=wildcards.ext) if 'virulencefinder' in config['analyses'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='virulencefinder', ext=wildcards.ext) if 'virulencefinder' in config['analyses_selected'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='virulencefinder_shiga', ext=wildcards.ext) if 'virulencefinder' in config['analyses_selected'] else [],
         # Plasmid characterization
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='plasmidfinder', ext=wildcards.ext) if 'plasmidfinder' in config['analyses'] else [],
-        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='plasmidfinder', ext=wildcards.ext) if 'plasmidfinder' in config['analyses_selected'] else [],
+        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses_selected'] else [],
         # Serotype
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='serotype_h', ext=wildcards.ext) if 'serotype' in config['analyses'] else [],
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='serotype_o', ext=wildcards.ext) if 'serotype' in config['analyses'] else [],
-        serotype_detection.OUTPUT_SUMMARY if 'serotype' in config['analyses'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='serotype_h', ext=wildcards.ext) if 'serotype' in config['analyses_selected'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='serotype_o', ext=wildcards.ext) if 'serotype' in config['analyses_selected'] else [],
+        serotype_detection.OUTPUT_SUMMARY if 'serotype' in config['analyses_selected'] else [],
         # Sequence typing
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_pasteur', ext=wildcards.ext) if 'mlst_pasteur' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_warwick', ext=wildcards.ext) if 'mlst_warwick' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='innuendo_cgmlst', ext=wildcards.ext) if 'innuendo_cgmlst' in config['analyses'] else []
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_pasteur', ext=wildcards.ext) if 'mlst_pasteur' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_warwick', ext=wildcards.ext) if 'mlst_warwick' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='innuendo_cgmlst', ext=wildcards.ext) if 'innuendo_cgmlst' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:
@@ -225,14 +225,14 @@ rule link_genomic_context:
     """
     input:
         # AMR
-        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses'] else [],
-        TSV_gd_ncbi_stress = 'gene_detection/ncbi_stress/metadata/tsv.io' if 'ncbi_stress' in config['analyses'] else[],
-        INFORMS_gd_ncbi_stress = 'gene_detection/ncbi_stress/db_manager/informs.iob' if 'ncbi_stress' in config['analyses'] else [],
+        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses_selected'] else [],
+        TSV_gd_ncbi_stress = 'gene_detection/ncbi_stress/metadata/tsv.io' if 'ncbi_stress' in config['analyses_selected'] else[],
+        INFORMS_gd_ncbi_stress = 'gene_detection/ncbi_stress/db_manager/informs.iob' if 'ncbi_stress' in config['analyses_selected'] else [],
         # Virulence
-        TSV_gd_vf = 'gene_detection/virulencefinder/metadata/tsv.io' if 'virulencefinder' in config['analyses'] else [],
-        INFORMS_gd_vf = 'gene_detection/virulencefinder/db_manager/informs.iob' if 'virulencefinder' in config['analyses'] else [],
-        TSV_gd_vf_shiga = 'gene_detection/virulencefinder_shiga/metadata/tsv.io' if 'virulencefinder' in config['analyses'] else [],
-        INFORMS_gd_vf_shiga = 'gene_detection/virulencefinder_shiga/db_manager/informs.iob' if 'virulencefinder' in config['analyses'] else []
+        TSV_gd_vf = 'gene_detection/virulencefinder/metadata/tsv.io' if 'virulencefinder' in config['analyses_selected'] else [],
+        INFORMS_gd_vf = 'gene_detection/virulencefinder/db_manager/informs.iob' if 'virulencefinder' in config['analyses_selected'] else [],
+        TSV_gd_vf_shiga = 'gene_detection/virulencefinder_shiga/metadata/tsv.io' if 'virulencefinder' in config['analyses_selected'] else [],
+        INFORMS_gd_vf_shiga = 'gene_detection/virulencefinder_shiga/db_manager/informs.iob' if 'virulencefinder' in config['analyses_selected'] else []
     output:
         TSV = 'mob_suite/genomic_context/input/tsv.io',
         INFORMS = 'mob_suite/genomic_context/input/informs.io'

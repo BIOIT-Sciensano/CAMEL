@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.loggers import logger as camel_logger
@@ -13,7 +12,7 @@ rule quast_quast:
     """
     input:
         FASTA = assembly.OUTPUT_FASTA,
-        IO = 'fq_dict.io'
+        IO = 'fq_dict.io' if config['input']['type'] not in ('fasta', 'fasta_with_vcf') else []
     output:
         TSV = 'quast/output/tsv.io',
         HTML = 'quast/output/html.iob', # quast.OUTPUT_REPORT
@@ -25,6 +24,7 @@ rule quast_quast:
         fasta = config.get('reference', {}).get('fasta'),
         gff = config.get('reference', {}).get('gff3')
     run:
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.quast.quast import Quast
 
@@ -36,8 +36,8 @@ rule quast_quast:
         quast_ = Quast()
 
         # Add input
-        snakemakeutils.add_pickle_inputs(quast_, input, excluded_keys=['IO'])
-        fq_dict = snakemakeutils.load_object(Path(input.IO))
+        snakemakeutils.add_io_inputs(quast_, input, excluded_keys=['IO'])
+        fq_dict = snakemakeutils.load_object(Path(input.IO)) if len(input.IO) > 0 else {}
         if params.input_type in ('illumina', 'hybrid'):
             quast_.add_input_files({'FASTQ_PE': fq_dict['PE']})
         if params.input_type in ('ont', 'hybrid'):
@@ -58,7 +58,7 @@ rule quast_quast:
         step.run()
 
         # Collect output
-        snakemakeutils.dump_tool_outputs(quast_, output, ignore_missing_output=True)
+        snakemakeutils.dump_io_outputs(quast_, output, ignore_missing_output=True)
         snakemakeutils.dump_object([ToolIODirectory(dir_out)], Path(output.DIR))
 
 rule quast_busco:
@@ -67,7 +67,8 @@ rule quast_busco:
     BUSCO is ran outside of QUAST because of dependency issues with the BUSCO installation bundled with QUAST.
     """
     input:
-        FASTA = assembly.OUTPUT_FASTA
+        FASTA = assembly.OUTPUT_FASTA,
+        DB = config['busco']['db']
     output:
         TXT = 'quast/busco/txt.io',
         INFORMS = 'quast/busco/informs.io' # quast.OUTPUT_INFORMS_BUSCO
@@ -76,13 +77,15 @@ rule quast_busco:
         lineage_dataset = 'bacteria_odb10'
     threads: 8
     run:
+        from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.busco.busco import Busco
         busco = Busco()
-        snakemakeutils.add_pickle_inputs(busco, input)
+        snakemakeutils.add_io_input(busco, 'FASTA', Path(input.FASTA))
+        busco.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
         step = Step(rule_name=str(rule), tool=busco, dir_=Path(params.dir_))
         busco.update_parameters(lineage_dataset=params.lineage_dataset, threads=str(threads))
         step.run()
-        snakemakeutils.dump_tool_outputs(busco, output)
+        snakemakeutils.dump_io_outputs(busco, output)
 
 rule quast_report:
     """
@@ -105,14 +108,14 @@ rule quast_report:
         from camel.app.tools.quast.quastreporter import QuastReporter
         reporter = QuastReporter()
         reporter.update_parameters(name=params.name)
-        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['INFORMS_assembler'])
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['INFORMS_assembler'])
         reporter.add_input_informs({
             'assembler': ', '.join(snakemakeutils.load_object(Path(x))['_name_full'] for x in input.INFORMS_assembler)
             if input.INFORMS_assembler else 'n/a'
         })
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule quast_create_summary_out:
     """

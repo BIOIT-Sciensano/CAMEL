@@ -1,11 +1,128 @@
-############################################################################################
-# This YAML file contains the additional configuration data for the Mycobacterium pipeline #
-# The values are added to the configuration data constructed by the BasePipeline class.    #
-############################################################################################
+analyses:
+  51snp:
+    dbs:
+      - 51snp
+  amr:
+    dbs:
+      - amr
+      - gene_detection_amr_cds
+  csb_rd:
+    dbs:
+      - gene_detection_csb_rd
+  cgmlst:
+    dbs:
+      - typing_cgmlst
+  confindr:
+    dbs:
+      - confindr
+  hsp65:
+    dbs:
+      - gene_detection_hsp65
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  mlst:
+    dbs:
+      - typing_mlst
+  ncbi_16s:
+    dbs:
+      - gene_detection_ncbi_16s
+  rmlst:
+    dbs:
+      - typing_rmlst
+  snp_lineage:
+    dbs:
+      - snp_lineage
+  snpit:
+    dbs: []
+  spoligotyping:
+    dbs: []
+  variant_calling:
+    dbs:
+      - variant_calling_bed
+
 #############
 # Databases #
 #############
-dbs: {{}}
+dbs:
+  51snp:
+    location: &db_51snp {DB_ROOT}/pipelines/mycobacterium/51snp
+    required: false
+    method: ftp
+  amr:
+    location: &db_amr {DB_ROOT}/pipelines/mycobacterium/amr/who_2023.6
+    required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gene_detection_amr_cds:
+    location: &db_gd_amr_cds {DB_ROOT}/pipelines/mycobacterium/amr/gene_detection/myco_amr_cds
+    required: false
+    method: ftp
+  gene_detection_csb_rd:
+    location: &db_gd_csb_rd {DB_ROOT}/pipelines/mycobacterium/csb_rd
+    required: false
+    method: ftp
+  gene_detection_ncbi_16s:
+    location: &db_gd_ncbi_16s {DB_ROOT}/gene_detection/NCBI_16S
+    required: false
+    method: ftp
+  gene_detection_hsp65:
+    location: &db_gd_hsp65 {DB_ROOT}/pipelines/mycobacterium/hsp65
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Mycobacterium_tuberculosis/H37Rv.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Mycobacterium_tuberculosis/H37Rv.gff
+    is_file: true
+    required: true
+    method: ftp
+  ref_tabix:
+    location: &ref_tabix {DB_ROOT}/refgenomes/Mycobacterium_tuberculosis/H37Rv.tab.ann.gz
+    is_file: true
+    required: true
+    method: ftp
+  typing_cgmlst:
+    location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/mycobacterium/cgmlst
+    required: false
+    method: mist
+  typing_mlst:
+    location: &db_typing_mlst {DB_ROOT}/sequence_typing/mycobacterium/mlst
+    required: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+  snp_lineage:
+    location: &snp_lineage_bed {DB_ROOT}/pipelines/mycobacterium/snp_lineage/tbdb-2024_02_23.bed
+    is_file: true
+    required: false
+    method: ftp
+  variant_calling_bed:
+    location: &variant_calling_bed {DB_ROOT}/pipelines/mycobacterium/variant_filtering/excluded_regions.bed
+    is_file: true
+    required: true
+    method: ftp
 
 ####################
 # Pipeline options #
@@ -41,33 +158,34 @@ citations:
 ####################
 reference:
   expected_gc: 51.5
-  fasta: /db/refgenomes/Mycobacterium_tuberculosis/H37Rv.fasta
-  gff3: /db/refgenomes/Mycobacterium_tuberculosis/H37Rv.gff
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   name: H37Rv
-  tabix: /db/refgenomes/Mycobacterium_tuberculosis/H37Rv.tab.ann.gz
+  tabix: *ref_tabix
   url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000195955.2
 
 ################
 # Tool options #
 ################
 51snp:
-  bed: /db/pipelines/mycobacterium/51snp/51snp_locations.bed
-  profiles: /db/pipelines/mycobacterium/51snp/profiles.tsv
+  db: *db_51snp
 
 amr:
-  bed_regions: /db/pipelines/mycobacterium/amr/who_2023.6/amr_regions.bed
-  mutation_db: /db/pipelines/mycobacterium/amr/who_2023.6
+  db: *db_amr
 
 assembly:
   spades:
     cov_cutoff: 10
   min_contig_length: 1000
 
+busco:
+  db: *db_busco
+
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: *db_kraken2
   expected_species: Mycobacterium tuberculosis
 
 downsampling:
@@ -80,23 +198,24 @@ quality_checks:
   coverage_mode: ref
 
 read_trimming: {{}}
-read_scrubbing: {{}}
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 sequence_typing:
   dbs:
     mlst:
-      path: /db/sequence_typing/mycobacterium/mlst
+      path: *db_typing_mlst
     cgmlst:
-      path: /db/sequence_typing/mycobacterium/cgmlst
+      path: *db_typing_cgmlst
       detection_method: blast
     rmlst:
-      path: /db/sequence_typing/various/rmlst
+      path: *db_typing_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info
 
 snp_lineage:
-  bed: /db/pipelines/mycobacterium/snp_lineage/tbdb-2024_02_23.bed
+  bed: *snp_lineage_bed
 
 variant_calling:
   ploidy: 1
@@ -104,7 +223,7 @@ variant_calling:
 
 variant_filtering:
   region:
-    bed_file: /db/pipelines/mycobacterium/variant_filtering/excluded_regions.bed
+    bed_file: *variant_calling_bed
   depth:
     min_fwd_depth: 1
     min_rev_depth: 1
@@ -114,7 +233,7 @@ variant_filtering:
 gene_detection:
   dbs:
     amr_cds:
-      path: /db/pipelines/mycobacterium/amr/gene_detection/myco_amr_cds
+      path: *db_gd_amr_cds
       force_method: kma
       params:
         min_coverage: 20
@@ -123,11 +242,11 @@ gene_detection:
         key: antibiotics
 
     csb_rd:
-      path: /db/pipelines/mycobacterium/csb_rd
+      path: *db_gd_csb_rd
       force_method: kma
 
     ncbi_16s:
-      path: /db/gene_detection/NCBI_16S
+      path: *db_gd_ncbi_16s
       params:
         blastn:
           min_percent_identity: 95
@@ -139,7 +258,7 @@ gene_detection:
         key: species
 
     hsp65:
-      path: /db/pipelines/mycobacterium/hsp65
+      path: *db_gd_hsp65
       metadata:
         name: Species
         key: species_name

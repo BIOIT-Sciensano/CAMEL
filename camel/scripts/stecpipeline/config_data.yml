@@ -1,3 +1,48 @@
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  cgmlst:
+    dbs:
+      - cgmlst
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  innuendo_cgmlst:
+    dbs:
+      - innuendo_cgmlst
+  mlst_pasteur:
+    dbs:
+      - mlst_pasteur
+  mlst_warwick:
+    dbs:
+      - mlst_warwick
+  mob_suite:
+    dbs:
+      - mob_suite
+  ncbi_stress:
+    dbs:
+      - ncbi_stress
+  plasmidfinder:
+    dbs:
+      - plasmidfinder
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - rmlst
+  serotype_h:
+    dbs:
+      - serotype_h
+  serotype_o:
+    dbs:
+      - serotype_o
+  virulencefinder:
+    dbs:
+      - virulencefinder
+      - virulencefinder_shiga
+
 #######
 # DBs #
 #######
@@ -6,8 +51,49 @@ dbs:
     location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
     required: false
     method: ftp
-  mobsuite:
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  cgmlst:
+    location: &db_cgmlst {DB_ROOT}/sequence_typing/ecoli/cgmlst
+    required: false
+    method: mist
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  innuendo_cgmlst:
+    location: &db_innuendo_cgmlst {DB_ROOT}/sequence_typing/ecoli/innuendo_cgmlst
+    required: false
+    method: mist
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mlst_pasteur:
+    location: &db_mlst_pasteur {DB_ROOT}/sequence_typing/ecoli/mlst_pasteur
+    required: false
+    method: mist
+  mlst_warwick:
+    location: &db_mlst_warwick {DB_ROOT}/sequence_typing/ecoli/mlst_warwick
+    required: false
+    method: mist
+  mob_suite:
     location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ncbi_stress:
+    location: &db_ncbi_stress {DB_ROOT}/gene_detection/NCBI_STRESS
+    required: false
+    method: ftp
+  plasmidfinder:
+    location: &db_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-entero
     required: false
     method: ftp
   ref_fasta:
@@ -22,6 +108,26 @@ dbs:
     method: ftp
   resfinder4:
     location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  rmlst:
+    location: &db_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+  serotype_h:
+    location: &db_serotype_h {DB_ROOT}/gene_detection/SerotypeFinder-H_type
+    required: false
+    method: ftp
+  serotype_o:
+    location: &db_serotype_o {DB_ROOT}/gene_detection/SerotypeFinder-O_type
+    required: false
+    method: ftp
+  virulencefinder:
+    location: &db_virulencefinder {DB_ROOT}/gene_detection/VirulenceFinder-Ecoli
+    required: false
+    method: ftp
+  virulencefinder_shiga:
+    location: &db_virulencefinder_shiga {DB_ROOT}/gene_detection/VirulenceFinder-Shiga
     required: false
     method: ftp
 
@@ -65,7 +171,7 @@ reference:
   expected_gc: 50.5
 
 #########################
-# Tool specific options #
+# Tool-specific options #
 #########################
 amrfinder:
   db: *db_amrfinder
@@ -76,11 +182,14 @@ assembly:
     cov_cutoff: 10
   min_contig_length: 1000
 
+busco:
+  db: *db_busco
+
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: *db_kraken2
   expected_species: Escherichia coli
 
 downsampling:
@@ -94,7 +203,8 @@ quality_checks:
 
 read_trimming: {{}}
 
-read_scrubbing: {{}}
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 resfinder4:
   db: *db_resfinder4
@@ -112,7 +222,7 @@ variant_filtering: {{}}
 gene_detection:
   dbs:
     plasmidfinder:
-      path: /db/gene_detection/PlasmidFinder-entero
+      path: *db_plasmidfinder
       params:
         blastn:
           min_percent_identity: 95
@@ -121,9 +231,9 @@ gene_detection:
         content: The presence of a replicon does not mean that the corresponding plasmid is present.
         category: warning
     ncbi_stress:
-      path: /db/gene_detection/NCBI_STRESS
+      path: *db_ncbi_stress
     serotype_o:
-      path: /db/gene_detection/SerotypeFinder-O_type
+      path: *db_serotype_o
       params:
         blastn:
           min_percent_identity: 85
@@ -132,7 +242,7 @@ gene_detection:
         name: Predicted serotype
         key: predicted_serotype
     serotype_h:
-      path: /db/gene_detection/SerotypeFinder-H_type
+      path: *db_serotype_h
       params:
         blastn:
           min_percent_identity: 85
@@ -141,13 +251,13 @@ gene_detection:
         name: Predicted serotype
         key: predicted_serotype
     virulencefinder:
-      path: /db/gene_detection/VirulenceFinder-Ecoli
+      path: *db_virulencefinder
       metadata:
         name: Protein function
         key: protein_function
       hidden: true
     virulencefinder_shiga:
-      path: /db/gene_detection/VirulenceFinder-Shiga
+      path: *db_virulencefinder_shiga
       metadata:
         name: stx variant
         key: stx_variant
@@ -158,16 +268,16 @@ gene_detection:
 sequence_typing:
   dbs:
     cgmlst:
-      path: /db/sequence_typing/ecoli/cgmlst
+      path: *db_cgmlst
       blastn_task: blastn
     innuendo_cgmlst:
-      path: /db/sequence_typing/ecoli/innuendo_cgmlst
+      path: *db_innuendo_cgmlst
     mlst_pasteur:
-      path: /db/sequence_typing/ecoli/mlst_pasteur
+      path: *db_mlst_pasteur
     mlst_warwick:
-      path: /db/sequence_typing/ecoli/mlst_warwick
+      path: *db_mlst_warwick
     rmlst:
-      path: /db/sequence_typing/various/rmlst
+      path: *db_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info

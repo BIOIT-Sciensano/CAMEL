@@ -36,4 +36,4 @@ rule assembly_spades_run:
         spades.update_parameters(**params.spades_options)
         spades.update_parameters(isolate=True, careful=False, threads=threads)
         step.run()
-        snakemakeutils.dump_tool_outputs(spades, output)
+        snakemakeutils.dump_io_outputs(spades, output)

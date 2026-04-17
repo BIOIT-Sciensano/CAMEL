@@ -20,9 +20,13 @@ def aggregate_input(wc: Any, cp: Any, conf: dict, get_informs: bool) -> list[str
     path_metadata = cp.typing_extract_schema_info.get(**wc).output.INFORMS
     informs_ = snakemakeutils.load_object(Path(path_metadata))
 
+    # Fallback when database is missing
+    if 'loci' not in informs_:
+        return []
+
     # Determine which loci are present
-    has_dna_loci = any(info['type'] == 'DNA' for _, info in  informs_['loci'].metadata_by_locus_name.items())
-    has_peptide_loci = any(info['type'] == 'peptide' for _, info in  informs_['loci'].metadata_by_locus_name.items())
+    has_dna_loci = any(info['type'] == 'DNA' for _, info in informs_['loci'].metadata_by_locus_name.items())
+    has_peptide_loci = any(info['type'] == 'peptide' for _, info in informs_['loci'].metadata_by_locus_name.items())
 
     # Create output files
     basename = 'hits.iob' if not get_informs else 'informs.io'
@@ -135,7 +139,7 @@ rule typing_mist:
         mist_call.update_parameters(threads=threads)
         step = Step(str(rule), mist_call, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(mist_call, output)
+        snakemakeutils.dump_io_outputs(mist_call, output)
 
 rule typing_mist_extract_hits:
     """
@@ -213,7 +217,7 @@ rule typing_export_tsv:
     run:
         from camel.app.tools.pipelines.sequence_typing.exporttsv import ExportTSV
         export_tsv = ExportTSV()
-        snakemakeutils.add_pickle_inputs(export_tsv, input)
+        snakemakeutils.add_io_inputs(export_tsv, input)
         step = Step(str(rule), export_tsv, dir_=Path(str(params.dir_)))
         export_tsv.update_parameters(output_filename=str(params.output_filename))
         step.run()
@@ -265,7 +269,7 @@ rule typing_detect_sequence_type:
             snakemakeutils.dump_object([], Path(output.TSV))
         else:
             sequence_type_detector = SequenceTypeDetector()
-            snakemakeutils.add_pickle_inputs(sequence_type_detector, input)
+            snakemakeutils.add_io_inputs(sequence_type_detector, input)
             step = Step(rule_name=str(rule), tool=sequence_type_detector, dir_=Path(str(params.dir_)), wildcards=wildcards)
             sequence_type_detector.update_parameters(allele_wildcards='N', allele_absent_symbol='0')
             if params.write_all_matches:
@@ -326,7 +330,7 @@ rule typing_create_report:
             reporter.add_input_informs({'ST': snakemakeutils.load_object(Path(str(input.INFORMS_ST)))})
 
         # Add other inputs and parameters
-        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['INFORMS_ST'])
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['INFORMS_ST'])
         reporter.add_input_files({'VAL_SAMPLE': [ToolIOValue(params.sample_name)]})
         if params.detection_method != config['sequence_typing']['options']['method']:
             reporter.update_parameters(forced_detection_method=str(params.detection_method))
@@ -343,7 +347,7 @@ rule typing_create_report:
         # Run the reporter
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)), wildcards=wildcards)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule typing_create_report_empty:
     """

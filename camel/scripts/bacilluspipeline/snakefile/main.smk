@@ -74,8 +74,8 @@ rule main_update_gmm_report:
         VAL_HTML_VECTORS = gene_detection.get_gene_detection_report('gmm_genes_vectors', config, analysis_name='gmo'),
         VAL_HTML_JUNCTIONS = gene_detection.get_gene_detection_report('gmm_junctions', config, analysis_name='gmo'),
         TSV_STRAINS = straingst.get_summaries(config, ext='tsv'),
-        TSV_GMM_VECTORS = gene_detection.OUTPUT_SUMMARY.format(db='gmm_genes_vectors', ext='tsv') if 'gmo' in config['analyses'] else [],
-        TSV_GMM_JUNCTIONS = gene_detection.OUTPUT_SUMMARY.format(db='gmm_junctions', ext='tsv') if 'gmo' in config['analyses'] else [],
+        TSV_GMM_VECTORS = gene_detection.OUTPUT_SUMMARY.format(db='gmm_genes_vectors', ext='tsv') if 'gmo' in config['analyses_selected'] else [],
+        TSV_GMM_JUNCTIONS = gene_detection.OUTPUT_SUMMARY.format(db='gmm_junctions', ext='tsv') if 'gmo' in config['analyses_selected'] else [],
         TSV_GMM_DB = config['gene_detection']['dbs']['gmm_genes_vectors']['known_gmm_constructs']
     output:
         VAL_HTML = 'gene_detection/gmo/updated_html_report.iob'
@@ -86,7 +86,7 @@ rule main_update_gmm_report:
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.core.snakemake.step import Step
         gmmupdater = UpdateGMMReport()
-        snakemakeutils.add_pickle_inputs(gmmupdater, input, excluded_keys=['TSV_STRAINS', 'TSV_GMM_VECTORS', 'TSV_GMM_JUNCTIONS', 'TSV_GMM_DB'])
+        snakemakeutils.add_io_inputs(gmmupdater, input, excluded_keys=['TSV_STRAINS', 'TSV_GMM_VECTORS', 'TSV_GMM_JUNCTIONS', 'TSV_GMM_DB'])
         gmmupdater.add_input_files({
             'TSV_STRAINS': [ToolIOFile(Path(x)) for x in input.TSV_STRAINS],
             'TSV_GMM_DB': [ToolIOFile(Path(input.TSV_GMM_DB))],
@@ -95,7 +95,7 @@ rule main_update_gmm_report:
              })
         step = Step(rule_name=str(rule), tool=gmmupdater, dir_=Path(str(params.running_dir)))
         step.run()
-        snakemakeutils.dump_tool_outputs(gmmupdater, output)
+        snakemakeutils.dump_io_outputs(gmmupdater, output)
 
 ##########
 # Report #
@@ -113,18 +113,18 @@ rule report_create_commands_section:
         INFORMS_busco = quast.OUTPUT_INFORMS_BUSCO,
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
-        INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses'] else [],
-        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
+        INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses_selected'] else [],
+        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses_selected'] else [],
         INFORMS_assembly_map = assembly.get_qc_informs(config['input']['type']),
-        INFORMS_btyper = btyper.OUTPUT_INFORMS if 'btyper' in config['analyses'] else [],
-        INFORMS_fastani = ani.OUTPUT_INFORMS if 'fastani' in config['analyses'] else [],
+        INFORMS_btyper = btyper.OUTPUT_INFORMS if 'btyper' in config['analyses_selected'] else [],
+        INFORMS_fastani = ani.OUTPUT_INFORMS if 'fastani' in config['analyses_selected'] else [],
         INFORMS_straingst = straingst.get_command_informs(config),
-        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses'] else [],
-        INFORMS_vfdb_core = gene_detection.OUTPUT_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_plasmidfinder = gene_detection.OUTPUT_INFORMS.format(db='plasmidfinder') if 'plasmidfinder' in config['analyses'] else [],
-        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses'] else [],
-        INFORMS_mlst_cereus = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_cereus') if 'mlst_cereus' in config['analyses'] else [],
-        INFORMS_mlst_subtilis = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_subtilis') if 'mlst_subtilis' in config['analyses'] else []
+        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses_selected'] else [],
+        INFORMS_vfdb_core = gene_detection.OUTPUT_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses_selected'] else [],
+        INFORMS_plasmidfinder = gene_detection.OUTPUT_INFORMS.format(db='plasmidfinder') if 'plasmidfinder' in config['analyses_selected'] else [],
+        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses_selected'] else [],
+        INFORMS_mlst_cereus = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_cereus') if 'mlst_cereus' in config['analyses_selected'] else [],
+        INFORMS_mlst_subtilis = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_subtilis') if 'mlst_subtilis' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -145,13 +145,13 @@ rule report_content_cereus:
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
         report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input']['type']),
-        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
-        report_btyper = btyper.OUTPUT_REPORT if 'btyper' in config['analyses'] else btyper.OUTPUT_REPORT_EMPTY,
-        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
+        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses_selected'] else [],
+        report_btyper = btyper.OUTPUT_REPORT if 'btyper' in config['analyses_selected'] else btyper.OUTPUT_REPORT_EMPTY,
+        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses_selected'] else amrfinder.OUTPUT_REPORT_EMPTY,
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
         report_plasmidfinder = gene_detection.get_gene_detection_report('plasmidfinder', config),
-        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_REPORT_EMPTY,
-        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
+        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY,
+        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         report_mlst = sequence_typing.get_sequence_typing_report('mlst_cereus', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst_cereus', config),
@@ -162,7 +162,7 @@ rule report_content_cereus:
     params:
         output_dir = config['output']['dir'],
         pipeline_info = config['script_info'],
-        species = config['species'],
+        species = config['species'][config['species_selected']]['full_name'],
         input_dict = config['input'],
         citation_keys = config['citations'],
         gene_detection_method = config['gene_detection']['options']['method'],
@@ -200,7 +200,7 @@ rule report_content_cereus:
         basepipeutils.add_content_contamination_check(
             report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.append(('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]))
-        if 'variant_calling' in config['analyses']:
+        if 'variant_calling' in config['analyses_selected']:
             report_structure.append(('Variant calling', 'variant', [Path(input.report_variant)]))
         # Custom assays (B. cereus)
         report_structure.extend([
@@ -229,15 +229,15 @@ rule report_content_subtilis:
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
         report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input']['type']),
-        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
-        report_fastani = ani.OUTPUT_REPORT if 'fastani' in config['analyses'] else ani.OUTPUT_REPORT_EMPTY,
-        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
-        report_gmo = rules.main_update_gmm_report.output.VAL_HTML if 'gmo' in config['analyses'] else gene_detection.get_gene_detection_report('gmm_genes_vectors', config, analysis_name='gmo'),
+        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses_selected'] else [],
+        report_fastani = ani.OUTPUT_REPORT if 'fastani' in config['analyses_selected'] else ani.OUTPUT_REPORT_EMPTY,
+        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses_selected'] else amrfinder.OUTPUT_REPORT_EMPTY,
+        report_gmo = rules.main_update_gmm_report.output.VAL_HTML if 'gmo' in config['analyses_selected'] else gene_detection.get_gene_detection_report('gmm_genes_vectors', config, analysis_name='gmo'),
         report_junctions = gene_detection.get_gene_detection_report('gmm_junctions', config, analysis_name='gmo'),
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
         report_plasmidfinder = gene_detection.get_gene_detection_report('plasmidfinder', config),
-        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mobsuite' in config['analyses'] else mobsuite.OUTPUT_REPORT_EMPTY,
-        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
+        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mobsuite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY,
+        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
         reports_straingst = straingst.get_reports(config),
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         report_mlst = sequence_typing.get_sequence_typing_report('mlst_subtilis', config),
@@ -248,7 +248,7 @@ rule report_content_subtilis:
     params:
         output_dir = config['output']['dir'],
         pipeline_info = config['script_info'],
-        species = config['species'],
+        species = config['species'][config['species_selected']]['full_name'],
         input_dict = config['input'],
         citation_keys = config['citations'],
         gene_detection_method = config['gene_detection']['options']['method'],
@@ -289,7 +289,7 @@ rule report_content_subtilis:
         basepipeutils.add_content_contamination_check(
             report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.append(('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]))
-        if 'variant_calling' in config['analyses']:
+        if 'variant_calling' in config['analyses_selected']:
             report_structure.append(('Variant calling', 'variant', [Path(input.report_variant)]))
         # B. subtilis assays
         report_structure.extend([
@@ -313,7 +313,7 @@ rule report_select_by_species:
     Selects the report content based on the detected species.
     """
     input:
-        HTML = f'report/report_{config["species"]}.html'
+        HTML = f'report/report_{config["species_selected"]}.html'
     output:
         HTML = config['output']['html']
     params:
@@ -336,20 +336,20 @@ rule summary_combine_all:
         quality_checks.OUTPUT_SUMMARY,
         lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
-        variant_calling.get_summaries(config) if 'variant_calling' in config['analyses'] else [],
+        variant_calling.get_summaries(config) if 'variant_calling' in config['analyses_selected'] else [],
         lambda wildcards: straingst.get_summaries(config, ext=wildcards.ext),
-        btyper.OUTPUT_SUMMARY if 'btyper' in config['analyses'] else [],
-        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses'] else [],
-        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses'] else [],
-        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='gmm_genes_vectors', ext=wildcards.ext) if 'gmo' in config['analyses'] else [],
-        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='gmm_junctions', ext=wildcards.ext) if 'gmo' in config['analyses'] else [],
-        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='plasmidfinder', ext=wildcards.ext) if 'plasmidfinder' in config['analyses'] else [],
-        ani.OUTPUT_SUMMARY if 'fastani' in config['analyses'] else [],
-        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst_cereus', ext=wildcards.ext) if 'mlst_cereus' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst_subtilis', ext=wildcards.ext) if 'mlst_subtilis' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst_cereus', ext=wildcards.ext) if 'cgmlst_cereus' in config['analyses'] else []
+        btyper.OUTPUT_SUMMARY if 'btyper' in config['analyses_selected'] else [],
+        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses_selected'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses_selected'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='gmm_genes_vectors', ext=wildcards.ext) if 'gmo' in config['analyses_selected'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='gmm_junctions', ext=wildcards.ext) if 'gmo' in config['analyses_selected'] else [],
+        lambda wildcards: gene_detection.OUTPUT_SUMMARY.format(db='plasmidfinder', ext=wildcards.ext) if 'plasmidfinder' in config['analyses_selected'] else [],
+        ani.OUTPUT_SUMMARY if 'fastani' in config['analyses_selected'] else [],
+        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst_cereus', ext=wildcards.ext) if 'mlst_cereus' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst_subtilis', ext=wildcards.ext) if 'mlst_subtilis' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst_cereus', ext=wildcards.ext) if 'cgmlst_cereus' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:
@@ -364,10 +364,10 @@ rule link_genomic_context:
     """
     input:
         # AMR
-        TSV_amrfinder = 'amrfinder/tsv.io' if 'amrfinder' in config['analyses'] else [],
+        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses_selected'] else [],
         # Virulence
-        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_gd_vfdb = gene_detection.OUTPUT_DB_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else []
+        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses_selected'] else [],
+        INFORMS_gd_vfdb = gene_detection.OUTPUT_DB_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses_selected'] else []
     output:
         TSV = 'mob_suite/genomic_context/input/tsv.io',
         INFORMS = 'mob_suite/genomic_context/input/informs.io'

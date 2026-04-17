@@ -4,6 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+import click
 import humanize
 import requests
 from furl import furl
@@ -83,7 +84,7 @@ def download_db_from_archive(path_url: str, dir_out: Path) -> None:
         # Move the extracted files to the target directory
         fileutils.move_directory_contents(dir_extract, dir_out)
 
-def download_dbs(yml: Path, force: bool, keys: list[str] | None, dir_db: Path, threads: int) -> None:
+def download_dbs(yml: Path, force: bool, keys: list[str] | None, dir_db: Path, threads: int, list_only: bool=False) -> None:
     """
     Downloads databases from the CAMEL FTP server.
     :param yml: Pipeline YML file
@@ -91,11 +92,17 @@ def download_dbs(yml: Path, force: bool, keys: list[str] | None, dir_db: Path, t
     :param keys: Keys of the databases to download
     :param dir_db: Databases directory
     :param threads: Number of threads to use for indexing
+    :param list_only: Only list the pipeline DBs
     :return: None
     """
     # Parse the YAML file
     data_dbs = cameltesthelper.extract_from_yaml(yml, 'dbs', placeholders={'DB_ROOT': str(dir_db)})
     target_keys = data_dbs.keys() if keys is None else keys
+    if list_only:
+        click.echo(f"{'key':<30} required")
+        for key, data in data_dbs.items():
+            click.echo(f"{key:<30} {data.get('required', False)}")
+        return
 
     # Iterate over the databases
     nb_by_status = collections.Counter()

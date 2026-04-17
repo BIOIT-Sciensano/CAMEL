@@ -12,6 +12,7 @@ from Bio import SeqIO
 
 from camel.app.cli import cliutils
 from camel.app.config import config
+from camel.app.core import cameltesthelper
 from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
 from camel.app.core.utils import fastautils
 from camel.app.loggers import logger, initialize_logging
@@ -22,49 +23,11 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.scripts.viralconsensuspipeline import SNAKEFILE_MAIN
+from camel.scripts.viralconsensuspipeline import SNAKEFILE_MAIN, CONFIG_DATA
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
 
+
 DB_ROOT = Path(config.dir_db, 'pipelines', 'viral_consensus', 'version_1.1')
-DATA_BY_SPECIES = {
-    'influenza_a': {
-        'antivirals_species': 'A',
-        'name': 'Influenza A',
-        'k2_name': 'Alphainfluenzavirus influenzae',
-        'nextclade_mash_db': str(DB_ROOT / 'subtype_mash' / 'influenza_a'),
-        'nextclade_capitalize': True,
-    },
-    'influenza_b': {
-        'antivirals_species': 'B',
-        'name': 'Influenza B',
-        'k2_name': 'Betainfluenzavirus influenzae',
-        'nextclade_segments': [],
-        'nextclade_mash_db': str(DB_ROOT / 'subtype_mash' / 'influenza_b'),
-        'nextclade_capitalize': True,
-    },
-    'sars_cov_2': {
-        'antivirals_species': None,
-        'name': 'SARS-CoV-2',
-        'k2_name': 'Severe acute respiratory syndrome-related coronavirus',
-        'nextclade_dbs': {
-            'genome': str(Path(config.dir_db, 'nextclade3', 'sars-cov-2', ))
-        },
-    },
-    'rsv_a': {
-        'name': 'Respiratory syncytial virus (A)',
-        'k2_name': 'Orthopneumovirus hominis',
-        'nextclade_dbs': {
-            'genome': str(Path(config.dir_db, 'nextclade3', 'rsv_a'))
-        }
-    },
-    'rsv_b': {
-        'name': 'Respiratory syncytial virus (B)',
-        'k2_name': 'Orthopneumovirus hominis',
-        'nextclade_dbs': {
-            'genome': str(Path(config.dir_db, 'nextclade3', 'rsv_b'))
-        }
-    },
-}
 
 @dataclasses.dataclass(frozen=True)
 class Options(model.BaseOptions):
@@ -72,7 +35,7 @@ class Options(model.BaseOptions):
     Pipeline-specific options.
     """
     # Species
-    species: str = dataclasses.field(metadata={'choices': list(DATA_BY_SPECIES.keys()) + ['other']})
+    species: str
     species_name: str | None = None
 
     # Reference genome or database
@@ -175,8 +138,6 @@ class MainViralConsensusPipeline(BasePipe):
         Determines the genome size.
         :return: Genome size
         """
-        import pprint
-        pprint.pprint(self._opts_custom)
         if self._opts_custom.fasta_ref is not None:
             logger.info('Extracting genome size from reference FASTA file')
             return fastautils.count_bases(self._opts_custom.fasta_ref)
@@ -187,6 +148,15 @@ class MainViralConsensusPipeline(BasePipe):
                 return data_genome['genome_size']
         raise ValueError('Cannot determine genome size')
 
+    def _validate_config_data(self, config_data: dict) -> bool:
+        """
+        Validates the config data.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
+        """
+        self.check_dbs(config_data)
+        return True
+
     def _execute(self) -> None:
         """
         Runs the pipeline.
@@ -194,24 +164,15 @@ class MainViralConsensusPipeline(BasePipe):
         """
         self._validate_opts()
 
-        # Create symlinks for the input files
-        # dir_symlinks = self._script_opts.working_dir / 'symlinks'
-        # if self._opts_custom.fasta_ref_name is not None:
-        #     path_fasta_ref = dir_symlinks / self._opts_custom.fasta_ref_name
-        #     path_fasta_ref.symlink_to(self._opts_custom.fasta_ref)
-        # else:
-        #     path_fasta_ref = self._opts_custom.fasta_ref
-        #
-        # if self._opts_custom.fasta_primers_name is not None:
-        #     path_fasta_primers = self._script_opts.working_dir / self._opts_custom.fasta_primers_name
-        #     path_fasta_primers.symlink_to(self._opts_custom.fasta_primers)
-        #     path_fasta_primers = path_fasta_primers.resolve()
-        # else:
-        #     path_fasta_primers = self._opts_custom.fasta_primers
-        # script_in: ScriptInput = self._script_in.
+        # Build and validate the config file
+        config_data = self._build_config()
+        self._validate_config_data(config_data)
 
-        # Create config file and run snakemake
-        path_config = self.__construct_config_file()
+        # Create the config file and run snakefile
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
+        path_config = snakepipelineutils.generate_config_file(
+            config_data, self._script_opts.working_dir
+        )
         self.run_snakefile(path_config)
 
         # Copy the FASTA file of the consensus sequence (if specified)
@@ -233,26 +194,9 @@ class MainViralConsensusPipeline(BasePipe):
                 config_data, yaml.safe_load(handle_in.read().format(
                     COV_MAX=self._script_opts.cov_max,
                     COV_MAX_SEGMENT=self._opts_custom.cov_max_segment,
+                    DB_ROOT=config.dir_db,
                     GENOME_SIZE=self.determine_genome_size(),
-                    EXPECTED_SPECIES=DATA_BY_SPECIES[self._opts_custom.species]['k2_name'] if
-                    self._opts_custom.species != 'other' else self._opts_custom.species_name
                 )))
-
-    def __config_add_nextclade_data(self, config_data: dict) -> None:
-        """
-        Adds the config data for the nextclade assay.
-        :param config_data: Configuration data
-        :return: None
-        """
-        config_data['nextclade'] = {}
-        if DATA_BY_SPECIES.get(self._opts_custom.species, {}).get('nextclade_dbs') is not None:
-            config_data['nextclade']['dbs'] = DATA_BY_SPECIES[self._opts_custom.species]['nextclade_dbs']
-            config_data['analyses'].append('nextclade')
-        elif DATA_BY_SPECIES.get(self._opts_custom.species, {}).get('nextclade_mash_db') is not None:
-            config_data['nextclade']['db_mash'] = str(DATA_BY_SPECIES[self._opts_custom.species]['nextclade_mash_db'])
-            config_data['analyses'].append('nextclade')
-        if DATA_BY_SPECIES.get(self._opts_custom.species, {}).get('nextclade_capitalize', False) is True:
-            config_data['nextclade']['capitalize'] = True
 
     def __config_add_iterative_mapping_data(self, config_data: dict) -> None:
         """
@@ -292,29 +236,32 @@ class MainViralConsensusPipeline(BasePipe):
             'gap_len_cutoff': self._opts_custom.gap_len_cutoff
         }
 
-    def __construct_config_file(self) -> Path:
+    def _build_config(self) -> dict:
         """
-        Constructs the Snakemake configuration file.
-        :return: Path to the config file
+        Builds the configuration data for Snakemake.
+        :return: Configuration data
         """
-        # Input files & read type
-        config_data = self.get_config_data()
+        # Input files and read type
+        config_data = self.get_config_data() # TODO: check if invalid species raises an error
 
         # YAML data
         self.__config_add_yaml_data(config_data)
-        config_data['analyses'] = ['kraken2']
-        config_data['analyses'].extend(self._opts_custom.analyses)
+        config_data['analyses_selected'] = ['kraken2']
+        config_data['analyses_selected'].extend(self._opts_custom.analyses)
+
+        if self._opts_custom.species == 'other':
+            config_data['contamination_check']['expected_species'] = self._opts_custom.species_name
 
         # Antiviral mutation detection (only for selected species)
-        species_antivirals = DATA_BY_SPECIES.get(self._opts_custom.species, {}).get('antivirals_species')
-        if species_antivirals is not None:
-            config_data['analyses'].append('antivirals')
-            config_data['antivirals']['species'] = species_antivirals
+        # species_antivirals = DATA_BY_SPECIES.get(self._opts_custom.species, {}).get('antivirals_species')
+        # if species_antivirals is not None:
+        #     config_data['analyses_selected'].append('antivirals')
+        #     config_data['antivirals']['species'] = species_antivirals
 
         # Amplicon primer clipping
         if self._opts_custom.fasta_primers is not None:
             config_data['preprocess'] = {'ampligone': {'fasta': str(self._opts_custom.fasta_primers)}}
-            config_data['analyses'].append('ampligone')
+            config_data['analyses_selected'].append('ampligone')
 
         # Reference genome / reference selection
         config_data['fasta_ref'] = str(self._opts_custom.fasta_ref) if self._opts_custom.fasta_ref is not None else None
@@ -323,12 +270,13 @@ class MainViralConsensusPipeline(BasePipe):
 
         # Other assays
         self.__config_add_coverage_data(config_data)
-        self.__config_add_nextclade_data(config_data)
         self.__config_add_iterative_mapping_data(config_data)
 
-        # Create YAML file
-        path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
-        return Path(path_config)
+        # Resolve species specific values
+        config_data = basepipeutils.resolve_config(
+            config_data, self._opts_custom.species
+        )
+        return config_data
 
 
 @click.command(name='viral_consensus_pipeline', short_help='Extracts the consensus sequence from viral sequencing data')

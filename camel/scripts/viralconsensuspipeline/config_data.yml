@@ -1,3 +1,85 @@
+analyses:
+  ampligone:
+    dbs: []
+  antivirals:
+    dbs:
+      - antivirals
+  kraken2:
+    dbs:
+      - kraken2
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  nextclade:
+    dbs:
+      - nextclade_mash_influenza_a
+      - nextclade_mash_influenza_b
+      - nextclade_sars_cov_2
+
+dbs:
+  antivirals:
+    location: &db_antivirals {DB_ROOT}/pipelines/viral_consensus/version_1.1/antivirals
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  nextclade_mash_influenza_a:
+    location: &db_nextclade_mash_influenza_a {DB_ROOT}/pipelines/viral_consensus/version_1.1/subtype_mash/influenza_a
+    required: true
+    method: ftp
+  nextclade_mash_influenza_b:
+    location: &db_nextclade_mash_influenza_b {DB_ROOT}/pipelines/viral_consensus/version_1.1/subtype_mash/influenza_b
+    required: true
+    method: ftp
+  nextclade_sars_cov_2:
+    location: &db_nextclade_sars_cov_2 {DB_ROOT}/nextclade3/sars-cov-2
+    required: true
+    method: ftp
+
+##################################
+# Species-specific configuration #
+##################################
+species:
+  influenza_a:
+    antivirals_species: A
+    name: Influenza A
+    k2_name: Alphainfluenzavirus influenzae
+    nextclade_capitalize: true
+    nextclade_dbs: null
+    nextclade_mash_db: *db_nextclade_mash_influenza_a
+  influenza_b:
+    antivirals_species: B
+    name: Influenza B
+    k2_name: Betainfluenzavirus influenzae
+    nextclade_capitalize: true
+    nextclade_dbs: null
+    nextclade_mash_db: *db_nextclade_mash_influenza_b
+  other:
+    antivirals_species: null
+    name: null
+    k2_name: null
+    nextclade_capitalize: false
+    nextclade_dbs: null
+    nextclade_mash_db: null
+  rsv_a:
+    k2_name: Orthopneumovirus hominis
+  rsv_b:
+    k2_name: Orthopneumovirus hominis
+  sars_cov_2:
+    antivirals_species: null
+    nextclade_capitalize: false
+    nextclade_dbs:
+      genome: *db_nextclade_sars_cov_2
+    nextclade_mash_db: null
+    k2_name: Severe acute respiratory syndrome-related coronavirus
+
 ####################
 # Pipeline options #
 ####################
@@ -25,19 +107,36 @@ reference: {{}}
 # Tool specific options #
 #########################
 antivirals:
-  db: /db/pipelines/viral_consensus/version_1.1/antivirals
+  db: *db_antivirals
+  species:
+    resolve: species
+    key: antivirals_species
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
-  expected_species: {EXPECTED_SPECIES}
+  db: *db_kraken2
+  expected_species:
+    resolve: species
+    key: k2_name
 
 downsampling:
   disabled: true
   coverage_max_by_segment: {COV_MAX_SEGMENT}
 
-read_scrubbing: {{}}
+nextclade:
+  dbs:
+    resolve: species
+    key: nextclade_dbs
+  db_mash:
+    resolve: species
+    key: nextclade_mash_db
+  capitalize:
+    resolve: species
+    key: nextclade_capitalize
+
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 read_trimming: {{}}
 
 quality_checks:
-  expected_gc_content: 51.5
+  expected_gc_content: 51.5 # TODO: check if used

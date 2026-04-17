@@ -1,5 +1,6 @@
 import itertools
 import json
+from pathlib import Path
 
 from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.core.snakemake.step import Step
@@ -27,13 +28,16 @@ rule antivirals_check_mutations:
             'DB': [ToolIODirectory(Path(params.db))],
             'TSV': list(itertools.chain(*[snakemakeutils.load_object(Path(tsv)) for tsv in input.TSV]))
         })
-        subtype = snakemakeutils.load_object(Path(str(input.INFORMS_subtype)))['subtype']
+
+        # Check the subtypes
+        informs_subtype = snakemakeutils.load_object(Path(str(input.INFORMS_subtype)))
+        subtype = informs_subtype.get('subtype')
         if subtype is None:
             raise RuntimeError(f'A subtype should be detected to detected antiviral mutations.')
         detection.update_parameters(species=params.species, subtype=subtype)
         step = Step(rule_name=str(rule), tool=detection, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(detection, output)
+        snakemakeutils.dump_io_outputs(detection, output)
 
 rule antivirals_report:
     """
@@ -48,10 +52,10 @@ rule antivirals_report:
     run:
         from camel.app.tools.pipelines.viral_consensus.antiviralsreporter import AntiviralsReporter
         reporter = AntiviralsReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule antivirals_report_empty:
     """

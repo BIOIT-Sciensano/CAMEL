@@ -20,6 +20,6 @@ rule read_simulation_fastq_from_fasta:
         from camel.app.tools.art.art import ART
         art = ART()
         step = Step(rule_name=str(rule), tool=art, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(art, input)
+        snakemakeutils.add_io_inputs(art, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(art, output)
+        snakemakeutils.dump_io_outputs(art, output)

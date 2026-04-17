@@ -18,10 +18,10 @@ rule polishing_samtools_index_polypolish:
     run:
         from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
         samtools = SamtoolsFastaIndex()
-        snakemakeutils.add_pickle_inputs(samtools, input)
+        snakemakeutils.add_io_inputs(samtools, input)
         step = Step(rule_name=str(rule), tool=samtools, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools, output)
+        snakemakeutils.dump_io_outputs(samtools, output)
 
 rule polishing_bwa_index:
     """
@@ -36,10 +36,10 @@ rule polishing_bwa_index:
     run:
         from camel.app.tools.bwa.bwaindex import BWAIndex
         bwa = BWAIndex()
-        snakemakeutils.add_pickle_inputs(bwa, input)
+        snakemakeutils.add_io_inputs(bwa, input)
         step = Step(rule_name=str(rule), tool=bwa, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(bwa, output)
+        snakemakeutils.dump_io_outputs(bwa, output)
 
 rule polishing_read_mapping_1:
     """
@@ -63,10 +63,10 @@ rule polishing_read_mapping_1:
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict), 'illumina')
         bwa_map.add_input_files({'FASTQ_SE': [fq_in.pe[0]]})
         bwa_map.update_parameters(threads=threads, all_alns=True)
-        snakemakeutils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
+        snakemakeutils.add_io_input(bwa_map,'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
         step = Step(rule_name=str(rule), tool=bwa_map, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(bwa_map, output)
+        snakemakeutils.dump_io_outputs(bwa_map, output)
 
 rule polishing_read_mapping_2:
     """
@@ -89,10 +89,10 @@ rule polishing_read_mapping_2:
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict), 'illumina')
         bwa_map.add_input_files({'FASTQ_SE': [fq_in.pe[1]]})
         bwa_map.update_parameters(threads=threads, all_alns=True)
-        snakemakeutils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
+        snakemakeutils.add_io_input(bwa_map,'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
         step = Step(rule_name=str(rule), tool=bwa_map, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(bwa_map, output)
+        snakemakeutils.dump_io_outputs(bwa_map, output)
 
 rule polishing_polypolish_insert_filter:
     """
@@ -114,7 +114,7 @@ rule polishing_polypolish_insert_filter:
         insert_filter.add_input_files({'SAM': [input_sam1[0], input_sam2[0]]})
         step = Step(rule_name=str(rule), tool=insert_filter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(insert_filter, output)
+        snakemakeutils.dump_io_outputs(insert_filter, output)
 
 rule polishing_polypolish:
     """
@@ -132,11 +132,11 @@ rule polishing_polypolish:
     run:
         from camel.app.tools.polypolish.polypolish import Polypolish
         polypolish = Polypolish()
-        snakemakeutils.add_pickle_inputs(polypolish, input)
+        snakemakeutils.add_io_inputs(polypolish, input)
         polypolish.update_parameters(**params.polypolish_options)
         step = Step(rule_name=str(rule), tool=polypolish, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(polypolish, output)
+        snakemakeutils.dump_io_outputs(polypolish, output)
 
 rule polishing_samtools_index_pypolca:
     """
@@ -151,10 +151,10 @@ rule polishing_samtools_index_pypolca:
     run:
         from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
         samtools = SamtoolsFastaIndex()
-        snakemakeutils.add_pickle_inputs(samtools, input)
+        snakemakeutils.add_io_inputs(samtools, input)
         step = Step(rule_name=str(rule), tool=samtools, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools, output)
+        snakemakeutils.dump_io_outputs(samtools, output)
 
 rule polishing_pypolca:
     """
@@ -176,8 +176,8 @@ rule polishing_pypolca:
         from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict),'illumina')
         pypolca.add_input_files({'FASTQ_PE': fq_in.pe})
-        snakemakeutils.add_pickle_input(pypolca, 'FASTA', Path(input.FASTA))
+        snakemakeutils.add_io_input(pypolca,'FASTA', Path(input.FASTA))
         pypolca.update_parameters(**params.pypolca_options, threads=threads)
         step = Step(rule_name=str(rule), tool=pypolca, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(pypolca, output)
+        snakemakeutils.dump_io_outputs(pypolca, output)

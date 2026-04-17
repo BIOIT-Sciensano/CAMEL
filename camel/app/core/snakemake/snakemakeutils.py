@@ -98,25 +98,24 @@ def load_object(path: Path) -> Any:
     raise ValueError(f'Cannot load IO object from: {path}: invalid extension')
 
 
-def add_pickle_input(tool: Tool, key: str, path: Path, optional: bool = False) -> None:
+def add_io_input(tool: Tool, key: str, path: Path, optional: bool = False) -> None:
     """
-    Adds a pickled input to a tool. For optional input whose value is empty, it is skipped.
+    Adds an IO input (pickle or json) to a tool. For optional input whose value is empty, it is skipped.
     :param tool: Tool
     :param key: Key
-    :param path: Pickle path
+    :param path: IO path (.io for json, .iob for pickle)
     :param optional: True for optional input, False otherwise
     :return: None
     """
-    logger.debug(f"Adding pickled input with key '{key}' from file '{path}' to tool '{tool.name}'")
+    logger.debug(f"Adding IO input with key '{key}' from file '{path}' to tool '{tool.name}'")
     value = load_object(path)
     if optional and len(value) == 0:
         logger.debug(f"Optional Input '{key}' empty, skipped")
     else:
         tool.add_input_files({key: value})
 
-
-def add_pickle_inputs(tool: Tool, snake_input: Any, keys: Optional[list[str]] = None,
-                      excluded_keys: Optional[list[str]] = None, optionals: Optional[list[str]] = None) -> None:
+def add_io_inputs(tool: Tool, snake_input: Any, keys: Optional[list[str]] = None,
+                  excluded_keys: Optional[list[str]] = None, optionals: Optional[list[str]] = None) -> None:
     """
     Adds pickled inputs from the snakemake input. If 'optionals' is specified, any optional input in that
     list will be skipped if its value is empty (no input file).
@@ -156,7 +155,7 @@ def add_pickle_inputs(tool: Tool, snake_input: Any, keys: Optional[list[str]] = 
             tool.add_input_files({key: value})
             logger.debug(f"Input '{value}' added")
 
-def dump_tool_output(tool: Tool, key: str, path: Path) -> None:
+def dump_io_output(tool: Tool, key: str, path: Path) -> None:
     """
     Dumps a tool output to an IO file.
     :param tool: Tool
@@ -169,8 +168,8 @@ def dump_tool_output(tool: Tool, key: str, path: Path) -> None:
         raise KeyError(f"Tool '{tool.name}' has no output '{key}'")
     dump_object(tool.tool_outputs[key], path)
 
-def dump_tool_outputs(tool: Tool, snake_output: Any, keys: Optional[list[str]] = None,
-                      ignore_missing_output: bool = False) -> None:
+def dump_io_outputs(tool: Tool, snake_output: Any, keys: Optional[list[str]] = None,
+                    ignore_missing_output: bool = False) -> None:
     """
     Dumps the tool outputs in pickles.
     :param tool: Tool

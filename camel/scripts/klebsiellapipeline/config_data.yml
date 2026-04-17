@@ -1,7 +1,117 @@
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  bacmet:
+    dbs:
+      - bacmet
+  cgmlst:
+    dbs:
+      - typing_cgmlst
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kleborate:
+    dbs: []
+  kraken2:
+    dbs:
+      - kraken2
+  mlst:
+    dbs:
+      - typing_mlst
+  mob_suite:
+    dbs:
+      - mob_suite
+  plasmidfinder:
+    dbs:
+      - gene_detection_plasmidfinder
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - typing_rmlst
+  scgmlst:
+    dbs:
+      - typing_scgmlst
+  vfdb_core:
+    dbs:
+      - gene_detection_vfdb_core
+
 #############
 # Databases #
 #############
-dbs: {{}}
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  bacmet:
+    location: &db_bacmet {DB_ROOT}/bacmet/latest
+    required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gene_detection_plasmidfinder:
+    location: &db_gd_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-entero
+    required: false
+    method: ftp
+  gene_detection_vfdb_core:
+    location: &db_vfdb_core {DB_ROOT}/gene_detection/VFDB_core
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mob_suite:
+    location: &db_mob_suite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Klebsiella_pneumoniae/NC_016845.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Klebsiella_pneumoniae/NC_016845.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  typing_cgmlst:
+    location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/klebsiella/cgmlst
+    required: false
+    method: mist
+  typing_mlst:
+    location: &db_typing_mlst {DB_ROOT}/sequence_typing/klebsiella/mlst
+    is_file: false
+    method: mist
+  typing_scgmlst:
+    location: &db_typing_scgmlst {DB_ROOT}/sequence_typing/klebsiella/scgmlst629_s/
+    is_file: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
 
 #####################
 # Pipeline settings #
@@ -38,15 +148,15 @@ citations:
 ####################
 reference:
   name: <i>Klebsiella pneumoniae subsp. pneumoniae</i> HS11286 (NC_016845.1)
-  fasta: /db/refgenomes/Klebsiella_pneumoniae/NC_016845.1.fasta
-  gff3: /db/refgenomes/Klebsiella_pneumoniae/NC_016845.1.gff3
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/nuccore/NC_016845.1
 
 #########################
 # Tool specific options #
 #########################
 amrfinder:
-  db: /db/amrfinder/v4/latest
+  db: *db_amrfinder
 
 assembly:
   spades:
@@ -54,13 +164,16 @@ assembly:
   min_contig_length: 1000
 
 bacmet:
-  db: /db/bacmet/latest
+  db: *db_bacmet
+
+busco:
+  db: *db_busco
 
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: *db_kraken2
   expected_species: Klebsiella pneumoniae
 
 downsampling:
@@ -68,14 +181,15 @@ downsampling:
   expected_genome_size: 5_330_000
 
 mob_suite:
-  db: /db/mob_suite/latest
+  db: *db_mob_suite
 
-read_scrubbing: {{}}
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 read_trimming: {{}}
 
 resfinder4:
-  db: /db/resfinder4
+  db: *db_resfinder4
   species: Klebsiella
 
 quality_checks:
@@ -92,13 +206,13 @@ variant_filtering: {{}}
 gene_detection:
   dbs:
     vfdb_core:
-      path: /db/gene_detection/VFDB_core
+      path: *db_vfdb_core
       perc_identity_cutoff: 90
       metadata:
         name: Gene
         key: gene
     plasmidfinder:
-      path: /db/gene_detection/PlasmidFinder-entero
+      path: *db_gd_plasmidfinder
       params:
         blastn:
           min_percent_identity: 95
@@ -113,14 +227,14 @@ gene_detection:
 sequence_typing:
   dbs:
     mlst:
-      path: /db/sequence_typing/klebsiella/mlst/
+      path: *db_typing_mlst
     scgmlst:
-      path: /db/sequence_typing/klebsiella/scgmlst629_s/
+      path: *db_typing_scgmlst
     cgmlst:
-      path: /db/sequence_typing/klebsiella/cgmlst/
+      path: *db_typing_cgmlst
       detection_method: blast
     rmlst:
-      path: /db/sequence_typing/various/rmlst
+      path: *db_typing_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info

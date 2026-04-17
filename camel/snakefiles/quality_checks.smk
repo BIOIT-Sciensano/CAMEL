@@ -16,7 +16,7 @@ def _get_kraken2_informs(config: dict, tech: str) -> Union[str, list]:
     :return: Path to informs, or empty list if Kraken2 is disabled
     """
     # Kraken2 is disabled -> return empty list
-    if 'kraken2' not in config['analyses']:
+    if 'kraken2' not in config['analyses_selected']:
         return []
 
     # Illumina
@@ -72,13 +72,15 @@ rule quality_checks_typing_loci:
         qc_check = quality_checks.QC_CHECKS_BY_KEY['typing_loci']
     run:
         import json
-
         if len(input.INFORMS) == 0:
             data_export = params.qc_check.to_dict()
         else:
             typing_stats = snakemakeutils.load_object(Path(input.INFORMS))
-            fraction_detected = typing_stats['hits_found'] / typing_stats['nb_of_loci']
-            data_export = params.qc_check.to_dict(100 * fraction_detected)
+            if typing_stats['nb_of_loci'] > 0:
+                perc_detected = 100 * typing_stats['hits_found'] / typing_stats['nb_of_loci']
+            else:
+                perc_detected = None
+            data_export = params.qc_check.to_dict(perc_detected)
         with open(output.JSON, 'w') as handle:
             json.dump(data_export, handle, indent=2)
 
@@ -219,9 +221,9 @@ rule quality_checks_parse_fastqc:
         from camel.app.tools.fastqc.fastqcdatafileparser import FastQCDataFileParser
         fastqc_checks = FastQCDataFileParser()
         step = Step(rule_name=str(rule), tool=fastqc_checks, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(fastqc_checks, input)
+        snakemakeutils.add_io_inputs(fastqc_checks, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(fastqc_checks, output)
+        snakemakeutils.dump_io_outputs(fastqc_checks, output)
 
 rule quality_checks_fqc_gc_content:
     """
@@ -366,7 +368,7 @@ rule quality_checks_confindr:
     Extracts the quality checks from the ConFindr output.
     """
     input:
-        INFORMS = confindr.OUTPUT_INFORMS if 'confindr' in config['analyses'] else []
+        INFORMS = confindr.OUTPUT_INFORMS if 'confindr' in config['analyses_selected'] else []
     output:
         JSON = 'quality_checks/confindr.json'
     params:
@@ -412,10 +414,10 @@ rule quality_checks_seqkit_stats:
     run:
         from camel.app.tools.seqkit.seqkitstats import SeqkitStats
         seqkit_stats = SeqkitStats()
-        snakemakeutils.add_pickle_inputs(seqkit_stats, input)
+        snakemakeutils.add_io_inputs(seqkit_stats, input)
         step = Step(rule_name=str(rule), tool=seqkit_stats, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(seqkit_stats, output)
+        snakemakeutils.dump_io_outputs(seqkit_stats, output)
 
 rule quality_checks_seqkit_gc:
     """
@@ -532,7 +534,7 @@ rule quality_checks_report:
             informs = json.load(handle)
         reporter.add_input_informs({'qc_checks': informs})
         reporter.run(Path(output.VAL_HTML).parent)
-        snakemakeutils.dump_tool_output(reporter, 'VAL_HTML', Path(output.VAL_HTML))
+        snakemakeutils.dump_io_output(reporter,'VAL_HTML', Path(output.VAL_HTML))
 
 rule quality_checks_export_summary_info:
     """

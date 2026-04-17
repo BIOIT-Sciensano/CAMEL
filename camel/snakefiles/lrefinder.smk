@@ -26,10 +26,10 @@ rule run_lrefinder:
             lrefinder.add_input_files(fq_dict)
         else:
             # When the input type is FASTA the simulated reads are used as input
-            snakemakeutils.add_pickle_input(lrefinder, 'FASTQ_PE', Path(input.IO))
+            snakemakeutils.add_io_input(lrefinder,'FASTQ_PE', Path(input.IO))
         step = Step(rule_name=str(rule), tool=lrefinder, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(lrefinder, output)
+        snakemakeutils.dump_io_outputs(lrefinder, output)
 
 rule lre_finder_report:
     """
@@ -45,12 +45,12 @@ rule lre_finder_report:
     run:
         from camel.app.tools.lrefinder.lrefinderreporter import LREFinderReporter
         reporter = LREFinderReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         if params.input_type == 'fasta':
             reporter.update_parameters(pseudo_reads=True)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule lre_finder_report_empty:
     """

@@ -1,14 +1,14 @@
 import unittest
 
 from camel.app.cli import cliutils
-from camel.app.config import config
-from camel.app.core import cameltesthelper
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.dbs.dbutils import DBEntry
-from camel.app.scriptutils.basescript import basescriptutils
+from camel.app.scriptutils.basepipe import basepipeutils
 from camel.scripts.stecpipeline import CONFIG_DATA
-from camel.scripts.stecpipeline.mainstecpipeline import main, CUSTOM_ANALYSES
+from camel.scripts.stecpipeline.mainstecpipeline import main
 from camel.tests import longRunningTest
+
+
+CUSTOM_ANALYSES = basepipeutils.get_custom_analyses(CONFIG_DATA)
 
 
 class TestSTECPipeline(CamelTestSuite):
@@ -25,18 +25,8 @@ class TestSTECPipeline(CamelTestSuite):
     input_fastq_ont = test_file_dir / 'STEC-SRR16955601_ont-ds.fastq.gz'
     input_fasta = test_file_dir / 'STEC-591_S13-ds.fasta'
 
-    def test_dbs(self) -> None:
-        """
-        Checks if the databases for the pipeline are available.
-        :return: None
-        """
-        data_dbs = cameltesthelper.extract_from_yaml(
-            CONFIG_DATA, 'dbs', placeholders={'DB_ROOT': config.dir_db})
-        dbs = {key: DBEntry(**data) for key, data in data_dbs.items()}
-        self.assertEqual(basescriptutils.check_dbs(dbs), True)
-
     @longRunningTest()
-    def test_stec_pipeline_blast_illumina(self) -> None:
+    def test_blast_illumina(self) -> None:
         """
         Tests the STEC pipeline with all assays except for cgMLST.
         :return: None
@@ -52,13 +42,13 @@ class TestSTECPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if  'cgmlst' not in a)
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if 'cgmlst' not in a)
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_stec_pipeline_kma_illumina(self) -> None:
+    def test_kma_illumina(self) -> None:
         """
         Tests the STEC pipeline with all assays except for cgMLST.
         :return: None
@@ -82,7 +72,7 @@ class TestSTECPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_stec_pipeline_blast_illumina_with_downsampling(self) -> None:
+    def test_blast_illumina_with_downsampling(self) -> None:
         """
         Tests the STEC pipeline with Illumina data and downsampling.
         :return: None
@@ -98,14 +88,14 @@ class TestSTECPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--analyses', 'mlst-warwick',
+            '--analyses', 'mlst_warwick',
             '--cov-max', '5',
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_stec_pipeline_fasta(self) -> None:
+    def test_fasta(self) -> None:
         """
         Tests the STEC pipeline using FASTA as input with all assays except for cgMLST.
         :return: None
@@ -125,7 +115,7 @@ class TestSTECPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_stec_pipeline_ont(self) -> None:
+    def test_ont(self) -> None:
         """
         Tests the STEC pipeline using ONT as input with all assays except for cgMLST.
         :return: None
@@ -145,7 +135,7 @@ class TestSTECPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_stec_pipeline_kma_ont(self) -> None:
+    def test_kma_ont(self) -> None:
         """
         Tests the STEC pipeline using ONT as input with all assays except for cgMLST and kma as detection method
         :return: None

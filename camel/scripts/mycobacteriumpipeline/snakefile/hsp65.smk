@@ -23,9 +23,9 @@ rule hps65_report:
         reporter = Hsp65Reporter()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         reporter.update_parameters(hit_type=params.hit_type)
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule hps65_report_empty:
     """

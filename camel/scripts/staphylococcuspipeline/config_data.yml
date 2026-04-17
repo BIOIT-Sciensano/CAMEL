@@ -1,7 +1,166 @@
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  bacmet:
+    dbs:
+      - bacmet
+  cgmlst:
+    dbs:
+      - typing_cgmlst
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
+  lrefinder:
+    dbs: []
+  mlst:
+    dbs:
+      - typing_mlst
+  mob_suite:
+    dbs:
+      - mob_suite
+  plasmidfinder:
+    dbs:
+      - gene_detection_plasmidfinder
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - typing_rmlst
+  sccmec_typing:
+    dbs:
+      - sccmec_typing
+      - gene_detection_sccmec_cassette
+      - gene_detection_sccmec_genes
+  se_toxins:
+    dbs:
+      - gene_detection_se_toxins
+  spa_typing:
+    dbs:
+      - spa_typing
+      - spa_typing_profiles
+  variant_calling:
+    dbs: []
+  vfdb_core:
+    dbs:
+      - gene_detection_vfdb_core
+  virulencefinder:
+    dbs:
+      - gene_detection_vf_exoenzyme
+      - gene_detection_vf_hostimm
+      - gene_detection_vf_toxin
+
 #############
 # Databases #
 #############
-dbs: {{}}
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  bacmet:
+    location: &db_bacmet {DB_ROOT}/bacmet/latest
+    required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gene_detection_plasmidfinder:
+    location: &db_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-gram_positive
+    required: false
+    method: ftp
+  gene_detection_sccmec_cassette:
+    location: &db_gd_sccmec_cassette {DB_ROOT}/gene_detection/SCCmec_cassette
+    required: false
+    method: ftp
+  gene_detection_sccmec_genes:
+    location: &db_gd_sccmec_genes {DB_ROOT}/gene_detection/SCCmec_genes
+    required: false
+    method: ftp
+  gene_detection_se_toxins:
+    location: &db_gd_se_toxins {DB_ROOT}/gene_detection/saureus_se_toxins
+    required: false
+    method: ftp
+  gene_detection_vfdb_core:
+    location: &db_gd_vfdb_core {DB_ROOT}/gene_detection/VFDB_core
+    required: false
+    method: ftp
+  gene_detection_vf_exoenzyme:
+    location: &db_gd_vf_exoenzyme {DB_ROOT}/gene_detection/VirulenceFinder-Saureus-exoenzyme
+    required: false
+    method: ftp
+  gene_detection_vf_hostimm:
+    location: &db_gd_vf_hostimm {DB_ROOT}/gene_detection/VirulenceFinder-Saureus-hostimm
+    required: false
+    method: ftp
+  gene_detection_vf_toxin:
+    location: &db_gd_vf_toxin {DB_ROOT}/gene_detection/VirulenceFinder-Saureus-toxin
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mob_suite:
+    location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Staphylococcus_aureus/NC_007795.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Staphylococcus_aureus/NC_007795.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  sccmec_typing:
+    location: &db_sccmec_typing {DB_ROOT}/pipelines/saureus/SCCmec_genes/profiles.yml
+    required: false
+    is_file: true
+    method: ftp
+  spa_typing:
+    location: &spatyping {DB_ROOT}/pipelines/saureus/spatyping/profiles.fasta
+    is_file: true
+    required: false
+    method: ftp
+  spa_typing_profiles:
+    location: &spatyping_profiles {DB_ROOT}/pipelines/saureus/spatyping/spatypes.csv
+    is_file: true
+    required: false
+    method: ftp
+  typing_cgmlst:
+    location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/staphylococcus/cgmlst
+    required: false
+  typing_mlst:
+    location: &db_typing_mlst {DB_ROOT}/sequence_typing/staphylococcus/mlst
+    required: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
 
 #####################
 # Pipeline settings #
@@ -36,17 +195,16 @@ citations:
 ####################
 reference:
   name: <i>Staphylococcus aureus subsp. aureus</i> NCTC 8325 (NC_007795.1)
-  fasta: /db/refgenomes/Staphylococcus_aureus/NC_007795.1.fasta
-  gff3: /db/refgenomes/Staphylococcus_aureus/NC_007795.1.gff3
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/nuccore/NC_007795.1
 
 #########################
 # Tool specific options #
 #########################
 amrfinder:
-  db: /db/amrfinder/v4/latest
+  db: *db_amrfinder
   species: Staphylococcus_aureus
-
 
 assembly:
   spades:
@@ -54,13 +212,16 @@ assembly:
   min_contig_length: 1000
 
 bacmet:
-  db: /db/bacmet/latest
+  db: *db_bacmet
+
+busco:
+  db: *db_busco
 
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: *db_kraken2
   expected_species: Staphylococcus aureus
 
 downsampling:
@@ -68,24 +229,25 @@ downsampling:
   expected_genome_size: 2_821_361
 
 mob_suite:
-  db: /db/mob_suite/latest
+  db: *db_mobsuite
 
 sccmec_typing:
-  profiles: /db/pipelines/saureus/SCCmec_genes/profiles.yml
+  profiles: *db_sccmec_typing
 
 spa_typing:
-  db: /db/pipelines/saureus/spatyping/profiles.fasta
-  profiles: /db/pipelines/saureus/spatyping/spatypes.csv
+  db: *spatyping
+  profiles: *spatyping_profiles
 
 quality_checks:
   typing_scheme: {QC_SCHEME}
 
-read_scrubbing: {{}}
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 read_trimming: {{}}
 
 resfinder4:
-  db: /db/resfinder4
+  db: *db_resfinder4
   species: Staphylococcus aureus
   min_identity: 0.90
   min_cov: 0.60
@@ -102,7 +264,7 @@ variant_filtering: {{}}
 gene_detection:
   dbs:
     vfdb_core:
-      path: /db/gene_detection/VFDB_core
+      path: *db_gd_vfdb_core
       perc_identity_cutoff: 90
       metadata:
         name: Gene
@@ -110,32 +272,32 @@ gene_detection:
       hidden: true
 
     vf_exoenzyme:
-      path: /db/gene_detection/VirulenceFinder-Saureus-exoenzyme
+      path: *db_gd_vf_exoenzyme
       metadata:
         name: Protein function
         key: protein_function
 
     vf_hostimm:
-      path: /db/gene_detection/VirulenceFinder-Saureus-hostimm
+      path: *db_gd_vf_hostimm
       metadata:
         name: Protein function
         key: protein_function
 
     vf_toxin:
-      path: /db/gene_detection/VirulenceFinder-Saureus-toxin
+      path: *db_gd_vf_toxin
       metadata:
         name: Protein function
         key: protein_function
 
     sccmec_genes:
-      path: /db/gene_detection/SCCmec_genes
+      path: *db_gd_sccmec_genes
 
     sccmec_cassette:
-      path: /db/gene_detection/SCCmec_cassette
+      path: *db_gd_sccmec_cassette
       force_method: kma
 
     plasmidfinder:
-      path: /db/gene_detection/PlasmidFinder-gram_positive
+      path: *db_plasmidfinder
       params:
         blastn:
           min_percent_identity: 95
@@ -148,7 +310,7 @@ gene_detection:
         category: warning
 
     se_toxins:
-      path: /db/gene_detection/saureus_se_toxins
+      path: *db_gd_se_toxins
 
 ###################
 # Sequence typing #
@@ -156,12 +318,12 @@ gene_detection:
 sequence_typing:
   dbs:
     mlst:
-      path: /db/sequence_typing/staphylococcus/mlst
+      path: *db_typing_mlst
     cgmlst:
-      path: /db/sequence_typing/staphylococcus/cgmlst
+      path: *db_typing_cgmlst
       detection_method: blast
     rmlst:
-      path: /db/sequence_typing/various/rmlst
+      path: *db_typing_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info

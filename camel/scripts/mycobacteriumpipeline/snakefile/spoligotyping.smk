@@ -66,17 +66,17 @@ rule spoligotyping_spotyping:
         from camel.app.tools.spotyping.spotyping import SpoTyping
         spotyping = SpoTyping()
         if params.key == 'FASTQ':
-            snakemakeutils.add_pickle_input(spotyping, params.key, Path(input.FASTQ))
+            snakemakeutils.add_io_input(spotyping, params.key, Path(input.FASTQ))
             spotyping_params = snakemakeutils.load_object(Path(input.INFORMS_spoligo_param))
             spotyping.update_parameters(
                 swift='off', min_strict=spotyping_params['min_strict'], min_relaxed=spotyping_params['min_relaxed'])
         else:
-            snakemakeutils.add_pickle_input(spotyping, params.key, Path(input.FASTA))
+            snakemakeutils.add_io_input(spotyping, params.key, Path(input.FASTA))
             spotyping.update_parameters(swift='off', fasta=True)
         step = Step(rule_name=str(rule), tool=spotyping, dir_=Path(str(params.dir_)))
         step.run()
         spotyping.informs['_tag'] = 'Spoligotyping'
-        snakemakeutils.dump_tool_outputs(spotyping, output)
+        snakemakeutils.dump_io_outputs(spotyping, output)
 
 rule spoligotyping_report:
     """
@@ -99,10 +99,10 @@ rule spoligotyping_report:
         reporter = SpoTypingReporter()
         # noinspection PyUnresolvedReferences
         keys = [k for k, path in input.items() if len(path) > 0]
-        snakemakeutils.add_pickle_inputs(reporter, input, keys=keys)
+        snakemakeutils.add_io_inputs(reporter, input, keys=keys)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule spoligotyping_report_empty:
     """

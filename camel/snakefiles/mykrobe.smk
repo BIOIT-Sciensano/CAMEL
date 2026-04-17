@@ -35,7 +35,7 @@ rule mykrobe_run:
             fq_in = FastqInput.from_fq_dict(Path(input.IO), params.input_type)
             typer.add_input_files({'FASTQ_SE': fq_in.se})
         if params.input_type == 'fasta':
-            snakemakeutils.add_pickle_input(typer, 'FASTA', Path(input.IO))
+            snakemakeutils.add_io_input(typer,'FASTA', Path(input.IO))
         typer.add_input_files({
             'DIR': [ToolIODirectory(params.db_dir)],
             'SPECIES': [ToolIOValue(params.species)]
@@ -44,7 +44,7 @@ rule mykrobe_run:
         # Run tool
         step = Step(rule_name=str(rule), tool=typer, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_output(typer, 'CSV', Path(output.CSV))
+        snakemakeutils.dump_io_output(typer,'CSV', Path(output.CSV))
         # Informs can contain numpy objects -> sanitize first
         snakemakeutils.dump_object(snakemakeutils.sanitize_numpy(typer.informs), Path(output.INFORMS))
 
@@ -74,9 +74,9 @@ rule mykrobe_report:
             reporter.update_parameters(custom_header = params.title)
 
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule mykrobe_report_empty:
     """

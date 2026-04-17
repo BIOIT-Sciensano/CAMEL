@@ -26,11 +26,11 @@ rule assembly_filter_contig_length:
     run:
         from camel.app.tools.seqtk.seqtkseq import SeqtkSeq
         seqtk = SeqtkSeq()
-        snakemakeutils.add_pickle_inputs(seqtk, input)
+        snakemakeutils.add_io_inputs(seqtk, input)
         step = Step(rule_name=str(rule), tool=seqtk, dir_=Path(params.dir_))
         seqtk.update_parameters(output_filename='assembly_filtered.fasta', min_length=params.min_contig_length)
         step.run()
-        snakemakeutils.dump_tool_outputs(seqtk, output)
+        snakemakeutils.dump_io_outputs(seqtk, output)
 
 rule assembly_bt2_index:
     """
@@ -46,9 +46,9 @@ rule assembly_bt2_index:
         from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
         bowtie2_index = Bowtie2Index()
         step = Step(rule_name=str(rule), tool=bowtie2_index, dir_=Path(params.dir_))
-        snakemakeutils.add_pickle_inputs(bowtie2_index, input)
+        snakemakeutils.add_io_inputs(bowtie2_index, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(bowtie2_index, output)
+        snakemakeutils.dump_io_outputs(bowtie2_index, output)
 
 rule assembly_bt2_map:
     """
@@ -76,7 +76,7 @@ rule assembly_bt2_map:
         bowtie2_map.add_input_files(snakepipelineutils.extract_fq_input(
             Path(input.IO), key_se='FASTQ_SE', drop_empty=True, read_type=params.read_type))
         bowtie2_map.update_parameters(threads=threads)
-        snakemakeutils.add_pickle_input(bowtie2_map, 'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
+        snakemakeutils.add_io_input(bowtie2_map,'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
 
         # Initialize tools
         samtools_view = SamtoolsView()
@@ -85,7 +85,7 @@ rule assembly_bt2_map:
         pipeutils.run_as_pipe([bowtie2_map, samtools_view, samtools_sort], Path(params.dir_))
 
         # Save output
-        snakemakeutils.dump_tool_output(samtools_sort, 'BAM', Path(output.BAM))
+        snakemakeutils.dump_io_output(samtools_sort,'BAM', Path(output.BAM))
         bowtie2_map.informs['_tag'] = 'Coverage calculation'
         snakemakeutils.dump_object(bowtie2_map.informs, Path(output.INFORMS))
 
@@ -111,7 +111,7 @@ rule assembly_minimap2_map:
 
         # Minimap2
         minimap2 = Minimap2Mapping()
-        snakemakeutils.add_pickle_input(minimap2, 'FASTA', Path(input.FASTA))
+        snakemakeutils.add_io_input(minimap2,'FASTA', Path(input.FASTA))
         minimap2.add_input_files(snakepipelineutils.extract_fq_input(Path(input.FQ), key_se='FASTQ', read_type='SE'))
         step = Step(rule_name=str(rule), tool=minimap2, dir_=Path(params.dir_))
         step.run()
@@ -123,7 +123,7 @@ rule assembly_minimap2_map:
         pipeutils.run_as_pipe([minimap2, samtools_view, samtools_sort], Path(params.dir_))
 
         # Export output
-        snakemakeutils.dump_tool_output(samtools_sort, 'BAM', Path(output.BAM))
+        snakemakeutils.dump_io_output(samtools_sort,'BAM', Path(output.BAM))
         minimap2.informs['_tag'] = 'Coverage calculation'
         snakemakeutils.dump_object(minimap2.informs, Path(output.INFORMS))
 
@@ -142,10 +142,10 @@ rule assembly_samtools_depth:
         from camel.app.tools.samtools.samtoolsdepth import SamtoolsDepth
         samtools_depth = SamtoolsDepth()
         step = Step(rule_name=str(rule), tool=samtools_depth, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(samtools_depth, input)
+        snakemakeutils.add_io_inputs(samtools_depth, input)
         step.run()
         samtools_depth.informs['_tag'] = 'Coverage calculation'
-        snakemakeutils.dump_tool_outputs(samtools_depth, output)
+        snakemakeutils.dump_io_outputs(samtools_depth, output)
 
 rule assembly_samtools_flagstat:
     """
@@ -160,12 +160,12 @@ rule assembly_samtools_flagstat:
     run:
         from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat
         flagstat = SamtoolsFlagstat()
-        snakemakeutils.add_pickle_inputs(flagstat, input)
+        snakemakeutils.add_io_inputs(flagstat, input)
         step = Step(rule_name=str(rule), tool=flagstat, dir_=Path(params.dir_))
         step.run()
         # Calculate mapping rate
         flagstat.informs['mapping_perc'] = 100 * flagstat.informs['mapped'][0] / flagstat.informs['total'][0]
-        snakemakeutils.dump_tool_outputs(flagstat, output)
+        snakemakeutils.dump_io_outputs(flagstat, output)
 
 #################################################################
 # The rules below generate a basic QUAST report / summary file. #
@@ -185,10 +185,10 @@ rule assembly_quast:
     run:
         from camel.app.tools.quast.quast import Quast
         quast = Quast()
-        snakemakeutils.add_pickle_inputs(quast, input)
+        snakemakeutils.add_io_inputs(quast, input)
         step = Step(rule_name=str(rule), tool=quast, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(quast, output)
+        snakemakeutils.dump_io_outputs(quast, output)
 
 rule assembly_quast_extract_informs:
     """
@@ -204,10 +204,10 @@ rule assembly_quast_extract_informs:
     run:
         from camel.app.tools.quast.quastinformextractor import QuastInformExtractor
         quast_inform_extractor = QuastInformExtractor()
-        snakemakeutils.add_pickle_inputs(quast_inform_extractor, input)
+        snakemakeutils.add_io_inputs(quast_inform_extractor, input)
         step = Step(rule_name=str(rule), tool=quast_inform_extractor, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(quast_inform_extractor, output)
+        snakemakeutils.dump_io_outputs(quast_inform_extractor, output)
 
 rule assembly_quast_report:
     """
@@ -231,10 +231,10 @@ rule assembly_quast_report:
         assembler_name = ', '.join(snakemakeutils.load_object(Path(x))['_name'] for x in input.INFORMS_assembler) \
             if input.INFORMS_assembler else 'n/a'
         reporter.add_input_informs({'assembler': {'_name': assembler_name}})
-        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['INFORMS_assembler'])
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['INFORMS_assembler'])
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule assembly_dump_summary_info:
     """

@@ -78,8 +78,10 @@ def install(yml: list[Path]) -> None:
 @click.option("--keys", type=str, help='List of keys to download (comma-separated), defaults to all')
 @click.option("--force", is_flag=True, help='Force download, even if the DBs already exist')
 @click.option("--out", type=click.Path(exists=True, path_type=Path), help='Output directory (defaults to value from config)')
+@click.option("--list-only", is_flag=True, help='Only list the DBs, do not download')
 @click.option("--threads", type=int, default=4, help='Number of threads to use for indexing')
-def download_dbs(ctx, yml: Path, name: str, force: bool, keys: str | None, out: Path | None, threads: int) -> None:
+def download_dbs(ctx, yml: Path, name: str, force: bool, keys: str | None, out: Path | None, threads: int,
+                 list_only: bool) -> None:
     """
     Downloads databases for the CAMEL pipelines.
     """
@@ -117,7 +119,9 @@ def download_dbs(ctx, yml: Path, name: str, force: bool, keys: str | None, out: 
         force=force,
         keys=keys.split(',') if keys else None,
         dir_db=dir_db,
-        threads=threads)
+        list_only=list_only,
+        threads=threads,
+    )
 
 
 if __name__ == '__main__':

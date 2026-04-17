@@ -24,7 +24,7 @@ rule picard_create_interval_lists:
         from camel.app.tools.picard.intervallisttools import IntervalListTools
 
         generate_interval_list = IntervalListTools()
-        snakemakeutils.add_pickle_inputs(generate_interval_list, input)
+        snakemakeutils.add_io_inputs(generate_interval_list, input)
         step = Step(rule_name=str(rule), tool=generate_interval_list, dir_=params.working_dir)
         generate_interval_list.update_parameters(
             **config['rule_params']['variant_calling'][rule],
@@ -32,7 +32,7 @@ rule picard_create_interval_lists:
         )
         step.run()
 
-        snakemakeutils.dump_tool_output(generate_interval_list, 'TXT_intervalLists', Path(output.TXT_intervalLists))
+        snakemakeutils.dump_io_output(generate_interval_list,'TXT_intervalLists', Path(output.TXT_intervalLists))
 
 
 rule create_io_intervalLists:
@@ -75,13 +75,13 @@ rule gatk4_haplotype_caller:
         subprocess.run(f"touch {output.bamout}", shell = True, executable="/bin/bash")
 
         hc = GATK4HaplotypeCaller()
-        snakemakeutils.add_pickle_inputs(hc, input)
+        snakemakeutils.add_io_inputs(hc, input)
         step = Step(rule_name=str(rule), tool=hc, dir_=params.working_dir)
         hc.update_parameters(
             **config['rule_params']['variant_calling'][rule],
         )
         step.run()
-        snakemakeutils.dump_tool_output(hc, 'VCF', Path(output.VCF))
+        snakemakeutils.dump_io_output(hc,'VCF', Path(output.VCF))
 
 rule picard_merge_vcfs:
     """
@@ -104,4 +104,4 @@ rule picard_merge_vcfs:
         merge_vcf.add_input_files({"VCF": [snakemakeutils.load_object(Path(path))[0] for path in input.VCF]})
         step = Step(rule_name=str(rule), tool=merge_vcf, dir_=params.working_dir)
         step.run()
-        snakemakeutils.dump_tool_output(merge_vcf, "VCF", Path(output.VCF))
+        snakemakeutils.dump_io_output(merge_vcf,"VCF", Path(output.VCF))

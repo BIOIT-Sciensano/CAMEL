@@ -29,4 +29,8 @@ class Parameter(BaseModel):
         """
         if self.flag:
             return self.option
-        return f'{self.option} {self.value}'
+        if self.option is not None and self.value is not None:
+            return f'{self.option} {self.value}'
+        if self.option is None:
+            return str(self.value)
+        return self.option

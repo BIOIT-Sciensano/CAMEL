@@ -4,6 +4,7 @@ import dataclasses
 import click
 import yaml
 
+from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
@@ -14,23 +15,6 @@ from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.scripts.klebsiellapipeline import SNAKEFILE_MAIN, CONFIG_DATA
-
-CUSTOM_ANALYSES = [
-    "amrfinder",
-    "bacmet",
-    "cgmlst",
-    "confindr",
-    "human_read_scrubbing",
-    "kleborate",
-    "kraken2",
-    "mlst",
-    "mob_suite",
-    "plasmidfinder",
-    "resfinder4",
-    "scgmlst",
-    "variant_calling",
-    "vfdb_core",
-]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -73,16 +57,25 @@ class MainKlebsiellaPipeline(BasePipe):
         )
         self._opts_custom = opts_custom
 
-    def _execute(self) -> None:
+    def _validate_config_data(self, config_data: dict) -> bool:
         """
-        Runs the pipeline.
-        :return: None
+        Validates the config data.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
         """
-        # Parse template data
+        self.check_dbs(config_data)
+        return True
+
+    def _build_config(self) -> dict:
+        """
+        Builds the configuration data for Snakemake.
+        :return: Configuration data
+        """
         with open(CONFIG_DATA) as handle:
             yaml_text = handle.read()
         yaml_text = yaml_text.format(
             COV_MAX=self._script_opts.cov_max,
+            DB_ROOT=config.dir_db,
             QC_SCHEME="cgmlst" if "cgmlst" in self._opts_custom.analyses else "mlst",
             EXPORT_BAM=self._script_opts.include_bam,
         )
@@ -92,24 +85,46 @@ class MainKlebsiellaPipeline(BasePipe):
         # Add the base config data
         config_data = self.get_config_data()
         basepipeutils.dict_merge(config_data, data_template)
-        config_data['analyses'] = self._opts_custom.analyses
-        config_data['sequence_typing']['options'] = {'method': self._script_opts.typing_method}
-        config_data['gene_detection']['options'] = {'method': self._script_opts.gene_detection_method}
-        path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
+        config_data['analyses_selected'] = self._opts_custom.analyses
+        config_data['sequence_typing']['options'] = {
+            'method': self._script_opts.typing_method
+        }
+        config_data['gene_detection']['options'] = {
+            'method': self._script_opts.gene_detection_method
+        }
+        return config_data
 
-        # Run the Snakefile
+    def _execute(self) -> None:
+        """
+        Runs the pipeline.
+        :return: None
+        """
+        # Build and validate the config file
+        config_data = self._build_config()
+        self._validate_config_data(config_data)
+
+        # Create the config file and run snakefile
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
+        path_config = snakepipelineutils.generate_config_file(
+            config_data, self._script_opts.working_dir
+        )
         self.run_snakefile(path_config)
+
+        # Additional export for the assembly
         self._export_assembly()
 
 
-@click.command(name='klebsiella_pipeline', short_help='Pipeline for the complete characterization of Klebsiella isolates')
+@click.command(
+    name='klebsiella_pipeline',
+    short_help='Pipeline for the complete characterization of Klebsiella isolates',
+)
 @basescriptutils.add_input_opts()
 @basescriptutils.add_output_opts
 @basescriptutils.add_general_opts
 @click.option(
-    "--analyses",
+    '--analyses',
     type=str,
-    help=f"Comma-separated list of analyses to run ({', '.join(CUSTOM_ANALYSES)})",
+    help=f"Comma-separated list of analyses to run ({', '.join(basepipeutils.get_custom_analyses(CONFIG_DATA))})",
 )
 def main(**kwargs) -> None:
     """
@@ -118,8 +133,12 @@ def main(**kwargs) -> None:
     script_input = basescriptutils.parse_script_input(kwargs)
     script_out = basescriptutils.parse_script_output(kwargs)
     script_opts = basescriptutils.parse_script_opts(kwargs)
-    custom_opts = Options(analyses=kwargs["analyses"].split(",") if kwargs["analyses"] else [])
-    pipeline = MainKlebsiellaPipeline(script_input, script_out, script_opts, custom_opts)
+    custom_opts = Options(
+        analyses=kwargs["analyses"].split(",") if kwargs["analyses"] else []
+    )
+    pipeline = MainKlebsiellaPipeline(
+        script_input, script_out, script_opts, custom_opts
+    )
     pipeline.run()
 
 

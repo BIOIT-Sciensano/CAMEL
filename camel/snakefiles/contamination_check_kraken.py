@@ -35,21 +35,21 @@ def get_reports(config: dict[str, Any]) -> list[str]:
 
     # PE reads
     if input_type in ('illumina', 'hybrid'):
-        if 'kraken2' in config['analyses']:
+        if 'kraken2' in config['analyses_selected']:
             paths.append(str(OUTPUT_REPORT).format(input_format='fastq_pe'))
         else:
             paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fastq_pe'))
 
     # SE reads
     if input_type in ('ont', 'hybrid'):
-        if 'kraken2' in config['analyses']:
+        if 'kraken2' in config['analyses_selected']:
             paths.append(str(OUTPUT_REPORT).format(input_format='fastq_se'))
         else:
             paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fastq_se'))
 
     # FASTA input
     if input_type in ('fasta', 'fasta_with_vcf'):
-        if 'kraken2' in config['analyses']:
+        if 'kraken2' in config['analyses_selected']:
             paths.append(str(OUTPUT_REPORT).format(input_format='fasta'))
         else:
             paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fasta'))
@@ -67,15 +67,15 @@ def get_summaries(config: dict[str, Any], ext: str) -> list[Path]:
     paths = []
 
     # PE reads
-    if (input_type in ('illumina', 'hybrid')) and ('kraken2' in config['analyses']):
+    if (input_type in ('illumina', 'hybrid')) and ('kraken2' in config['analyses_selected']):
         paths.append(str(OUTPUT_SUMMARY).format(input_format='fastq_pe', ext=ext))
 
     # SE reads
-    if (input_type in ('ont', 'hybrid')) and ('kraken2' in config['analyses']):
+    if (input_type in ('ont', 'hybrid')) and ('kraken2' in config['analyses_selected']):
         paths.append(str(OUTPUT_SUMMARY).format(input_format='fastq_se', ext=ext))
 
     # FASTA input
-    if (input_type in ('fasta', 'fasta_with_vcf')) and ('kraken2' in config['analyses']):
+    if (input_type in ('fasta', 'fasta_with_vcf')) and ('kraken2' in config['analyses_selected']):
         paths.append(str(OUTPUT_SUMMARY).format(input_format='fasta', ext=ext))
     return paths
 
@@ -90,7 +90,7 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     paths = []
 
     # Kraken 2 is disabled -> return empty list
-    if 'kraken2' not in config['analyses']:
+    if 'kraken2' not in config['analyses_selected']:
         return []
 
     # PE reads

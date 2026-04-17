@@ -1,3 +1,49 @@
+analyses:
+  abritamr:
+    dbs:
+      - abritamr
+  amrfinder:
+    dbs:
+      - amrfinder
+  cgmlst:
+    dbs:
+      - typing_cgmlst
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
+  mlst:
+    dbs:
+      - typing_mlst
+  mob_suite:
+    dbs:
+      - mob_suite
+  mykrobe:
+    dbs:
+      - mykrobe
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - typing_rmlst
+  serotype:
+    dbs:
+      - sistr
+  spifinder:
+    dbs:
+      - spifinder
+  variant_calling:
+    dbs: []
+  vfdb_core:
+    dbs:
+      - gene_detection_vfdb_core
+
 #############
 # Databases #
 #############
@@ -9,6 +55,10 @@ dbs:
   amrfinder:
     location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
     required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
     method: ftp
   confindr:
     location: &db_confindr {DB_ROOT}/confindr/0.8.1
@@ -22,8 +72,8 @@ dbs:
     location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
     required: false
     method: ftp
-  mobsuite:
-    location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+  mob_suite:
+    location: &db_mob_suite {DB_ROOT}/mob_suite/latest
     required: false
     method: ftp
   mykrobe:
@@ -127,6 +177,9 @@ assembly:
     cov_cutoff: 10
   min_contig_length: 1000
 
+busco:
+  db: *db_busco
+
 confindr:
   db: *db_confindr
 
@@ -138,7 +191,7 @@ downsampling:
   coverage_max: {COV_MAX}
 
 mob_suite:
-  db: *db_mobsuite
+  db: *db_mob_suite
 
 mykrobe:
   db: *db_mykrobe

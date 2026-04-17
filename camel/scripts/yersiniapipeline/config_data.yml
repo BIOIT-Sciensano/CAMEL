@@ -1,3 +1,54 @@
+analyses:
+  ampc:
+    dbs:
+      - ampc
+  amrfinder:
+    dbs:
+      - amrfinder
+  cgmlst_enterobase:
+    dbs:
+      - typing_cgmlst_enterobase
+  cgmlst_ye:
+    dbs:
+      - typing_cgmlst_ye
+  cgmlst_yp:
+    dbs:
+      - typing_cgmlst_yp
+  cgmlst_yersinia_spp:
+    dbs:
+      - typing_cgmlst_yersinia_spp
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
+  mlst_achtman:
+    dbs:
+      - typing_mlst_achtman
+  mlst_mcnally:
+    dbs:
+      - typing_mlst_mcnally
+  mob_suite:
+    dbs:
+      - mob_suite
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - typing_rmlst
+  species_determination:
+    dbs:
+      - taxonomic
+      - typing_cgmlst_yersinia_spp
+  vfdb_core:
+    dbs:
+      - vfdb_core
+
 #############
 # Databases #
 #############
@@ -10,12 +61,20 @@ dbs:
     location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
     required: false
     method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
   confindr:
     location: &db_confindr {DB_ROOT}/confindr/0.8.1
     required: false
     method: skip
-  mobsuite:
-    location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mob_suite:
+    location: &db_mob_suite {DB_ROOT}/mob_suite/latest
     required: false
     method: ftp
   ncbi_human_read_scrubber:
@@ -112,39 +171,42 @@ reference:
 #########################
 # Tool-specific options #
 #########################
-downsampling:
-  coverage_max: {COV_MAX}
-
-contamination_check:
-  db: {K2_DB}
-  expected_species: 'Yersinia'
-  level_of_depth: G
-
-quality_checks:
-  typing_scheme: {QC_SCHEME}
+amrfinder:
+  db: *db_amrfinder
 
 assembly:
   spades:
     cov_cutoff: 'off'
   min_contig_length: 1000
 
-amrfinder:
-  db: *db_amrfinder
-
-mob_suite:
-  db: *db_mobsuite
+busco:
+  db: *db_busco
 
 confindr:
   db: *db_confindr
+
+contamination_check:
+  db: *db_kraken2
+  expected_species: 'Yersinia'
+  level_of_depth: G
+
+downsampling:
+  coverage_max: {COV_MAX}
+
+mob_suite:
+  db: *db_mob_suite
+
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
+
+read_trimming: {{}}
 
 resfinder4:
   point: False
   db: *db_resfinder4
 
-read_trimming: {{}}
-
-read_scrubbing:
-  db: *db_ncbi_human_read_scrubber
+quality_checks:
+  typing_scheme: {QC_SCHEME}
 
 species_determination:
   tsv: *db_taxonomic
@@ -178,11 +240,11 @@ gene_detection:
 ###################
 sequence_typing:
   dbs:
-    cgmlst:
+    cgmlst_yersinia_spp:
       path: *db_typing_cgmlst_yersinia_spp
       detection_method: blast
       write_all_matches: True
-    mlst:
+    mlst_achtman:
       path: *db_typing_mlst_achtman
     mlst_mcnally:
       path: *db_typing_mlst_mcnally

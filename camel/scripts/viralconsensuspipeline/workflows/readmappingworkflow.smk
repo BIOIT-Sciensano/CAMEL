@@ -37,7 +37,7 @@ rule bwa_index_ref:
         step = Step(rule_name=str(rule), tool=bwa_index, dir_=Path(str(params.dir_)).absolute())
         bwa_index.add_input_files({'FASTA_REF': [ToolIOFile(path_symlink)]})
         step.run()
-        snakemakeutils.dump_tool_output(bwa_index, 'INDEX_GENOME_PREFIX', Path(output.FASTA))
+        snakemakeutils.dump_io_output(bwa_index,'INDEX_GENOME_PREFIX', Path(output.FASTA))
 
 rule bwa_map_reads_pe:
     """
@@ -55,11 +55,11 @@ rule bwa_map_reads_pe:
     run:
         from camel.app.tools.bwa.bwamap import BWAMap
         bwa_map = BWAMap()
-        snakemakeutils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.FASTA))
+        snakemakeutils.add_io_input(bwa_map,'INDEX_GENOME_PREFIX', Path(input.FASTA))
         bwa_map.add_input_files(snakepipelineutils.extract_fq_input(Path(
             input.FASTQ), drop_empty=True, read_type='PE'))
         bwa_map.run(Path(str(params.dir_)))
-        snakemakeutils.dump_tool_outputs(bwa_map, output)
+        snakemakeutils.dump_io_outputs(bwa_map, output)
 
 rule bwa_map_reads_se:
     """
@@ -92,10 +92,10 @@ rule bwa_map_reads_se:
         else:
             # Map SE reads
             bwa_map = BWAMap()
-            snakemakeutils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.FASTA))
+            snakemakeutils.add_io_input(bwa_map,'INDEX_GENOME_PREFIX', Path(input.FASTA))
             bwa_map.add_input_files({'FASTQ_SE': fq_in})
             bwa_map.run(Path(str(params.dir_)))
-            snakemakeutils.dump_tool_outputs(bwa_map, output)
+            snakemakeutils.dump_io_outputs(bwa_map, output)
 
 rule bwa_map_merge_sam:
     """
@@ -130,7 +130,7 @@ rule bwa_map_merge_sam:
         # Run samtools merge
         merge.add_input_files({'SAM': sam_input})
         merge.run(Path(str(params.dir_)))
-        snakemakeutils.dump_tool_output(merge, 'SAM', Path(output.SAM))
+        snakemakeutils.dump_io_output(merge,'SAM', Path(output.SAM))
 
         # Collect informs
         informs = []
@@ -171,7 +171,7 @@ rule minimap2_map_reads:
         # Run tool and collect output
         minimap2.update_parameters(threads=threads)
         minimap2.run(dir_)
-        snakemakeutils.dump_tool_outputs(minimap2, output)
+        snakemakeutils.dump_io_outputs(minimap2, output)
 
 rule sam_to_bam:
     """
@@ -193,7 +193,7 @@ rule sam_to_bam:
         # View and sort
         samtools_view = SamtoolsView()
         samtools_sort = SamtoolsSort()
-        snakemakeutils.add_pickle_input(samtools_view, 'SAM', Path(input.SAM))
+        snakemakeutils.add_io_input(samtools_view,'SAM', Path(input.SAM))
         pipeutils.run_as_pipe([samtools_view, samtools_sort], Path(str(params.dir_)).absolute())
 
         # Create index
@@ -201,7 +201,7 @@ rule sam_to_bam:
         samtools_index.update_parameters(output_filename=params.name)
         samtools_index.add_input_files({'BAM': samtools_sort.tool_outputs['BAM']})
         samtools_index.run(Path(str(params.dir_)).absolute())
-        snakemakeutils.dump_tool_output(samtools_index, 'BAM', Path(output.BAM))
+        snakemakeutils.dump_io_output(samtools_index,'BAM', Path(output.BAM))
 
 rule samtools_depth:
     """
@@ -219,11 +219,11 @@ rule samtools_depth:
     run:
         from camel.app.tools.samtools.samtoolsdepth import SamtoolsDepth
         depth = SamtoolsDepth()
-        snakemakeutils.add_pickle_inputs(depth, input)
+        snakemakeutils.add_io_inputs(depth, input)
         depth.update_parameters(
             maximum_coverage_depth=params.max_depth, output_filename=params.name, output_all_positions_absolutely=True)
         depth.run(Path(params.dir_).absolute())
-        snakemakeutils.dump_tool_outputs(depth, output)
+        snakemakeutils.dump_io_outputs(depth, output)
 
 rule samtools_flagstat:
     """
@@ -238,14 +238,14 @@ rule samtools_flagstat:
     run:
         from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat
         flagstat = SamtoolsFlagstat()
-        snakemakeutils.add_pickle_inputs(flagstat, input)
+        snakemakeutils.add_io_inputs(flagstat, input)
         flagstat.run(Path(params.dir_).absolute())
         # Calculate mapping rate
         try:
             flagstat.informs['mapping_rate'] = flagstat.informs['mapped'][0] / flagstat.informs['total'][0]
         except ZeroDivisionError:
             flagstat.informs['mapping_rate'] = None
-        snakemakeutils.dump_tool_outputs(flagstat, output)
+        snakemakeutils.dump_io_outputs(flagstat, output)
 
 rule collect_low_depth_regions:
     """
@@ -264,12 +264,12 @@ rule collect_low_depth_regions:
     run:
         from camel.app.tools.pipelines.viral_consensus.collectlowdepthregions import CollectLowDepthRegions
         collect_low_depth = CollectLowDepthRegions()
-        snakemakeutils.add_pickle_input(collect_low_depth, 'BAM', Path(input.BAM))
+        snakemakeutils.add_io_input(collect_low_depth,'BAM', Path(input.BAM))
         collect_low_depth.update_parameters(
             gap_depth_cutoff=params.gap_depth_cutoff, gap_len_cutoff=params.gap_len_cutoff)
         collect_low_depth.add_input_files({'FASTA': [ToolIOFile(Path(input.FASTA))]})
         collect_low_depth.run(Path(params.dir_).absolute())
-        snakemakeutils.dump_tool_outputs(collect_low_depth, output)
+        snakemakeutils.dump_io_outputs(collect_low_depth, output)
 
 rule combine_stats:
     """

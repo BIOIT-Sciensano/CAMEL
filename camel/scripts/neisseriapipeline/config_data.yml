@@ -1,7 +1,210 @@
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  bast:
+    dbs:
+      - typing_bast
+  cgmlst:
+    dbs:
+      - typing_cgmlst
+  cgmlst_v3:
+    dbs:
+      - typing_cgmlst_v3
+  confindr:
+    dbs:
+      - confindr
+  feta:
+    dbs:
+      - typing_feta
+  fhbp:
+    dbs:
+      - typing_fhbp
+  gmats:
+    dbs:
+      - gmats
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  mendevar:
+    dbs:
+      - mendevar
+  pora:
+    dbs:
+      - typing_pora
+  porb:
+    dbs:
+      - typing_porb
+  mlst:
+    dbs:
+      - typing_mlst
+  resfinder4:
+    dbs:
+      - resfinder4
+  resistance_genes:
+    dbs:
+      - typing_resistance_genes
+  rmlst:
+    dbs:
+      - typing_rmlst
+  rplf:
+    dbs:
+      - typing_rplf
+  serogroup:
+    dbs:
+      - typing_serogroup_a
+      - typing_serogroup_b
+      - typing_serogroup_c
+      - typing_serogroup_e
+      - typing_serogroup_h
+      - typing_serogroup_l
+      - typing_serogroup_w
+      - typing_serogroup_x
+      - typing_serogroup_y
+      - typing_serogroup_z
+  vaccine_targets:
+    dbs:
+      - typing_vaccine_targets
+  variant_calling:
+    dbs: []
+
 #############
 # Databases #
 #############
-dbs: {{}}
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gmats:
+    location: &db_gmats {DB_ROOT}/pipelines/neisseria/gMATS_DB.txt
+    is_file: true
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mendevar:
+    location: &db_mendevar {DB_ROOT}/pipelines/neisseria/mendevar_DB.txt
+    is_file: true
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Neisseria_meningitidis/NZ_CP021520.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Neisseria_meningitidis/NZ_CP021520.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  typing_resistance_genes:
+    location: &db_resistance_genes {DB_ROOT}/sequence_typing/neisseria/resistance_genes
+    required: false
+    method: mist
+  typing_bast:
+    location: &db_bast {DB_ROOT}/sequence_typing/neisseria/bast
+    required: false
+    method: mist
+  typing_cgmlst:
+    location: &db_cgmlst {DB_ROOT}/sequence_typing/neisseria/cgmlst
+    required: false
+    method: mist
+  typing_cgmlst_v3:
+    location: &db_cgmlst_v3 {DB_ROOT}/sequence_typing/neisseria/cgmlst_v3
+    required: false
+    method: mist
+  typing_feta:
+    location: &db_feta {DB_ROOT}/sequence_typing/neisseria/feta
+    required: false
+    method: mist
+  typing_fhbp:
+    location: &db_fhbp {DB_ROOT}/sequence_typing/neisseria/fhbp
+    required: false
+    method: mist
+  typing_mlst:
+    location: &db_mlst {DB_ROOT}/sequence_typing/neisseria/mlst
+    required: false
+    method: mist
+  typing_pora:
+    location: &db_pora {DB_ROOT}/sequence_typing/neisseria/pora
+    required: false
+    method: mist
+  typing_porb:
+    location: &db_porb {DB_ROOT}/sequence_typing/neisseria/porb
+    required: false
+    method: mist
+  typing_rmlst:
+    location: &db_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+  typing_rplf:
+    location: &db_rplf {DB_ROOT}/sequence_typing/neisseria/rplf
+    required: false
+    method: mist
+  typing_serogroup_a:
+    location: &db_serogroup_a {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_a
+    required: false
+    method: mist
+  typing_serogroup_b:
+    location: &db_serogroup_b {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_b
+    required: false
+    method: mist
+  typing_serogroup_c:
+    location: &db_serogroup_c {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_c
+    required: false
+    method: mist
+  typing_serogroup_e:
+    location: &db_serogroup_e {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_e
+    required: false
+    method: mist
+  typing_serogroup_h:
+    location: &db_serogroup_h {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_h
+    required: false
+    method: mist
+  typing_serogroup_l:
+    location: &db_serogroup_l {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_l
+    required: false
+    method: mist
+  typing_serogroup_w:
+    location: &db_serogroup_w {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_w
+    required: false
+    method: mist
+  typing_serogroup_x:
+    location: &db_serogroup_x {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_x
+    required: false
+    method: mist
+  typing_serogroup_y:
+    location: &db_serogroup_y {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_y
+    required: false
+    method: mist
+  typing_serogroup_z:
+    location: &db_serogroup_z {DB_ROOT}/sequence_typing/neisseria/capsule_region_a_serogroup_z
+    required: false
+    method: mist
+  typing_vaccine_targets:
+    location: &db_vaccine_targets {DB_ROOT}/sequence_typing/neisseria/vaccine_targets
+    required: false
+    method: mist
 
 ####################
 # Pipeline options #
@@ -34,8 +237,8 @@ citations:
 ####################
 reference:
   name: <i>Neisseria meningitidis</i> (NZ_CP021520.1)
-  fasta: /db/refgenomes/Neisseria_meningitidis/NZ_CP021520.1.fasta
-  gff3: /db/refgenomes/Neisseria_meningitidis/NZ_CP021520.1.gff3
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/nuccore/NZ_CP021520.1
   expected_gc: 51.5
 
@@ -43,7 +246,7 @@ reference:
 # Tool-specific options #
 #########################
 amrfinder:
-  db: /db/amrfinder/v4/latest
+  db: *db_amrfinder
   organism: Neisseria_meningitidis
 
 assembly:
@@ -51,31 +254,35 @@ assembly:
     cov_cutoff: 'off'
   min_contig_length: 0
 
+busco:
+  db: *db_busco
+
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
+  db: {DB_ROOT}/kraken2_microbial/latest
   expected_species: Neisseria meningitidis
 
 downsampling:
   coverage_max: {COV_MAX}
 
 gmats:
-  db: /db/pipelines/neisseria/gMATS_DB.txt
+  db: *db_gmats
 
 mendevar:
-  db: /db/pipelines/neisseria/mendevar_DB.txt
+  db: *db_mendevar
 
 quality_checks:
   typing_scheme: {QC_SCHEME}
 
-read_scrubbing: {{}}
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 read_trimming: {{}}
 
 resfinder4:
-  db: /db/resfinder4
+  db: *db_resfinder4
   point: False
 
 variant_calling:
@@ -90,49 +297,49 @@ variant_filtering: {{}}
 sequence_typing:
   dbs:
     bast:
-      path: /db/sequence_typing/neisseria/bast
+      path: *db_bast
     cgmlst:
-      path: /db/sequence_typing/neisseria/cgmlst
+      path: *db_cgmlst
     cgmlst_v3:
-      path: /db/sequence_typing/neisseria/cgmlst_v3
+      path: *db_cgmlst_v3
     feta:
-      path: /db/sequence_typing/neisseria/feta
+      path: *db_feta
     fhbp:
-      path: /db/sequence_typing/neisseria/fhbp
+      path: *db_fhbp
     mlst:
-      path: /db/sequence_typing/neisseria/mlst
+      path: *db_mlst
     pora:
-      path: /db/sequence_typing/neisseria/pora
+      path: *db_pora
     porb:
-      path: /db/sequence_typing/neisseria/porb
+      path: *db_porb
     resistance_genes:
-      path: /db/sequence_typing/neisseria/resistance_genes
+      path: *db_resistance_genes
     rmlst:
-      path: /db/sequence_typing/various/rmlst
+      path: *db_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info
     rplf:
-      path: /db/sequence_typing/neisseria/rplf
+      path: *db_rplf
     serogroup_a:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_a
+      path: *db_serogroup_a
     serogroup_b:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_b
+      path: *db_serogroup_b
     serogroup_c:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_c
+      path: *db_serogroup_c
     serogroup_e:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_e
+      path: *db_serogroup_e
     serogroup_h:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_h
+      path: *db_serogroup_h
     serogroup_l:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_l
+      path: *db_serogroup_l
     serogroup_w:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_w
+      path: *db_serogroup_w
     serogroup_x:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_x
+      path: *db_serogroup_x
     serogroup_y:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_y
+      path: *db_serogroup_y
     serogroup_z:
-      path: /db/sequence_typing/neisseria/capsule_region_a_serogroup_z
+      path: *db_serogroup_z
     vaccine_targets:
-      path: /db/sequence_typing/neisseria/vaccine_targets
+      path: *db_vaccine_targets

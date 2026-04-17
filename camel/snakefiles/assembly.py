@@ -18,9 +18,9 @@ def get_fasta_raw(config: dict[str, Any]) -> str:
     """
     Returns the assembly FASTA output IO object path (before filtering).
     """
-    if (config['input']['type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' not in config['analyses']):
+    if (config['input']['type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' not in config['analyses_selected']):
         return human_read_scrubbing.INPUT_FASTA.format(input_format='fasta')
-    if (config['input']['type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses']):
+    if (config['input']['type'] in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses_selected']):
         return human_read_scrubbing.OUTPUT_FASTA.format(input_format='fasta')
     if config['input']['type'] == 'illumina':
         return assembly_spades.OUTPUT_FASTA

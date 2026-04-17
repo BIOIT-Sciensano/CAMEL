@@ -54,20 +54,20 @@ rule report_command_section:
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_assembly_map = assembly.get_qc_informs(config,config['input']['type']),
-        INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses'] else [],
-        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
-        INFORMS_serotyping_sistr = serotyping_sistr.OUTPUT_INFORMS if 'serotype' in config['analyses'] else [],
+        INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses_selected'] else [],
+        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses_selected'] else [],
+        INFORMS_serotyping_sistr = serotyping_sistr.OUTPUT_INFORMS if 'serotype' in config['analyses_selected'] else [],
         INFORMS_serotyping_seqsero2 = serotyping_seqsero2.get_command_informs(config),
-        INFORMS_mykrobe = mykrobe.OUTPUT_INFORMS if 'mykrobe' in config['analyses'] else [],
+        INFORMS_mykrobe = mykrobe.OUTPUT_INFORMS if 'mykrobe' in config['analyses_selected'] else [],
         INFORMS_abritamr_run = abritamr.get_command_informs(config),
-        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses'] else [],
-        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses'] else [],
+        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses_selected'] else [],
+        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses_selected'] else [],
         INFORMS_spifinder = spifinder.get_command_informs(config),
-        INFORMS_vfdb_core = str(gene_detection.OUTPUT_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses'] else [],
-        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst') if 'mlst' in config['analyses'] else [],
-        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else [],
-        INFORMS_rmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='rmlst') if 'rmlst' in config['analyses'] else []
+        INFORMS_vfdb_core = str(gene_detection.OUTPUT_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses_selected'] else [],
+        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses_selected'] else [],
+        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst') if 'mlst' in config['analyses_selected'] else [],
+        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses_selected'] else [],
+        INFORMS_rmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='rmlst') if 'rmlst' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -88,18 +88,18 @@ rule report_combine_all:
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
         report_adv_qc = str(quality_checks.OUTPUT_REPORT).format(input_type=config['input']['type']),
-        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
+        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses_selected'] else [],
         # Gene detection
-        report_amrfinder = (amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY),
-        report_resfinder4 = (resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses'] else resfinder4.OUTPUT_REPORT_EMPTY),
-        report_spifinder = (spifinder.OUTPUT_REPORT if 'spifinder' in config['analyses'] else spifinder.OUTPUT_REPORT_EMPTY),
-        report_mykrobe = (mykrobe.OUTPUT_REPORT if 'mykrobe' in config['analyses'] else mykrobe.OUTPUT_REPORT_EMPTY),
-        report_abritamr = (abritamr.OUTPUT_REPORT if 'abritamr' in config['analyses'] else abritamr.OUTPUT_REPORT_EMPTY),
-        report_serotyping_sistr = (serotyping_sistr.OUTPUT_REPORT if 'serotype' in config['analyses'] else serotyping_sistr.OUTPUT_REPORT_EMPTY),
-        report_serotyping_seqsero2 = (serotyping_seqsero2.OUTPUT_REPORT if 'serotype' in config['analyses'] else serotyping_seqsero2.OUTPUT_REPORT_EMPTY),
+        report_amrfinder = (amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses_selected'] else amrfinder.OUTPUT_REPORT_EMPTY),
+        report_resfinder4 = (resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses_selected'] else resfinder4.OUTPUT_REPORT_EMPTY),
+        report_spifinder = (spifinder.OUTPUT_REPORT if 'spifinder' in config['analyses_selected'] else spifinder.OUTPUT_REPORT_EMPTY),
+        report_mykrobe = (mykrobe.OUTPUT_REPORT if 'mykrobe' in config['analyses_selected'] else mykrobe.OUTPUT_REPORT_EMPTY),
+        report_abritamr = (abritamr.OUTPUT_REPORT if 'abritamr' in config['analyses_selected'] else abritamr.OUTPUT_REPORT_EMPTY),
+        report_serotyping_sistr = (serotyping_sistr.OUTPUT_REPORT if 'serotype' in config['analyses_selected'] else serotyping_sistr.OUTPUT_REPORT_EMPTY),
+        report_serotyping_seqsero2 = (serotyping_seqsero2.OUTPUT_REPORT if 'serotype' in config['analyses_selected'] else serotyping_seqsero2.OUTPUT_REPORT_EMPTY),
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
-        report_mob_suite = (mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_REPORT_EMPTY),
-        report_genomic_context = (mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY),
+        report_mob_suite = (mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY),
+        report_genomic_context = (mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY),
         # Typing
         report_mlst = sequence_typing.get_sequence_typing_report('mlst', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
@@ -149,7 +149,7 @@ rule report_combine_all:
         basepipeutils.add_content_contamination_check(
             report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.append(('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]))
-        if 'variant_calling' in config['analyses']:
+        if 'variant_calling' in config['analyses_selected']:
             report_structure.append(('Variant calling', 'variant', [Path(input.report_variant)]))
         report_structure.append(('Species identification', 'species', [Path(input.report_rmlst)]))
         report_structure.extend([
@@ -180,19 +180,19 @@ rule summary_combine_all:
         lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
         quality_checks.OUTPUT_SUMMARY,
-        variant_calling.get_summaries(config) if 'variant_calling' in config['analyses'] else [],
-        serotyping_sistr.OUTPUT_SUMMARY if 'serotype' in config['analyses'] else [],
-        serotyping_seqsero2.OUTPUT_SUMMARY if 'serotype' in config['analyses'] else [],
-        mykrobe.OUTPUT_SUMMARY if 'mykrobe' in config['analyses'] else [],
-        abritamr.OUTPUT_SUMMARY if 'abritamr' in config['analyses'] else [],
-        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses'] else [],
-        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses'] else [],
+        variant_calling.get_summaries(config) if 'variant_calling' in config['analyses_selected'] else [],
+        serotyping_sistr.OUTPUT_SUMMARY if 'serotype' in config['analyses_selected'] else [],
+        serotyping_seqsero2.OUTPUT_SUMMARY if 'serotype' in config['analyses_selected'] else [],
+        mykrobe.OUTPUT_SUMMARY if 'mykrobe' in config['analyses_selected'] else [],
+        abritamr.OUTPUT_SUMMARY if 'abritamr' in config['analyses_selected'] else [],
+        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses_selected'] else [],
+        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses_selected'] else [],
         spifinder.get_summaries(config),
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses'] else [],
-        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else []
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses_selected'] else [],
+        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:
@@ -207,10 +207,10 @@ rule link_genomic_context:
     """
     input:
         # AMR
-        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses'] else [],
+        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses_selected'] else [],
         # Virulence
-        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_gd_vfdb = str(gene_detection.OUTPUT_DB_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else []
+        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses_selected'] else [],
+        INFORMS_gd_vfdb = str(gene_detection.OUTPUT_DB_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses_selected'] else []
     output:
         TSV = 'mob_suite/genomic_context/input/tsv.io',
         INFORMS = 'mob_suite/genomic_context/input/informs.io'

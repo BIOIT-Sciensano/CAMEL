@@ -20,11 +20,11 @@ rule trimming_illumina_fastqc_pre:
     run:
         from camel.app.tools.fastqc.fastqc import FastQC
         fastqc = FastQC()
-        snakemakeutils.add_pickle_inputs(fastqc, input)
+        snakemakeutils.add_io_inputs(fastqc, input)
         step = Step(rule_name=str(rule), tool=fastqc, dir_=Path(params.dir_))
         fastqc.update_parameters(threads=threads)
         step.run()
-        snakemakeutils.dump_tool_outputs(fastqc, output)
+        snakemakeutils.dump_io_outputs(fastqc, output)
 
 rule trimming_illumina_trimmomatic:
     """
@@ -46,14 +46,14 @@ rule trimming_illumina_trimmomatic:
     run:
         from camel.app.tools.trimmomatic.trimmomatic import Trimmomatic
         trimmomatic = Trimmomatic()
-        snakemakeutils.add_pickle_inputs(trimmomatic, input)
+        snakemakeutils.add_io_inputs(trimmomatic, input)
         trimmomatic.update_parameters(baseout=f'{params.sample_name}-trimmed.fastq.gz')
         if params.adapter is not None:
             trimmomatic.update_parameters(illuminaclip_PE=f'$TRIMMOMATIC_ADAPTER_DIR/{params.adapter}-PE.fa:2:30:10')
         step = Step(rule_name=str(rule), tool=trimmomatic, dir_=Path(params.dir_))
         trimmomatic.update_parameters(threads=threads)
         step.run()
-        snakemakeutils.dump_tool_outputs(trimmomatic, output)
+        snakemakeutils.dump_io_outputs(trimmomatic, output)
 
 rule trimming_illumina_fastp:
     """
@@ -75,7 +75,7 @@ rule trimming_illumina_fastp:
     run:
         from camel.app.tools.fastp.fastp import Fastp
         fastp = Fastp()
-        snakemakeutils.add_pickle_inputs(fastp, input)
+        snakemakeutils.add_io_inputs(fastp, input)
         fastp.update_parameters(
             output_name=f'{params.sample_name}-trimmed',
             # Adapter trimming
@@ -99,7 +99,7 @@ rule trimming_illumina_fastp:
         )
         step = Step(rule_name=str(rule), tool=fastp, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(fastp, output)
+        snakemakeutils.dump_io_outputs(fastp, output)
 
 rule trimming_illumina_fastqc_post:
     """
@@ -116,11 +116,11 @@ rule trimming_illumina_fastqc_post:
     run:
         from camel.app.tools.fastqc.fastqc import FastQC
         fastqc = FastQC()
-        snakemakeutils.add_pickle_inputs(fastqc, input)
+        snakemakeutils.add_io_inputs(fastqc, input)
         step = Step(rule_name=str(rule), tool=fastqc, dir_=Path(params.dir_))
         fastqc.update_parameters(threads=threads)
         step.run()
-        snakemakeutils.dump_tool_outputs(fastqc, output)
+        snakemakeutils.dump_io_outputs(fastqc, output)
 
 rule trimming_illumina_report_trimmomatic:
     """
@@ -141,11 +141,11 @@ rule trimming_illumina_report_trimmomatic:
     run:
         from camel.app.tools.pipelines.read_trimming.reportertrimming import ReporterTrimming
         reporter = ReporterTrimming()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         reporter.update_parameters(export_fastq=params.export_fastq)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule trimming_illumina_report_fastp:
     """
@@ -167,11 +167,11 @@ rule trimming_illumina_report_fastp:
     run:
         from camel.app.tools.fastp.fastpreporter import FastpReporter
         reporter = FastpReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         reporter.update_parameters(export_fastq=str(params.export_fastq))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule trimming_illumina_report_select:
     """

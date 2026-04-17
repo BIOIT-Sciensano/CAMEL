@@ -24,7 +24,7 @@ def get_command_informs(config: dict[str, Any]) -> list[Path]:
     paths = []
 
     # Straingst is disabled -> return empty list
-    if not any([an for an in config['analyses'] if an in ['straingst', 'gmo']]):
+    if not any([an for an in config['analyses_selected'] if an in ['straingst', 'gmo']]):
         return []
 
     input_type = config['input']['type']
@@ -50,12 +50,12 @@ def get_reports(config: dict[str, Any]) -> list[Path]:
 
     # FASTQ input
     if input_type in ('illumina', 'hybrid'):
-        if any([an for an in config['analyses'] if an in ['straingst', 'gmo']]):
+        if any([an for an in config['analyses_selected'] if an in ['straingst', 'gmo']]):
             paths.append(Path(OUTPUT_REPORT.format(read_type='illumina')))
         else:
             paths.append(Path(OUTPUT_REPORT_EMPTY.format(read_type='illumina')))
     if input_type == 'ont':
-        if any([an for an in config['analyses'] if an in ['straingst', 'gmo']]):
+        if any([an for an in config['analyses_selected'] if an in ['straingst', 'gmo']]):
             paths.append(Path(OUTPUT_REPORT.format(read_type='ont')))
         else:
             paths.append(Path(OUTPUT_REPORT_EMPTY.format(read_type='ont')))
@@ -84,8 +84,8 @@ def get_summaries(config: dict[str, Any], ext: str) -> list[Path]:
     paths = []
     # StrainGST can be part of the GMO assay or can also be run independently, hence the following conditions cover that
     # scenario.
-    if (input_type in ('illumina', 'hybrid')) and any([an for an in config['analyses'] if an in ['straingst', 'gmo']]):
+    if (input_type in ('illumina', 'hybrid')) and any([an for an in config['analyses_selected'] if an in ['straingst', 'gmo']]):
         paths.append(Path(OUTPUT_SUMMARY.format(read_type='illumina', ext=ext)))
-    if (input_type == 'ont') and any([an for an in config['analyses'] if an in ['straingst', 'gmo']]):
+    if (input_type == 'ont') and any([an for an in config['analyses_selected'] if an in ['straingst', 'gmo']]):
         paths.append(Path(OUTPUT_SUMMARY.format(read_type='ont', ext=ext)))
     return paths

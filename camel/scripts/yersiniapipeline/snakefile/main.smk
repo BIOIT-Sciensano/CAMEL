@@ -52,19 +52,19 @@ rule report_create_command_section:
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_assembly_map = assembly.get_qc_informs(config, config['input']['type']),
-        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses'] else [],
-        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses'] else [],
-        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses'] else [],
-        INFORMS_vfdb_core = str(gene_detection.OUTPUT_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst') if 'mlst' in config['analyses'] else [],
-        INFORMS_mlst_mcnally = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_mcnally') if 'mlst_mcnally' in config['analyses'] else [],
-        INFORMS_amr = sequence_typing.OUTPUT_INFORMS.format(scheme='resistance_genes') if 'resistance_genes' in config['analyses'] else [],
-        INFORMS_ampc = str(gene_detection.OUTPUT_INFORMS).format(db='ampc') if 'ampc' in config['analyses'] else[],
-        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else [],
-        INFORMS_cgmlst_ye = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_ye') if 'cgmlst_ye' in config['analyses'] else [],
-        INFORMS_cgmlst_yp = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_yp') if 'cgmlst_yp' in config['analyses'] else [],
-        INFORMS_cgmlst_enterobase = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_enterobase') if 'cgmlst_enterobase' in config['analyses'] else [],
-        INFORMS_rmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='rmlst') if 'rmlst' in config['analyses'] else []
+        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses_selected'] else [],
+        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses_selected'] else [],
+        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses_selected'] else [],
+        INFORMS_vfdb_core = str(gene_detection.OUTPUT_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses_selected'] else [],
+        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_achtman') if 'mlst_achtman' in config['analyses_selected'] else [],
+        INFORMS_mlst_mcnally = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_mcnally') if 'mlst_mcnally' in config['analyses_selected'] else [],
+        INFORMS_amr = sequence_typing.OUTPUT_INFORMS.format(scheme='resistance_genes') if 'resistance_genes' in config['analyses_selected'] else [],
+        INFORMS_ampc = str(gene_detection.OUTPUT_INFORMS).format(db='ampc') if 'ampc' in config['analyses_selected'] else[],
+        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_yersinia_spp') if 'cgmlst_yersinia_spp' in config['analyses_selected'] else [],
+        INFORMS_cgmlst_ye = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_ye') if 'cgmlst_ye' in config['analyses_selected'] else [],
+        INFORMS_cgmlst_yp = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_yp') if 'cgmlst_yp' in config['analyses_selected'] else [],
+        INFORMS_cgmlst_enterobase = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_enterobase') if 'cgmlst_enterobase' in config['analyses_selected'] else [],
+        INFORMS_rmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='rmlst') if 'rmlst' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -87,24 +87,24 @@ rule combine_reports:
         report_adv_qc = str(quality_checks.OUTPUT_REPORT).format(
             input_type=config['input']['type']),
         # AMR detection
-        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
-        report_resfinder4 = resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses'] else resfinder4.OUTPUT_REPORT_EMPTY,
+        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses_selected'] else amrfinder.OUTPUT_REPORT_EMPTY,
+        report_resfinder4 = resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses_selected'] else resfinder4.OUTPUT_REPORT_EMPTY,
         report_ampc_amr = gene_detection.get_gene_detection_report('ampc', config),
         # Virulence gene detection
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
         # Genomic context investigation
-        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_REPORT_EMPTY,
-        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
+        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY,
+        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
         # Sequence typing
-        report_mlst = sequence_typing.get_sequence_typing_report('mlst', config),
+        report_mlst = sequence_typing.get_sequence_typing_report('mlst_achtman', config),
         report_mlst_mcnally = sequence_typing.get_sequence_typing_report('mlst_mcnally', config),
-        report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
+        report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst_yersinia_spp', config),
         report_cgmlst_ye = sequence_typing.get_sequence_typing_report('cgmlst_ye', config),
         report_cgmlst_yp = sequence_typing.get_sequence_typing_report('cgmlst_yp', config),
         report_cgmlst_enterobase = sequence_typing.get_sequence_typing_report('cgmlst_enterobase', config),
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         # Species determination
-        report_species = species_determination.OUTPUT_REPORT if 'species' in config['analyses'] else species_determination.OUTPUT_REPORT_EMPTY,
+        report_species = species_determination.OUTPUT_REPORT if 'species' in config['analyses_selected'] else species_determination.OUTPUT_REPORT_EMPTY,
         # Report
         report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_create_command_section.output.HTML
@@ -179,21 +179,21 @@ rule combine_summary_files:
         quality_checks.OUTPUT_SUMMARY,
         lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
-        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses'] else [],
-        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses'] else [],
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='ampc', ext=wildcards.ext) if 'ampc' in config['analyses'] else [],
-        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses'] else [],
+        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses_selected'] else [],
+        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses_selected'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='ampc', ext=wildcards.ext) if 'ampc' in config['analyses_selected'] else [],
+        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses_selected'] else [],
         # Virulence detection
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses_selected'] else [],
         # Sequence typing
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_mcnally', ext=wildcards.ext) if 'mlst_mcnally' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_ye', ext=wildcards.ext) if 'cgmlst_ye' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_yp', ext=wildcards.ext) if 'cgmlst_yp' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_enterobase', ext=wildcards.ext) if 'cgmlst_enterobase' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else [],
-        species_determination.OUTPUT_SUMMARY if 'species' in config['analyses'] else []
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_achtman', ext=wildcards.ext) if 'mlst_achtman' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_mcnally', ext=wildcards.ext) if 'mlst_mcnally' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_yersinia_spp', ext=wildcards.ext) if 'cgmlst_yersinia_spp' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_ye', ext=wildcards.ext) if 'cgmlst_ye' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_yp', ext=wildcards.ext) if 'cgmlst_yp' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_enterobase', ext=wildcards.ext) if 'cgmlst_enterobase' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
+        species_determination.OUTPUT_SUMMARY if 'species' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:
@@ -208,10 +208,10 @@ rule link_genomic_context:
     """
     input:
         # AMR
-        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses'] else [],
+        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses_selected'] else [],
         # Virulence
-        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_gd_vfdb = gene_detection.OUTPUT_DB_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else []
+        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses_selected'] else [],
+        INFORMS_gd_vfdb = gene_detection.OUTPUT_DB_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses_selected'] else []
     output:
         TSV = 'mob_suite/genomic_context/input/tsv.io',
         INFORMS = 'mob_suite/genomic_context/input/informs.io'

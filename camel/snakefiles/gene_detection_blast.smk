@@ -22,12 +22,12 @@ rule gene_detection_blast_blastn:
     run:
         from camel.app.tools.blast.blastn import Blastn
         blastn = Blastn()
-        snakemakeutils.add_pickle_inputs(blastn, input)
+        snakemakeutils.add_io_inputs(blastn, input)
         step = Step(rule_name=str(rule), tool=blastn, dir_=Path(str(params.dir_)))
         blastn.update_parameters(threads=1, task=str(params.task), max_target_seqs=1 if params.blast_reads else 20_000)
         step.run()
         blastn.informs['Task'] = params.task
-        snakemakeutils.dump_tool_outputs(blastn, output)
+        snakemakeutils.dump_io_outputs(blastn, output)
 
 rule gene_detection_blast_tsv_generation:
     """
@@ -42,11 +42,11 @@ rule gene_detection_blast_tsv_generation:
     run:
         from camel.app.tools.blast.blastformatter import BlastFormatter
         blast_formatter = BlastFormatter()
-        snakemakeutils.add_pickle_inputs(blast_formatter, input)
+        snakemakeutils.add_io_inputs(blast_formatter, input)
         step = Step(rule_name=str(rule), tool=blast_formatter, dir_=Path(str(params.dir_)))
         blast_formatter.update_parameters(output_format='"7 pident sseqid sseq slen qseqid qstart qend score"')
         step.run()
-        snakemakeutils.dump_tool_outputs(blast_formatter, output)
+        snakemakeutils.dump_io_outputs(blast_formatter, output)
 
 rule gene_detection_blast_hit_filtering:
     """
@@ -68,7 +68,7 @@ rule gene_detection_blast_hit_filtering:
     run:
         from camel.app.tools.pipelines.genedetection.blasthitfiltering import BlastHitFiltering
         hit_filtering = BlastHitFiltering()
-        snakemakeutils.add_pickle_inputs(hit_filtering, input)
+        snakemakeutils.add_io_inputs(hit_filtering, input)
         step = Step(rule_name=str(rule), tool=hit_filtering, dir_=Path(str(params.dir_)))
 
         # Update parameters
@@ -80,7 +80,7 @@ rule gene_detection_blast_hit_filtering:
         )
         # Run tool
         step.run()
-        snakemakeutils.dump_tool_outputs(hit_filtering, output)
+        snakemakeutils.dump_io_outputs(hit_filtering, output)
 
         # Add the informs from the filtering to the existing ones with the blastn command
         informs = snakemakeutils.load_object(Path(input.INFORMS_blastn))
@@ -103,11 +103,11 @@ rule gene_detection_blast_text_alignment_generation:
     run:
         from camel.app.tools.blast.blastformatter import BlastFormatter
         blast_formatter = BlastFormatter()
-        snakemakeutils.add_pickle_inputs(blast_formatter, input)
+        snakemakeutils.add_io_inputs(blast_formatter, input)
         step = Step(rule_name=str(rule), tool=blast_formatter, dir_=Path(str(params.dir_)))
         blast_formatter.update_parameters(output_format='0', num_alignments=20000)
         step.run()
-        snakemakeutils.dump_tool_outputs(blast_formatter, output)
+        snakemakeutils.dump_io_outputs(blast_formatter, output)
 
 rule gene_detection_blast_text_alignment_extraction:
     """
@@ -123,7 +123,7 @@ rule gene_detection_blast_text_alignment_extraction:
     run:
         from camel.app.tools.pipelines.genedetection.alignmentextractor import AlignmentExtractor
         alignment_extractor = AlignmentExtractor()
-        snakemakeutils.add_pickle_inputs(alignment_extractor, input)
+        snakemakeutils.add_io_inputs(alignment_extractor, input)
         step = Step(rule_name=str(rule), tool=alignment_extractor, dir_=Path(str(params.dir_)))
         step.run()
         hits_with_alignment = []

@@ -30,4 +30,4 @@ rule assembly_flye_run:
         flye.update_parameters(**params.flye_options)
         flye.update_parameters(threads=threads)
         step.run()
-        snakemakeutils.dump_tool_outputs(flye, output)
+        snakemakeutils.dump_io_outputs(flye, output)

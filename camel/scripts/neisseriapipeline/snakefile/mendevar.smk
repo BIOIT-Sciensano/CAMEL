@@ -23,7 +23,7 @@ rule mendevar_run:
 
         mendevar_ = MenDeVAR()
         step = Step(rule_name=str(rule), tool=mendevar_, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(mendevar_,input)
+        snakemakeutils.add_io_inputs(mendevar_, input)
 
         # Add database
         if params.db is None:
@@ -35,7 +35,7 @@ rule mendevar_run:
 
         # Run tool
         step.run()
-        snakemakeutils.dump_tool_outputs(mendevar_, output)
+        snakemakeutils.dump_io_outputs(mendevar_, output)
 
 rule mendevar_report:
     """
@@ -52,9 +52,9 @@ rule mendevar_report:
         from camel.app.tools.pipelines.neisseria.mendevarreporter import MenDeVARReporter
         reporter = MenDeVARReporter()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule mendevar_report_empty:
     """

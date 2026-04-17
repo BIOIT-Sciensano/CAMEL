@@ -19,10 +19,10 @@ rule kleborate_run:
         from camel.app.tools.pipelines.klebsiella.kleborate import Kleborate
         kleborate = Kleborate()
         kleborate.update_parameters(all=True)
-        snakemakeutils.add_pickle_inputs(kleborate, input)
+        snakemakeutils.add_io_inputs(kleborate, input)
         step = Step(rule_name=str(rule), tool=kleborate, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(kleborate, output)
+        snakemakeutils.dump_io_outputs(kleborate, output)
 
 rule kleborate_reporter:
     """
@@ -38,10 +38,10 @@ rule kleborate_reporter:
     run:
         from camel.app.tools.pipelines.klebsiella.kleboratereporter import KleborateReporter
         reporter = KleborateReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule kleborate_report_empty:
     """

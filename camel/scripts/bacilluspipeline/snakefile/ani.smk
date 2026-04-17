@@ -23,11 +23,11 @@ rule fastani_run:
     run:
         from camel.app.tools.fastani.fastani import FastANI
         fastani = FastANI()
-        snakemakeutils.add_pickle_inputs(fastani, input)
+        snakemakeutils.add_io_inputs(fastani, input)
         fastani.add_input_files({'TSV_FASTA_R': [ToolIOFile(Path(params.fastani_ref))]})
         step = Step(rule_name=str(rule), tool=fastani, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(fastani, output)
+        snakemakeutils.dump_io_outputs(fastani, output)
 
 rule fastani_report:
     """
@@ -45,11 +45,11 @@ rule fastani_report:
     run:
         from camel.app.tools.fastani.fastanireporter import FastANIReporter
         ani_report = FastANIReporter()
-        snakemakeutils.add_pickle_inputs(ani_report, input)
+        snakemakeutils.add_io_inputs(ani_report, input)
         ani_report.update_parameters(sample_name=params.sample_name, species=params.species)
         step = Step(rule_name=str(rule), tool=ani_report, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(ani_report, output)
+        snakemakeutils.dump_io_outputs(ani_report, output)
 
 rule fastani_report_empty:
     """
@@ -73,10 +73,8 @@ rule fastani_dump_summary_info:
     output:
         TSV = 'ani/summary/summary_out.{ext}'
     run:
-        # TODO: fix
         tsv_fastani = snakemakeutils.load_object(Path(input.TSV))[0].path
         fastani_table = pd.read_table(tsv_fastani, header=None)
-        pd.set_option('display.max_columns', None)
         with open(output.TSV, 'w') as handle:
             handle.write('fastani_closest_species\t{}'.format([Path(fastani_table[1][0]).stem, str(fastani_table[2][0])+'%']))
             handle.write('\n')

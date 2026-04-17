@@ -45,21 +45,21 @@ def get_reports(config: dict[str, Any]) -> list[str]:
 
     # FASTA input
     if input_type in ('fasta', 'fasta_with_vcf'):
-        if 'human_read_scrubbing' in config['analyses']:
+        if 'human_read_scrubbing' in config['analyses_selected']:
             paths.append(str(OUTPUT_REPORT).format(input_format='fasta'))
         else:
             paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fasta'))
 
     # PE reads
     if input_type in ('illumina', 'hybrid'):
-        if 'human_read_scrubbing' in config['analyses']:
+        if 'human_read_scrubbing' in config['analyses_selected']:
             paths.append(str(OUTPUT_REPORT).format(input_format='fastq_pe'))
         else:
             paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fastq_pe'))
 
     # SE reads
     if input_type in ('ont', 'hybrid'):
-        if 'human_read_scrubbing' in config['analyses']:
+        if 'human_read_scrubbing' in config['analyses_selected']:
             paths.append(str(OUTPUT_REPORT).format(input_format='fastq_se'))
         else:
             paths.append(str(OUTPUT_REPORT_EMPTY).format(input_format='fastq_se'))
@@ -80,19 +80,19 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     input_type = config['input']['type']
     paths = []
 
-    if 'human_read_scrubbing' not in config['analyses']:
+    if 'human_read_scrubbing' not in config['analyses_selected']:
         return []
 
     # FASTA input
-    if (input_type in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses_selected']):
         paths.append(str(OUTPUT_INFORMS).format(input_format='fasta'))
 
     # PE reads
-    if (input_type in ('illumina', 'hybrid')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('illumina', 'hybrid')) and ('human_read_scrubbing' in config['analyses_selected']):
         paths.append(str(OUTPUT_INFORMS).format(input_format='fastq_pe'))
 
     # SE reads
-    if (input_type in ('ont', 'hybrid')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('ont', 'hybrid')) and ('human_read_scrubbing' in config['analyses_selected']):
         paths.append(str(OUTPUT_INFORMS).format(input_format='fastq_se'))
 
     # Check if at least one path was added
@@ -112,19 +112,19 @@ def get_summaries(config: dict[str, Any], ext: str) -> list[Path]:
     input_type = config['input']['type']
     paths = []
 
-    if 'human_read_scrubbing' not in config['analyses']:
+    if 'human_read_scrubbing' not in config['analyses_selected']:
         return []
 
     # FASTA input
-    if (input_type in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses_selected']):
         paths.append(str(OUTPUT_SUMMARY).format(input_format='fasta', ext=ext))
 
     # PE reads
-    if (input_type in ('illumina', 'hybrid')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('illumina', 'hybrid')) and ('human_read_scrubbing' in config['analyses_selected']):
         paths.append(str(OUTPUT_SUMMARY).format(input_format='fastq_pe', ext=ext))
 
     # SE reads
-    if (input_type in ('ont', 'hybrid')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('ont', 'hybrid')) and ('human_read_scrubbing' in config['analyses_selected']):
         paths.append(str(OUTPUT_SUMMARY).format(input_format='fastq_se', ext=ext))
 
     # Check if at least one path was added
@@ -143,14 +143,14 @@ def get_output_io(config: dict[str, Any]) -> str:
     input_type = config['input']['type']
 
     # FASTA input
-    if (input_type in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('fasta', 'fasta_with_vcf')) and ('human_read_scrubbing' in config['analyses_selected']):
         return str(OUTPUT_FASTA).format(input_format='fasta')
 
     # PE reads
-    if (input_type in ('illumina', 'hybrid')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('illumina', 'hybrid')) and ('human_read_scrubbing' in config['analyses_selected']):
         return str(OUTPUT_FASTQ).format(input_format='fastq_pe')
 
     # SE reads
-    if (input_type in ('ont', 'hybrid')) and ('human_read_scrubbing' in config['analyses']):
+    if (input_type in ('ont', 'hybrid')) and ('human_read_scrubbing' in config['analyses_selected']):
         return str(OUTPUT_FASTQ).format(input_format='fastq_se')
     raise ValueError(f'Invalid input type: {input_type}')

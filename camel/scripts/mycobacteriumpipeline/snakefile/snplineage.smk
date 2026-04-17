@@ -21,11 +21,11 @@ rule snp_lineage_detection:
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.mycobacterium.snplineagedetector import SNPLineageDetector
         detector = SNPLineageDetector()
-        snakemakeutils.add_pickle_inputs(detector, input)
+        snakemakeutils.add_io_inputs(detector, input)
         detector.add_input_files({'BED': [ToolIOFile(Path(params.lineage_snp_positions))]})
         step = Step(rule_name=str(rule), tool=detector, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(detector, output)
+        snakemakeutils.dump_io_outputs(detector, output)
 
 rule snp_lineage_report:
     """
@@ -41,10 +41,10 @@ rule snp_lineage_report:
     run:
         from camel.app.tools.pipelines.mycobacterium.snplineagereporter import SNPLineageReporter
         lineage_snp = SNPLineageReporter()
-        snakemakeutils.add_pickle_inputs(lineage_snp, input)
+        snakemakeutils.add_io_inputs(lineage_snp, input)
         step = Step(rule_name=str(rule), tool=lineage_snp, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(lineage_snp, output)
+        snakemakeutils.dump_io_outputs(lineage_snp, output)
 
 rule snp_lineage_report_empty:
     """

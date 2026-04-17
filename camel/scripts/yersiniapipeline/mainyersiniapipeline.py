@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import dataclasses
-from pathlib import Path
 
 import click
 import yaml
@@ -17,30 +16,13 @@ from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.scripts.yersiniapipeline import SNAKEFILE_MAIN, CONFIG_DATA
 
-CUSTOM_ANALYSES = [
-    'ampc',
-    'amrfinder',
-    'cgmlst',
-    'cgmlst_enterobase',
-    'cgmlst_ye',
-    'cgmlst_yp',
-    'confindr',
-    'human_read_scrubbing',
-    'kraken2',
-    'mlst',
-    'mlst_mcnally',
-    'mob_suite',
-    'resfinder4',
-    'rmlst',
-    'vfdb_core',
-]
-
 
 @dataclasses.dataclass(frozen=True)
 class Options(model.BaseOptions):
     """
     Pipeline-specific options.
     """
+
     analyses: list[str] = dataclasses.field(default_factory=list)
 
 
@@ -54,7 +36,7 @@ class MainYersiniaPipeline(BasePipe):
         in_: ScriptInput,
         out: ScriptOutput,
         opts: ScriptOptions,
-        opts_custom: Options
+        opts_custom: Options,
     ) -> None:
         """
         Initializes the main class.
@@ -71,14 +53,14 @@ class MainYersiniaPipeline(BasePipe):
             script_in=in_,
             script_out=out,
             opts=opts,
-            snakefile=SNAKEFILE_MAIN
+            snakefile=SNAKEFILE_MAIN,
         )
         self._opts_custom = opts_custom
 
-    def _execute(self) -> None:
+    def _build_config(self) -> dict:
         """
-        Runs the pipeline.
-        :return: None
+        Builds the configuration data for Snakemake.
+        :return: Configuration data
         """
         # Parse template data
         with open(CONFIG_DATA) as handle:
@@ -86,36 +68,63 @@ class MainYersiniaPipeline(BasePipe):
         yaml_text = yaml_text.format(
             COV_MAX=self._script_opts.cov_max,
             DB_ROOT=config.dir_db,
-            QC_SCHEME='cgmlst' if 'cgmlst' in  self._opts_custom.analyses else 'mlst',
-            K2_DB=str({
-                'small': Path(config.dir_db, '/scratch/bebog/camel_dbs/kraken2/k2_standard_08_20251015'), # TODO FIX!
-                'full': Path(config.dir_db, 'kraken2_microbial', 'latest')
-            }['small' if self._script_opts.kraken2_small_db else 'full'])
+            QC_SCHEME='cgmlst_yersinia_spp' if 'cgmlst_yersinia_spp' in self._opts_custom.analyses else 'mlst_achtman'
         )
         data_template = yaml.safe_load(yaml_text)
-        self.check_dbs(data_template)
-        self._script_out.dir.mkdir(parents=True, exist_ok=True)
-
-        # Add the base config data
         config_data = self.get_config_data()
-        config_data['analyses'] = self._opts_custom.analyses
-        if 'cgmlst' in self._opts_custom.analyses:
-            config_data['analyses'].append('species')
-        config_data['sequence_typing'] = {'options': {'method': self._script_opts.typing_method}}
-        config_data['gene_detection'] = {'options': {'method': self._script_opts.gene_detection_method}}
+        config_data['analyses_selected'] = self._opts_custom.analyses
+        if 'cgmlst_yersinia_spp' in self._opts_custom.analyses:
+            config_data['analyses_selected'].append('species_determination')
+        config_data['sequence_typing'] = {
+            'options': {'method': self._script_opts.typing_method}
+        }
+        config_data['gene_detection'] = {
+            'options': {'method': self._script_opts.gene_detection_method}
+        }
         basepipeutils.dict_merge(config_data, data_template)
-        path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
+        return config_data
 
-        # Run the Snakefile
+    def _validate_config_data(self, config_data: dict) -> bool:
+        """
+        Validates the config data.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
+        """
+        self.check_dbs(config_data)
+        return True
+
+    def _execute(self) -> None:
+        """
+        Runs the pipeline.
+        :return: None
+        """
+        # Build and validate the config file
+        config_data = self._build_config()
+        self._validate_config_data(config_data)
+
+        # Create the config file and run snakefile
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
+        path_config = snakepipelineutils.generate_config_file(
+            config_data, self._script_opts.working_dir
+        )
         self.run_snakefile(path_config)
+
+        # Additional export for the assembly
         self._export_assembly()
 
 
-@click.command(name='yersinia_pipeline', short_help='Pipeline for the complete characterization of Yersinia isolates')
+@click.command(
+    name='yersinia_pipeline',
+    short_help='Pipeline for the complete characterization of Yersinia isolates',
+)
 @basescriptutils.add_input_opts()
 @basescriptutils.add_output_opts
 @basescriptutils.add_general_opts
-@click.option('--analyses', type=str, help=f"Comma-separated list of analyses to run ({', '.join(CUSTOM_ANALYSES)})")
+@click.option(
+    '--analyses',
+    type=str,
+    help=f"Comma-separated list of analyses to run ({', '.join(basepipeutils.get_custom_analyses(CONFIG_DATA))})",
+)
 def main(**kwargs) -> None:
     """
     Pipeline for the complete characterization of Yersinia isolates.

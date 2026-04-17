@@ -23,12 +23,12 @@ rule multi_allelic_sites_bcftools_pileup:
     run:
         from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
         mpileup = BcftoolsMpileup()
-        snakemakeutils.add_pickle_inputs(mpileup, input)
+        snakemakeutils.add_io_inputs(mpileup, input)
         mpileup.update_parameters(
             max_depth=params.max_depth, output_type='v', annotate='FORMAT/AD', config=params.config)
         step = Step(rule_name=str(rule), tool=mpileup, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(mpileup, output)
+        snakemakeutils.dump_io_outputs(mpileup, output)
 
 rule multi_allelic_sites_extract_snps:
     """
@@ -43,11 +43,11 @@ rule multi_allelic_sites_extract_snps:
     run:
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
         bcftools_view = BcftoolsView()
-        snakemakeutils.add_pickle_inputs(bcftools_view, input)
+        snakemakeutils.add_io_inputs(bcftools_view, input)
         bcftools_view.update_parameters(types='snps')
         step = Step(rule_name=str(rule), tool=bcftools_view, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(bcftools_view, output)
+        snakemakeutils.dump_io_outputs(bcftools_view, output)
 
 rule multi_allelic_sites_extract_sites:
     """
@@ -65,10 +65,10 @@ rule multi_allelic_sites_extract_sites:
     run:
         from camel.app.tools.pipelines.viral_consensus.callmultiallelicsites import CallMultiAllelicSites
         call_multi_allelic = CallMultiAllelicSites()
-        snakemakeutils.add_pickle_inputs(call_multi_allelic, input)
+        snakemakeutils.add_io_inputs(call_multi_allelic, input)
         step = Step(rule_name=str(rule), tool=call_multi_allelic, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(call_multi_allelic, output)
+        snakemakeutils.dump_io_outputs(call_multi_allelic, output)
 
 rule multi_allelic_sites_apply_to_consensus:
     """
@@ -137,11 +137,11 @@ rule multi_allelic_sites_report:
     run:
         from camel.app.tools.pipelines.viral_consensus.reportmultiallelic import ReporterMultiAllelic
         reporter = ReporterMultiAllelic()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         reporter.update_parameters(name=params.name)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule multi_allelic_create_summary:
     """

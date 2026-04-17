@@ -19,10 +19,10 @@ rule snpit_report:
     run:
         from camel.app.tools.snpit.snpit import Snpit
         snpit = Snpit()
-        snakemakeutils.add_pickle_inputs(snpit, input)
+        snakemakeutils.add_io_inputs(snpit, input)
         step = Step(rule_name=str(rule), tool=snpit, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(snpit, output)
+        snakemakeutils.dump_io_outputs(snpit, output)
 
 rule snpit_report_empty:
     """

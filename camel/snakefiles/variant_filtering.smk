@@ -24,7 +24,7 @@ rule variant_filtering_depth:
         from camel.app.tools.variantfiltering.depthfilter import DepthFilter
         depth_filter = DepthFilter()
         step = Step(rule_name=str(rule), tool=depth_filter, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(depth_filter, input)
+        snakemakeutils.add_io_inputs(depth_filter, input)
         if params.min_total_depth is not None:
             depth_filter.update_parameters(min_depth=params.min_total_depth)
         if params.min_fwd_depth is not None:
@@ -33,7 +33,7 @@ rule variant_filtering_depth:
             depth_filter.update_parameters(min_reverse_depth=params.min_rev_depth)
         depth_filter.update_parameters(soft_filter=params.soft_filter)
         step.run()
-        snakemakeutils.dump_tool_outputs(depth_filter, output)
+        snakemakeutils.dump_io_outputs(depth_filter, output)
 
 rule variant_filtering_snp_quality:
     """
@@ -51,13 +51,13 @@ rule variant_filtering_snp_quality:
     run:
         from camel.app.tools.variantfiltering.snpqualityfilter import SnpQualityFilter
         snp_qual_filter = SnpQualityFilter()
-        snakemakeutils.add_pickle_inputs(snp_qual_filter, input)
+        snakemakeutils.add_io_inputs(snp_qual_filter, input)
         step = Step(rule_name=str(rule), tool=snp_qual_filter, dir_=Path(str(params.dir_)))
         if params.min_snp_quality is not None:
             snp_qual_filter.update_parameters(min_snp_quality=params.min_snp_quality)
         snp_qual_filter.update_parameters(soft_filter=params.soft_filter)
         step.run()
-        snakemakeutils.dump_tool_outputs(snp_qual_filter, output)
+        snakemakeutils.dump_io_outputs(snp_qual_filter, output)
 
 rule variant_filtering_mapping_quality:
     """
@@ -75,14 +75,14 @@ rule variant_filtering_mapping_quality:
     run:
         from camel.app.tools.variantfiltering.mappingqualityfilter import MappingQualityFilter
         mapping_quality_filter = MappingQualityFilter()
-        snakemakeutils.add_pickle_inputs(mapping_quality_filter, input)
+        snakemakeutils.add_io_inputs(mapping_quality_filter, input)
         step = Step(rule_name=str(rule), tool=mapping_quality_filter, dir_=Path(str(params.dir_)))
         if params.min_mapping_quality is not None:
             mapping_quality_filter.update_parameters(min_mapping_quality=params.min_mapping_quality)
         mapping_quality_filter.update_parameters(
             output_filename="filtered_mapping_qual.vcf.gz", soft_filter=params.soft_filter)
         step.run()
-        snakemakeutils.dump_tool_outputs(mapping_quality_filter, output)
+        snakemakeutils.dump_io_outputs(mapping_quality_filter, output)
 
 rule variant_filtering_distance_index:
     """
@@ -104,9 +104,9 @@ rule variant_filtering_distance_index:
         # Run tool
         bcftools_index = BcftoolsIndex()
         step = Step(rule_name=str(rule), tool=bcftools_index, dir_=dir_working)
-        snakemakeutils.add_pickle_inputs(bcftools_index, input)
+        snakemakeutils.add_io_inputs(bcftools_index, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(bcftools_index, output)
+        snakemakeutils.dump_io_outputs(bcftools_index, output)
 
 rule variant_filtering_distance:
     """
@@ -131,9 +131,9 @@ rule variant_filtering_distance:
         if params.keep_best is not None:
             distance_filter.update_parameters(keep_best=params.keep_best)
         distance_filter.update_parameters(soft_filter=params.soft_filter)
-        snakemakeutils.add_pickle_inputs(distance_filter, input)
+        snakemakeutils.add_io_inputs(distance_filter, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(distance_filter, output)
+        snakemakeutils.dump_io_outputs(distance_filter, output)
 
 rule variant_filtering_zscore_index:
     """
@@ -149,9 +149,9 @@ rule variant_filtering_zscore_index:
         from camel.app.tools.bcftools.bcftoolsindex import BcftoolsIndex
         bcftools_index  = BcftoolsIndex()
         step = Step(rule_name=str(rule), tool=bcftools_index, dir_=Path(str(params.running_dir)))
-        snakemakeutils.add_pickle_inputs(bcftools_index, input)
+        snakemakeutils.add_io_inputs(bcftools_index, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(bcftools_index, output)
+        snakemakeutils.dump_io_outputs(bcftools_index, output)
 
 rule variant_filtering_zscore:
     """
@@ -183,9 +183,9 @@ rule variant_filtering_zscore:
             shutil.copyfile(input.VCF_GZ, output.VCF_GZ)
             snakemakeutils.dump_object({'variants_in': 'NA', 'variants_out': 'NA'}, Path(output.INFORMS))
         else:
-            snakemakeutils.add_pickle_inputs(zscore_filter, input)
+            snakemakeutils.add_io_inputs(zscore_filter, input)
             step.run()
-            snakemakeutils.dump_tool_outputs(zscore_filter, output)
+            snakemakeutils.dump_io_outputs(zscore_filter, output)
 
 rule variant_filtering_region:
     """
@@ -222,7 +222,7 @@ rule variant_filtering_region:
         step.run()
 
         # Collect output
-        snakemakeutils.dump_tool_output(bcftools_filter, 'VCF', Path(output.VCF))
+        snakemakeutils.dump_io_output(bcftools_filter,'VCF', Path(output.VCF))
         informs = {
             **bcftools_filter.informs,
             'variants_out': vcfutils.count_variants(bcftools_filter.tool_outputs['VCF'][0].path),

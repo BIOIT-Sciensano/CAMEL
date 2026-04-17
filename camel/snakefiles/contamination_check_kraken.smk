@@ -32,12 +32,12 @@ rule contamination_check_kraken2_run:
         elif params.input_format == 'fastq_se':
             kraken2.add_input_files(snakepipelineutils.extract_fq_input(Path(input.IO), key_se='FASTQ', read_type='SE'))
         else:
-            snakemakeutils.add_pickle_input(kraken2, 'FASTA', Path(input.IO))
+            snakemakeutils.add_io_input(kraken2,'FASTA', Path(input.IO))
         kraken2.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
         step = Step(rule_name=str(rule), tool=kraken2, dir_=Path(str(params.dir_)))
         kraken2.update_parameters(threads=threads)
         step.run()
-        snakemakeutils.dump_tool_outputs(kraken2, output)
+        snakemakeutils.dump_io_outputs(kraken2, output)
 
 rule contamination_check_kraken_report_parser:
     """
@@ -58,7 +58,7 @@ rule contamination_check_kraken_report_parser:
     run:
         from camel.app.tools.kraken.krakenreportparser import KrakenReportParser
         report_parser = KrakenReportParser()
-        snakemakeutils.add_pickle_inputs(report_parser, input)
+        snakemakeutils.add_io_inputs(report_parser, input)
         step = Step(rule_name=str(rule), tool=report_parser, dir_=Path(str(params.dir_)))
         report_parser.update_parameters(
             expected_species=params.expected_species if params.expected_species is not None else 'n/a')
@@ -68,7 +68,7 @@ rule contamination_check_kraken_report_parser:
         if params.input_format == 'fasta':
             report_parser.update_parameters(normalize_for_len=True)
         step.run()
-        snakemakeutils.dump_tool_outputs(report_parser, output)
+        snakemakeutils.dump_io_outputs(report_parser, output)
 
 rule contamination_check_krona:
     """
@@ -85,12 +85,12 @@ rule contamination_check_krona:
         from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.krona.krona import Krona
         krona = Krona()
-        snakemakeutils.add_pickle_input(krona, 'TSV', Path(input.TSV))
+        snakemakeutils.add_io_input(krona,'TSV', Path(input.TSV))
         if len(input.DB) > 0:
             krona.add_input_files({'DB': [ToolIODirectory(Path(input.DB, 'krona'))]})
         step = Step(rule_name=str(rule), tool=krona, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(krona, output)
+        snakemakeutils.dump_io_outputs(krona, output)
 
 rule contamination_check_report:
     """
@@ -110,7 +110,7 @@ rule contamination_check_report:
     run:
         from camel.app.tools.pipelines.quality_checks.htmlreportercontamination import HtmlReporterContamination
         reporter = HtmlReporterContamination()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
 
         # Update report title and output files for hybrid data
         if params.input_type == 'hybrid':
@@ -122,7 +122,7 @@ rule contamination_check_report:
         # Run the tool
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule contamination_check_report_empty:
     """

@@ -37,6 +37,6 @@ def get_sequence_typing_report(scheme_key: str, config: dict[str, Any], analysis
     :return: Report input path
     """
     search_key = analysis_name if analysis_name is not None else scheme_key
-    if search_key not in config['analyses']:
+    if search_key not in config['analyses_selected']:
         return OUTPUT_REPORT_EMPTY.format(scheme=scheme_key)
     return OUTPUT_REPORT.format(scheme=scheme_key)

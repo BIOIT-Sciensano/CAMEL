@@ -22,7 +22,7 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     input_type = config['input']['type']
     paths = []
 
-    if 'serotype' not in config['analyses']:
+    if 'serotype' not in config['analyses_selected']:
         return []
 
     # FASTA or hybrid input

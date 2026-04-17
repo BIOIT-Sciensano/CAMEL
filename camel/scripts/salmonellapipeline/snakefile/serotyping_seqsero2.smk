@@ -27,11 +27,11 @@ rule serotyping_seqsero2_run_fasta:
 
         seqsero_tool = SeqSero2()
         seqsero_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db_path_seqsero2))]})
-        snakemakeutils.add_pickle_input(seqsero_tool, 'FASTA', Path(input.FASTA))
+        snakemakeutils.add_io_input(seqsero_tool,'FASTA', Path(input.FASTA))
         seqsero_tool.update_parameters(mode=params.mode)
         step = Step(rule_name=str(rule), tool=seqsero_tool, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(seqsero_tool, output)
+        snakemakeutils.dump_io_outputs(seqsero_tool, output)
 
 rule serotyping_seqsero2_run_fastq:
     """
@@ -60,7 +60,7 @@ rule serotyping_seqsero2_run_fastq:
         seqsero_tool.update_parameters(mode=str(params.mode))
         step = Step(rule_name=str(rule), tool=seqsero_tool, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(seqsero_tool, output)
+        snakemakeutils.dump_io_outputs(seqsero_tool, output)
 
 rule serotyping_seqsero2_dump_summary_info:
     """
@@ -125,14 +125,14 @@ rule serotyping_seqsero2_report:
 
         reporter = SeqSero2Reporter()
         reporter.add_input_files({'DIR_seqsero2': [ToolIODirectory(Path(params.db_path_seqsero2))]})
-        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['TXT_seqsero2_allele', 'TXT_seqsero2_kmerread'])
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['TXT_seqsero2_allele', 'TXT_seqsero2_kmerread'])
         if input.TXT_seqsero2_allele:
-            snakemakeutils.add_pickle_input(reporter, 'TXT_seqsero2_allele', Path(str(input.TXT_seqsero2_allele)))
+            snakemakeutils.add_io_input(reporter,'TXT_seqsero2_allele', Path(str(input.TXT_seqsero2_allele)))
         if input.TXT_seqsero2_kmerread:
-            snakemakeutils.add_pickle_input(reporter, 'TXT_seqsero2_kmerread', Path(str(input.TXT_seqsero2_kmerread)))
+            snakemakeutils.add_io_input(reporter,'TXT_seqsero2_kmerread', Path(str(input.TXT_seqsero2_kmerread)))
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule serotyping_seqsero2_report_empty:
     """

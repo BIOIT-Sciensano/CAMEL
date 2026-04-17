@@ -77,7 +77,7 @@ class MainNcbiHumanReadScrubber(BasePipe):
         :return: Configuration file
         """
         config_data = self.get_config_data()
-        config_data['analyses'] = ['human_read_scrubbing']
+        config_data['analyses_selected'] =['human_read_scrubbing']
         config_data['read_scrubbing'] = {}
         if self._opts_custom.export_removed_reads:
             config_data['read_scrubbing']['export_removed_reads'] = True

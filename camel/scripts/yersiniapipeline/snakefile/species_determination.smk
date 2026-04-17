@@ -23,7 +23,7 @@ rule species_determination_analysis:
             'TSV_taxonomic': snakemakeutils.load_object(Path(str(input.TSV_taxonomic)))})
         step = Step(rule_name=str(rule), tool=detector, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(detector, output)
+        snakemakeutils.dump_io_outputs(detector, output)
 
 rule species_determination_report:
     """
@@ -39,10 +39,10 @@ rule species_determination_report:
     run:
         from camel.app.tools.pipelines.yersinia.speciesdeterminationreporter import SpeciesDeterminationReporter
         reporter = SpeciesDeterminationReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule species_determination_report_empty:
     """

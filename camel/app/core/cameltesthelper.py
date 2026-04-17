@@ -88,7 +88,7 @@ def export_report_section(report_section, dir_out: Path) -> Path:
     logger.info(f"Report section exported to: {path_out}")
     return path_out
 
-def extract_from_yaml(path_in: Path, key: str, placeholders: dict[str, str] | None = None) -> dict:
+def extract_from_yaml(path_in: Path, key: str, placeholders: dict[str, str] | None = None) -> dict | list:
     """
     Extracts the given top-level section from the input YAML file.
     :param path_in: Input YAML file

@@ -80,7 +80,7 @@ rule report_create_command_section:
         INFORMS_preprocess = preprocess.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],
         INFORMS_iterative_mapping = iterativemapping.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],
         INFORMS_mash = nextclade3.OUTPUT_INFORMS_MASH if config['nextclade'].get('db_mash') is not None and config['input']['type'] != 'fasta' else [],
-        INFORMS_nextclade = nextclade3.OUTPUT_INFORMS if 'nextclade' in config['analyses'] else []
+        INFORMS_nextclade = nextclade3.OUTPUT_INFORMS if 'nextclade' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -99,14 +99,14 @@ rule report_combine_all:
         reports_trimming = trimming.get_reports(config),
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_reference_selection = refselection.OUTPUT_REPORT if config['fasta_ref'] is None and config['input']['type'] != 'fasta' else refselection.OUTPUT_REPORT_EMPTY,
-        report_preprocess_ampligone = preprocess.OUTPUT_AMPLIGONE_REPORT if 'ampligone' in config['analyses'] and config['input']['type'] != 'fasta' else preprocess.OUTPUT_AMPLIGONE_REPORT_EMPTY,
-        report_preprocess_clipping = preprocess.OUTPUT_CLIPPING_REPORT if 'ampligone' in config['analyses'] and config['input']['type'] != 'fasta' else preprocess.OUTPUT_CLIPPING_REPORT_EMPTY,
+        report_preprocess_ampligone = preprocess.OUTPUT_AMPLIGONE_REPORT if 'ampligone' in config['analyses_selected'] and config['input']['type'] != 'fasta' else preprocess.OUTPUT_AMPLIGONE_REPORT_EMPTY,
+        report_preprocess_clipping = preprocess.OUTPUT_CLIPPING_REPORT if 'ampligone' in config['analyses_selected'] and config['input']['type'] != 'fasta' else preprocess.OUTPUT_CLIPPING_REPORT_EMPTY,
         report_preprocess = preprocess.OUTPUT_REPORT if config['input']['type'] != 'fasta' else [],
         report_iterative_mapping = iterativemapping.OUTPUT_REPORT if config['input']['type'] != 'fasta' else [],
-        report_nexclade_subtype = nextclade3.OUTPUT_SUBTYPE_REPORT if (config['nextclade'].get('db') is None) and ('nextclade' in config['analyses']) else nextclade3.OUTPUT_SUBTYPE_REPORT_EMPTY,
-        report_nextclade = nextclade3.OUTPUT_REPORT if 'nextclade' in config['analyses'] else nextclade3.OUTPUT_REPORT_EMPTY,
+        report_nexclade_subtype = nextclade3.OUTPUT_SUBTYPE_REPORT if (config['nextclade'].get('db') is None) and ('nextclade' in config['analyses_selected']) else nextclade3.OUTPUT_SUBTYPE_REPORT_EMPTY,
+        report_nextclade = nextclade3.OUTPUT_REPORT if 'nextclade' in config['analyses_selected'] else nextclade3.OUTPUT_REPORT_EMPTY,
         report_multi_allelic = multiallelicsites.OUTPUT_REPORT if config['input']['type'] != 'fasta' else [],
-        report_antivirals = antivirals.OUTPUT_REPORT if 'antivirals' in config['analyses'] else antivirals.OUTPUT_REPORT_EMPTY,
+        report_antivirals = antivirals.OUTPUT_REPORT if 'antivirals' in config['analyses_selected'] else antivirals.OUTPUT_REPORT_EMPTY,
         report_commands = 'report/html-commands.iob',
         report_citations = core.OUTPUT_HTML_CITATIONS
     output:
@@ -178,8 +178,8 @@ rule summary_combine_all:
         preprocess.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
         iterativemapping.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
         multiallelicsites.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
-        nextclade3.OUTPUT_SUMMARY if 'nextclade' in config['analyses'] else [],
-        antivirals.OUTPUT_SUMMARY if 'antivirals' in config['analyses'] else []
+        nextclade3.OUTPUT_SUMMARY if 'nextclade' in config['analyses_selected'] else [],
+        antivirals.OUTPUT_SUMMARY if 'antivirals' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:

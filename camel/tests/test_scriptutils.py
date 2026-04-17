@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from camel.app.scriptutils import model
+from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 
 
@@ -28,6 +29,7 @@ def ont_input() -> ScriptInput:
         type_=model.InputType.ONT, fastq_se=path_fastq, sample_name="ONT_sample"
     )
 
+
 @pytest.fixture
 def illumina_input() -> ScriptInput:
     """
@@ -36,7 +38,9 @@ def illumina_input() -> ScriptInput:
     """
     paths_fastq = (Path("path/to/reads_1.fastq.gz"), Path("path/to/reads_2.fastq.gz"))
     return ScriptInput(
-        type_=model.InputType.ILLUMINA, fastq_pe=paths_fastq, sample_name="Illumina_sample"
+        type_=model.InputType.ILLUMINA,
+        fastq_pe=paths_fastq,
+        sample_name="Illumina_sample",
     )
 
 
@@ -73,6 +77,7 @@ def test_input_str_ont_with_name(ont_input: ScriptInput) -> None:
     updated = dataclasses.replace(ont_input, fastq_se_name="custom_name.fastq")
     assert updated.input_str == "custom_name.fastq"
 
+
 def test_input_str_illumina(illumina_input: ScriptInput) -> None:
     """
     Tests the input string for Illumina input.
@@ -103,6 +108,7 @@ def test_from_dict_roundtrip_fasta(fasta_input: ScriptInput) -> None:
         val_restored = getattr(restored, field.name)
         assert val_orig == val_restored, f"mismatched field: {field.name}"
 
+
 @pytest.mark.parametrize("fixture_name", ["ont_input", "illumina_input", "fasta_input"])
 def test_from_dict_roundtrip(request, fixture_name) -> None:
     """
@@ -121,3 +127,103 @@ def test_from_dict_roundtrip(request, fixture_name) -> None:
         val_orig = getattr(instance, field.name)
         val_restored = getattr(restored, field.name)
         assert val_orig == val_restored, f"mismatched field: {field.name}"
+
+
+def test_resolve_species_basic() -> None:
+    """
+    Tests basic resolution of a species-specific value.
+    :return: None
+    """
+    cfg = {
+        "species": {"faecalis": {"mlst_db": "/path/to/mlst"}},
+        "tool": {"db": {"resolve": "species", "key": "mlst_db"}},
+    }
+
+    resolved = basepipeutils.resolve_config(cfg, "faecalis")
+    assert resolved["tool"]["db"] == "/path/to/mlst"
+
+
+def test_resolve_nested_dict() -> None:
+    """
+    Tests resolution within nested dictionary structures.
+    :return: None
+    """
+    cfg = {
+        "species": {"faecalis": {"ref_fasta": "/ref.fa"}},
+        "reference": {"genome": {"fasta": {"resolve": "species", "key": "ref_fasta"}}},
+    }
+
+    resolved = basepipeutils.resolve_config(cfg, "faecalis")
+
+    assert resolved["reference"]["genome"]["fasta"] == "/ref.fa"
+
+
+def test_resolve_in_list() -> None:
+    """
+    Tests resolution of multiple values inside a list.
+    :return: None
+    """
+    cfg = {
+        "species": {"faecalis": {"a": "A", "b": "B"}},
+        "values": [
+            {"resolve": "species", "key": "a"},
+            {"resolve": "species", "key": "b"},
+        ],
+    }
+    resolved = basepipeutils.resolve_config(cfg, "faecalis")
+    assert resolved["values"] == ["A", "B"]
+
+
+def test_unknown_species() -> None:
+    """
+    Tests that resolving with an unknown species raises an error.
+    :return: None
+    """
+    cfg = {"species": {}, "tool": {"db": {"resolve": "species", "key": "mlst_db"}}}
+
+    with pytest.raises(ValueError, match="Unknown species"):
+        basepipeutils.resolve_config(cfg, "faecalis")
+
+
+def test_missing_key() -> None:
+    """
+    Tests that resolving a missing key for a species raises an error.
+    :return: None
+    """
+    cfg = {
+        "species": {"faecalis": {}},
+        "tool": {"db": {"resolve": "species", "key": "mlst_db"}},
+    }
+
+    with pytest.raises(ValueError, match="Missing key"):
+        basepipeutils.resolve_config(cfg, "faecalis")
+
+
+def test_unknown_resolver() -> None:
+    """
+    Tests that an unknown resolver type raises an error.
+    :return: None
+    """
+    cfg = {
+        "species": {"faecalis": {"mlst_db": "/path"}},
+        "tool": {"db": {"resolve": "unknown", "key": "mlst_db"}},
+    }
+
+    with pytest.raises(ValueError, match="Unknown resolver"):
+        basepipeutils.resolve_config(cfg, "faecalis")
+
+
+def test_mixed_values() -> None:
+    """
+    Tests resolution alongside static values in the same structure.
+    :return: None
+    """
+    cfg = {
+        "species": {"faecalis": {"mlst_db": "/mlst"}},
+        "tool": {"db": {"resolve": "species", "key": "mlst_db"}, "threads": 4},
+    }
+
+    resolved = basepipeutils.resolve_config(cfg, "faecalis")
+
+    assert resolved["tool"]["db"] == "/mlst"
+    assert resolved["tool"]["threads"] == 4

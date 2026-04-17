@@ -280,7 +280,6 @@ class MainSamtoolsPhylo(BasePhylo):
         """
         section.add_paragraph("Filtering settings:")
         table_data = []
-        print(self._opts_custom)
         for group, params in MainSamtoolsPhylo.PARAMETER_MAPPING.items():
             for param_name, param_value in params.items():
                 table_data.append([param_value["title"], getattr(self._opts_custom, param_name)])

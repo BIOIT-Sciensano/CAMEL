@@ -58,7 +58,7 @@ rule unicycler:
         unicycler_assembly.update_parameters(output_dir='unicycler', threads=threads)
         step = Step(str(rule), unicycler_assembly, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(unicycler_assembly, output)
+        snakemakeutils.dump_io_outputs(unicycler_assembly, output)
 
 rule copy_unicycler_assembly_to_medaka_input:
     input:

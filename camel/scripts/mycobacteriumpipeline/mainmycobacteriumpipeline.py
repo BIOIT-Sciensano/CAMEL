@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import dataclasses
 import tempfile
-from importlib.resources import files
 from pathlib import Path
 
 import click
@@ -20,34 +19,21 @@ from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.app.tools.pipelines.mycobacterium.bamaddcustomtag import BAMAddCustomTag
-from camel.scripts.mycobacteriumpipeline import SNAKEFILE_MAIN
+from camel.scripts.mycobacteriumpipeline import SNAKEFILE_MAIN, CONFIG_DATA
 from camel.snakefiles import variant_calling
 
-CUSTOM_ANALYSES = [
-    '51snp',
-    'amr',
-    'cgmlst',
-    'confindr',
-    'csb_rd',
-    'hsp65',
-    'human_read_scrubbing'
-    'kraken2',
-    'mlst',
-    'ncbi_16s',
-    'rmlst',
-    'snp_lineage',
-    'snpit',
-    'spoligotyping',
-]
 
 @dataclasses.dataclass(frozen=True)
 class Options(model.BaseOptions):
     """
     Pipeline-specific options.
     """
+
     analyses: list[str] = dataclasses.field(default_factory=list)
-    output_bam: Path | None = dataclasses.field(default=None, metadata={
-        'help': 'Output path for the mapping to the reference genome (BAM)'})
+    output_bam: Path | None = dataclasses.field(
+        default=None,
+        metadata={'help': 'Output path for the mapping to the reference genome (BAM)'},
+    )
 
 
 class MainMycobacteriumPipeline(BasePipe):
@@ -60,7 +46,7 @@ class MainMycobacteriumPipeline(BasePipe):
         in_: ScriptInput,
         out: ScriptOutput,
         opts: ScriptOptions,
-        opts_custom: Options
+        opts_custom: Options,
     ) -> None:
         """
         Initializes the main class.
@@ -77,22 +63,32 @@ class MainMycobacteriumPipeline(BasePipe):
             script_in=in_,
             script_out=out,
             opts=opts,
-            snakefile=SNAKEFILE_MAIN
+            snakefile=SNAKEFILE_MAIN,
         )
         self._opts_custom = opts_custom
 
-    def _execute(self) -> None:
+    def _validate_config_data(self, config_data: dict) -> bool:
         """
-        Runs the pipeline.
-        :return: None
+        Validates the config data.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
+        """
+        self.check_dbs(config_data)
+        return True
+
+    def _build_config(self) -> dict:
+        """
+        Builds the configuration data for Snakemake.
+        :return: Configuration data
         """
         # Parse template data
-        with open(str(files('camel').joinpath('scripts/mycobacteriumpipeline/config_data.yml'))) as handle:
+        with open(CONFIG_DATA) as handle:
             yaml_text = handle.read()
         yaml_text = yaml_text.format(
             COV_MAX=self._script_opts.cov_max,
-            QC_SCHEME='cgmlst' if 'cgmlst' in  self._opts_custom.analyses else 'mlst',
-            EXPORT_BAM=self._script_opts.include_bam
+            DB_ROOT=config.dir_db,
+            QC_SCHEME='cgmlst' if 'cgmlst' in self._opts_custom.analyses else 'mlst',
+            EXPORT_BAM=self._script_opts.include_bam,
         )
         data_template = yaml.safe_load(yaml_text)
         self._script_out.dir.mkdir(parents=True, exist_ok=True)
@@ -100,22 +96,52 @@ class MainMycobacteriumPipeline(BasePipe):
         # Add the base config data
         config_data = self.get_config_data()
         basepipeutils.dict_merge(config_data, data_template)
-        config_data['analyses'] = self._opts_custom.analyses
-        config_data['sequence_typing']['options'] = {'method': self._script_opts.typing_method}
-        config_data['gene_detection']['options'] = {'method': self._script_opts.gene_detection_method}
+        config_data['analyses_selected'] = self._opts_custom.analyses
+        config_data['sequence_typing']['options'] = {
+            'method': self._script_opts.typing_method
+        }
+        config_data['gene_detection']['options'] = {
+            'method': self._script_opts.gene_detection_method
+        }
 
         # Map to reference genome instead of assembly
         if self._script_in.type_ is model.InputType.ILLUMINA:
-            config_data['quality_checks']['forced'] = ['map_rate_ref_illumina', 'cov_ref_illumina']
-            config_data['quality_checks']['skipped'] = ['map_rate_assembly_illumina', 'cov_assembly_illumina']
+            config_data['quality_checks']['forced'] = [
+                'map_rate_ref_illumina',
+                'cov_ref_illumina',
+            ]
+            config_data['quality_checks']['skipped'] = [
+                'map_rate_assembly_illumina',
+                'cov_assembly_illumina',
+            ]
         if self._script_in.type_ is model.InputType.ONT:
-            config_data['quality_checks']['forced'] = ['map_rate_ref_ont', 'cov_ref_ont']
-            config_data['quality_checks']['skipped'] = ['map_rate_assembly_ont', 'cov_assembly_ont']
+            config_data['quality_checks']['forced'] = [
+                'map_rate_ref_ont',
+                'cov_ref_ont',
+            ]
+            config_data['quality_checks']['skipped'] = [
+                'map_rate_assembly_ont',
+                'cov_assembly_ont',
+            ]
+        return config_data
 
-        path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
+    def _execute(self) -> None:
+        """
+        Runs the pipeline.
+        :return: None
+        """
+        # Build and validate the config file
+        config_data = self._build_config()
+        self._validate_config_data(config_data)
 
-        # Run the Snakefile
+        # Create the config file and run the snakefile
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
+        path_config = snakepipelineutils.generate_config_file(
+            config_data, self._script_opts.working_dir
+        )
         self.run_snakefile(path_config)
+
+        # Additional exports
         self._export_assembly()
         self._export_bam()
 
@@ -127,26 +153,41 @@ class MainMycobacteriumPipeline(BasePipe):
         if self._opts_custom.output_bam is None:
             logger.debug('Not exporting BAM output')
             return
-        path_io = variant_calling.get_bam({
-            'input': {'type': self._script_in.type_.value},
-            'working_dir': self._script_opts.working_dir
-        })
-        bam_input = snakemakeutils.load_object(Path(self._script_opts.working_dir, path_io))
+        path_io = variant_calling.get_bam(
+            {
+                'input': {'type': self._script_in.type_.value},
+                'working_dir': self._script_opts.working_dir,
+            }
+        )
+        bam_input = snakemakeutils.load_object(
+            Path(self._script_opts.working_dir, path_io)
+        )
 
         # Add a custom tag with the sample name for PACU
         with tempfile.TemporaryDirectory(prefix='camel_', dir=config.dir_temp) as dir_:
             add_tag = BAMAddCustomTag()
             add_tag.add_input_files({'BAM': bam_input})
             add_tag.update_parameters(
-                output=str(self._opts_custom.output_bam), name='PACU_name', value=self._script_in.name)
+                output=str(self._opts_custom.output_bam),
+                name='PACU_name',
+                value=self._script_in.name,
+            )
             add_tag.run(Path(str(dir_)))
         logger.info(f'Output BAM file copied to: {self._opts_custom.output_bam}')
 
-@click.command(name='mycobacterium_pipeline', short_help='Pipeline for the complete characterization of Mycobacterium tuberculosis complex isolates')
+
+@click.command(
+    name='mycobacterium_pipeline',
+    short_help='Pipeline for the complete characterization of Mycobacterium tuberculosis complex isolates',
+)
 @basescriptutils.add_input_opts()
 @basescriptutils.add_output_opts
 @basescriptutils.add_general_opts
-@click.option('--analyses', type=str, help=f"Comma-separated list of analyses to run ({', '.join(CUSTOM_ANALYSES)})")
+@click.option(
+    '--analyses',
+    type=str,
+    help=f"Comma-separated list of analyses to run ({', '.join(basepipeutils.get_custom_analyses(CONFIG_DATA))})",
+)
 @cliutils.add_click_options_from_dataclass(Options, skip=['analyses'])
 def main(**kwargs) -> None:
     """
@@ -157,9 +198,11 @@ def main(**kwargs) -> None:
     script_opts = basescriptutils.parse_script_opts(kwargs)
     custom_opts = Options(
         analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
-        output_bam=kwargs['output_bam']
+        output_bam=kwargs['output_bam'],
     )
-    pipeline = MainMycobacteriumPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline = MainMycobacteriumPipeline(
+        script_input, script_out, script_opts, custom_opts
+    )
     pipeline.prepare_input()
     pipeline.run()
 

@@ -22,10 +22,10 @@ rule trimming_ont_nanoplot_pre:
     run:
         from camel.app.tools.nanoplot.nanoplot import NanoPlot
         nanoplot = NanoPlot()
-        snakemakeutils.add_pickle_inputs(nanoplot, input)
+        snakemakeutils.add_io_inputs(nanoplot, input)
         step = Step(rule_name=str(rule), tool=nanoplot, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(nanoplot, output)
+        snakemakeutils.dump_io_outputs(nanoplot, output)
 
 rule trimming_ont_seqkit:
     """
@@ -52,12 +52,12 @@ rule trimming_ont_seqkit:
             output_filename=f'{params.sample_name}-filtered.fastq',
             threads=threads
         )
-        snakemakeutils.add_pickle_inputs(seqkit, input)
+        snakemakeutils.add_io_inputs(seqkit, input)
         step = Step(rule_name=str(rule), tool=seqkit, dir_=Path(params.dir_))
         step.run()
         if seqkit.informs['nb_seqs_out'] == 0:
             raise PipelineExecutionError('No reads left after filtering.')
-        snakemakeutils.dump_tool_outputs(seqkit, output)
+        snakemakeutils.dump_io_outputs(seqkit, output)
 
 rule trimming_ont_nanoplot_post:
     """
@@ -75,10 +75,10 @@ rule trimming_ont_nanoplot_post:
     run:
         from camel.app.tools.nanoplot.nanoplot import NanoPlot
         nanoplot = NanoPlot()
-        snakemakeutils.add_pickle_inputs(nanoplot, input)
+        snakemakeutils.add_io_inputs(nanoplot, input)
         step = Step(rule_name=str(rule), tool=nanoplot, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(nanoplot, output)
+        snakemakeutils.dump_io_outputs(nanoplot, output)
 
 rule trimming_ont_report:
     """
@@ -99,11 +99,11 @@ rule trimming_ont_report:
     run:
         from camel.app.tools.pipelines.read_trimming.reportertrimmingont import ReporterTrimmingONT
         reporter = ReporterTrimmingONT()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         reporter.update_parameters(export_fastq=str(params.export_fastq))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule trimming_ont_dump_summary_info:
     """

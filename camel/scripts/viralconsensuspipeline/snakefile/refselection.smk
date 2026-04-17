@@ -39,7 +39,7 @@ rule ref_selection_mash_screen:
         mash.update_parameters(threads=threads)
         step = Step(rule_name=str(rule), tool=mash, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(mash, output)
+        snakemakeutils.dump_io_outputs(mash, output)
 
 rule ref_selection_create_fasta:
     """
@@ -64,7 +64,7 @@ rule ref_selection_create_fasta:
         ref_selection.add_input_files({'TSV': tsv_in, 'DB': [ToolIODirectory(Path(input.DB))]})
         step = Step(rule_name=str(rule), tool=ref_selection, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(ref_selection, output)
+        snakemakeutils.dump_io_outputs(ref_selection, output)
 
 rule ref_selection_report:
     """
@@ -84,10 +84,10 @@ rule ref_selection_report:
         from camel.app.tools.pipelines.viral_consensus.reporterrefselection import ReporterRefSelection
         reporter = ReporterRefSelection()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['DB'])
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['DB'])
         reporter.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule ref_selection_report_empty:
     """

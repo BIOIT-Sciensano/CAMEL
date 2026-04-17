@@ -31,7 +31,7 @@ rule resfinder4_run:
     run:
         from camel.app.tools.resfinder.resfinder import ResFinder
         resfinder = ResFinder()
-        snakemakeutils.add_pickle_input(resfinder, 'FASTA', Path(input.FASTA))
+        snakemakeutils.add_io_input(resfinder,'FASTA', Path(input.FASTA))
         resfinder.add_input_files({'DIR': [ToolIODirectory(Path(input.DIR))]})
         resfinder.update_parameters(min_cov=0.9, acquired=True, point=params.point)
         if params.species is not None:
@@ -43,9 +43,9 @@ rule resfinder4_run:
         step = Step(rule_name=str(rule), tool=resfinder, dir_=Path(str(params.dir_)))
         step.run()
         if params.point:
-            snakemakeutils.dump_tool_outputs(resfinder, output)
+            snakemakeutils.dump_io_outputs(resfinder, output)
         else:
-            snakemakeutils.dump_tool_outputs(resfinder, output,
+            snakemakeutils.dump_io_outputs(resfinder, output,
                 keys=[key for key in output.keys() if key not in ('TSV_point', 'TSV_pheno_species')])
             snakemakeutils.dump_object([], Path(output.TSV_point))
             snakemakeutils.dump_object([], Path(output.TSV_pheno_species))
@@ -68,10 +68,10 @@ rule resfinder4_reporter:
     run:
         from camel.app.tools.resfinder.resfinderreporter import ResFinderReporter
         reporter = ResFinderReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys = None if params.point else ['TSV_point', 'TSV_pheno_species'])
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys = None if params.point else ['TSV_point', 'TSV_pheno_species'])
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule resfinder4_report_empty:
     """

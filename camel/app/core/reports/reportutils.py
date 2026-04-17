@@ -101,7 +101,7 @@ def create_commands_section(
     section = HtmlReportSection('Commands')
     logger.debug(f"Exporting command for {len(tool_informs)} tools")
     for informs in tool_informs:
-        header = f"{informs['_name_full']} - {informs['_tag']}" if '_tag' in informs else informs['_name']
+        header = f"{informs['_name_full']} - {informs['_tag']}" if '_tag' in informs else informs['_name_full']
         section.add_header(header, 3)
         command_txt = informs['_command'].replace(str(dir_), '$WORKING')
         command_txt = command_txt.replace('\n', '<br />\n')

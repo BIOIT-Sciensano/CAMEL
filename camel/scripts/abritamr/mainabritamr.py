@@ -137,7 +137,7 @@ class MainAbriTAMR(BaseScript[FastaInput, Output, Options]):
         with open(CONFIG_DATA) as handle_in:
             config_data.update(yaml.safe_load(handle_in.read()))
         config_data['abritamr']['species'] = self._script_opts.species
-        config_data['analyses'] = ['abritamr']
+        config_data['analyses_selected'] =['abritamr']
         return snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
 
 

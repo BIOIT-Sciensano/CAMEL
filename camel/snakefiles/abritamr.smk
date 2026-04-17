@@ -26,11 +26,11 @@ rule abritamr_run:
 
         abritamr_run_tool = AbriTAMRRun()
         abritamr_run_tool.add_input_files({'DIR_AMRF': [ToolIODirectory(Path(str(params.db_path_amrf)))]})
-        snakemakeutils.add_pickle_input(abritamr_run_tool, 'FASTA', Path(input.FASTA))
-        step = Step(rule_name=str(rule), tool=abritamr_run_tool, dir_=Path(params.dir_))
+        snakemakeutils.add_io_input(abritamr_run_tool,'FASTA', Path(input.FASTA))
+        step = Step(rule_name=str(rule),tool=abritamr_run_tool,dir_=Path(params.dir_))
         abritamr_run_tool.update_parameters(species=params.species)
         step.run()
-        snakemakeutils.dump_tool_outputs(abritamr_run_tool, output)
+        snakemakeutils.dump_io_outputs(abritamr_run_tool, output)
 
 rule abritamr_generate_dummy_mdu_qc_file:
     """
@@ -58,8 +58,8 @@ rule abritamr_generate_dummy_mdu_qc_file:
 
 rule abritamr_report_run:
     """
-    This rule will run AbriTAMR report to generate an antibiogram in case the species is Salmonella, 
-    else it will create a summary of the TXT_MATCHES and TXT_PARTIALS that will not actually be used in the 
+    This rule will run AbriTAMR report to generate an antibiogram in case the species is Salmonella,
+    else it will create a summary of the TXT_MATCHES and TXT_PARTIALS that will not actually be used in the
     abritamr_report rule.
     """
     input:
@@ -75,10 +75,10 @@ rule abritamr_report_run:
     run:
         from camel.app.tools.abritamr.abritamrreport import AbriTAMRReport
         abritamr_report_tool = AbriTAMRReport()
-        snakemakeutils.add_pickle_inputs(abritamr_report_tool, input)
+        snakemakeutils.add_io_inputs(abritamr_report_tool, input)
         step = Step(rule_name=str(rule), tool=abritamr_report_tool, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(abritamr_report_tool, output)
+        snakemakeutils.dump_io_outputs(abritamr_report_tool, output)
 
 rule abritamr_create_summary:
     """
@@ -128,10 +128,10 @@ rule abritamr_report:
         from camel.app.tools.abritamr.abritamrreporter import AbriTAMRReporter
 
         reporter = AbriTAMRReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule abritamr_report_empty:
     """
@@ -143,3 +143,4 @@ rule abritamr_report_empty:
         from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.abritamr.abritamrreporter import AbriTAMRReporter
         snakepipelineutils.create_empty_report_section(AbriTAMRReporter.TITLE, Path(output.VAL_HTML))
+

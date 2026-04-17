@@ -26,7 +26,7 @@ rule medaka_polishing_map_ont_reads:
 
         # Minimap2
         minimap2 = Minimap2Mapping()
-        snakemakeutils.add_pickle_input(minimap2, 'FASTA', Path(str(input.FASTA)))
+        snakemakeutils.add_io_input(minimap2,'FASTA', Path(str(input.FASTA)))
         minimap2.add_input_files(snakepipelineutils.extract_fq_input(Path(input.FQ), key_se='FASTQ', read_type='SE'))
 
         # Initialize tools
@@ -36,7 +36,7 @@ rule medaka_polishing_map_ont_reads:
         pipeutils.run_as_pipe([minimap2, samtools_view, samtools_sort], Path(str(params.dir_)))
 
         # Export output
-        snakemakeutils.dump_tool_output(samtools_sort, 'BAM', Path(output.BAM))
+        snakemakeutils.dump_io_output(samtools_sort,'BAM', Path(output.BAM))
 
 rule medaka_polishing_index_bam_file:
     input:
@@ -48,11 +48,11 @@ rule medaka_polishing_index_bam_file:
     run:
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
         samtools_index = SamtoolsIndex()
-        snakemakeutils.add_pickle_input(samtools_index, 'BAM', Path(input.BAM))
+        snakemakeutils.add_io_input(samtools_index,'BAM', Path(input.BAM))
         samtools_index.update_parameters(generate_bai_index=True)
         step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_index, output)
+        snakemakeutils.dump_io_outputs(samtools_index, output)
 
 rule medaka_polishing_medaka_inference:
     """
@@ -70,12 +70,12 @@ rule medaka_polishing_medaka_inference:
     run:
         from camel.app.tools.medaka.medakainference import MedakaInference
         medaka = MedakaInference()
-        snakemakeutils.add_pickle_input(medaka, 'BAM', Path(input.BAM))
+        snakemakeutils.add_io_input(medaka,'BAM', Path(input.BAM))
         medaka.update_parameters(**params.medaka_options)
         medaka.update_parameters(threads=threads)
         step = Step(rule_name=str(rule), tool=medaka, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(medaka, output)
+        snakemakeutils.dump_io_outputs(medaka, output)
 
 rule medaka_polishing_medaka_sequence:
     """
@@ -94,11 +94,11 @@ rule medaka_polishing_medaka_sequence:
     run:
         from camel.app.tools.medaka.medakasequence import MedakaSequence
         medaka = MedakaSequence()
-        snakemakeutils.add_pickle_inputs(medaka, input)
+        snakemakeutils.add_io_inputs(medaka, input)
         medaka.update_parameters(**params.medaka_options, threads=threads)
         step = Step(rule_name=str(rule), tool=medaka, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(medaka, output)
+        snakemakeutils.dump_io_outputs(medaka, output)
 
 rule medaka_polishing_empty_report:
     """

@@ -1,7 +1,193 @@
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  bacmet:
+    dbs:
+      - bacmet
+  cgmlst:
+    dbs:
+      - typing_cgmlst_faecalis
+      - typing_cgmlst_faecium
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
+  lrefinder:
+      dbs: []
+  mlst:
+    dbs:
+      - typing_mlst_faecalis
+      - typing_mlst_faecium
+      - typing_mlst_faecium_bezdicek
+  mob_suite:
+    dbs:
+      - mob_suite
+  plasmidfinder:
+    dbs:
+      - gene_detection_plasmidfinder
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - typing_rmlst
+  variant_calling:
+    dbs: []
+  vfdb_core:
+    dbs:
+      - gene_detection_vfdb_core
+  virulencefinder:
+    dbs:
+      - gene_detection_virulencefinder
+
 #############
 # Databases #
 #############
-dbs: {{}}
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  bacmet:
+    location: &db_bacmet {DB_ROOT}/bacmet/latest
+    required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gene_detection_plasmidfinder:
+    location: &db_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-gram_positive
+    required: false
+    method: ftp
+  gene_detection_vfdb_core:
+    location: &db_vfdb_core {DB_ROOT}/gene_detection/VFDB_core
+    required: false
+    method: ftp
+  gene_detection_virulencefinder:
+    location: &db_virulencefinder {DB_ROOT}/gene_detection/VirulenceFinder-Enterococcus
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mob_suite:
+    location: &db_mob_suite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta_faecalis:
+    location: &ref_fasta_faecalis {DB_ROOT}/refgenomes/Enterococcus_faecalis/KB944666.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_fasta_faecium:
+    location: &ref_fasta_faecium {DB_ROOT}/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3_faecalis:
+    location: &ref_gff3_faecalis {DB_ROOT}/refgenomes/Enterococcus_faecalis/KB944666.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3_faecium:
+    location: &ref_gff3_faecium {DB_ROOT}/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  typing_cgmlst_faecalis:
+    location: &db_typing_cgmlst_faecalis {DB_ROOT}/sequence_typing/enterococcus_faecalis/cgmlst
+    required: false
+    method: mist
+    species:
+      - faecalis
+  typing_cgmlst_faecium:
+    location: &db_typing_cgmlst_faecium {DB_ROOT}/sequence_typing/enterococcus_faecium/cgmlst
+    required: false
+    method: mist
+    species:
+      - faecium
+  typing_mlst_faecalis:
+    location: &db_typing_mlst_faecalis {DB_ROOT}/sequence_typing/enterococcus_faecalis/cgmlst
+    required: false
+    method: mist
+  typing_mlst_faecium:
+    location: &db_typing_mlst_faecium {DB_ROOT}/sequence_typing/enterococcus_faecium/cgmlst
+    required: false
+    method: mist
+  typing_mlst_faecium_bezdicek:
+    location: &db_typing_mlst_faecium_bezdicek {DB_ROOT}/sequence_typing/enterococcus_faecium/mlst_bezdicek
+    required: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+
+##################################
+# Species-specific configuration #
+##################################
+species:
+  faecalis:
+    amrfinder_species: Enterococcus_faecalis
+    cgmlst_db: *db_typing_cgmlst_faecalis
+    full_name: Enterococcus faecalis
+    kraken2_level: S
+    kraken2_name: Enterococcus faecalis
+    mlst_db: *db_typing_mlst_faecalis
+    ref:
+      fasta: *ref_fasta_faecalis
+      gff3: *ref_gff3_faecalis
+      name: KB944666.1
+      url: https://www.ncbi.nlm.nih.gov/nuccore/KB944666.1
+    resfinder4_species: Enterococcus faecalis
+    resfinder4_point: true
+  faecium:
+    amrfinder_species: Enterococcus_faecium
+    cgmlst_db: *db_typing_cgmlst_faecium
+    full_name: Enterococcus faecium
+    kraken2_level: S
+    kraken2_name: Enterococcus faecium
+    mlst_db: *db_typing_mlst_faecium
+    ref:
+      fasta: *ref_fasta_faecium
+      gff3: *ref_gff3_faecium
+      name: CP038996.1
+      url: https://www.ncbi.nlm.nih.gov/nuccore/CP038996.1/
+    resfinder4_species: Enterococcus faecium
+    resfinder4_point: true
+  spp:
+    amrfinder_species: null
+    cgmlst_db: null
+    full_name: Enterococcus spp.
+    kraken2_name: Entrococcus
+    kraken2_level: G
+    ref:
+      expected_gc: 37.4
+      expected_size: 2_973_380
+    mlst_db: null
+    resfinder4_species: null
+    resfinder4_point: false
 
 #####################
 # Pipeline settings #
@@ -35,55 +221,66 @@ citations:
 # Tool specific options #
 #########################
 amrfinder:
-  db: /db/amrfinder/v4/latest
-  species: {AMRFINDER_SPECIES}
+  db: *db_amrfinder
+  species:
+    resolve: species
+    key: amrfinder_species
 
 assembly:
   spades:
-    cov_cutoff: 10
+    cov_cutoff: 'off'
   min_contig_length: 1000
 
 bacmet:
-  db: /db/bacmet/latest
+  db: *db_bacmet
+
+busco:
+  db: *db_busco
 
 confindr:
-  db: /db/confindr/0.8.1
+  db: *db_confindr
 
 contamination_check:
-  db: /db/kraken2_microbial/latest
-  expected_species: {K2_NAME}
-  level_of_depth: {K2_LEVEL}
+  db: *db_kraken2
+  expected_species:
+    resolve: species
+    key: kraken2_name
+  level_of_depth:
+    resolve: species
+    key: kraken2_level
 
 downsampling:
   coverage_max: {COV_MAX}
 
 mob_suite:
-  db: /db/mob_suite/latest
+  db: *db_mob_suite
 
 reference:
-  name: {REF_NAME}
-  url: {REF_URL}
-  fasta: {REF_FASTA}
-  gff3: {REF_GFF3}
-  expected_gc: {REF_GC}
-  expected_size: {REF_SIZE}
+  resolve: species
+  key: ref
 
-read_scrubbing: {{}}
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 read_trimming: {{}}
 
 resfinder4:
-  db: /db/resfinder4
-  species: {RESFINDER4_SPECIES}
+  db: *db_resfinder4
+  species:
+    resolve: species
+    key: resfinder4_species
   min_identity: 0.90
   min_cov: 0.60
+  point:
+    resolve: species
+    key: resfinder4_point
 
 quality_checks:
   typing_scheme: {QC_SCHEME}
 
 variant_calling:
   ploidy: 1
-  report_include_bam: {EXPORT_BAM}
+  report_include_bam: false
 
 variant_filtering: {{}}
 
@@ -93,7 +290,7 @@ variant_filtering: {{}}
 gene_detection:
   dbs:
     vfdb_core:
-      path: /db/gene_detection/VFDB_core
+      path: *db_vfdb_core
       perc_identity_cutoff: 90
       metadata:
         name: Gene
@@ -101,13 +298,13 @@ gene_detection:
       hidden: true
 
     virulencefinder:
-      path: /db/gene_detection/VirulenceFinder-Enterococcus
+      path: *db_virulencefinder
       metadata:
         name: Protein function
         key: protein_function
 
     plasmidfinder:
-      path: /db/gene_detection/PlasmidFinder-gram_positive
+      path: *db_plasmidfinder
       params:
         blastn:
           min_percent_identity: 95
@@ -125,14 +322,18 @@ gene_detection:
 sequence_typing:
   dbs:
     mlst:
-      path: {MLST_DB}
+      path:
+        resolve: species
+        key: mlst_db
     mlst_bezdicek:
-      path: '/db/sequence_typing/enterococcus_faecium/mlst_bezdicek'
+      path: *db_typing_mlst_faecium_bezdicek
     rmlst:
-      path: /db/sequence_typing/various/rmlst
+      path: *db_typing_rmlst
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info
     cgmlst:
-      path: {CGMLST_DB}
+      path:
+        resolve: species
+        key: mlst_db
       detection_method: blast

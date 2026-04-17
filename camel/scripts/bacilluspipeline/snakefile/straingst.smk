@@ -29,7 +29,7 @@ rule straingst_kmerize:
             straingst_kmerize_.add_input_files({'FASTQ': [fq_in.pe[0], fq_in.pe[1]]})
         step = Step(str(rule), straingst_kmerize_, dir_=Path(str(params.dir_)))
         step.run_step()
-        snakemakeutils.dump_tool_outputs(straingst_kmerize_, output)
+        snakemakeutils.dump_io_outputs(straingst_kmerize_, output)
 
 rule straingst_run:
     """
@@ -47,11 +47,11 @@ rule straingst_run:
     run:
         from camel.app.tools.strainge.straingstrun import StrainGSTRun
         straingst_run_ = StrainGSTRun()
-        snakemakeutils.add_pickle_inputs(straingst_run_, input)
+        snakemakeutils.add_io_inputs(straingst_run_, input)
         straingst_run_.add_input_files({'DB_HDF5': [ToolIOFile(Path(params.straingst_db))]})
         step = Step(str(rule), straingst_run_, dir_=Path(str(params.dir_)))
         step.run_step()
-        snakemakeutils.dump_tool_outputs(straingst_run_, output)
+        snakemakeutils.dump_io_outputs(straingst_run_, output)
 
 rule straingst_report:
     """
@@ -69,11 +69,11 @@ rule straingst_report:
     run:
         from camel.app.tools.strainge.straingstreporter import StrainGSTReporter
         straingst_reporter = StrainGSTReporter()
-        snakemakeutils.add_pickle_inputs(straingst_reporter, input)
+        snakemakeutils.add_io_inputs(straingst_reporter, input)
         straingst_reporter.update_parameters(sample_name=params.sample_name, suffix=str(params.read_type))
         step = Step(str(rule), straingst_reporter, dir_=Path(str(params.dir_)))
         step.run_step()
-        snakemakeutils.dump_tool_outputs(straingst_reporter, output)
+        snakemakeutils.dump_io_outputs(straingst_reporter, output)
 
 rule straingst_report_empty:
     """

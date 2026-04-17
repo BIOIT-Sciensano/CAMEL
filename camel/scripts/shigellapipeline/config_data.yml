@@ -1,3 +1,48 @@
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  cgmlst:
+    dbs:
+      - typing_cgmlst
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
+  mlst_pasteur:
+    dbs:
+      - typing_mlst_pasteur
+  mlst_warwick:
+    dbs:
+      - typing_mlst_warwick
+  mob_suite:
+    dbs:
+      - mob_suite
+  mykrobe:
+    dbs:
+      - mykrobe
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - typing_rmlst
+  shigatyper:
+    dbs: []
+  shigeifinder:
+    dbs: []
+  variant_calling:
+    dbs: []
+  virulencefinder:
+    dbs:
+      - gene_detection_virulencefinder_ecoli
+      - gene_detection_virulencefinder_shiga
+
 #############
 # Databases #
 #############
@@ -6,14 +51,14 @@ dbs:
     location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
     required: false
     method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
   confindr:
     location: &db_confindr {DB_ROOT}/confindr/0.8.1
     required: false
     method: skip
-  gene_detection_serotype_o:
-    location: &db_gd_serotype_o {DB_ROOT}/gene_detection/SerotypeFinder-O_type
-    required: false
-    method: ftp
   gene_detection_virulencefinder_ecoli:
     location: &db_gd_virulencefinder_ecoli {DB_ROOT}/gene_detection/VirulenceFinder-Ecoli
     required: false
@@ -26,7 +71,7 @@ dbs:
     location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
     required: false
     method: ftp
-  mobsuite:
+  mob_suite:
     location: &db_mobsuite {DB_ROOT}/mob_suite/latest
     required: false
     method: ftp
@@ -121,6 +166,9 @@ assembly:
     cov_cutoff: 'off'
   min_contig_length: 1000
 
+busco:
+  db: *db_busco
+
 confindr:
   db: *db_confindr
 
@@ -174,22 +222,11 @@ gene_detection:
         name: Protein function
         key: protein_function
       hidden: true
-
     virulencefinder_shiga:
       path: *db_gd_virulencefinder_shiga
       metadata:
         name: stx variant
         key: stx_variant
-
-    serotype_o:
-      path: *db_gd_serotype_o
-      params:
-        blastn:
-          min_percent_identity: 85
-          min_coverage: 60
-      metadata:
-        name: Predicted serotype
-        key: predicted_serotype
 
 ###################
 # Sequence typing #

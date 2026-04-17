@@ -13,8 +13,8 @@ rule assay_51snp_init_db:
         BED = '51snp/db/bed.io',
         TSV = '51snp/db/tsv.io'
     params:
-        bed = config['51snp']['bed'],
-        tsv = config['51snp']['profiles']
+        bed = Path(config['51snp']['db'], '51snp_locations.bed'),
+        tsv = Path(config['51snp']['db'], 'profiles.tsv')
     run:
         from camel.app.core.io.tooliofile import ToolIOFile
         snakemakeutils.dump_object([ToolIOFile(Path(params.bed))], Path(output.BED))
@@ -34,11 +34,11 @@ rule assay_51snp_filter_vcf:
     run:
         from camel.app.tools.bcftools.bcftoolsfilter import BcftoolsFilter
         bcf_filter = BcftoolsFilter()
-        snakemakeutils.add_pickle_inputs(bcf_filter, input)
+        snakemakeutils.add_io_inputs(bcf_filter, input)
         bcf_filter.update_parameters(output_filename='51_snps.vcf')
         step = Step(rule_name=str(rule), tool=bcf_filter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(bcf_filter, output)
+        snakemakeutils.dump_io_outputs(bcf_filter, output)
 
 rule assay_51snp_detect_info:
     """
@@ -56,10 +56,10 @@ rule assay_51snp_detect_info:
     run:
         from camel.app.tools.pipelines.mycobacterium.assay51snpdetector import Assay51SnpDetector
         detector = Assay51SnpDetector()
-        snakemakeutils.add_pickle_inputs(detector, input)
+        snakemakeutils.add_io_inputs(detector, input)
         step = Step(rule_name=str(rule), tool=detector, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(detector, output)
+        snakemakeutils.dump_io_outputs(detector, output)
 
 rule assay_51snp_report:
     """
@@ -76,11 +76,11 @@ rule assay_51snp_report:
         from camel.app.core.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.assay51snpreporter import Assay51SnpReporter
         spr = Assay51SnpReporter()
-        snakemakeutils.add_pickle_inputs(spr, input)
+        snakemakeutils.add_io_inputs(spr, input)
         spr.add_input_files({'VAL_Sample': [ToolIOValue(params.sample_name)]})
         step = Step(rule_name=str(rule), tool=spr, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(spr, output)
+        snakemakeutils.dump_io_outputs(spr, output)
 
 rule assay_51snp_report_empty:
     """

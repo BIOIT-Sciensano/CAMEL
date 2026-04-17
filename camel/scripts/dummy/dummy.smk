@@ -20,7 +20,7 @@ rule seqtk_seq:
         seqtk_seq_tool.update_parameters(output_filename='filtered.fasta')
         step = Step(rule_name=str(rule), tool=seqtk_seq_tool, dir_=Path(params.dir_).absolute())
         step.run()
-        snakemakeutils.dump_tool_outputs(seqtk_seq_tool, output)
+        snakemakeutils.dump_io_outputs(seqtk_seq_tool, output)
 
 rule seqkit_stats:
     input:
@@ -32,10 +32,10 @@ rule seqkit_stats:
     run:
         from camel.app.tools.seqkit.seqkitstats import SeqkitStats
         seqtk_stats = SeqkitStats()
-        snakemakeutils.add_pickle_inputs(seqtk_stats, input)
+        snakemakeutils.add_io_inputs(seqtk_stats, input)
         step = Step(rule_name=str(rule), tool=seqtk_stats, dir_=Path(params.dir_).absolute())
         step.run()
-        snakemakeutils.dump_tool_outputs(seqtk_stats, output)
+        snakemakeutils.dump_io_outputs(seqtk_stats, output)
 
 rule collect_output:
     """

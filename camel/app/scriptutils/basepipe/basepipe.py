@@ -1,6 +1,7 @@
 import abc
 import dataclasses
 import sys
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -74,6 +75,15 @@ class BasePipe(BaseScript[ScriptInput, ScriptOutput, ScriptOptions], metaclass=a
             raise click.UsageError(
                 f"Invalid analysis option '{analysis}'. Allowed analyses: {', '.join(allowed)}"
             )
+
+    def _validate_config_data(self, config_data: dict) -> bool:
+        """
+        Validates the config data.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
+        """
+        self.check_dbs(config_data)
+        return True
 
     def get_config_data(self) -> dict[str, Any]:
         """
@@ -150,9 +160,24 @@ class BasePipe(BaseScript[ScriptInput, ScriptOutput, ScriptOptions], metaclass=a
         :param data_template: Template data
         :return: None
         """
+        try:
+            analyses = {key: data_template['analyses'][key] for key in data_template['analyses_selected']}
+            logger.debug(f"Selected analyses: {', '.join(analyses.keys())}")
+        except KeyError as err:
+            raise ValueError(f"Analysis {err} is not defined for this pipeline")
         dbs = {key: DBEntry(**data) for key, data in data_template['dbs'].items()}
-        if not basescriptutils.check_dbs(dbs):
-            logger.info("Essential databases are missing, aborting pipeline")
+
+        # Check for unused DBs
+        used_dbs = set(db for a in data_template['analyses'].values() for db in a["dbs"])
+        defined_dbs = set(data_template["dbs"].keys())
+        required_dbs = {key for key, db_info in data_template['dbs'].items() if db_info.get('required') is True}
+        unused = defined_dbs - used_dbs - required_dbs
+        if len(unused) > 0:
+            logger.warning(f"The followings DBs are defined but not used: {', '.join(unused)}")
+
+        # Check if the DBs for the specified analyses are available
+        if not basescriptutils.check_dbs(dbs, analyses):
+            logger.info("Required databases are missing, aborting pipeline")
             sys.exit(1)
 
     def prepare_input(self) -> None:
@@ -164,21 +189,21 @@ class BasePipe(BaseScript[ScriptInput, ScriptOutput, ScriptOptions], metaclass=a
         dir_links = self._script_opts.working_dir / 'input'
         dir_links.mkdir(parents=True, exist_ok=True)
 
-        to_replace = {}
+        links_by_key = defaultdict(list)
         for key, path, link_name in self._script_in.get_symlinks():
-            # Create the symlink
             path_link_out = dir_links / link_name
-            if path_link_out.is_symlink():
-                logger.debug(f'Symlink already exists: {path_link_out}')
-            else:
-                ((dir_links / link_name).absolute()).symlink_to(path.resolve().absolute())
 
-            # Save the updated path
-            if key not in to_replace:
-                to_replace[key] = path_link_out
-            else:
-                to_replace[key] = [to_replace[key], path_link_out]
+            # Remove existing symlink
+            if path_link_out.exists() or path_link_out.is_symlink():
+                path_link_out.unlink()
 
-        # Update the script input
-        script_in_updated = dataclasses.replace(self._script_in, **to_replace)
-        self._script_in = script_in_updated
+            # Store the link
+            path_link_out.symlink_to(path.resolve())
+            links_by_key[key].append(path_link_out)
+
+        # Convert lists back to single items (if needed)
+        to_replace = {
+            k: (v[0] if len(v) == 1 else v)
+            for k, v in links_by_key.items()
+        }
+        self._script_in = dataclasses.replace(self._script_in, **to_replace)

@@ -45,7 +45,7 @@ rule gene_detection_kma:
         from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.kma.kma import KMA
         kma = KMA()
-        snakemakeutils.add_pickle_input(kma, 'DB', Path(input.DB))
+        snakemakeutils.add_io_input(kma,'DB', Path(input.DB))
         key_reads = 'PE' if params.input_type in ('illumina', 'fasta', 'fasta_with_vcf') else 'SE'
         fq_input_dict = snakepipelineutils.extract_fq_input(
             Path(input.IO), key_pe='FASTQ_PE', key_se='FASTQ_SE', read_type=key_reads)
@@ -60,7 +60,7 @@ rule gene_detection_kma:
         if params.apm is not None:
             kma.update_parameters(apm=str(params.apm))
         step.run()
-        snakemakeutils.dump_tool_outputs(kma, output)
+        snakemakeutils.dump_io_outputs(kma, output)
 
 rule gene_detection_kma_add_parameters:
     """
@@ -94,11 +94,11 @@ rule gene_detection_kma_hit_extraction:
     run:
         from camel.app.tools.kma.kmagenedetectionhitextractor import KMAGeneDetectionHitExtractor
         extractor = KMAGeneDetectionHitExtractor()
-        snakemakeutils.add_pickle_inputs(extractor, input)
+        snakemakeutils.add_io_inputs(extractor, input)
         step = Step(rule_name=str(rule), tool=extractor, dir_=Path(str(params.dir_)))
         extractor.update_parameters(
             min_percent_identity=float(str(params.min_identity)),
             min_percent_coverage=float(str(params.min_coverage))
         )
         step.run()
-        snakemakeutils.dump_tool_outputs(extractor, output)
+        snakemakeutils.dump_io_outputs(extractor, output)

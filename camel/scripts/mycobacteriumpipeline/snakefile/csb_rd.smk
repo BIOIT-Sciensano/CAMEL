@@ -23,13 +23,13 @@ rule rd_csb_report:
     run:
         from camel.app.tools.pipelines.mycobacterium.rdcsbreporter import RdCsbReporter
         reporter = RdCsbReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         reporter.update_parameters(hit_type=params.detection_method)
         if params.input_type in ('fasta', 'fasta_with_vcf'):
             reporter.update_parameters(pseudo_reads=True)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule rd_csb_report_empty:
     """

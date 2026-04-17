@@ -44,19 +44,19 @@ class LREFinderReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('LRE-Finder', subtitle=self._input_informs['lrefinder']['_name'])
+        section = HtmlReportSection('LRE-Finder', subtitle=self._input_informs['lrefinder']['_name_full'])
         informs = self._input_informs['lrefinder']
         section.add_paragraph(f"Detected species: <i>{informs['species']}</i>")
         data_genes = pd.DataFrame(informs['genes'])
         section.add_header('Detected genes', 3)
         section.add_table([
             [LREFinderReporter.__format_value(row[col]) for col in data_genes.columns] for
-            row in data_genes.to_dict('records')], data_genes.columns, [('class', 'data')])
+            row in data_genes.to_dict('records')], list(data_genes.columns), [('class', 'data')])
         section.add_header('Detected mutations', 3)
         data_mutations = pd.DataFrame(informs['mutations'])
         section.add_table([
             [LREFinderReporter.__format_value(row[col]) for col in data_mutations.columns] for
-            row in data_mutations.to_dict('records')], data_mutations.columns, [('class', 'data')])
+            row in data_mutations.to_dict('records')], list(data_mutations.columns), [('class', 'data')])
         if 'pseudo_reads' in self._parameters:
             section.add_warning_message("The tool is executed on simulated reads.")
         self._tool_outputs['HTML'] = [ToolIOValue(section)]

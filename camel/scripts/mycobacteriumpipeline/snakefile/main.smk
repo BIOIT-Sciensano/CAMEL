@@ -59,12 +59,12 @@ rule report_command_section:
         INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_variant_calling_all = variant_calling.get_command_informs(config),
         INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL,
-        INFORMS_snpit = snpit.OUTPUT_INFORMS if 'snpit' in config['analyses'] else [],
-        INFORMS_16s = str(gene_detection.OUTPUT_INFORMS).format(db='ncbi_16s') if 'ncbi_16s' in config['analyses'] else [],
-        INFORMS_csb_rd = str(gene_detection.OUTPUT_INFORMS).format(db='csb_rd') if 'csb_rd' in config['analyses'] else [],
-        INFORMS_hsp65 = str(gene_detection.OUTPUT_INFORMS).format(db='hsp65') if 'hsp65' in config['analyses'] else [],
-        INFORMS_spoligo = spoligotyping.OUTPUT_INFORMS if 'spoligotyping' in config['analyses'] else [],
-        INFORMS_amr = amrdetection.OUTPUT_INFORMS if 'amr' in config['analyses'] else []
+        INFORMS_snpit = snpit.OUTPUT_INFORMS if 'snpit' in config['analyses_selected'] else [],
+        INFORMS_16s = str(gene_detection.OUTPUT_INFORMS).format(db='ncbi_16s') if 'ncbi_16s' in config['analyses_selected'] else [],
+        INFORMS_csb_rd = str(gene_detection.OUTPUT_INFORMS).format(db='csb_rd') if 'csb_rd' in config['analyses_selected'] else [],
+        INFORMS_hsp65 = str(gene_detection.OUTPUT_INFORMS).format(db='hsp65') if 'hsp65' in config['analyses_selected'] else [],
+        INFORMS_spoligo = spoligotyping.OUTPUT_INFORMS if 'spoligotyping' in config['analyses_selected'] else [],
+        INFORMS_amr = amrdetection.OUTPUT_INFORMS if 'amr' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -89,15 +89,15 @@ rule report_combine_all:
         # Species identification
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         report_ncbi_16s = gene_detection.get_gene_detection_report('ncbi_16s', config),
-        report_51snp = (assay51snp.OUTPUT_REPORT if '51snp' in config['analyses'] else assay51snp.OUTPUT_REPORT_EMPTY),
-        report_csb_rd = (csb_rd.OUTPUT_CSB_RD_REPORT if 'csb_rd' in config['analyses'] else csb_rd.OUTPUT_CSB_RD_REPORT_EMPTY),
-        report_hsp65 = (hsp65.OUTPUT_REPORT if 'hsp65' in config['analyses'] else hsp65.OUTPUT_REPORT_EMPTY),
-        report_snpit = (snpit.OUTPUT_REPORT if 'snpit' in config['analyses'] else snpit.OUTPUT_REPORT_EMPTY),
+        report_51snp = (assay51snp.OUTPUT_REPORT if '51snp' in config['analyses_selected'] else assay51snp.OUTPUT_REPORT_EMPTY),
+        report_csb_rd = (csb_rd.OUTPUT_CSB_RD_REPORT if 'csb_rd' in config['analyses_selected'] else csb_rd.OUTPUT_CSB_RD_REPORT_EMPTY),
+        report_hsp65 = (hsp65.OUTPUT_REPORT if 'hsp65' in config['analyses_selected'] else hsp65.OUTPUT_REPORT_EMPTY),
+        report_snpit = (snpit.OUTPUT_REPORT if 'snpit' in config['analyses_selected'] else snpit.OUTPUT_REPORT_EMPTY),
         # Spoligotyping & lineage determination
-        report_spoligo = (spoligotyping.OUTPUT_REPORT if 'spoligotyping' in config['analyses'] else spoligotyping.OUTPUT_REPORT_EMPTY),
-        report_snp_lineage = (snplineage.OUTPUT_REPORT if 'snp_lineage' in config['analyses'] else snplineage.OUTPUT_REPORT_EMPTY),
+        report_spoligo = (spoligotyping.OUTPUT_REPORT if 'spoligotyping' in config['analyses_selected'] else spoligotyping.OUTPUT_REPORT_EMPTY),
+        report_snp_lineage = (snplineage.OUTPUT_REPORT if 'snp_lineage' in config['analyses_selected'] else snplineage.OUTPUT_REPORT_EMPTY),
         # AMR
-        report_amr = (amrdetection.OUTPUT_REPORT if 'amr' in config['analyses'] else amrdetection.OUTPUT_REPORT_EMPTY),
+        report_amr = (amrdetection.OUTPUT_REPORT if 'amr' in config['analyses_selected'] else amrdetection.OUTPUT_REPORT_EMPTY),
         report_amr_genes = amrdetection.OUTPUT_REPORT_CDS,
         # Typing
         report_mlst = sequence_typing.get_sequence_typing_report('mlst', config),
@@ -183,17 +183,17 @@ rule summary_combine_all:
         quality_checks.OUTPUT_SUMMARY,
         variant_calling.get_summaries(config),
         variant_filtering.OUTPUT_SUMMARY,
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='ncbi_16s', ext=wildcards.ext) if 'ncbi_16s' in config['analyses'] else [],
-        csb_rd.OUTPUT_CSB_RD_SUMMARY if 'csb_rd' in config['analyses'] else [],
-        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='hsp65', ext=wildcards.ext) if 'hsp65' in config['analyses'] else [],
-        assay51snp.OUTPUT_SUMMARY if '51snp' in config['analyses'] else [],
-        snpit.OUTPUT_SUMMARY if 'snpit' in config['analyses'] else [],
-        spoligotyping.OUTPUT_SUMMARY if 'spoligotyping' in config['analyses'] else [],
-        snplineage.OUTPUT_SUMMARY if 'snp_lineage' in config['analyses'] else [],
-        amrdetection.OUTPUT_SUMMARY if 'amr' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses'] else []
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='ncbi_16s', ext=wildcards.ext) if 'ncbi_16s' in config['analyses_selected'] else [],
+        csb_rd.OUTPUT_CSB_RD_SUMMARY if 'csb_rd' in config['analyses_selected'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='hsp65', ext=wildcards.ext) if 'hsp65' in config['analyses_selected'] else [],
+        assay51snp.OUTPUT_SUMMARY if '51snp' in config['analyses_selected'] else [],
+        snpit.OUTPUT_SUMMARY if 'snpit' in config['analyses_selected'] else [],
+        spoligotyping.OUTPUT_SUMMARY if 'spoligotyping' in config['analyses_selected'] else [],
+        snplineage.OUTPUT_SUMMARY if 'snp_lineage' in config['analyses_selected'] else [],
+        amrdetection.OUTPUT_SUMMARY if 'amr' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:

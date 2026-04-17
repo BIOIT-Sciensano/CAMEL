@@ -1,8 +1,10 @@
 import unittest
+from pathlib import Path
 
-
+from camel.app.config import config
 from camel.app.core.command import Command
 from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.busco.busco import Busco
 
@@ -16,6 +18,7 @@ class TestBusco(CamelTestSuite):
     test_file_dir = CamelTestSuite.get_test_file_dir('checkm')
     input_fasta = test_file_dir / 'contigs_neisseria.fasta'
     input_fasta_2 = test_file_dir / 'busco_failure_noble.fasta'
+    db = Path(config.dir_db, 'busco', 'odb10')
 
     def test_dependencies(self) -> None:
         """
@@ -26,7 +29,9 @@ class TestBusco(CamelTestSuite):
         for dependency in busco.dependencies:
             command = Command(f'module load {dependency};')
             command.run(self.running_dir)
-            self.assertEqual(command.returncode, 0, f"Dependency '{dependency}' cannot be loaded")
+            self.assertEqual(
+                command.returncode, 0, f"Dependency '{dependency}' cannot be loaded"
+            )
 
     def test_busco(self) -> None:
         """
@@ -34,7 +39,12 @@ class TestBusco(CamelTestSuite):
         :return: None
         """
         busco = Busco()
-        busco.add_input_files({'FASTA': [ToolIOFile(TestBusco.input_fasta)]})
+        busco.add_input_files(
+            {
+                'FASTA': [ToolIOFile(TestBusco.input_fasta)],
+                'DB': [ToolIODirectory(TestBusco.db)],
+            }
+        )
         busco.update_parameters(lineage_dataset='bacteria_odb10')
         busco.run(self.running_dir)
         self.verify_output_files(busco, 'TXT')
@@ -48,7 +58,12 @@ class TestBusco(CamelTestSuite):
         :return: None
         """
         busco = Busco()
-        busco.add_input_files({'FASTA': [ToolIOFile(TestBusco.input_fasta_2)]})
+        busco.add_input_files(
+            {
+                'FASTA': [ToolIOFile(TestBusco.input_fasta_2)],
+                'DB': [ToolIODirectory(TestBusco.db)],
+            }
+        )
         busco.update_parameters(lineage_dataset='bacteria_odb10')
         busco.run(self.running_dir)
         self.verify_output_files(busco, 'TXT')

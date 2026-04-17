@@ -33,7 +33,7 @@ class ProdigalReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('Prodigal', subtitle=self._input_informs['prodigal']['_name'])
+        section = HtmlReportSection('Prodigal', subtitle=self._input_informs['prodigal']['_name_full'])
 
         # Stats
         section.add_table(

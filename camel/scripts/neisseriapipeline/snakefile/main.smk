@@ -56,23 +56,23 @@ rule report_create_command_section:
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
         INFORMS_assembly_map = assembly.get_qc_informs(config, config['input']['type']),
-        INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses'] else [],
-        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses'] else [],
-        INFORMS_amrfnder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses'] else [],
-        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses'] else [],
-        INFORMS_rmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='rmlst') if 'rmlst' in config['analyses'] else [],
-        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst') if 'mlst' in config['analyses'] else [],
-        INFORMS_rplf = sequence_typing.OUTPUT_INFORMS.format(scheme='rplf') if 'rplf' in config['analyses'] else [],
-        INFORMS_bast = sequence_typing.OUTPUT_INFORMS.format(scheme='bast') if 'bast' in config['analyses'] else [],
-        INFORMS_pora = sequence_typing.OUTPUT_INFORMS.format(scheme='pora') if 'pora' in config['analyses'] else [],
-        INFORMS_porb = sequence_typing.OUTPUT_INFORMS.format(scheme='porb') if 'porb' in config['analyses'] else [],
-        INFORMS_feta = sequence_typing.OUTPUT_INFORMS.format(scheme='feta') if 'feta' in config['analyses'] else [],
-        INFORMS_amr = sequence_typing.OUTPUT_INFORMS.format(scheme='resistance_genes') if 'resistance_genes' in config['analyses'] else [],
-        INFORMS_vaccine = sequence_typing.OUTPUT_INFORMS.format(scheme='vaccine_targets') if 'vaccine_targets' in config['analyses'] else [],
-        INFORMS_fhbp = sequence_typing.OUTPUT_INFORMS.format(scheme='fhbp') if 'fhbp' in config['analyses'] else [],
-        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else [],
-        INFORMS_cgmlst_v3 = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_v3') if 'cgmlst_v3' in config['analyses'] else [],
-        INFORMS_serogroup = serogroup_determination.OUTPUT_INFORMS if 'serogroup' in config['analyses'] else []
+        INFORMS_variant_calling_all = variant_calling.get_command_informs(config) if 'variant_calling' in config['analyses_selected'] else [],
+        INFORMS_variant_filtering_all = variant_filtering.OUTPUT_INFORMS_ALL if 'variant_calling' in config['analyses_selected'] else [],
+        INFORMS_amrfnder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses_selected'] else [],
+        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses_selected'] else [],
+        INFORMS_rmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='rmlst') if 'rmlst' in config['analyses_selected'] else [],
+        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst') if 'mlst' in config['analyses_selected'] else [],
+        INFORMS_rplf = sequence_typing.OUTPUT_INFORMS.format(scheme='rplf') if 'rplf' in config['analyses_selected'] else [],
+        INFORMS_bast = sequence_typing.OUTPUT_INFORMS.format(scheme='bast') if 'bast' in config['analyses_selected'] else [],
+        INFORMS_pora = sequence_typing.OUTPUT_INFORMS.format(scheme='pora') if 'pora' in config['analyses_selected'] else [],
+        INFORMS_porb = sequence_typing.OUTPUT_INFORMS.format(scheme='porb') if 'porb' in config['analyses_selected'] else [],
+        INFORMS_feta = sequence_typing.OUTPUT_INFORMS.format(scheme='feta') if 'feta' in config['analyses_selected'] else [],
+        INFORMS_amr = sequence_typing.OUTPUT_INFORMS.format(scheme='resistance_genes') if 'resistance_genes' in config['analyses_selected'] else [],
+        INFORMS_vaccine = sequence_typing.OUTPUT_INFORMS.format(scheme='vaccine_targets') if 'vaccine_targets' in config['analyses_selected'] else [],
+        INFORMS_fhbp = sequence_typing.OUTPUT_INFORMS.format(scheme='fhbp') if 'fhbp' in config['analyses_selected'] else [],
+        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses_selected'] else [],
+        INFORMS_cgmlst_v3 = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_v3') if 'cgmlst_v3' in config['analyses_selected'] else [],
+        INFORMS_serogroup = serogroup_determination.OUTPUT_INFORMS if 'serogroup' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -102,11 +102,11 @@ rule neisseria_additional_resistance_gene_metadata:
         from camel.app.core.snakemake.step import Step
         from camel.app.tools.pipelines.neisseria.resistancemetadataextractor import ResistanceMetadataExtractor
         extractor = ResistanceMetadataExtractor()
-        snakemakeutils.add_pickle_inputs(extractor, input)
+        snakemakeutils.add_io_inputs(extractor, input)
         step = Step(rule_name=str(rule), tool=extractor, dir_=Path(str(params.dir_)))
         extractor.update_parameters(loci=params.loci)
         step.run()
-        snakemakeutils.dump_tool_outputs(extractor, output)
+        snakemakeutils.dump_io_outputs(extractor, output)
 
 rule combine_reports:
     """
@@ -120,11 +120,11 @@ rule combine_reports:
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
         report_adv_qc= quality_checks.OUTPUT_REPORT.format(input_type=config['input']['type']),
-        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses'] else [],
+        report_variant = variant_calling.get_reports(config) if 'variant_calling' in config['analyses_selected'] else [],
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         # AMR detection
-        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_REPORT_EMPTY,
-        report_resfinder4 = resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses'] else resfinder4.OUTPUT_REPORT_EMPTY,
+        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses_selected'] else amrfinder.OUTPUT_REPORT_EMPTY,
+        report_resfinder4 = resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses_selected'] else resfinder4.OUTPUT_REPORT_EMPTY,
         # Sequence typing
         report_mlst = sequence_typing.get_sequence_typing_report('mlst', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
@@ -134,13 +134,13 @@ rule combine_reports:
         report_feta = sequence_typing.get_sequence_typing_report('feta', config),
         report_rplf = sequence_typing.get_sequence_typing_report('rplf', config),
         report_vaccine_targets = sequence_typing.get_sequence_typing_report('vaccine_targets', config),
-        report_resistance_genes = rules.neisseria_additional_resistance_gene_metadata.output.VAL_HTML if 'resistance_genes' in config['analyses'] else sequence_typing.OUTPUT_REPORT_EMPTY.format(scheme='resistance_genes'),
+        report_resistance_genes = rules.neisseria_additional_resistance_gene_metadata.output.VAL_HTML if 'resistance_genes' in config['analyses_selected'] else sequence_typing.OUTPUT_REPORT_EMPTY.format(scheme='resistance_genes'),
         report_fhbp = sequence_typing.get_sequence_typing_report('fhbp', config),
         report_bast = sequence_typing.get_sequence_typing_report('bast', config),
-        report_gmats = gmats.OUTPUT_REPORT if 'gmats' in config['analyses'] else gmats.OUTPUT_REPORT_EMPTY,
-        report_mendevar = mendevar.OUTPUT_REPORT if 'mendevar' in config['analyses'] else mendevar.OUTPUT_REPORT_EMPTY,
-        report_serogroup = serogroup_determination.OUTPUT_REPORT if 'serogroup' in config['analyses'] else serogroup_determination.OUTPUT_REPORT_EMPTY,
-        report_serogroup_legacy = serogroup_determination.OUTPUT_LEGACY_REPORT if 'serogroup' in config['analyses'] else serogroup_determination.OUTPUT_LEGACY_REPORT_EMPTY,
+        report_gmats = gmats.OUTPUT_REPORT if 'gmats' in config['analyses_selected'] else gmats.OUTPUT_REPORT_EMPTY,
+        report_mendevar = mendevar.OUTPUT_REPORT if 'mendevar' in config['analyses_selected'] else mendevar.OUTPUT_REPORT_EMPTY,
+        report_serogroup = serogroup_determination.OUTPUT_REPORT if 'serogroup' in config['analyses_selected'] else serogroup_determination.OUTPUT_REPORT_EMPTY,
+        report_serogroup_legacy = serogroup_determination.OUTPUT_LEGACY_REPORT if 'serogroup' in config['analyses_selected'] else serogroup_determination.OUTPUT_LEGACY_REPORT_EMPTY,
         report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_create_command_section.output.HTML
     output:
@@ -180,7 +180,7 @@ rule combine_reports:
         basepipeutils.add_content_contamination_check(
             report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.append(('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]))
-        if 'variant_calling' in config['analyses']:
+        if 'variant_calling' in config['analyses_selected']:
             report_structure.append(('Variant calling', 'variant', [Path(input.report_variant)]))
         report_structure.extend([
             ('Species identification', 'species', [Path(input.report_rmlst)]),
@@ -211,24 +211,24 @@ rule combine_summary_files:
         quality_checks.OUTPUT_SUMMARY,
         lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
-        variant_calling.get_summaries(config) if 'variant_calling' in config['analyses'] else [],
-        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses'] else [],
-        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='rplf', ext=wildcards.ext) if 'rplf' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='bast', ext=wildcards.ext) if 'bast' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='pora', ext=wildcards.ext) if 'pora' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='porb', ext=wildcards.ext) if 'porb' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='feta', ext=wildcards.ext) if 'feta' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='fhbp', ext=wildcards.ext) if 'fhbp' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='resistance_genes', ext=wildcards.ext) if 'resistance_genes' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='vaccine_targets', ext=wildcards.ext) if 'vaccine_targets' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses'] else [],
-        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst_v3', ext=wildcards.ext) if 'cgmlst_v3' in config['analyses'] else [],
-        gmats.OUTPUT_SUMMARY if 'gmats' in config['analyses'] else [],
-        mendevar.OUTPUT_SUMMARY if 'mendevar' in config['analyses'] else [],
-        serogroup_determination.OUTPUT_SUMMARY if 'serogroup' in config['analyses'] else []
+        variant_calling.get_summaries(config) if 'variant_calling' in config['analyses_selected'] else [],
+        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses_selected'] else [],
+        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='rplf', ext=wildcards.ext) if 'rplf' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='bast', ext=wildcards.ext) if 'bast' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='pora', ext=wildcards.ext) if 'pora' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='porb', ext=wildcards.ext) if 'porb' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='feta', ext=wildcards.ext) if 'feta' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='fhbp', ext=wildcards.ext) if 'fhbp' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='resistance_genes', ext=wildcards.ext) if 'resistance_genes' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='vaccine_targets', ext=wildcards.ext) if 'vaccine_targets' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else [],
+        lambda wildcards: sequence_typing.OUTPUT_SUMMARY.format(scheme='cgmlst_v3', ext=wildcards.ext) if 'cgmlst_v3' in config['analyses_selected'] else [],
+        gmats.OUTPUT_SUMMARY if 'gmats' in config['analyses_selected'] else [],
+        mendevar.OUTPUT_SUMMARY if 'mendevar' in config['analyses_selected'] else [],
+        serogroup_determination.OUTPUT_SUMMARY if 'serogroup' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:

@@ -63,7 +63,7 @@ class BacMetReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('BacMet', subtitle=self._input_informs['blastp']['_name'])
+        section = HtmlReportSection('BacMet', subtitle=self._input_informs['blastp']['_name_full'])
 
         # Parameters
         section.add_table([

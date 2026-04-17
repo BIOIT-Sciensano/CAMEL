@@ -34,12 +34,12 @@ rule shigatyper_run:
             typer.add_input_files({'FASTQ_SE': fq_in.se})
         else:
             # When the input type is FASTA the simulated reads are used as input
-            snakemakeutils.add_pickle_input(typer, 'FASTQ_PE', Path(input.IO))
+            snakemakeutils.add_io_input(typer,'FASTQ_PE', Path(input.IO))
 
         # Run tool
         step = Step(rule_name=str(rule), tool=typer, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(typer, output)
+        snakemakeutils.dump_io_outputs(typer, output)
 
 rule shigatyper_report:
     """
@@ -58,11 +58,11 @@ rule shigatyper_report:
         from camel.app.tools.pipelines.shigella.shigatyperreporter import ShigaTyperReporter
         reporter = ShigaTyperReporter()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         if params.input_type == 'fasta':
             reporter.update_parameters(pseudo_reads=True)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule shigatyper_report_empty:
     """

@@ -1,14 +1,13 @@
 import unittest
 
 from camel.app.cli import cliutils
-from camel.app.config import config
-from camel.app.core import cameltesthelper
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.dbs.dbutils import DBEntry
-from camel.app.scriptutils.basescript import basescriptutils
+from camel.app.scriptutils.basepipe import basepipeutils
 from camel.scripts.listeriapipeline import CONFIG_DATA
-from camel.scripts.listeriapipeline.mainlisteriapipeline import CUSTOM_ANALYSES, main
+from camel.scripts.listeriapipeline.mainlisteriapipeline import main
 from camel.tests import longRunningTest
+
+CUSTOM_ANALYSES = basepipeutils.get_custom_analyses(CONFIG_DATA)
 
 
 class TestListeriaPipeline(CamelTestSuite):
@@ -25,18 +24,8 @@ class TestListeriaPipeline(CamelTestSuite):
     input_fastq_se = test_file_dir / 'pipelines' / 'Listeria-SRR17965220_ont-ds.fastq.gz'
     input_fasta = test_file_dir / 'pipelines' / 'Listeria-S16BD02199.fasta'
 
-    def test_dbs(self) -> None:
-        """
-        Checks if the databases for the pipeline are available.
-        :return: None
-        """
-        data_dbs = cameltesthelper.extract_from_yaml(
-            CONFIG_DATA, 'dbs', placeholders={'DB_ROOT': config.dir_db})
-        dbs = {key: DBEntry(**data) for key, data in data_dbs.items()}
-        self.assertEqual(basescriptutils.check_dbs(dbs), True)
-
     @longRunningTest()
-    def test_listeria_pipeline_blast(self) -> None:
+    def test_blast(self) -> None:
         """
         Tests the Listeria pipeline with all assays except for cgMLST.
         :return: None
@@ -61,7 +50,7 @@ class TestListeriaPipeline(CamelTestSuite):
         self.assertGreater(path_fasta_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_listeria_pipeline_kma(self) -> None:
+    def test_kma(self) -> None:
         """
         Tests the Listeria pipeline with all assays except for cgMLST.
         :return: None
@@ -85,7 +74,7 @@ class TestListeriaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_listeria_pipeline_fasta(self) -> None:
+    def test_fasta(self) -> None:
         """
         Tests the Listeria pipeline using FASTA as input with all assays except for cgMLST.
         :return: None
@@ -105,7 +94,7 @@ class TestListeriaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_listeria_pipeline_ont(self) -> None:
+    def test_ont(self) -> None:
         """
         Tests the Listeria pipeline using FASTA as input with all assays except for cgMLST with ONT input
         :return: None
@@ -125,7 +114,7 @@ class TestListeriaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_listeria_pipeline_kma_ont(self) -> None:
+    def test_kma_ont(self) -> None:
         """
         Tests the Listeria pipeline with all assays except for cgMLST, using KMA with ONT input
         :return: None

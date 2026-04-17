@@ -24,10 +24,10 @@ rule serotyping_sistr_run:
         from camel.app.tools.pipelines.salmonella.sistr import Sistr
         sistr_tool = Sistr()
         sistr_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db))]})
-        snakemakeutils.add_pickle_inputs(sistr_tool, input)
+        snakemakeutils.add_io_inputs(sistr_tool, input)
         step = Step(rule_name=str(rule), tool=sistr_tool, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(sistr_tool, output)
+        snakemakeutils.dump_io_outputs(sistr_tool, output)
 
 rule serotyping_sistr_dump_summary_info:
     """
@@ -98,10 +98,10 @@ rule serotyping_sistr_report:
         from camel.app.tools.pipelines.salmonella.sistrreporter import SistrReporter
         reporter = SistrReporter()
         reporter.add_input_files({'DIR_sistr': [ToolIODirectory(Path(params.db_path_sistr))]})
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(str(rule), reporter, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule serotyping_sistr_report_empty:
     """

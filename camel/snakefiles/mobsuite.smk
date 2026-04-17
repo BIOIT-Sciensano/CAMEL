@@ -26,12 +26,12 @@ rule mobsuite_mob_recon:
     run:
         from camel.app.tools.mobsuite.mobrecon import MOBRecon
         mob_recon = MOBRecon()
-        snakemakeutils.add_pickle_input(mob_recon, 'FASTA', Path(input.FASTA))
+        snakemakeutils.add_io_input(mob_recon,'FASTA', Path(input.FASTA))
         mob_recon.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
         mob_recon.update_parameters(num_threads=threads)
         step = Step(rule_name=str(rule), tool=mob_recon, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(mob_recon, output)
+        snakemakeutils.dump_io_outputs(mob_recon, output)
 
 rule mobsuite_mob_recon_reporter:
     """
@@ -50,11 +50,11 @@ rule mobsuite_mob_recon_reporter:
     run:
         from camel.app.tools.mobsuite.mobreconreporter import MOBReconReporter
         reporter = MOBReconReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         reporter.update_parameters(contig_report=params.contig_report)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule mobsuite_mob_recon_report_empty:
     """
@@ -136,7 +136,7 @@ rule mobsuite_report_genomic_context:
             detection_method=str(params.detection_method), input_type=str(params.input_type))
         step = Step(rule_name=str(rule), tool=genomic_context, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(genomic_context, output)
+        snakemakeutils.dump_io_outputs(genomic_context, output)
 
 rule mobsuite_report_genomic_context_empty:
     """

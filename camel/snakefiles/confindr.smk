@@ -45,7 +45,7 @@ rule confindr_run:
         # Run the tool
         step = Step(rule_name=str(rule), tool=confindr_, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(confindr_, output)
+        snakemakeutils.dump_io_outputs(confindr_, output)
 
 rule confindr_report:
     """
@@ -62,9 +62,9 @@ rule confindr_report:
         reporter = ConFindrReporter()
         reporter.update_parameters(input_type=config['input']['type'])
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule confindr_report_empty:
     """

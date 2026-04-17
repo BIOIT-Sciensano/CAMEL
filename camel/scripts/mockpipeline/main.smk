@@ -51,8 +51,8 @@ rule report_create_command_section:
         INFORMS_busco = quast.OUTPUT_INFORMS_BUSCO,
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
-        INFORMS_ncbi_amr = gene_detection.OUTPUT_INFORMS.format(db='ncbi_amr') if 'ncbi_amr' in config['analyses'] else [],
-        INFORMS_snpit = snpit.OUTPUT_INFORMS if 'snpit' in config['analyses'] else []
+        INFORMS_ncbi_amr = gene_detection.OUTPUT_INFORMS.format(db='ncbi_amr') if 'ncbi_amr' in config['analyses_selected'] else [],
+        INFORMS_snpit = snpit.OUTPUT_INFORMS if 'snpit' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -74,7 +74,7 @@ rule report_create:
         report_confindr = confindr.get_report(config),
         report_adv_qc = quality_checks.OUTPUT_REPORT.format(input_type=config['input']['type']),
         report_ncbi_amr = gene_detection.get_gene_detection_report('ncbi_amr', config),
-        report_snpit = snpit.OUTPUT_REPORT if 'snpit' in config['analyses'] else snpit.OUTPUT_REPORT_EMPTY,
+        report_snpit = snpit.OUTPUT_REPORT if 'snpit' in config['analyses_selected'] else snpit.OUTPUT_REPORT_EMPTY,
         report_commands = rules.report_create_command_section.output.HTML
     output:
         HTML = config['output']['html']
@@ -131,7 +131,7 @@ rule summary_combine:
         lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
         quality_checks.OUTPUT_SUMMARY,
-        snpit.OUTPUT_SUMMARY if 'snpit' in config['analyses'] else []
+        snpit.OUTPUT_SUMMARY if 'snpit' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:

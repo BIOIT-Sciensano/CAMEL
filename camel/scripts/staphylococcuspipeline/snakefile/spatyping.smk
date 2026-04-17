@@ -21,7 +21,7 @@ rule spa_typing_blastn:
         from camel.app.tools.spatyping.spatyping import SpaTyping
         from camel.app.core.io.tooliofile import ToolIOFile
         blastn = Blastn()
-        snakemakeutils.add_pickle_input(blastn, 'FASTA', Path(input.FASTA))
+        snakemakeutils.add_io_input(blastn,'FASTA', Path(input.FASTA))
         blastn.add_input_files({'DB_BLAST': [ToolIOFile(Path(input.DB_BLAST))]})
         blastn.update_parameters(
             output_format=SpaTyping.BLASTN_OUTPUT_FORMAT,
@@ -30,7 +30,7 @@ rule spa_typing_blastn:
             task='blastn')
         step = Step(rule_name=str(rule), tool=blastn, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(blastn, output)
+        snakemakeutils.dump_io_outputs(blastn, output)
 
 rule spa_typing_run:
     """
@@ -48,11 +48,11 @@ rule spa_typing_run:
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.spatyping.spatyping import SpaTyping
         spatyping = SpaTyping()
-        snakemakeutils.add_pickle_input(spatyping, 'TSV', Path(input.TSV))
+        snakemakeutils.add_io_input(spatyping,'TSV', Path(input.TSV))
         spatyping.add_input_files({'CSV_profiles': [ToolIOFile(Path(input.CSV_profiles))]})
         step = Step(rule_name=str(rule), tool=spatyping, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(spatyping, output)
+        snakemakeutils.dump_io_outputs(spatyping, output)
 
 rule spa_typing_report:
     """
@@ -68,10 +68,10 @@ rule spa_typing_report:
     run:
         from camel.app.tools.spatyping.spatypingreporter import SpaTypingReporter
         reporter = SpaTypingReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule spa_typing_report_empty:
     """

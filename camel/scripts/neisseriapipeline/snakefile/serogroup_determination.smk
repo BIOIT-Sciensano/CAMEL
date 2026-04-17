@@ -26,7 +26,7 @@ rule serogroup_determination_analysis:
             detector.add_input_files({f'hits_{serogroup}': snakemakeutils.load_object(Path(hits_output))})
         step = Step(rule_name=str(rule), tool=detector, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(detector, output)
+        snakemakeutils.dump_io_outputs(detector, output)
 
 rule serogroup_determination_report:
     """
@@ -41,10 +41,10 @@ rule serogroup_determination_report:
     run:
         from camel.app.tools.pipelines.neisseria.serogroupdeterminationreporter import SerogroupDeterminationReporter
         reporter = SerogroupDeterminationReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule serogroup_determination_report_empty:
     """
@@ -71,10 +71,10 @@ rule serogroup_capsule_tool:
     run:
         from camel.app.tools.pipelines.neisseria.characterizeneisseriacapsule import CharacterizeNeisseriaCapsule
         capsule_typer = CharacterizeNeisseriaCapsule()
-        snakemakeutils.add_pickle_inputs(capsule_typer, input)
+        snakemakeutils.add_io_inputs(capsule_typer, input)
         step = Step(rule_name=str(rule), tool=capsule_typer, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(capsule_typer, output)
+        snakemakeutils.dump_io_outputs(capsule_typer, output)
 
 rule serogroup_capsule_tool_report:
     """
@@ -92,10 +92,10 @@ rule serogroup_capsule_tool_report:
         from camel.app.tools.pipelines.neisseria.characterizeneisseriacapsulereporter import \
             CharacterizeNeisseriaCapsuleReporter
         reporter = CharacterizeNeisseriaCapsuleReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule serogroup_capsule_tool_report_empty:
     """

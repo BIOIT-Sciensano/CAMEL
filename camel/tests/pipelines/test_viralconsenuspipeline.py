@@ -23,7 +23,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     # Illumina - FASTA reference file #
     ###################################
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_influenza_a_h1n1(self) -> None:
+    def test_illumina_fasta_ref_influenza_a_h1n1(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -48,7 +48,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_influenza_a_h1n1_with_json(self) -> None:
+    def test_illumina_fasta_ref_influenza_a_h1n1_with_json(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -76,7 +76,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_json_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_influenza_a_h1n1_with_fasta_export(self) -> None:
+    def test_illumina_fasta_ref_influenza_a_h1n1_with_fasta_export(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -104,7 +104,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(fastautils.count_reads(path_fasta_out), 0)
 
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_influenza_a_h1n1_with_scrubbing(self) -> None:
+    def test_illumina_fasta_ref_influenza_a_h1n1_with_scrubbing(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -124,13 +124,13 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--analyses', 'human-read-scrubbing',
+            '--analyses', 'human_read_scrubbing',
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_influenza_a_h3n2(self) -> None:
+    def test_illumina_fasta_ref_influenza_a_h3n2(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -155,7 +155,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_influenza_b_yam(self) -> None:
+    def test_illumina_fasta_ref_influenza_b_yam(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -180,7 +180,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_influenza_b_vic(self) -> None:
+    def test_illumina_fasta_ref_influenza_b_vic(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -205,7 +205,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_sars_cov_2(self) -> None:
+    def test_illumina_fasta_ref_sars_cov_2(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -230,7 +230,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_illumina_fasta_ref_other(self) -> None:
+    def test_illumina_fasta_ref_other(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -256,7 +256,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_fasta_ref_fasta_input(self) -> None:
+    def test_fasta_ref_fasta_input(self) -> None:
         """
         Tests the viral consensus pipeline with FASTA input.
         :return: None
@@ -276,7 +276,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
-    def test_viral_consensus_fasta_ref_fasta_input_with_antivirals(self) -> None:
+    def test_fasta_ref_fasta_input_with_antivirals(self) -> None:
         """
         Tests the viral consensus pipeline with FASTA input and antiviral mutation detection.
         :return: None
@@ -300,7 +300,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     # Illumina - Automatic reference selection #
     ############################################
     @longRunningTest()
-    def test_viral_consensus_illumina_ref_selection_influenza_a_h1n1(self) -> None:
+    def test_illumina_ref_selection_influenza_a_h1n1(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -328,7 +328,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     # ONT - FASTA reference file #
     ##############################
     @longRunningTest()
-    def test_viral_consensus_ont_fasta_ref_influenza_a_h1n1(self) -> None:
+    def test_ont_fasta_ref_influenza_a_h1n1(self) -> None:
         """
         Tests the viral consensus pipeline with ONT data.
         :return: None
@@ -352,7 +352,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_ont_fasta_ref_influenza_a_h1n1_with_scrubbing(self) -> None:
+    def test_ont_fasta_ref_influenza_a_h1n1_with_scrubbing(self) -> None:
         """
         Tests the viral consensus pipeline with ONT data.
         :return: None
@@ -371,13 +371,13 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--analyses', 'human-read-scrubbing',
+            '--analyses', 'human_read_scrubbing',
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_ont_fasta_ref_influenza_a_h3n2(self) -> None:
+    def test_ont_fasta_ref_influenza_a_h3n2(self) -> None:
         """
         Tests the viral consensus pipeline with ONT data.
         :return: None
@@ -401,7 +401,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_ont_ref_selection_influenza_b_missing_segments_fastaref(self) -> None:
+    def test_ont_ref_selection_influenza_b_missing_segments_fastaref(self) -> None:
         """
         Tests the viral consensus pipeline with ONT data with missing segments.
         Previously the pipeline used to fail on Nextclade when segments were missing but after adding the rule
@@ -427,7 +427,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_ont_fasta_ref_sars_cov_2(self) -> None:
+    def test_ont_fasta_ref_sars_cov_2(self) -> None:
         """
         Tests the viral consensus pipeline with ONT data.
         :return: None
@@ -451,7 +451,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_ont_fasta_ref_sars_cov_2_primer_removal(self) -> None:
+    def test_ont_fasta_ref_sars_cov_2_primer_removal(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -475,7 +475,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
-    def test_viral_consensus_fasta_ref_fasta_input_sars_cov_2(self) -> None:
+    def test_fasta_ref_fasta_input_sars_cov_2(self) -> None:
         """
         Tests the viral consensus pipeline with Illumina data.
         :return: None
@@ -499,7 +499,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     # ONT + automatic reference selection #
     #######################################
     @longRunningTest()
-    def test_viral_consensus_ont_ref_selection_influenza_b_missing_segments_refsel(self) -> None:
+    def test_ont_ref_selection_influenza_b_missing_segments_refsel(self) -> None:
         """
         Tests the viral consensus pipeline with ONT data with missing segments.
         Previously the pipeline used to fail on Nextclade when segments were missing but after adding the rule
@@ -525,7 +525,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_viral_consensus_ont_ref_selection_sars_cov_2(self) -> None:
+    def test_ont_ref_selection_sars_cov_2(self) -> None:
         """
         Tests the viral consensus pipeline with ONT data & automatic reference selection.
         :return: None

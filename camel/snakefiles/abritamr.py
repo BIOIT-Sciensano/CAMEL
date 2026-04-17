@@ -22,7 +22,7 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     paths = []
 
     # AbriTAMR is disabled -> return empty list
-    if 'abritamr' not in config['analyses']:
+    if 'abritamr' not in config['analyses_selected']:
         return []
     else:
         paths.append(OUTPUT_RUN_INFORMS)

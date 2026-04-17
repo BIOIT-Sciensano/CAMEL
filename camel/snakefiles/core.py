@@ -17,7 +17,7 @@ def get_fastq_input_downsampling(config: dict[str, Any], read_key: str) -> str:
     :param read_key: fastq_se or fastq_pe
     :return: Path to the input file
     """
-    if 'human_read_scrubbing' in config.get('analyses', []):
+    if 'human_read_scrubbing' in config.get('analyses_selected', []):
         return human_read_scrubbing.OUTPUT_FASTQ.format(input_format=read_key)
     else:
         return human_read_scrubbing.INPUT_FASTQ.format(input_format=read_key)

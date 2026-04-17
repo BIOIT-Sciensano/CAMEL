@@ -20,15 +20,15 @@ rule amr_lofreq:
         INFORMS = 'amr/lofreq/vcf/informs.io' # amrdetection.OUTPUT_INFORMS_LOFREQ
     params:
         dir_ = 'amr/lofreq/vcf',
-        bed_regions = config['amr']['bed_regions']
+        bed_regions = Path(config['amr']['db'], 'amr_regions.bed')
     run:
         from camel.app.tools.lofreq.lofreqcall import LofreqCall
         lofreq_call = LofreqCall()
-        snakemakeutils.add_pickle_inputs(lofreq_call, input)
-        lofreq_call.update_parameters(bed=params.bed_regions, no_default_filter=False)
+        snakemakeutils.add_io_inputs(lofreq_call, input)
+        lofreq_call.update_parameters(bed=str(params.bed_regions), no_default_filter=False)
         step = Step(rule_name=str(rule), tool=lofreq_call, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(lofreq_call, output)
+        snakemakeutils.dump_io_outputs(lofreq_call, output)
 
 rule amr_extract_variant_positions:
     """
@@ -40,16 +40,16 @@ rule amr_extract_variant_positions:
         VCF = 'amr/filtering/{variant_caller}/vcf.io'
     params:
         dir_ = lambda wildcards: f'amr/filtering/{wildcards.variant_caller}',
-        bed_regions = config['amr']['bed_regions']
+        bed_regions = Path(config['amr']['db'], 'amr_regions.bed')
     run:
         from camel.app.tools.bcftools.bcftoolsfilter import BcftoolsFilter
         bcf_filter = BcftoolsFilter()
-        snakemakeutils.add_pickle_inputs(bcf_filter, input)
+        snakemakeutils.add_io_inputs(bcf_filter, input)
         bcf_filter.add_input_files({'BED_include': [ToolIOFile(Path(params.bed_regions))]})
         bcf_filter.update_parameters(targets_overlap='2')
         step = Step(rule_name=str(rule), tool=bcf_filter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(bcf_filter, output)
+        snakemakeutils.dump_io_outputs(bcf_filter, output)
 
 rule amr_annotate_variants_csq:
     """
@@ -67,11 +67,11 @@ rule amr_annotate_variants_csq:
     run:
         from camel.app.tools.bcftools.bcftoolscsq import BcftoolsCsq
         csq = BcftoolsCsq()
-        snakemakeutils.add_pickle_inputs(csq, input)
+        snakemakeutils.add_io_inputs(csq, input)
         csq.add_input_files({'GFF': [ToolIOFile(Path(params.gff))]})
         step = Step(rule_name=str(rule), tool=csq, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(csq, output)
+        snakemakeutils.dump_io_outputs(csq, output)
 
 rule amr_screen_mutations:
     """
@@ -87,21 +87,21 @@ rule amr_screen_mutations:
         INFORMS = 'amr/screen/informs.io'
     params:
         dir_ = 'amr/screen',
-        db = config['amr']['mutation_db'],
-        resistance_bed = config['amr']['bed_regions']
+        db = config['amr']['db'],
+        bed_regions = Path(config['amr']['db'], 'amr_regions.bed')
     run:
         from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.mycobacterium.amr.amrscreen import AMRScreen
 
         amr_screen = AMRScreen()
-        snakemakeutils.add_pickle_inputs(amr_screen, input)
+        snakemakeutils.add_io_inputs(amr_screen, input)
         amr_screen.add_input_files({
             'DB': [ToolIODirectory(Path(params.db))],
-            'BED': [ToolIOFile(Path(params.resistance_bed))]
+            'BED': [ToolIOFile(Path(params.bed_regions))]
         })
         step = Step(rule_name=str(rule), tool=amr_screen, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(amr_screen, output)
+        snakemakeutils.dump_io_outputs(amr_screen, output)
 
 rule amr_export_positions:
     """
@@ -147,11 +147,11 @@ rule amr_pileup_variant_positions:
     run:
         from camel.app.tools.samtools.samtoolsmpileup import SamtoolsMPileup
         samtools_mpileup = SamtoolsMPileup()
-        snakemakeutils.add_pickle_inputs(samtools_mpileup, input)
+        snakemakeutils.add_io_inputs(samtools_mpileup, input)
         samtools_mpileup.update_parameters(count_orphans=True, min_base_quality=0)
         step = Step(rule_name=str(rule), tool=samtools_mpileup, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_mpileup, output)
+        snakemakeutils.dump_io_outputs(samtools_mpileup, output)
 
 rule amr_parse_actg_counts:
     """
@@ -181,16 +181,16 @@ rule amr_predict_phenotype:
         JSON = 'amr/phenotype_prediction/json_muts_by_ab.io'
     params:
         dir_ = 'amr/phenotype_prediction',
-        dir_amr_db = config['amr']['mutation_db']
+        dir_amr_db = config['amr']['db']
     run:
         from camel.app.core.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.mycobacterium.amr.amrphenotypepredictor import AMRPhenotypePredictor
         type_determination = AMRPhenotypePredictor()
-        snakemakeutils.add_pickle_inputs(type_determination, input)
+        snakemakeutils.add_io_inputs(type_determination, input)
         type_determination.add_input_files({'DIR_DB': [ToolIODirectory(Path(params.dir_amr_db))]})
         step = Step(rule_name=str(rule), tool=type_determination, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(type_determination, output)
+        snakemakeutils.dump_io_outputs(type_determination, output)
 
 rule amr_determine_resistance_type:
     """
@@ -205,10 +205,10 @@ rule amr_determine_resistance_type:
     run:
         from camel.app.tools.pipelines.mycobacterium.amr.amrtypedetermination import AMRTypeDetermination
         determination = AMRTypeDetermination()
-        snakemakeutils.add_pickle_inputs(determination, input)
+        snakemakeutils.add_io_inputs(determination, input)
         step = Step(rule_name=str(rule), tool=determination, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(determination, output)
+        snakemakeutils.dump_io_outputs(determination, output)
 
 rule amr_visualization_create_template:
     """
@@ -221,16 +221,16 @@ rule amr_visualization_create_template:
         TXT = 'amr/visualization/txt.io'
     params:
         dir_ = 'amr/visualization',
-        resistance_bed = config['amr']['bed_regions']
+        bed_regions = Path(config['amr']['db'], 'amr_regions.bed')
     run:
         from camel.app.tools.pipelines.mycobacterium.amr.amrcircostemplategeneration import AMRCircosTemplateGeneration
         templater = AMRCircosTemplateGeneration()
         templater.update_parameters(spacing=500)
-        templater.add_input_files({'BED': [ToolIOFile(Path(params.resistance_bed))]})
-        snakemakeutils.add_pickle_inputs(templater, input)
+        templater.add_input_files({'BED': [ToolIOFile(Path(params.bed_regions))]})
+        snakemakeutils.add_io_inputs(templater, input)
         step = Step(rule_name=str(rule), tool=templater, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(templater, output)
+        snakemakeutils.dump_io_outputs(templater, output)
 
 rule amr_visualization_circos:
     """
@@ -245,10 +245,10 @@ rule amr_visualization_circos:
     run:
         from camel.app.tools.circos.circos import Circos
         circos = Circos()
-        snakemakeutils.add_pickle_inputs(circos, input)
+        snakemakeutils.add_io_inputs(circos, input)
         step = Step(str(rule), circos, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(circos, output)
+        snakemakeutils.dump_io_outputs(circos, output)
 
 rule amr_visualization_add_text:
     """
@@ -268,9 +268,9 @@ rule amr_visualization_add_text:
         from camel.app.tools.pipelines.mycobacterium.amr.amraddtext import AMRAddText
         text_adder = AMRAddText()
         text_adder.add_input_files({'VAL_sample': [ToolIOValue(params.sample_name)]})
-        snakemakeutils.add_pickle_inputs(text_adder, input)
+        snakemakeutils.add_io_inputs(text_adder, input)
         text_adder.run(Path(params.dir_))
-        snakemakeutils.dump_tool_outputs(text_adder, output)
+        snakemakeutils.dump_io_outputs(text_adder, output)
 
 rule amr_create_report:
     """
@@ -288,15 +288,15 @@ rule amr_create_report:
     params:
         dir_ = 'amr/report',
         sample_name = config['input']['sample_name'],
-        bed_regions = config['amr']['bed_regions']
+        bed_regions = Path(config['amr']['db'], 'amr_regions.bed')
     run:
         from camel.app.tools.pipelines.mycobacterium.amr.amrreporter import AMRReporter
         reporter = AMRReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         reporter.add_input_files({'BED': [ToolIOFile(Path(params.bed_regions))]})
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule amr_check_completeness_cds:
     """
@@ -313,10 +313,10 @@ rule amr_check_completeness_cds:
     run:
         from camel.app.tools.pipelines.mycobacterium.amr.amrcdscompletenessreporter import AMRCDSCompletenessReporter
         reporter = AMRCDSCompletenessReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule amr_create_report_empty:
     """

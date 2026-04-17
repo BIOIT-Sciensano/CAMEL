@@ -28,6 +28,8 @@ class Busco(Tool):
         """
         if 'FASTA' not in self._tool_inputs:
             raise InvalidToolInputError('FASTA input is required')
+        if 'DB' not in self._tool_inputs:
+            raise InvalidToolInputError('DB input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -40,6 +42,7 @@ class Busco(Tool):
             self._tool_command,
             f"--in {self._tool_inputs['FASTA'][0].path}",
             f'--out {dir_out.name}',
+            f"--download_path {self._tool_inputs['DB'][0].path}",
             '--mode', 'genome',
             *self._build_options(),
         ])

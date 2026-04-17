@@ -32,7 +32,7 @@ rule spifinder_fastq_run:
                 Path(input.IO), key_se='FASTQ', read_type='SE'))
         step = Step(rule_name=str(rule), tool=spifinder_tool, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(spifinder_tool, output)
+        snakemakeutils.dump_io_outputs(spifinder_tool, output)
 
 rule spifinder_fasta_run:
     """
@@ -50,11 +50,11 @@ rule spifinder_fasta_run:
         from camel.app.tools.pipelines.salmonella.spifinder import SPIFinder
         spifinder_tool = SPIFinder()
         spifinder_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db_path))]})
-        snakemakeutils.add_pickle_input(spifinder_tool, 'FASTA', Path(input.FASTA))
+        snakemakeutils.add_io_input(spifinder_tool,'FASTA', Path(input.FASTA))
         step = Step(rule_name=str(rule), tool=spifinder_tool, dir_=Path(params.dir_))
         step.run()
         spifinder_tool.informs['_tag'] = 'FASTA'
-        snakemakeutils.dump_tool_outputs(spifinder_tool, output)
+        snakemakeutils.dump_io_outputs(spifinder_tool, output)
 
 rule spifinder_create_summary:
     """
@@ -128,15 +128,15 @@ rule spifinder_report:
 
         # Create the report
         reporter = SPIFinderReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['JSON_FASTQ', 'INFORMS_spifinder_fastq', 'DB'])
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['JSON_FASTQ', 'INFORMS_spifinder_fastq', 'DB'])
         reporter.add_input_files({'TSV_documentation': [ToolIOFile(path_doc)]})
         if input.JSON_FASTQ:
-            snakemakeutils.add_pickle_input(reporter, 'JSON_FASTQ', Path(input.JSON_FASTQ))
+            snakemakeutils.add_io_input(reporter,'JSON_FASTQ', Path(input.JSON_FASTQ))
         if input.INFORMS_spifinder_fastq:
             reporter.add_input_informs({'spifinder_fastq': snakemakeutils.load_object(Path(input.INFORMS_spifinder_fastq))})
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_output(reporter, 'VAL_HTML', Path(output.VAL_HTML))
+        snakemakeutils.dump_io_output(reporter,'VAL_HTML', Path(output.VAL_HTML))
         # snakemakeutils.dump_object([ToolIOFile(path_doc)], Path(output.TSV_doc))
 
 rule spifinder_report_empty:

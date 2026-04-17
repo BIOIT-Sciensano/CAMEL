@@ -1,7 +1,283 @@
-####################
-# Pipeline options #
-####################
-species: {SPECIES}
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  btyper:
+    dbs: []
+  cgmlst_cereus:
+    dbs:
+      - typing_cgmlst_cereus
+  confindr:
+    dbs:
+      - confindr
+  fastani:
+    dbs:
+      - fastani
+  gmo:
+    dbs:
+      - gene_detection_gmm_genes
+      - gene_detection_gmm_junctions
+      - gmm_constructs
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
+  mlst_cereus:
+    dbs:
+      - typing_mlst_cereus
+  mlst_subtilis:
+    dbs:
+      - typing_mlst_subtilis
+  mob_suite:
+    dbs:
+      - mob_suite
+  plasmidfinder:
+    dbs:
+      - gene_detection_plasmidfinder
+  rmlst:
+    dbs:
+      - typing_rmlst
+  straingst:
+    dbs:
+      - straingst
+  variant_calling:
+    dbs: []
+  vfdb_core:
+    dbs:
+      - gene_detection_vfdb_core
+
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  fastani:
+    location: &db_fastani {DB_ROOT}/pipelines/bacillus/ref_list_complete.txt
+    is_file: true
+    required: true
+    method: ftp
+  gene_detection_gmm_genes:
+    location: &db_gd_gmm_genes {DB_ROOT}/gene_detection/GMM/V6/genes-vectors
+    required: false
+    method: ftp
+  gene_detection_gmm_junctions:
+    location: &db_gd_gmm_junctions {DB_ROOT}/gene_detection/GMM/V6/junctions
+    required: false
+    method: ftp
+  gene_detection_plasmidfinder:
+    location: &db_gd_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-gram_positive
+    required: false
+    method: ftp
+  gene_detection_vfdb_core:
+    location: &db_gd_vfdb_core {DB_ROOT}/gene_detection/VFDB_core
+    required: false
+    method: ftp
+  gmm_constructs:
+    location: &db_gmm_constructs {DB_ROOT}/pipelines/bacillus/list_of_constructs.csv
+    is_file: true
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mob_suite:
+    location: &db_mob_suite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_cereus_fasta:
+    location: &ref_cereus_fasta {DB_ROOT}/refgenomes/Bacillus/NZ_CP017060.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_cereus_gff3:
+    location: &ref_cereus_gff3 {DB_ROOT}/refgenomes/Bacillus/NZ_CP017060.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  ref_subtilis_fasta:
+    location: &ref_subtilis_fasta {DB_ROOT}/refgenomes/Bacillus/NC_000964.3.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_subtilis_gff3:
+    location: &ref_subtilis_gff3 {DB_ROOT}/refgenomes/Bacillus/NC_000964.3.gff3
+    is_file: true
+    required: true
+    method: ftp
+  straingst:
+    location: &db_straingst {DB_ROOT}/pipelines/bacillus/bacillus_straingst/bacillus_database.hdf5
+    is_file: true
+    required: true
+    method: ftp
+  typing_cgmlst_cereus:
+    location: &db_typing_cgmlst_cereus {DB_ROOT}/sequence_typing/bacillus_cereus/cgmlst
+    required: false
+    method: mist
+  typing_mlst_cereus:
+    location: &db_typing_mlst_cereus {DB_ROOT}/sequence_typing/bacillus_cereus/mlst
+    required: false
+    method: mist
+  typing_mlst_subtilis:
+    location: &db_typing_mlst_subtilis {DB_ROOT}/sequence_typing/bacillus_subtilis/mlst
+    required: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+
+##################################
+# Species-specific configuration #
+##################################
+species:
+  cereus:
+    full_name: Bacillus cereus
+    ref:
+      fasta: *ref_cereus_fasta
+      gff3: *ref_cereus_gff3
+      name: NZ_CP017060.1
+      url: https://www.ncbi.nlm.nih.gov/nuccore/NZ_CP017060.1
+  subtilis:
+    full_name: Bacillus subtilis
+    ref:
+      fasta: *ref_subtilis_fasta
+      gff3: *ref_subtilis_gff3
+      name: NC_000964.3
+      url: https://www.ncbi.nlm.nih.gov/nuccore/NC_000964.3
+
+#########################
+# Tool-specific options #
+#########################
+amrfinder:
+  db: *db_amrfinder
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+  canu:
+    minimum_input_coverage: 0
+  flye:
+    nano_raw: True
+    nano_corr: False
+
+busco:
+  db: *db_busco
+
+confindr:
+  db: *db_confindr
+
+contamination_check:
+  db: *db_kraken2
+  expected_species: Bacillus
+  level_of_depth: G
+
+downsampling:
+  coverage_max: {COV_MAX}
+
+fastani:
+  path: *db_fastani
+
+mob_suite:
+  db: *db_mob_suite
+  contig_report: {MOBSUITE_CONTIG_REPORT}
+
+straingst:
+  db: *db_straingst
+
+read_trimming: {{}}
+
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
+
+reference:
+  resolve: species
+  key: ref
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering: {{}}
+
+##########
+# Typing #
+##########
+sequence_typing:
+  dbs:
+    mlst_cereus:
+      path: *db_typing_mlst_cereus
+    mlst_subtilis:
+      path: *db_typing_mlst_subtilis
+    cgmlst_cereus:
+      path: *db_typing_cgmlst_cereus
+      detection_method: blast
+    rmlst:
+      path: *db_typing_rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+
+##################
+# Gene detection #
+##################
+gene_detection:
+  dbs:
+    gmm_genes_vectors:
+      known_gmm_constructs: *db_gmm_constructs
+      path: *db_gd_gmm_genes
+      force__method: kma
+      metadata:
+        name: Additional data
+        key: allele
+    gmm_junctions:
+      path: *db_gd_gmm_junctions
+      force__method: kma
+      metadata:
+        name: Additional data
+        key: allele
+    vfdb_core:
+        path: *db_gd_vfdb_core
+        perc_identity_cutoff: 90
+        min_coverage: 90
+        metadata:
+          name: Gene
+          key: gene
+    plasmidfinder:
+      path: *db_gd_plasmidfinder
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: Additional experimental validation should be required to confirm the presence of plasmids.
+        category: warning
+
+#############
+# Citations #
+#############
 citations:
   main: null
   other:
@@ -27,118 +303,3 @@ citations:
     - Robertson_2018-mob_suite
     - Carroll_2020a-btyper3
     - Carroll_2020b-btyper3
-
-####################
-# Reference genome #
-####################
-reference:
-  fasta: {REF_FASTA}
-  gff3: {REF_GFF}
-  name: {REF_NAME}
-  url: {REF_URL}
-
-#########################
-# Tool specific options #
-#########################
-amrfinder:
-  db: /db/amrfinder/v4/latest
-
-assembly:
-  spades:
-    cov_cutoff: 10
-  min_contig_length: 1000
-  canu:
-    minimum_input_coverage: 0
-  flye:
-    nano_raw: True
-    nano_corr: False
-
-confindr:
-  db: /db/confindr/0.8.1
-
-contamination_check:
-  db: /db/kraken2_microbial/latest
-  expected_species: Bacillus
-  level_of_depth: G
-
-downsampling:
-  coverage_max: {COV_MAX}
-
-fastani:
-  path: /db/pipelines/bacillus/ref_list_complete.txt
-
-mob_suite:
-  db: /db/mob_suite/latest
-  contig_report: {MOBSUITE_CONTIG_REPORT}
-
-straingst:
-  db: /db/pipelines/bacillus/bacillus_straingst/bacillus_database.hdf5
-
-read_trimming: {{}}
-
-read_scrubbing: {{}}
-
-quality_checks:
-  typing_scheme: {QC_SCHEME}
-
-variant_calling:
-  ploidy: 1
-  report_include_bam: {EXPORT_BAM}
-
-variant_filtering: {{}}
-
-##########
-# Typing #
-##########
-sequence_typing:
-  dbs:
-    mlst_cereus:
-      path: /db/sequence_typing/bacillus_cereus/mlst
-    mlst_subtilis:
-      path: /db/sequence_typing/bacillus_subtilis/mlst
-    cgmlst_cereus:
-      path: /db/sequence_typing/bacillus_cereus/cgmlst
-      detection_method: blast
-    rmlst:
-      path: /db/sequence_typing/various/rmlst
-      message:
-        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
-        category: info
-
-##################
-# Gene detection #
-##################
-gene_detection:
-  dbs:
-    gmm_genes_vectors:
-      known_gmm_constructs: /db/pipelines/bacillus/list_of_constructs.csv
-      path: /db/gene_detection/GMM/V6/genes-vectors/
-      force__method: kma
-      metadata:
-        name: Additional data
-        key: allele
-    gmm_junctions:
-      path: /db/gene_detection/GMM/V6/junctions/
-      force__method: kma
-      metadata:
-        name: Additional data
-        key: allele
-    vfdb_core:
-        path: /db/gene_detection/VFDB_core
-        perc_identity_cutoff: 90
-        min_coverage: 90
-        metadata:
-          name: Gene
-          key: gene
-    plasmidfinder:
-      path: /db/gene_detection/PlasmidFinder-gram_positive
-      params:
-        blastn:
-          min_percent_identity: 95
-          min_coverage: 60
-      metadata:
-        name: Notes
-        key: notes
-      message:
-        content: Additional experimental validation should be required to confirm the presence of plasmids.
-        category: warning

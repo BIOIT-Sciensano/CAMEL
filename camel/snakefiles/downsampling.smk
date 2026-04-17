@@ -18,7 +18,7 @@ rule downsampling_read_stats:
     run:
         from camel.app.tools.seqtk.seqtksize import SeqtkSize
         seqtk_size = SeqtkSize()
-        snakemakeutils.add_pickle_inputs(seqtk_size, input)
+        snakemakeutils.add_io_inputs(seqtk_size, input)
         step = Step(rule_name=str(rule), tool=seqtk_size, dir_=Path(str(params.dir_)))
         step.run()
         snakemakeutils.dump_object(seqtk_size.informs, Path(output.INFORMS))
@@ -57,11 +57,11 @@ rule downsampling_calculate:
                 "Unable to determine the expected size. Please specify either 'expected_size' or 'fasta' in the "
                 "'reference' section of the config file.")
 
-        snakemakeutils.add_pickle_inputs(ds_calc, input)
+        snakemakeutils.add_io_inputs(ds_calc, input)
         ds_calc.update_parameters(
             size_ref_genome=size_ref, cov_target=params.cov_target, is_paired=bool(params.is_paired))
         step.run()
-        snakemakeutils.dump_tool_outputs(ds_calc, output)
+        snakemakeutils.dump_io_outputs(ds_calc, output)
 
 rule downsampling_seqtk:
     """

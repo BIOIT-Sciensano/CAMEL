@@ -1,25 +1,49 @@
+analyses:
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  ncbi_amr:
+    dbs:
+      - gene_detection_ncbi_amr
+  kraken2:
+    dbs:
+      - kraken2
+  snpit:
+    dbs: []
+
 #############
 # Databases #
 #############
 dbs:
-  db_confindr:
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
     location: &db_confindr {DB_ROOT}/confindr/0.8.1
-  db_gene_detection_ncbi_amr:
+  gene_detection_ncbi_amr:
     location: &db_gene_detection_ncbi_amr {DB_ROOT}/gene_detection/NCBI_AMR/
     required: true
-  db_kraken2:
+  kraken2:
     location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
-  db_hrrt:
-    location: &db_hrrt {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
     is_file: true
+    required: false
+    method: ftp
   ref_fasta:
     location: &ref_fasta {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.fasta
     is_file: true
     required: true
+    method: ftp
   ref_gff3:
     location: &ref_gff3 {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.gff
     is_file: true
     required: true
+    method: ftp
 
 ####################
 # Reference genome #
@@ -49,6 +73,9 @@ assembly:
   flye:
     min_overlap: 1000
 
+busco:
+  db: *db_busco
+
 confindr:
   db: *db_confindr
 
@@ -74,7 +101,7 @@ gene_detection:
 
 read_trimming: {{}}
 read_scrubbing:
-  db: *db_hrrt
+  db: *db_ncbi_human_read_scrubber
 
 variant_calling:
   ploidy: 1

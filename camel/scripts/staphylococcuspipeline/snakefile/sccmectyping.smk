@@ -21,10 +21,10 @@ rule sccmec_typing_run:
         from camel.app.core.io.tooliofile import ToolIOFile
         sccmec_typing = SCCmecTyping()
         sccmec_typing.add_input_files({'YML': [ToolIOFile(Path(input.YAML))]})
-        snakemakeutils.add_pickle_input(sccmec_typing, 'VAL_HITS', Path(input.VAL_HITS))
+        snakemakeutils.add_io_input(sccmec_typing,'VAL_HITS', Path(input.VAL_HITS))
         step = Step(rule_name=str(rule), tool=sccmec_typing, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(sccmec_typing, output)
+        snakemakeutils.dump_io_outputs(sccmec_typing, output)
 
 rule sccmec_typing_report:
     """

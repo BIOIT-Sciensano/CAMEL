@@ -16,30 +16,13 @@ from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.scripts.salmonellapipeline import SNAKEFILE_MAIN, CONFIG_DATA
 
-CUSTOM_ANALYSES = [
-    "abritamr",
-    "amrfinder",
-    "cgmlst",
-    "confindr",
-    "human_read_scrubbing",
-    "kraken2",
-    "mlst",
-    "mob_suite",
-    "mykrobe",
-    "resfinder4",
-    "rmlst",
-    "serotype",
-    "spifinder",
-    "variant_calling",
-    "vfdb_core",
-]
-
 
 @dataclasses.dataclass(frozen=True)
 class Options(model.BaseOptions):
     """
     Pipeline-specific options.
     """
+
     analyses: list[str] = dataclasses.field(default_factory=list)
 
 
@@ -53,7 +36,7 @@ class MainSalmonellaPipeline(BasePipe):
         in_: ScriptInput,
         out: ScriptOutput,
         opts: ScriptOptions,
-        opts_custom: Options
+        opts_custom: Options,
     ) -> None:
         """
         Initializes the main class.
@@ -70,14 +53,23 @@ class MainSalmonellaPipeline(BasePipe):
             script_in=in_,
             script_out=out,
             opts=opts,
-            snakefile=SNAKEFILE_MAIN
+            snakefile=SNAKEFILE_MAIN,
         )
         self._opts_custom = opts_custom
 
-    def _execute(self) -> None:
+    def _validate_config_data(self, config_data: dict) -> bool:
         """
-        Runs the pipeline.
-        :return: None
+        Validates the config data.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
+        """
+        self.check_dbs(config_data)
+        return True
+
+    def _build_config(self) -> dict:
+        """
+        Builds the configuration data for Snakemake.
+        :return: Configuration data
         """
         # Parse template data
         with open(CONFIG_DATA) as handle:
@@ -86,29 +78,55 @@ class MainSalmonellaPipeline(BasePipe):
             COV_MAX=self._script_opts.cov_max,
             DB_ROOT=config.dir_db,
             EXPORT_BAM=self._script_opts.include_bam,
-            QC_SCHEME='cgmlst' if 'cgmlst' in  self._opts_custom.analyses else 'mlst',
+            QC_SCHEME='cgmlst' if 'cgmlst' in self._opts_custom.analyses else 'mlst',
         )
         data_template = yaml.safe_load(yaml_text)
         self._script_out.dir.mkdir(parents=True, exist_ok=True)
 
         # Add the base config data
         config_data = self.get_config_data()
-        config_data['analyses'] = self._opts_custom.analyses
-        config_data['sequence_typing'] = {'options': {'method': self._script_opts.typing_method}}
-        config_data['gene_detection'] = {'options': {'method': self._script_opts.gene_detection_method}}
+        config_data['analyses_selected'] = self._opts_custom.analyses
+        config_data['sequence_typing'] = {
+            'options': {'method': self._script_opts.typing_method}
+        }
+        config_data['gene_detection'] = {
+            'options': {'method': self._script_opts.gene_detection_method}
+        }
         basepipeutils.dict_merge(config_data, data_template)
-        path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
+        return config_data
 
-        # Run the Snakefile
+    def _execute(self) -> None:
+        """
+        Runs the pipeline.
+        :return: None
+        """
+        # Build and validate the config file
+        config_data = self._build_config()
+        self._validate_config_data(config_data)
+
+        # Create the config file and run the snakefile
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
+        path_config = snakepipelineutils.generate_config_file(
+            config_data, self._script_opts.working_dir
+        )
         self.run_snakefile(path_config)
+
+        # Additional export for the assembly
         self._export_assembly()
 
 
-@click.command(name='salmonella_pipeline', short_help='Pipeline for the complete characterization of Salmonella isolates.')
+@click.command(
+    name='salmonella_pipeline',
+    short_help='Pipeline for the complete characterization of Salmonella isolates.',
+)
 @basescriptutils.add_input_opts()
 @basescriptutils.add_output_opts
 @basescriptutils.add_general_opts
-@click.option('--analyses', type=str, help=f"Comma-separated list of analyses to run ({', '.join(CUSTOM_ANALYSES)})")
+@click.option(
+    '--analyses',
+    type=str,
+    help=f"Comma-separated list of analyses to run ({', '.join(basepipeutils.get_custom_analyses(CONFIG_DATA))})",
+)
 def main(**kwargs) -> None:
     """
     Pipeline for the complete characterization of Salmonella isolates.
@@ -119,7 +137,9 @@ def main(**kwargs) -> None:
     custom_opts = Options(
         analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
     )
-    pipeline = MainSalmonellaPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline = MainSalmonellaPipeline(
+        script_input, script_out, script_opts, custom_opts
+    )
     pipeline.prepare_input()
     pipeline.run()
 

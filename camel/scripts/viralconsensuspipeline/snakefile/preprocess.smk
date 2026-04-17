@@ -26,14 +26,14 @@ rule preprocess_ampligone_to_bed:
         from camel.app.core.io.tooliofile import ToolIOFile
         from camel.app.tools.ampligone.ampligonefasta2bed import AmpliGoneFasta2Bed
         ampligone = AmpliGoneFasta2Bed()
-        snakemakeutils.add_pickle_input(ampligone, 'FASTA_ref', Path(input.FASTA_ref))
+        snakemakeutils.add_io_input(ampligone,'FASTA_ref', Path(input.FASTA_ref))
         if not Path(input.FASTA_primers).exists():
             raise FileNotFoundError(f'Cannot find FASTA file with primers: {input.FASTA_primers}')
         ampligone.add_input_files({'FASTA_primers': [ToolIOFile(Path(input.FASTA_primers))]})
         step = Step(rule_name=str(rule), tool=ampligone, dir_=Path(str(params.dir_)))
         ampligone.update_parameters(primer_mismatch_rate=params.primer_mismatch_rate)
         step.run()
-        snakemakeutils.dump_tool_outputs(ampligone, output)
+        snakemakeutils.dump_io_outputs(ampligone, output)
 
 rule preprocess_remove_ampligone_report:
     """
@@ -50,10 +50,10 @@ rule preprocess_remove_ampligone_report:
     run:
         from camel.app.tools.ampligone.ampligonefasta2bedreporter import AmpliGoneFasta2BedReporter
         reporter = AmpliGoneFasta2BedReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule preprocess_remove_ampligone_report_empty:
     """
@@ -114,7 +114,7 @@ rule preprocess_downsample_by_segment:
     input:
         JSON = rules.preprocess_map_reads_pre.output.JSON,
         BAM = rules.preprocess_map_reads_pre.output.BAM,
-        BED = rules.preprocess_ampligone_to_bed.output.BED if 'ampligone' in config['analyses'] else []
+        BED = rules.preprocess_ampligone_to_bed.output.BED if 'ampligone' in config['analyses_selected'] else []
     output:
         FASTQ = 'preprocess/downsample/fq_dict.io',
         INFORMS = 'preprocess/downsample/informs.json'
@@ -214,12 +214,12 @@ rule preprocess_report:
         from camel.app.tools.pipelines.viral_consensus.reportersegmentdownsampling import ReporterSegmentDownsampling
         reporter = ReporterSegmentDownsampling()
         reporter.add_input_files({'TSV': [ToolIOFile(Path(input.TSV))]})
-        snakemakeutils.add_pickle_inputs(reporter, input, keys=['BAM', 'FASTA'])
+        snakemakeutils.add_io_inputs(reporter, input, keys=['BAM', 'FASTA'])
         reporter.update_parameters(
             max_depth=params.max_depth, gap_depth_cutoff=params.gap_depth_cutoff, name=str(params.name))
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 #####################
 # Amplicon clipping #
@@ -242,7 +242,7 @@ rule preprocess_report_ampliconclip:
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         reporter.add_input_informs({'ampliconclip': informs_amplicon_clip})
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule preprocess_report_ampliconclip_empty:
     """
@@ -264,7 +264,7 @@ rule preprocess_combine_informs:
     Combines the informs for the pre-processing workflow.
     """
     input:
-        INFORMS_ampligone = rules.preprocess_ampligone_to_bed.output.INFORMS if 'ampligone' in config['analyses'] else [],
+        INFORMS_ampligone = rules.preprocess_ampligone_to_bed.output.INFORMS if 'ampligone' in config['analyses_selected'] else [],
         INFORMS_mapping = rules.preprocess_map_reads_pre.output.INFORMS,
         INFORMS_downsample = rules.preprocess_downsample_by_segment.output.INFORMS
     output:

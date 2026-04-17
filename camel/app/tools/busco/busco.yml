@@ -17,11 +17,6 @@ parameters:
     mandatory: true
     option: --lineage_dataset
     value: null
-  download_path:
-    default: true
-    mandatory: true
-    option: --download_path
-    value: '/db/busco/odb10'
   offline:
     default: true
     mandatory: false

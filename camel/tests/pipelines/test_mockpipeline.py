@@ -34,7 +34,7 @@ class TestMockPipeline(CamelTestSuite):
             '--trimming-method', 'trimmomatic',
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'ncbi-amr,human-read-scrubbing',
+            '--analyses', 'ncbi_amr,human_read_scrubbing',
             '--threads', '8'
         ])
         self.assertEqual(result.exit_code, 0)
@@ -59,7 +59,7 @@ class TestMockPipeline(CamelTestSuite):
             '--trimming-method', 'fastp',
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'ncbi-amr,human-read-scrubbing',
+            '--analyses', 'ncbi_amr,human_read_scrubbing',
             '--threads', '8'
         ])
         self.assertEqual(result.exit_code, 0)
@@ -85,7 +85,7 @@ class TestMockPipeline(CamelTestSuite):
             '--trimming-method', 'fastp',
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'ncbi-amr,human-read-scrubbing',
+            '--analyses', 'ncbi_amr,human_read_scrubbing',
             '--threads', '8'
         ])
         self.assertEqual(result.exit_code, 0)
@@ -108,7 +108,7 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--typing-method', 'kma',
             '--gene-detection-method', 'kma',
-            '--analyses', 'ncbi-amr',
+            '--analyses', 'ncbi_amr',
             '--threads', '8'
         ])
         self.assertEqual(result.exit_code, 0)
@@ -131,7 +131,7 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'ncbi-amr,confindr',
+            '--analyses', 'ncbi_amr,confindr',
             '--threads', '8',
         ])
         self.assertEqual(result.exit_code, 0)
@@ -155,7 +155,7 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'ncbi-amr',
+            '--analyses', 'ncbi_amr',
             '--threads', '8',
         ])
         self.assertEqual(result.exit_code, 0)
@@ -179,7 +179,7 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'ncbi-amr,human-read-scrubbing',
+            '--analyses', 'ncbi_amr,human_read_scrubbing',
             '--ont-min-qual', '11',
             '--ont-min-length', '750',
             '--threads', '8',
@@ -205,7 +205,7 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
+            '--analyses', 'kraken2,ncbi_amr,human_read_scrubbing',
             '--threads', '8',
         ])
         self.assertEqual(result.exit_code, 0)
@@ -228,7 +228,7 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
+            '--analyses', 'kraken2,ncbi_amr,human_read_scrubbing',
             '--threads', '8',
         ])
         self.assertEqual(result.exit_code, 0)
@@ -252,7 +252,7 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
+            '--analyses', 'kraken2,ncbi_amr,human_read_scrubbing',
             '--threads', '8',
         ])
         self.assertEqual(result.exit_code, 0)
@@ -276,7 +276,7 @@ class TestMockPipeline(CamelTestSuite):
             '--working-dir', str(self.running_dir),
             '--typing-method', 'blast',
             '--gene-detection-method', 'blast',
-            '--analyses', 'kraken2,ncbi-amr,human-read-scrubbing',
+            '--analyses', 'kraken2,ncbi_amr,human_read_scrubbing',
             '--threads', '8',
         ])
         self.assertEqual(result.exit_code, 0)

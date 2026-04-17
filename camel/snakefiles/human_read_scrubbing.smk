@@ -68,7 +68,7 @@ rule scrubbing_interleave_fastq_pe:
         })
         step = Step(rule_name=str(rule), tool=merge_pe, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(merge_pe, output)
+        snakemakeutils.dump_io_outputs(merge_pe, output)
 
 rule scrubbing_select_input:
     """
@@ -129,7 +129,7 @@ rule scrubbing_run_scrubber:
             )
 
         # Add input files and run tool
-        snakemakeutils.add_pickle_input(scrubber, 'FASTQ_SE', Path(input.FASTQ_SE))
+        snakemakeutils.add_io_input(scrubber,'FASTQ_SE', Path(input.FASTQ_SE))
         if len(input.DB) > 0:
             scrubber.add_input_files({'DB': [ToolIOFile(Path(input.DB))]})
         step.run()
@@ -142,7 +142,7 @@ rule scrubbing_run_scrubber:
                 scrubber.informs['_tag'] = 'ONT'
 
         # Store the output
-        snakemakeutils.dump_tool_outputs(scrubber, output, keys=['FASTQ_SCRUBBED', 'INFORMS'])
+        snakemakeutils.dump_io_outputs(scrubber, output, keys=['FASTQ_SCRUBBED', 'INFORMS'])
         if 'FASTQ_REMOVED' not in scrubber.tool_outputs:
             snakemakeutils.dump_object([], Path(output.FASTQ_REMOVED))
         else:
@@ -231,11 +231,11 @@ rule scrubbing_deinterleave_fastq_pe:
             snakemakeutils.dump_object([], Path(output.FASTQ))
         else:
             split2 = SeqkitSplit2()
-            snakemakeutils.add_pickle_inputs(split2, input)
+            snakemakeutils.add_io_inputs(split2, input)
             split2.update_parameters(by_part=2)
             step = Step(rule_name=str(rule), tool=split2, dir_=Path(str(params.dir_)))
             step.run()
-            snakemakeutils.dump_tool_outputs(split2, output)
+            snakemakeutils.dump_io_outputs(split2, output)
 
 rule scrubbing_fastq_gzip:
     """
@@ -277,12 +277,12 @@ rule scrubbing_report:
 
         reporter = NcbiHumanReadScrubberReporter()
         if params.export_removed_reads:
-            snakemakeutils.add_pickle_inputs(reporter, input, keys=['REMOVED'])
-        snakemakeutils.add_pickle_inputs(reporter, input, keys=['INFORMS_SCRUBBER'])
+            snakemakeutils.add_io_inputs(reporter, input, keys=['REMOVED'])
+        snakemakeutils.add_io_inputs(reporter, input, keys=['INFORMS_SCRUBBER'])
         reporter.update_parameters(input_format=str(params.input_format))
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.running_dir)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule scrubbing_create_summary:
     """

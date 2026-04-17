@@ -18,9 +18,9 @@ def get_fasta(config: dict[str, Any]) -> Path:
     """
     Returns the consensus sequence output IO object path.
     """
-    if (config['input']['type'] == 'fasta') and ('human_read_scrubbing' not in config['analyses']):
+    if (config['input']['type'] == 'fasta') and ('human_read_scrubbing' not in config['analyses_selected']):
         return Path(str(human_read_scrubbing.INPUT_FASTA).format(input_format='fasta'))
-    if (config['input']['type'] == 'fasta') and ('human_read_scrubbing' in config['analyses']):
+    if (config['input']['type'] == 'fasta') and ('human_read_scrubbing' in config['analyses_selected']):
         return Path(str(human_read_scrubbing.OUTPUT_FASTA).format(input_format='fasta'))
     if config['input']['type'] in ['illumina', 'ont', 'hybrid']:
         return Path(OUTPUT_FASTA_CONSENSUS_FINAL_TRIMMED)

@@ -20,10 +20,10 @@ rule qc_hybrid_samtools_index:
     run:
         from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
         samtools = SamtoolsFastaIndex()
-        snakemakeutils.add_pickle_inputs(samtools, input)
+        snakemakeutils.add_io_inputs(samtools, input)
         step = Step(str(rule), samtools, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools, output)
+        snakemakeutils.dump_io_outputs(samtools, output)
 
 rule qc_hybrid_quast:
     """
@@ -39,7 +39,7 @@ rule qc_hybrid_quast:
     run:
         from camel.app.tools.quast.quast import Quast
         quast = Quast()
-        snakemakeutils.add_pickle_inputs(quast, input)
+        snakemakeutils.add_io_inputs(quast, input)
         step = Step(str(rule), quast, dir_=Path(str(params.dir_)))
         step.run()
         quast.informs['_tag'] = wildcards.name
@@ -61,7 +61,7 @@ rule qc_hybrid_parse_quast_output:
         quast_inform_extractor.add_input_files({'TSV': [ToolIOFile(Path(input.TSV))]})
         step = Step(str(rule), quast_inform_extractor, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(quast_inform_extractor, output)
+        snakemakeutils.dump_io_outputs(quast_inform_extractor, output)
 
 rule qc_hybrid_quast_all_assemblies:
     """
@@ -96,10 +96,10 @@ rule qc_hybrid_bwa_index:
     run:
         from camel.app.tools.bwa.bwaindex import BWAIndex
         bwa = BWAIndex()
-        snakemakeutils.add_pickle_inputs(bwa, input)
+        snakemakeutils.add_io_inputs(bwa, input)
         step = Step(str(rule), bwa, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(bwa, output)
+        snakemakeutils.dump_io_outputs(bwa, output)
 
 rule qc_hybrid_read_mapping_illumina:
     """
@@ -122,11 +122,11 @@ rule qc_hybrid_read_mapping_illumina:
         fq_in = FastqInput.from_fq_dict(Path(input.FQ_dict), 'illumina')
         bwa_map.add_input_files({'FASTQ_PE': fq_in.pe})
         bwa_map.update_parameters(threads=threads)
-        snakemakeutils.add_pickle_input(bwa_map, 'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX_BWA))
+        snakemakeutils.add_io_input(bwa_map,'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX_BWA))
         step = Step(str(rule), bwa_map, dir_=Path(str(params.dir_)))
         step.run()
         bwa_map.informs['_tag'] = wildcards.name
-        snakemakeutils.dump_tool_outputs(bwa_map, output)
+        snakemakeutils.dump_io_outputs(bwa_map, output)
 
 rule qc_hybrid_read_mapping_ont:
     """
@@ -144,11 +144,11 @@ rule qc_hybrid_read_mapping_ont:
     run:
         from camel.app.tools.minimap2.minimap2mapping import Minimap2Mapping
         minimap2 = Minimap2Mapping()
-        snakemakeutils.add_pickle_input(minimap2, 'FASTA', Path(input.FASTA))
+        snakemakeutils.add_io_input(minimap2,'FASTA', Path(input.FASTA))
         minimap2.add_input_files(snakepipelineutils.extract_fq_input(Path(input.FQ), key_se='FASTQ', read_type='SE'))
         step = Step(str(rule), minimap2, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(minimap2, output)
+        snakemakeutils.dump_io_outputs(minimap2, output)
 
 rule qc_hybrid_sam_to_bam_illumina:
     """
@@ -163,10 +163,10 @@ rule qc_hybrid_sam_to_bam_illumina:
     run:
         from camel.app.tools.samtools.samtoolsview import SamtoolsView
         samtools_view = SamtoolsView()
-        snakemakeutils.add_pickle_inputs(samtools_view, input)
+        snakemakeutils.add_io_inputs(samtools_view, input)
         step = Step(str(rule), samtools_view, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_view, output)
+        snakemakeutils.dump_io_outputs(samtools_view, output)
 
 rule qc_hybrid_bam_sorting_illumina:
     """
@@ -181,10 +181,10 @@ rule qc_hybrid_bam_sorting_illumina:
     run:
         from camel.app.tools.samtools.samtoolssort import SamtoolsSort
         samtools_sort = SamtoolsSort()
-        snakemakeutils.add_pickle_inputs(samtools_sort, input)
+        snakemakeutils.add_io_inputs(samtools_sort, input)
         step = Step(str(rule), samtools_sort, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_sort, output)
+        snakemakeutils.dump_io_outputs(samtools_sort, output)
 
 rule qc_hybrid_bam_indexing_illumina:
     """
@@ -199,10 +199,10 @@ rule qc_hybrid_bam_indexing_illumina:
     run:
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
         samtools_index = SamtoolsIndex()
-        snakemakeutils.add_pickle_inputs(samtools_index, input)
+        snakemakeutils.add_io_inputs(samtools_index, input)
         step = Step(str(rule), samtools_index, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_index, output)
+        snakemakeutils.dump_io_outputs(samtools_index, output)
 
 rule qc_hybrid_mapping_stats_illumina:
     """
@@ -217,10 +217,10 @@ rule qc_hybrid_mapping_stats_illumina:
     run:
         from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat
         samtools_flagstat = SamtoolsFlagstat()
-        snakemakeutils.add_pickle_inputs(samtools_flagstat, input)
+        snakemakeutils.add_io_inputs(samtools_flagstat, input)
         step = Step(str(rule), samtools_flagstat, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_flagstat, output)
+        snakemakeutils.dump_io_outputs(samtools_flagstat, output)
 
 rule qc_hybrid_samtools_depth_illumina:
     """
@@ -237,11 +237,11 @@ rule qc_hybrid_samtools_depth_illumina:
     run:
         from camel.app.tools.samtools.samtoolsdepth import SamtoolsDepth
         samtools_depth = SamtoolsDepth()
-        snakemakeutils.add_pickle_inputs(samtools_depth, input)
+        snakemakeutils.add_io_inputs(samtools_depth, input)
         step = Step(str(rule), samtools_depth, dir_=Path(str(params.dir_)))
         step.run()
         samtools_depth.informs['_tag'] = 'Coverage calculation'
-        snakemakeutils.dump_tool_outputs(samtools_depth, output)
+        snakemakeutils.dump_io_outputs(samtools_depth, output)
 
 rule qc_hybrid_sam_to_bam_ont:
     """
@@ -256,10 +256,10 @@ rule qc_hybrid_sam_to_bam_ont:
     run:
         from camel.app.tools.samtools.samtoolsview import SamtoolsView
         samtools_view = SamtoolsView()
-        snakemakeutils.add_pickle_inputs(samtools_view, input)
+        snakemakeutils.add_io_inputs(samtools_view, input)
         step = Step(str(rule), samtools_view, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_view, output)
+        snakemakeutils.dump_io_outputs(samtools_view, output)
 
 rule qc_hybrid_bam_sorting_ont:
     """
@@ -274,10 +274,10 @@ rule qc_hybrid_bam_sorting_ont:
     run:
         from camel.app.tools.samtools.samtoolssort import SamtoolsSort
         samtools_sort = SamtoolsSort()
-        snakemakeutils.add_pickle_inputs(samtools_sort, input)
+        snakemakeutils.add_io_inputs(samtools_sort, input)
         step = Step(str(rule), samtools_sort, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_sort, output)
+        snakemakeutils.dump_io_outputs(samtools_sort, output)
 
 rule qc_hybrid_bam_indexing_ont:
     """
@@ -292,10 +292,10 @@ rule qc_hybrid_bam_indexing_ont:
     run:
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
         samtools_index = SamtoolsIndex()
-        snakemakeutils.add_pickle_inputs(samtools_index, input)
+        snakemakeutils.add_io_inputs(samtools_index, input)
         step = Step(str(rule), samtools_index, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_index, output)
+        snakemakeutils.dump_io_outputs(samtools_index, output)
 
 rule qc_hybrid_mapping_stats_ont:
     """
@@ -311,10 +311,10 @@ rule qc_hybrid_mapping_stats_ont:
     run:
         from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat
         samtools_flagstat = SamtoolsFlagstat()
-        snakemakeutils.add_pickle_inputs(samtools_flagstat, input)
+        snakemakeutils.add_io_inputs(samtools_flagstat, input)
         step = Step(str(rule), samtools_flagstat, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_flagstat, output)
+        snakemakeutils.dump_io_outputs(samtools_flagstat, output)
 
 rule qc_hybrid_samtools_depth_ont:
     """
@@ -331,11 +331,11 @@ rule qc_hybrid_samtools_depth_ont:
     run:
         from camel.app.tools.samtools.samtoolsdepth import SamtoolsDepth
         samtools_depth = SamtoolsDepth()
-        snakemakeutils.add_pickle_inputs(samtools_depth, input)
+        snakemakeutils.add_io_inputs(samtools_depth, input)
         step = Step(str(rule), samtools_depth, dir_=Path(str(params.dir_)))
         step.run()
         samtools_depth.informs['_tag'] = 'Coverage calculation'
-        snakemakeutils.dump_tool_outputs(samtools_depth, output)
+        snakemakeutils.dump_io_outputs(samtools_depth, output)
 
 rule qc_hybrid_freebayes:
     """
@@ -354,12 +354,12 @@ rule qc_hybrid_freebayes:
     run:
         from camel.app.tools.freebayes.freebayes import Freebayes
         freebayes = Freebayes()
-        snakemakeutils.add_pickle_inputs(freebayes, input)
+        snakemakeutils.add_io_inputs(freebayes, input)
         freebayes.update_parameters(**params.freebayes_options)
         step = Step(str(rule), freebayes, dir_=Path(str(params.dir_)))
         step.run()
         freebayes.informs['_tag'] = wildcards.name
-        snakemakeutils.dump_tool_outputs(freebayes, output)
+        snakemakeutils.dump_io_outputs(freebayes, output)
 
 rule qc_hybrid_sniffles:
     """
@@ -378,12 +378,12 @@ rule qc_hybrid_sniffles:
     run:
         from camel.app.tools.sniffles.sniffles import Sniffles
         sniffles = Sniffles()
-        snakemakeutils.add_pickle_inputs(sniffles, input)
+        snakemakeutils.add_io_inputs(sniffles, input)
         sniffles.update_parameters(threads=threads)
         step = Step(str(rule), sniffles, dir_=Path(str(params.dir_)))
         step.run()
         sniffles.informs['_tag'] = wildcards.name
-        snakemakeutils.dump_tool_outputs(sniffles, output)
+        snakemakeutils.dump_io_outputs(sniffles, output)
 
 rule qc_hybrid_clair3:
     """
@@ -403,14 +403,14 @@ rule qc_hybrid_clair3:
     run:
         from camel.app.tools.clair3.clair3 import Clair3
         clair3 = Clair3()
-        snakemakeutils.add_pickle_inputs(clair3, input)
+        snakemakeutils.add_io_inputs(clair3, input)
         clair3.update_parameters(
             **params.clair3_options, chunk_size=100_000, platform='ont', no_phasing=True, include_ctgs=True,
             threads=threads)
         step = Step(str(rule), clair3, dir_=Path(str(params.dir_)))
         step.run()
         clair3.informs['_tag'] = wildcards.name
-        snakemakeutils.dump_tool_outputs(clair3, output)
+        snakemakeutils.dump_io_outputs(clair3, output)
 
 rule qc_hybrid_unzip_clair3_vcf:
     """
@@ -425,11 +425,11 @@ rule qc_hybrid_unzip_clair3_vcf:
     run:
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
         bcftools_view = BcftoolsView()
-        snakemakeutils.add_pickle_inputs(bcftools_view, input)
+        snakemakeutils.add_io_inputs(bcftools_view, input)
         bcftools_view.update_parameters(compress_output=False, output_filename='variants.vcf')
         step = Step(str(rule), bcftools_view, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(bcftools_view, output)
+        snakemakeutils.dump_io_outputs(bcftools_view, output)
 
 rule qc_hybrid_add_vcf_info_to_informs:
     """
@@ -473,11 +473,11 @@ rule qc_hybrid_ale:
     run:
         from camel.app.tools.ale.ale import ALE
         ale_report = ALE()
-        snakemakeutils.add_pickle_inputs(ale_report, input)
+        snakemakeutils.add_io_inputs(ale_report, input)
         step = Step(str(rule), ale_report, dir_=Path(str(params.dir_)))
         step.run()
         ale_report.informs['_tag'] = f'{wildcards.name}'
-        snakemakeutils.dump_tool_outputs(ale_report, output)
+        snakemakeutils.dump_io_outputs(ale_report, output)
 
 rule qc_hybrid_ale2wiggle:
     """
@@ -493,8 +493,8 @@ rule qc_hybrid_ale2wiggle:
     run:
         from camel.app.tools.ale.ale2wiggle import ALE2Wiggle
         ale2wiggle_report = ALE2Wiggle()
-        snakemakeutils.add_pickle_inputs(ale2wiggle_report, input)
+        snakemakeutils.add_io_inputs(ale2wiggle_report, input)
         step = Step(str(rule), ale2wiggle_report, dir_=Path(str(params.dir_)))
         step.run()
         ale2wiggle_report.informs['_tag'] = f'{wildcards.name}'
-        snakemakeutils.dump_tool_outputs(ale2wiggle_report, output)
+        snakemakeutils.dump_io_outputs(ale2wiggle_report, output)

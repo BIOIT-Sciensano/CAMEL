@@ -24,7 +24,7 @@ def get_command_informs(config: dict[str, Any]) -> list[str]:
     input_type = config['input']['type']
     paths = []
 
-    if 'spifinder' not in config['analyses']:
+    if 'spifinder' not in config['analyses_selected']:
         return []
 
     # FASTA input
@@ -52,7 +52,7 @@ def get_summaries(config: dict[str, Any]) -> list[str]:
     input_type = config['input']['type']
     paths = []
 
-    if 'spifinder' not in config['analyses']:
+    if 'spifinder' not in config['analyses_selected']:
         return []
 
     # FASTA input

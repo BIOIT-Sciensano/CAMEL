@@ -3,8 +3,6 @@ from pathlib import Path
 
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
 from camel.scripts.bacilluspipeline.mainbacilluspipeline import CUSTOM_ANALYSES, main
 from camel.tests import longRunningTest
 
@@ -28,26 +26,8 @@ class TestBacillusPipeline(CamelTestSuite):
     input_fasta_subtilis = test_file_dir / 'Bsubtilis-SRR10260289.fasta'
     input_fasta_cereus = test_file_dir / 'Bcereus-D12.fasta'
 
-    def test_bacillus_pipeline_typing_db(self) -> None:
-        """
-        Checks if the databases for the sequence typing are available.
-        :return: None
-        """
-        sequence_typing_dict = {
-             'mlst_cereus': {'path': '/db/sequence_typing/bacillus_cereus/mlst'},
-             'mlst_subtilis': {'path': '/db/sequence_typing/bacillus_subtilis/mlst'}}
-        for key, scheme_data in sequence_typing_dict.items():
-            # Check if scheme exists
-            self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
-
-            # Check if metadata can be loaded
-            manager = TypingDBLoader()
-            manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
-            manager.run(self.running_dir)
-            self.assertGreater(len(manager.informs), 0)
-
     @longRunningTest()
-    def test_bacillus_pipeline_subtilis_blast_illumina(self) -> None:
+    def test_subtilis_blast_illumina(self) -> None:
         """
         Tests the Bacillus pipeline with blast-based detection.
         :return: None
@@ -74,7 +54,7 @@ class TestBacillusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_cereus_blast_illumina(self) -> None:
+    def test_cereus_blast_illumina(self) -> None:
         """
         Tests the Bacillus pipeline with blast-based detection.
         :return: None
@@ -102,9 +82,9 @@ class TestBacillusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_subtilis_blast_ont(self) -> None:
+    def test_subtilis_blast_ont(self) -> None:
         """
-        Tests the Bacillus pipeline with blast based detection and ONT data.
+        Tests the Bacillus pipeline with blast-based detection and ONT data.
         :return: None
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
@@ -127,7 +107,7 @@ class TestBacillusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_cereus_blast_ont(self) -> None:
+    def test_cereus_blast_ont(self) -> None:
         """
         Tests the Bacillus pipeline with blast-based detection and ONT data.
         :return: None
@@ -152,7 +132,7 @@ class TestBacillusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_subtilis_blast_hybrid(self) -> None:
+    def test_subtilis_blast_hybrid(self) -> None:
         """
         Tests the Bacillus pipeline with blast-based detection and ONT data.
         :return: None
@@ -180,7 +160,7 @@ class TestBacillusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_subtilis_fasta(self) -> None:
+    def test_subtilis_fasta(self) -> None:
         """
         Tests the Bacillus pipeline on B. subtilis with blast-based detection and FASTA data.
         :return: None
@@ -205,7 +185,7 @@ class TestBacillusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_cereus_fasta(self) -> None:
+    def test_cereus_fasta(self) -> None:
         """
         Tests the Bacillus pipeline on B. cereus with blast-based detection and FASTA data.
         :return: None

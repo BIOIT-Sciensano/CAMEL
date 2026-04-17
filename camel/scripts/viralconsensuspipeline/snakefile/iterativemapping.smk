@@ -433,10 +433,10 @@ rule iterative_mapping_trim_fasta_edges:
     run:
         from camel.app.tools.pipelines.viral_consensus.trimfastaedges import TrimFastaEdges
         trim_edges = TrimFastaEdges()
-        snakemakeutils.add_pickle_inputs(trim_edges, input)
+        snakemakeutils.add_io_inputs(trim_edges, input)
         step = Step(rule_name=str(rule), tool=trim_edges, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(trim_edges, output)
+        snakemakeutils.dump_io_outputs(trim_edges, output)
 
 rule iterative_mapping_report:
     """
@@ -467,14 +467,14 @@ rule iterative_mapping_report:
             'TSV': [ToolIOFile(Path(input.TSV))],
             'TSV_seg': [ToolIOFile(Path(input.TSV_seg))]
         })
-        snakemakeutils.add_pickle_inputs(reporter, input,
+        snakemakeutils.add_io_inputs(reporter, input,
             ['FASTA', 'FASTA_ref', 'BAM', 'VCF_p1', 'VCF_p2', 'INFORMS_trim_fasta'])
         reporter.update_parameters(
             name=str(params.name), max_iter=params.max_iter, gap_depth_cutoff=params.gap_depth_cutoff,
             gap_len_cutoff=params.gap_len_cutoff)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule iterative_mapping_summary:
     """

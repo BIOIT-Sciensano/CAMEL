@@ -1,3 +1,4 @@
+import collections
 from pathlib import Path
 from typing import Callable, Any
 
@@ -52,9 +53,7 @@ def add_input_opts(*, supported: list[model.InputType] | None = None) -> Callabl
                 )
             )
             options.append(
-                click.option(
-                    "--fasta-name", type=str, help="FASTA input name"
-                )
+                click.option("--fasta-name", type=str, help="FASTA input name")
             )
 
         # VCF file
@@ -77,9 +76,7 @@ def add_input_opts(*, supported: list[model.InputType] | None = None) -> Callabl
                 )
             )
             options.append(
-                click.option(
-                    "--fastq-se-name", type=str, help="ONT FASTQ input name"
-                )
+                click.option("--fastq-se-name", type=str, help="ONT FASTQ input name")
             )
 
         # Illumina input
@@ -99,7 +96,6 @@ def add_input_opts(*, supported: list[model.InputType] | None = None) -> Callabl
                     type=str,
                     help="Paired-end FASTQ input names (R1_name R2_name)",
                 )
-
             )
 
         for opt in reversed(options):
@@ -119,7 +115,6 @@ def add_output_opts(f: Callable) -> Callable:
         click.option(
             "--output-html",
             type=click.Path(path_type=Path),
-            default=Path("out/report.html"),
             help="Output report (HTML)",
             show_default=True,
         ),
@@ -131,10 +126,7 @@ def add_output_opts(f: Callable) -> Callable:
             show_default=True,
         ),
         click.option(
-            "--output-tsv",
-            type=click.Path(path_type=Path),
-            default=Path("out/summary.tsv"),
-            help="Summary output (TSV)"
+            "--output-tsv", type=click.Path(path_type=Path), help="Summary output (TSV)"
         ),
         click.option(
             "--output-json",
@@ -237,24 +229,43 @@ def parse_script_input(kwargs: Any) -> ScriptInput:
     )
 
 
-def parse_script_output(kwargs: Any) -> ScriptOutput:
+def parse_script_output(kwargs: dict[str, Any]) -> ScriptOutput:
     """
-    Parses the script output arguments.
-    :param kwargs: Arguments
-    :return: Parsed script output options
+    Parses the script output.
+    :param kwargs: Keyword arguments (from click)
+    :return: Script output
     """
+    dir_out = Path(kwargs.get("output_dir", ".")).absolute()
+
+    def resolve(key: str, default_name: str, required: bool) -> Path | None:
+        """
+        Resolves the output path.
+        :param key: Output key
+        :param default_name: Default name
+        :param required: True if the input is required
+        return: Path
+        """
+        val = kwargs.get(key)
+        if val:
+            return Path(val).absolute()
+        if required:
+            return dir_out / default_name
+        return None
+
     return ScriptOutput(
-        dir=Path(kwargs["output_dir"]).absolute(),
-        html=Path(kwargs["output_html"]).absolute(),
-        tsv=Path(kwargs["output_tsv"]).absolute()  if kwargs.get("output_tsv") else None,
-        json=Path(kwargs["output_json"]).absolute() if kwargs.get("output_json") else None,
-        fasta=Path(kwargs["output_fasta"]).absolute() if kwargs.get("output_fasta") else None,
+        dir=dir_out,
+        html=resolve("output_html", "report.html", required=True),
+        tsv=resolve("output_tsv", "summary.tsv", required=True),
+        json=resolve("output_json", "report.json", required=False),
+        fasta=resolve("output_fasta", "assembly.fasta", required=False),
     )
 
 
 def parse_script_opts(kwargs) -> ScriptOptions:
     """
     Parses the script options.
+    :param kwargs: Keyword arguments (from click)
+    :return: Parsed script options
     """
     return ScriptOptions(
         typing_method=kwargs["typing_method"],
@@ -270,49 +281,49 @@ def parse_script_opts(kwargs) -> ScriptOptions:
     )
 
 
-def check_dbs(dbs: dict[str, DBEntry]) -> bool:
+def check_dbs(dbs: dict[str, DBEntry], analyses: dict[str, dict]) -> bool:
     """
-    Checks if the provided database specification is valid.
+    Checks if the provided database specification is valid and aligns with the requested analyses.
     :param dbs: Database specification
-    :return: True if valid, False otherwise, missing databases
+    :param analyses: Mapping of analyses to required database keys
+    :return: True if valid, False otherwise
     """
-    missing_required: list[str] = []
-    missing_optional: list[str] = []
+    missing_dbs: list[str] = []
 
-    for name, entry in dbs.items():
-        # Check if the DB exists
+    # Map DB names to the analyses that depend on them
+    analyses_by_db = collections.defaultdict(list)
+    for assay_name, info in analyses.items():
+        for db_key in info.get("dbs", []):
+            if db_key not in dbs:
+                raise ValueError(f"DB '{db_key}' is not defined")
+            analyses_by_db[db_key].append(assay_name)
+
+    # Check for each DB if it is required
+    for db_key, db_info in dbs.items():
+        required_globally = db_info.required
+        required_by_assay = len(analyses_by_db.get(db_key, [])) > 0
+        if not required_globally and not required_by_assay:
+            continue
+
+        # Path validation
         try:
-            path = entry.location.resolve(strict=True)
-            type_ok = path.is_file() if entry.is_file else path.is_dir()
-        except FileNotFoundError:
-            path = entry.location
+            path = db_info.location.resolve(strict=True)
+            type_ok = path.is_file() if db_info.is_file else path.is_dir()
+        except (FileNotFoundError, OSError):
+            path = db_info.location
             type_ok = False
 
-        # Log the message
         if not type_ok:
-            level = logger.error if entry.required else logger.warning
-            prefix = "Required" if entry.required else "Optional"
-
-            if not path.exists():
-                msg = f"{prefix} DB '{name}' missing: {path}"
+            affected_assays = ", ".join(analyses_by_db[db_key])
+            if db_info.required:
+                logger.error(f"Pipeline cannot run because essential DB '{db_key}' is missing at: {path}")
             else:
-                expected = "file" if entry.is_file else "directory"
-                msg = f"{prefix} DB '{name}': expected a {expected}, but got: {path}"
-            level(msg)
+                logger.warning(f"{affected_assays} assay(s) cannot be executed because DB '{db_key}' is missing")
+            missing_dbs.append(db_key)
 
-            # Save the database
-            if entry.required:
-                missing_required.append(name)
-            else:
-                missing_optional.append(name)
-
-    if missing_required:
-        logger.error(f"{len(missing_required)} required DB(s) missing: {', '.join(missing_required)}")
+    # Final summary
+    if missing_dbs:
         return False
 
-    if missing_optional:
-        logger.warning(f"{len(missing_optional)} optional DB(s) missing and the corresponding assays will not work: {', '.join(missing_optional)}")
-
-    if not missing_required and not missing_optional:
-        logger.info("All databases are available")
+    logger.info("All databases for the specified analyses are available")
     return True

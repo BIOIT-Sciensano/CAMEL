@@ -20,11 +20,11 @@ rule shigeifinder_run:
 
         shigeifinder_ = ShigEiFinder()
         step = Step(rule_name=str(rule), tool=shigeifinder_, dir_=Path(str(params.dir_)))
-        snakemakeutils.add_pickle_inputs(shigeifinder_,input)
+        snakemakeutils.add_io_inputs(shigeifinder_,input)
 
         # Run tool
         step.run()
-        snakemakeutils.dump_tool_outputs(shigeifinder_, output)
+        snakemakeutils.dump_io_outputs(shigeifinder_, output)
 
 rule shigeifinder_report:
     """
@@ -40,10 +40,10 @@ rule shigeifinder_report:
     run:
         from camel.app.tools.pipelines.shigella.shigeifinderreporter import ShigEiFinderReporter
         reporter = ShigEiFinderReporter()
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule shigeifinder_report_empty:
     """
