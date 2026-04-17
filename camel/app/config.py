@@ -18,7 +18,7 @@ class CamelConfig(BaseModel):
     create_missing_envs: bool = False
     timestamp_format: str = '%Y-%d-%m %H:%M:%S'
     dependency_service: Literal['lmod', 'pixi'] = 'lmod'
-    logging_fmt: str = '%Y-%m-%d %H:%M:%S - %(module)15s - %(levelname)7s - %(message)s'
+    logging_fmt: str = '%(asctime)s - %(module)15s - %(levelname)7s - %(message)s'
     date_fmt: str = '%d/%m/%Y - %X'
     ftp_server: str | None = None
     # Logging
