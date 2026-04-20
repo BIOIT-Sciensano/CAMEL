@@ -143,15 +143,16 @@ def add_io_inputs(tool: Tool, snake_input: Any, keys: Optional[list[str]] = None
             continue
 
         # Load the value
+        if key in optionals and len(snake_input[key]) == 0:
+            logger.debug(f"Optional Input '{key}' empty, skipped")
+            continue
+
         value = load_object(Path(snake_input[key]))
         if key.startswith('INFORMS'):
             inform_key = '_'.join(key.split('_')[1:])
             tool.add_input_informs({inform_key: value})
             logger.debug(f"Informs '{value}' added")
         else:
-            if key in optionals and len(value) == 0:
-                logger.debug(f"Optional Input '{key}' empty, skipped")
-                continue
             tool.add_input_files({key: value})
             logger.debug(f"Input '{value}' added")
 

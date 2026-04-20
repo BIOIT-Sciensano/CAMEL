@@ -35,6 +35,7 @@ analyses:
   serotype:
     dbs:
       - sistr
+      - seqsero
   spifinder:
     dbs:
       - spifinder

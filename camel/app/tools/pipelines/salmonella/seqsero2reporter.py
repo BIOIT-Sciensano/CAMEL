@@ -1,16 +1,28 @@
 import json
 from pathlib import Path
+from typing import Any
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.reports.htmlelement import HtmlElement
+from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class SeqSero2Reporter(Tool):
     """
-    Parses Seqsero2's TSV output results and returns an HTML report.
+    Creates an output report for SeqSero2.
     """
+
     TITLE = 'SeqSero2'
+
+    COLS = [
+        {'name': 'O-antigen', 'key': 'O antigen prediction', 'name_short': 'o_antigen'},
+        {'name': 'H1-antigen (<i>fliC</i>)', 'key': 'H1 antigen prediction(fliC)', 'name_short': 'h1_antigen'},
+        {'name': 'H2-antigen (<i>fljB</i>)', 'key': 'H2 antigen prediction(fljB)', 'name_short': 'h2_antigen'},
+        {'name': 'Antigenic formula', 'key': 'Predicted antigenic profile', 'name_short': 'formula'},
+        {'name': 'Serotype', 'key': 'Predicted serotype', 'name_short': 'serotype'},
+    ]
 
     def __init__(self) -> None:
         """
@@ -25,9 +37,11 @@ class SeqSero2Reporter(Tool):
         :return: None
         """
         self._section = HtmlReportSection(
-            SeqSero2Reporter.TITLE,subtitle=self._input_informs['serotyping_seqsero2']['_name_full'])
+            SeqSero2Reporter.TITLE,
+            subtitle=self._input_informs['serotyping_seqsero2']['_name_full'],
+        )
         self.__add_section_seqsero()
-        self.__add_file_output()
+        self.__add_db_info()
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._section)]
 
     def __add_section_seqsero(self) -> None:
@@ -35,77 +49,75 @@ class SeqSero2Reporter(Tool):
         Adds the SeqSero2 section to the HTML report.
         :return: None
         """
-        self._section.add_header(self._input_informs['serotyping_seqsero2']['_name'], 2)
+        self._section.add_header('Output', 3)
+        table_rows = []
+        notes = []
+        warnings = []
 
-        # Mandatory seqsero assay (from FASTA)
-        self._section.add_header('SeqSero2 serotyping - assembly kmer mode', 4)
-        self.___add_table_serotype_seqsero(self._tool_inputs['TXT_seqsero2_kmer'][0].path)
+        # Potential output files from SeqSero2
+        input_configs = [
+            ('TXT_seqsero2_kmer', 'Assembly', 'Kmer'),
+            ('TXT_seqsero2_allele', 'Reads', 'Allele'),
+            ('TXT_seqsero2_kmerread', 'Reads', 'Kmer'),
+        ]
 
-        # Optional seqsero assays (from FASTQ)
-        self._section.add_header('SeqSero2 serotyping - raw read allele mode', 4)
-        if 'TXT_seqsero2_allele' in self._tool_inputs:
-            self.___add_table_serotype_seqsero(self._tool_inputs['TXT_seqsero2_allele'][0].path)
-        else:
-            self._section.add_paragraph('SeqSero2 serotyping (raw read allele mode) not available in FASTA-input mode')
-        self._section.add_header('SeqSero2 serotyping - raw read kmer mode', 4)
-        if 'TXT_seqsero2_kmerread' in self._tool_inputs:
-            self.___add_table_serotype_seqsero(self._tool_inputs['TXT_seqsero2_kmerread'][0].path)
-        else:
-            self._section.add_paragraph('SeqSero2 serotyping (assembly kmer mode) not available in FASTA-input mode')
+        for key, label, mode in input_configs:
+            informs_key = key.replace('TXT_', '')
+            if key in self._tool_inputs:
+                output = SeqSero2Reporter.parse_seqsero_output(self._tool_inputs[key][0].path)
+                row_data = [output.get(k['key'], '') for k in self.COLS]
+                table_rows.append([label, mode, *row_data])
+                notes.append([label, mode, output.get('Note', 'n/a')])
+                if self._input_informs.get(informs_key, {}).get('simulated'):
+                    warnings.append(f"Input for mode '{mode}' on '{label}' was simulated from the assembly.")
+            else:
+                error_cell = HtmlElement(
+                    'td', 'Not supported', [('colspan', len(self.COLS))]
+                )
+                table_rows.append([label, mode, error_cell])
 
-        # add last update of the seqsero2 db
-        db_dir = self._tool_inputs['DIR_seqsero2'][0].path
-        self.___add_database_information(db_dir)
+        # Add main output table
+        column_names = ['Input', 'Mode'] + [c['name'] for c in self.COLS]
+        self._section.add_table(
+            table_rows, column_names=column_names, table_attributes=[('class', 'data')]
+        )
 
-    def ___add_table_serotype_seqsero(self, input_file_path: Path) -> None:
+        # Add notes
+        self._section.add_header('Notes', 4)
+        self._section.add_table(
+            notes, ['Input', 'Mode', 'Note'], table_attributes=[('class', 'data')]
+        )
+
+        # Add warnings (if applicable)
+        for warning in warnings:
+            self._section.add_warning_message(warning)
+
+    @staticmethod
+    def parse_seqsero_output(input_file_path: Path) -> dict[str, Any]:
         """
-        Generates and adds the table for seqsero2 tool.
-        :param input_file_path: the text file containing the results for a seqsero2 run in any mode.
-        :return: None
+        Parses the SeqSero2 output file.
+        :param input_file_path: Input file path
+        :return: Parsed info as a dictionary
         """
-        resultsdict = {}
+        logger.debug(f'Parsing: {input_file_path}')
+        output = {}
         with input_file_path.open('r') as handle:
             for line in handle:
-                parts = line.rstrip().split('\t')
-                resultsdict[parts[0]] = parts[1] if len(parts) > 1  else ''
-        table_data = []
-        header = ['O-antigen', 'H1-antigen (fliC)', 'H2-antigen (fljB)', 'Antigenic formula', 'Serotype']
-        row = [resultsdict['O antigen prediction:'], resultsdict['H1 antigen prediction(fliC):'],
-               resultsdict['H2 antigen prediction(fljB):'], resultsdict['Predicted antigenic profile:'],
-               resultsdict['Predicted serotype:']]
-        table_data.append(row)
-        self._section.add_table(table_data, header, [('class', 'data')])
+                parts = line.rstrip().split(':\t')
+                output[parts[0]] = parts[1].strip() if len(parts) > 1 else ''
+        return output
 
-    def __add_file_output(self) -> None:
+    def __add_db_info(self) -> None:
         """
-        Add the output tsv file to the html.
+        Adds the database information.
         :return: None
         """
-        # Mandatory seqsero assay (from FASTA)
-        relative_path = Path('serotyping', 'seqsero2', 'summary_out_seqsero2_kmer.tsv')
-        self._section.add_link_to_file("Download SeqSero2 Kmer mode (TSV)", relative_path)
-        self._section.add_file(self._tool_inputs['TXT_seqsero2_kmer'][0].path, relative_path)
-
-        # Optional seqsero assays (from FASTQ)
-        if 'TXT_seqsero2_allele' in self._tool_inputs:
-            relative_path = Path('serotyping', 'seqsero2', 'summary_out_seqsero2_allele.tsv')
-            self._section.add_link_to_file("Download SeqSero2 Allele mode (TSV)", relative_path)
-            self._section.add_file(self._tool_inputs['TXT_seqsero2_allele'][0].path, relative_path)
-        if 'TXT_seqsero2_kmerread' in self._tool_inputs:
-            relative_path = Path('serotyping', 'seqsero2', 'summary_out_seqsero2_kmerread.tsv')
-            self._section.add_link_to_file("Download SeqSero2 Kmer reads mode (TSV)", relative_path)
-            self._section.add_file(self._tool_inputs['TXT_seqsero2_kmerread'][0].path, relative_path)
-
-    def ___add_database_information(self, db_dir: Path) -> None:
-        """
-        Adds the date of latest database update.
-        :param db_dir: Input database directory
-        :return: None
-        """
+        self._section.add_header('Additional information', 3)
+        db_dir = self._tool_inputs['DIR_seqsero2'][0].path
         db_metadata_file = db_dir / 'db_update_info.json'
         if not db_metadata_file.is_file():
             raise FileNotFoundError(f'Database metadata not found: {db_metadata_file}')
         with db_metadata_file.open() as handle:
             metadata = json.load(handle)
             last_update_date = metadata['last_update_date']
-        self._section.add_paragraph(f'Last updated: {last_update_date}')
+        self._section.add_paragraph(f'Last database update: {last_update_date}')
