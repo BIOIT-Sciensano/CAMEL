@@ -219,7 +219,8 @@ The 'K-mer' mode with FASTQ input is executed for Illumina input, ONT input, and
 -t 2 or -t 5 or -t 2 and -t 5 respectively
 ```
 
-The 'Allele' mode is executed on Illumina input and on hybrid. If hybrid, only its Illumina input is used. The following options are used:
+The 'Allele' works with Illumina data. For `Illumina` and `hybrid` input data, the tool is executed directly on the reads. 
+For `ONT` and `FASTA` input, Illumina reads are simulated from the assembly using ART.  
 ```
 -m a
 -t 2
