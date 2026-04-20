@@ -6,7 +6,7 @@ from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.salmonella.sistr import Sistr
-from camel.app.tools.pipelines.salmonella.sistrreporter import SistrReporter
+from camel.app.tools.pipelines.salmonella.sistrreporter import SISTRReporter
 
 
 class TestSistr(CamelTestSuite):
@@ -45,7 +45,7 @@ class TestSistr(CamelTestSuite):
         sistr_tool.run(self.running_dir)
         self.verify_output_files(sistr_tool, 'JSON')
 
-        sistr_reporter = SistrReporter()
+        sistr_reporter = SISTRReporter()
         sistr_reporter.add_input_files({
             'JSON_SISTR': sistr_tool.tool_outputs['JSON'],
             'DIR_sistr': [ToolIODirectory(self.db_path)]})

@@ -95,8 +95,8 @@ rule serotyping_sistr_report:
         dir_ = 'serotyping/sistr/report' ,
         db_path_sistr = config['serotyping']['sistr']['path']
     run:
-        from camel.app.tools.pipelines.salmonella.sistrreporter import SistrReporter
-        reporter = SistrReporter()
+        from camel.app.tools.pipelines.salmonella.sistrreporter import SISTRReporter
+        reporter = SISTRReporter()
         reporter.add_input_files({'DIR_sistr': [ToolIODirectory(Path(params.db_path_sistr))]})
         snakemakeutils.add_io_inputs(reporter, input)
         step = Step(str(rule), reporter, dir_=Path(params.dir_))
@@ -111,5 +111,5 @@ rule serotyping_sistr_report_empty:
         VAL_HTML = 'serotyping/sistr/report/html-empty.iob' # serotyping_sistr.OUTPUT_REPORT_EMPTY
     run:
         from camel.app.core.snakemake import snakepipelineutils
-        from camel.app.tools.pipelines.salmonella.sistrreporter import SistrReporter
-        snakepipelineutils.create_empty_report_section(SistrReporter.TITLE, Path(output.VAL_HTML))
+        from camel.app.tools.pipelines.salmonella.sistrreporter import SISTRReporter
+        snakepipelineutils.create_empty_report_section(SISTRReporter.TITLE, Path(output.VAL_HTML))

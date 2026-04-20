@@ -9,120 +9,164 @@ from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 
 
-class SistrReporter(Tool):
+class SISTRReporter(Tool):
     """
-    Parses Sistr's JSON output results  and returns an HTML report.
+    Creates an HTML report for the SISTR JSON output.
     """
+
     TITLE = 'SISTR'
+    ANTIGEN_CONFIG = {
+        'h1': {
+            'loci': ['fliC'],
+            'short': 'h1',
+            'hits': lambda d: [d['h1_flic_prediction']],
+        },
+        'h2': {
+            'loci': ['fljB'],
+            'short': 'h2',
+            'hits': lambda d: [d['h2_fljb_prediction']],
+        },
+        'o': {
+            'loci': ['wzx', 'wzy'],
+            'short': 'serogroup',
+            'hits': lambda d: [
+                d['serogroup_prediction']['wzx_prediction'],
+                d['serogroup_prediction']['wzy_prediction'],
+            ],
+        },
+    }
 
     def __init__(self) -> None:
         """
         Initializes this tool.
         """
-        super().__init__('Sistr Reporter', '0.1')
-        self._section = None
+        super().__init__('SISTR Reporter', '0.1')
+        self._section: HtmlReportSection | None = None
 
     def _execute_tool(self) -> None:
         """
         Executes this tool.
         :return: None
         """
+        # Parse the input
+        path_json_in = self._tool_inputs['JSON_SISTR'][0].path
+        with path_json_in.open('r') as handle:
+            data_sistr: dict[str, Any] = json.load(handle)[0]
+
+        # Initialize the report section
         self._section = HtmlReportSection(
-            SistrReporter.TITLE, subtitle=self._input_informs['serotyping_sistr']['_name_full'])
-        self.__add_section_sistr()
-        self.__add_file_output()
+            SISTRReporter.TITLE,
+            subtitle=self._input_informs['serotyping_sistr']['_name_full'],
+        )
+
+        # Add content
+        self.__add_section_sistr(data_sistr)
+        self._add_link_to_output(path_json_in)
+        self._section.add_header('Additional information', 3)
+        self._add_db_info(self._tool_inputs['DIR_sistr'][0].path)
+
+        # Store the output
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._section)]
 
-    def __add_section_sistr(self) -> None:
+    def __add_section_sistr(self, data_sistr: dict) -> None:
         """
         Adds the SISTR section to the HTML report.
+        :param data_sistr: SISTR output data
         :return: None
         """
-        with self._tool_inputs['JSON_SISTR'][0].path.open('r') as handle:
-            data_sistr = json.load(handle)[0]
-            if data_sistr['qc_status'] == 'PASS':
-                self._section.add_header('H1 (fliC)-type', 4)
-                self.___add_antigen_serotype_table_sistr('h1')
-                self._section.add_header('H2 (fljB)-type', 4)
-                self.___add_antigen_serotype_table_sistr('h2')
-                self._section.add_header('O-type', 4)
-                self.___add_antigen_serotype_table_sistr('o')
-                self._section.add_header('Conclusion', 4)
-                self.___add_conclusion_sistr()
-            else:
-                self._section.add_paragraph('SISTR did not pass QC: the isolate might be contaminated, '
-                                            'or not contain enough sequencing reads, or ...')
-        db_dir = self._tool_inputs['DIR_sistr'][0].path
-        self.___add_database_information(db_dir)
+        if data_sistr['qc_status'] != 'PASS':
+            self._section.add_warning_message(
+                'SISTR QC failed: the isolate may be contaminated or have insufficient sequencing coverage.'
+            )
+            return
+        self._section.add_header('Output', 3)
+        self._section.add_header('H1 (<i>fliC</i>)-type', 4)
+        self._add_antigen_serotype_table_sistr(data_sistr, 'h1')
+        self._section.add_header('H2 (<i>fljB</i>)-type', 4)
+        self._add_antigen_serotype_table_sistr(data_sistr, 'h2')
+        self._section.add_header('O-type', 4)
+        self._add_antigen_serotype_table_sistr(data_sistr, 'o')
+        self._section.add_header('Conclusion', 3)
+        self._add_conclusion()
 
-    def ___add_antigen_serotype_table_sistr(self, antigen: str) -> None:
+    def _add_antigen_serotype_table_sistr(self, data_sistr: dict, antigen: str) -> None:
         """
         Generates and adds the table of an antigen type for sistr tool.
+        :param data_sistr: SISTR output data
         :param: antigen, the salmonella antigen in lowercase, either o, h1, or h2
         :return: None
         """
-        table_data = []
-        header = ['Locus', '% Identity', 'HSP/Locus length', 'Contig', 'Position in contig', 'Predicted serotype']
-        with self._tool_inputs['JSON_SISTR'][0].path.open('r') as json_file:
-            handle = json.load(json_file)[0]
-        if antigen == 'h1':
-            best_hits_per_locus = [handle['h1_flic_prediction']]
-            locus_full = ['fliC']
-            locus_short = ['h1']
-        elif antigen == 'h2':
-            best_hits_per_locus = [handle['h2_fljb_prediction']]
-            locus_full = ['fljB']
-            locus_short = ['h2']
-        elif antigen == 'o':
-            best_hits_per_locus = [handle['serogroup_prediction']['wzx_prediction'],
-                                   handle['serogroup_prediction']['wzy_prediction']]
-            locus_full = ['wzx', 'wzy']
-            locus_short = ['serogroup']
-        else:
-            raise ValueError('antigen needs to be either h1, h2, or o !')
+        config = SISTRReporter.ANTIGEN_CONFIG.get(antigen)
+        if not config:
+            raise ValueError(f"Antigen must be one of: {', '.join(config.keys())}")
 
+        best_hits_per_locus = config['hits'](data_sistr)
+        locus_full = config['loci']
+        locus_short = config['short']
+
+        table_data = []
+        header = [
+            'Locus',
+            '% Identity',
+            'HSP/Locus length',
+            'Contig',
+            'Position in contig',
+            'Predicted serotype',
+        ]
         any_best_hits_found = False
-        # loop over best hits per locus; h1 and h2 will both only have one best hit each,
-        # o has two loci, and therefore two best hits
-        for index, best_hit in enumerate(best_hits_per_locus):
-            if str(best_hit['is_missing']) == 'False':
+
+        for i, best_hit in enumerate(best_hits_per_locus):
+            if not best_hit.get('is_missing', True):
                 any_best_hits_found = True
+                top = best_hit.get('top_result', {})
                 color = self._get_hit_color(best_hit)
+
                 row = [
-                    locus_full[index], format(best_hit['top_result']['pident'], '.2f'),
-                    '/'.join([str(best_hit['top_result']['length']),
-                              str(best_hit['top_result']['qlen'])]),
-                    best_hit['top_result']['stitle'],
-                    '...'.join([str(best_hit['top_result']['sstart']), str(best_hit['top_result']['send'])]),
-                    best_hit[locus_short[0]]
+                    locus_full[i],
+                    f"{top.get('pident', 0):.2f}",
+                    f"{top.get('length', 0)}/{top.get('qlen', 0)}",
+                    top.get('stitle', ''),
+                    f"{top.get('sstart', '')}...{top.get('send', '')}",
+                    best_hit.get(locus_short, ''),
                 ]
-                row = [HtmlTableCell(x, color) for x in row]
-                table_data.append(row)
-            else:
-                if antigen == 'o':
-                    row = [HtmlTableCell(locus_full[index], 'red'),
-                           HtmlElement('td', 'No match found', attributes=[('colspan', 5), ('class', 'red')])]
-                    table_data.append(row)
+                table_data.append([HtmlTableCell(x, color) for x in row])
+
+            elif antigen == 'o':
+                table_data.append(
+                    [
+                        HtmlTableCell(locus_full[i], 'red'),
+                        HtmlElement(
+                            'td',
+                            'No match found',
+                            attributes=[('colspan', 5), ('class', 'red')],
+                        ),
+                    ]
+                )
 
         if any_best_hits_found:
             self._section.add_table(table_data, header, [('class', 'data')])
             if antigen == 'o':
-                self._section.add_paragraph(' '.join(['Predicted O antigen based on H antigens and serogroup:',
-                                                      handle['o_antigen']]))
-        else:  # if not any_best_hits_found:
-            if antigen == 'h1' or antigen == 'h2':
-                self._section.add_paragraph(f'{locus_full[0]}: No match found')
-            else:
-                self._section.add_paragraph(f'{locus_full[0]} and {locus_full[1]}: No match found')
+                self._section.add_paragraph(
+                    f"Predicted O antigen based on H antigens and serogroup: {data_sistr.get('o_antigen', 'N/A')}"
+                )
+        elif antigen in ('h1', 'h2'):
+            self._section.add_paragraph(f"{locus_full[0]}: No match found")
+        else:
+            self._section.add_paragraph(
+                f"{locus_full[0]} and {locus_full[1]}: No match found"
+            )
 
     @staticmethod
     def _get_hit_color(hit: dict[str, Any]) -> str:
         """
-        Gets a hits color based on its percentage identity and coverage.
-        :return: color as str
+        Returns the color for the corresponding hit.
+        :param hit: Input hit
+        :return: Color as a string
         """
-        if hit['top_result']['pident'] == 100.0 and \
-                hit['top_result']['length'] == hit['top_result']['qlen']:
+        if (
+            hit['top_result']['pident'] == 100.0
+            and hit['top_result']['length'] == hit['top_result']['qlen']
+        ):
             color = 'green'
         elif hit['top_result']['length'] == hit['top_result']['qlen']:
             color = 'lightgreen'
@@ -130,31 +174,43 @@ class SistrReporter(Tool):
             color = 'grey'
         return color
 
-    def ___add_conclusion_sistr(self) -> None:
+    def _add_conclusion(self) -> None:
         """
         Generates and adds the conclusion sentence for sistr tool.
         :return: None
         """
         with self._tool_inputs['JSON_SISTR'][0].path.open('r') as handle:
             json_data = json.load(handle)[0]
-        self._section.add_paragraph(' '.join(['Predicted antigenic profile (O:H1:H2):',
-                                              ':'.join([str(json_data['o_antigen']),
-                                                        str(json_data['h1']),
-                                                        str(json_data['h2'])])]))
-        self._section.add_paragraph(' '.join(['Predicted serotype:', json_data['serovar']]))
+        table_data = [
+            (
+                'Antigenic profile (O:H1:H2)',
+                ':'.join(
+                    [
+                        str(json_data['o_antigen']),
+                        str(json_data['h1']),
+                        str(json_data['h2']),
+                    ]
+                ),
+            ),
+            ('Serotype', json_data['serovar']),
+        ]
+        self._section.add_table(
+            table_data, ['Output', 'Prediction'], table_attributes=[('class', 'data')]
+        )
 
-    def __add_file_output(self) -> None:
+    def _add_link_to_output(self, path_json: Path) -> None:
         """
-        Add the output tsv file to the html.
+        Adds a download link to the SISTR output file.
+        :param path_json: JSON output file
         :return: None
         """
         relative_path = Path('serotyping', 'sistr', 'summary_out.json')
         self._section.add_link_to_file("Download (JSON)", relative_path)
-        self._section.add_file(self._tool_inputs['JSON_SISTR'][0].path, relative_path)
+        self._section.add_file(path_json, relative_path)
 
-    def ___add_database_information(self, db_dir: Path) -> None:
+    def _add_db_info(self, db_dir: Path) -> None:
         """
-        Adds the date of latest database update.
+        Adds the database information.
         :param db_dir: Input database directory
         :return: None
         """
@@ -164,4 +220,4 @@ class SistrReporter(Tool):
         with db_metadata_file.open() as handle:
             metadata = json.load(handle)
             last_update_date = metadata['last_update_date']
-        self._section.add_paragraph(f'Last updated: {last_update_date}')
+        self._section.add_paragraph(f'Last database update: {last_update_date}')
