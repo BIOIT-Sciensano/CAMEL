@@ -5,12 +5,18 @@ analyses:
   cgmlst:
     dbs:
       - cgmlst
+  confindr:
+    dbs:
+      - confindr
   human_read_scrubbing:
     dbs:
       - ncbi_human_read_scrubber
   innuendo_cgmlst:
     dbs:
       - innuendo_cgmlst
+  kraken2:
+    dbs:
+      - kraken2
   mlst_pasteur:
     dbs:
       - mlst_pasteur
@@ -32,11 +38,8 @@ analyses:
   rmlst:
     dbs:
       - rmlst
-  serotype_h:
-    dbs:
+  serotype:
       - serotype_h
-  serotype_o:
-    dbs:
       - serotype_o
   virulencefinder:
     dbs:
