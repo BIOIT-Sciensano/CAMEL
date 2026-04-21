@@ -49,7 +49,7 @@ class MainKlebsiellaPipeline(BasePipe):
         super().__init__(
             name="Klebsiella pipeline",
             title="<i>Klebsiella</i> pipeline",
-            version="1.1",
+            version="1.2.0",
             script_in=in_,
             script_out=out,
             opts=opts,

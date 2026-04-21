@@ -141,6 +141,7 @@ citations:
     - Li_2011-bcftools
     - Kaas_2014-csi_phylogeny
     - Ezewudo_2018-reseqtb_uvp
+    - Bogaerts_2025-mist
     - Camacho_2009-blast
     - Clausen_2018-kma
     - Xia_2016-spotyping
@@ -148,7 +149,6 @@ citations:
     - Coll_2014-myco_snp_lineage
     - Dai_2011-myco_hsp65
     - Srilohasin_2014-myco_51snp
-    - Zankari_2017-pointfinder
     - Danecek_2017-bcftools_csq
     - Miotto_2017-myco_amr
     - Jolley_2010-bigsdb

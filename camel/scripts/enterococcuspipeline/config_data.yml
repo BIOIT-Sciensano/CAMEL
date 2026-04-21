@@ -206,6 +206,7 @@ citations:
     - Langmead_2012-bowtie2
     - Li_2021-minimap2
     - Li_2009-samtools
+    - Bogaerts_2025-mist
     - Camacho_2009-blast
     - Clausen_2018-kma
     - Bortolaia_2020-resfinder_4.0
@@ -218,7 +219,7 @@ citations:
     - Pal_2014-bacmet
 
 #########################
-# Tool specific options #
+# Tool-specific options #
 #########################
 amrfinder:
   db: *db_amrfinder

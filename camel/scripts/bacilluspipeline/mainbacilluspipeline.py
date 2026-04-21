@@ -71,7 +71,7 @@ class MainBacillusPipeline(BasePipe):
         super().__init__(
             name='Bacillus pipeline',
             title='<i>Bacillus</i> pipeline',
-            version='1.0',
+            version='1.1.0',
             script_in=in_,
             script_out=out,
             opts=opts,

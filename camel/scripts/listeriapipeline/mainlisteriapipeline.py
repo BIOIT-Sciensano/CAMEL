@@ -49,7 +49,7 @@ class MainListeriaPipeline(BasePipe):
         super().__init__(
             name='Listeria pipeline',
             title='<i>Listeria</i> pipeline',
-            version='1.4',
+            version='1.5.0',
             script_in=in_,
             script_out=out,
             opts=opts,

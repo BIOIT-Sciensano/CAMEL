@@ -48,7 +48,7 @@ class MainSTECPipeline(BasePipe):
         super().__init__(
             name='STEC pipeline',
             title='STEC pipeline',
-            version='1.2',
+            version='1.3.0',
             script_in=in_,
             script_out=out,
             opts=opts,

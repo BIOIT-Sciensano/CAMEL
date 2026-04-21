@@ -49,7 +49,7 @@ class MainStaphylococcusPipeline(BasePipe):
         super().__init__(
             name='Staphylococcus pipeline',
             title='<i>Staphylococcus</i> pipeline',
-            version='1.2',
+            version='1.3.0',
             script_in=in_,
             script_out=out,
             opts=opts,

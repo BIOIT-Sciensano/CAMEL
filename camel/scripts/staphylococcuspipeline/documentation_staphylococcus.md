@@ -1,7 +1,7 @@
 # Overview
 The *Staphylococcus* pipeline performs complete characterization of *Staphylococcus aureus* isolates.
 
-Version: **1.2**
+Version: **1.3.0**
 
 # Components
 
@@ -121,24 +121,24 @@ database.
 An overview of the quality checks is provided below. Warnings are included for quality checks that fail but do not stop 
 the pipeline execution. 
 
-| **metric**                             | **warning threshold**  | **fail threshold**  | **description**                                                                                                                                                                                                                 |
-|----------------------------------------|------------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Kraken: contaminants                   | 1.00%                  | 5.00%               | Percentage of reads / contigs assigned to species other than *S. aureus*                                                                                                                                                        |
-| Typing loci detected (%)               | 90%                    | 95%                 | Percentage of cgMLST loci detected (or MLST loci when cgMLST is disabled)                                                                                                                                                       |
-| Coverage against assembled contigs     | 20x                    | 10x                 | Coverage of the reads mapped to the assembly (determined by QUAST)                                                                                                                                                              |
-| Reads mapping to the assembled contigs | 95%                    | 90%                 | Percentage of reads mapping back to the assembly (determined by QUAST)                                                                                                                                                          |
-| Total assembly length deviation        | 10%                    | 20%                 | Percent deviation from the expected genome size (determined from the reference genome)                                                                                                                                          |
-| ConFindr: number of contaminating SNPs | 10                     | 20                  | Number of SNPs flagged as contaminant by ConFindr                                                                                                                                                                               | 
-| Percentage of complete BUSCO genes     | 90%                    | 95%                 | Percentage of complete BUSCO genes identified                                                                                                                                                                                   |
-| FastQC: Average quality score          | 30                     | 25                  | Checks if the average read quality is above the given threshold.                                                                                                                                                                |
-| FastQC: GC-content deviation           | 2.00%                  | 4.00%               | Checks if the detected GC content is close enough to the expected GC content for this organism (32.70%).                                                                                                                        |
-| FastQC: Max. N-fraction                | 0.0050                 | 0.0100              | Checks if the maximal N fraction at any read position is below the given threshold.                                                                                                                                             |
-| FastQC: Per-base sequence content      | 3.00%                  | 6.00%               | Checks if the difference between A-T and C-G is below the given threshold at every position. The first 20 and last 5 bases of the reads are skipped, as the peaks there can be caused by the library kit or trimming artifacts. |
-| FastQC: Q-score drop                   | 200                    | 150                 | Checks whether the average position in the reads where the mean Q-score drops below 30 is above the given threshold.                                                                                                            |
-| FastQC: Sequence length distribution   | 66.67%                 | 40.00%              | Checks if the median read length of the trimmed reads is below a threshold compared to the mode length of the raw input reads (251).                                                                                            |
-| NanoPlot: Median read length           | 500                    | 250                 | Checks if the median read length of the trimmed reads is below a threshold compared to the mode length of the raw input reads (251).                                                                                            |
-| NanoPlot: Median read quality          | 10                     | 8                   | Checks if the median read length of the trimmed reads is below a threshold compared to the mode length of the raw input reads (251).                                                                                            |
-| seqkit: GC-content deviation           | 2.00%                  | 4.00%               | Checks if the median read length of the trimmed reads is below a threshold compared to the mode length of the raw input reads (251).                                                                                            |
+| **metric**                             | **warning threshold** | **fail threshold** | **description**                                                                                                                                                                                                                 |
+|----------------------------------------|-----------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Kraken: contaminants                   | 1.00%                 | 5.00%              | Percentage of reads / contigs assigned to species other than *S. aureus*                                                                                                                                                        |
+| Typing loci detected (%)               | 90%                   | 95%                | Percentage of cgMLST loci detected (or MLST loci when cgMLST is disabled)                                                                                                                                                       |
+| Coverage against assembled contigs     | 20x / 50x (ONT)       | 10x / 30x (ONT)    | Coverage of the reads mapped to the assembly (determined by QUAST)                                                                                                                                                              |
+| Reads mapping to the assembled contigs | 95%                   | 90%                | Percentage of reads mapping back to the assembly (determined by QUAST)                                                                                                                                                          |
+| Total assembly length deviation        | 10%                   | 20%                | Percent deviation from the expected genome size (determined from the reference genome)                                                                                                                                          |
+| ConFindr: number of contaminating SNPs | 10                    | 20                 | Number of SNPs flagged as contaminant by ConFindr                                                                                                                                                                               | 
+| Percentage of complete BUSCO genes     | 90%                   | 95%                | Percentage of complete BUSCO genes identified                                                                                                                                                                                   |
+| FastQC: Average quality score          | 30                    | 25                 | Checks if the average read quality is above the given threshold.                                                                                                                                                                |
+| FastQC: GC-content deviation           | 2.00%                 | 4.00%              | Checks if the detected GC content is close enough to the expected GC content for this organism (32.70%).                                                                                                                        |
+| FastQC: Max. N-fraction                | 0.0050                | 0.0100             | Checks if the maximal N fraction at any read position is below the given threshold.                                                                                                                                             |
+| FastQC: Per-base sequence content      | 3.00%                 | 6.00%              | Checks if the difference between A-T and C-G is below the given threshold at every position. The first 20 and last 5 bases of the reads are skipped, as the peaks there can be caused by the library kit or trimming artifacts. |
+| FastQC: Q-score drop                   | 200                   | 150                | Checks whether the average position in the reads where the mean Q-score drops below 30 is above the given threshold.                                                                                                            |
+| FastQC: Sequence length distribution   | 66.67%                | 40.00%             | Checks if the median read length of the trimmed reads is below a threshold compared to the mode length of the raw input reads (251).                                                                                            |
+| NanoPlot: Median read length           | 3000                  | 2000               | Median length of the filtered reads.                                                                                                                                                                                            |
+| NanoPlot: Median read quality          | 16                    | 14                 | Median quality of the filtered reads.                                                                                                                                                                                           |
+| seqkit: GC-content deviation           | 2.00%                 | 4.00%              | Checks if the detected GC content is close enough to the expected GC content for this organism                                                                                                                                  |                                                                                                                                 |
 
 **Note:** FastQC metrics are evaluated separately for the forward and reverse reads.
 
@@ -174,7 +174,7 @@ bcftools mpileup {BAM in} --fasta-ref {FASTA ref} --output-type z --count-orphan
 bcftools call {PILEUP out} --consensus-caller --output {VCF_GZ out} --output-type z --variants-only --ploidy 1;
 ```
 
-The following variant filters then applied, with threshold values listed in the output report.
+The following variant filters are then applied, with threshold values listed in the output report.
 
 - Depth (see command in the output report)
 - SNP/indel quality (see command in the output report)
@@ -239,7 +239,7 @@ The database version is indicated in the output report and summary output file.
 
 Virulence gene detection is performed as described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/) using an 
 updated version of blast (`blast 2.14.0`).
-Alternative detection using `kma 1.4.12a` is available by changing the `--detection-method` parameter.
+Alternative detection using `kma 1.4.12a` is available by changing the `--gene-detection-method` parameter.
 
 The following databases are available: 
 
@@ -279,7 +279,7 @@ database (not automatically updated). The following filtering is then performed:
 
 Sequence typing is performed as described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/) with an 
 updated version of blast (`blast 2.14.0`). 
-Alternative detection using `kma 1.4.12a` is available by changing the `--detection-method` parameter.
+Alternative detection using `kma 1.4.12a` or `MiST v1.2.0` is available by changing the `--typing-method` parameter.
 
 The following typing schemes are available:
 

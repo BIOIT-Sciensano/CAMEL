@@ -223,6 +223,7 @@ citations:
     - Langmead_2012-bowtie2
     - Li_2021-minimap2
     - Danecek_2021-samtools
+    - Bogaerts_2025-mist
     - Camacho_2009-blast
     - Clausen_2018-kma
     - Feldgarden_2019-ndaro
@@ -261,7 +262,7 @@ confindr:
   db: *db_confindr
 
 contamination_check:
-  db: {DB_ROOT}/kraken2_microbial/latest
+  db: *db_kraken2
   expected_species: Neisseria meningitidis
 
 downsampling:
