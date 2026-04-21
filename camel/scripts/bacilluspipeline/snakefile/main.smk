@@ -236,7 +236,7 @@ rule report_content_subtilis:
         report_junctions = gene_detection.get_gene_detection_report('gmm_junctions', config, analysis_name='gmo'),
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
         report_plasmidfinder = gene_detection.get_gene_detection_report('plasmidfinder', config),
-        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mobsuite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY,
+        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY,
         report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
         reports_straingst = straingst.get_reports(config),
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
