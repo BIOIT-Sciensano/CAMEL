@@ -19,7 +19,16 @@ class SeqSero2(Tool):
         Initialize tool.
                 :return: None
         """
-        super().__init__('SeqSero2', '1.2.1')
+        super().__init__('SeqSero2', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _execute_tool(self) -> None:
         """
