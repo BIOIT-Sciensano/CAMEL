@@ -61,7 +61,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         :return: None
         """
         super().__init__(
-            name='Viral Low-Frequency Variants pipeline',
+            name='Low-frequency variant calling pipeline',
             version='1.0',
             title=None,
             script_in=in_,
