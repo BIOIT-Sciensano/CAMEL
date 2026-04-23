@@ -22,6 +22,7 @@ class SeqSero2Reporter(Tool):
         {'name': 'H2-antigen (<i>fljB</i>)', 'key': 'H2 antigen prediction(fljB)', 'name_short': 'h2_antigen'},
         {'name': 'Antigenic formula', 'key': 'Predicted antigenic profile', 'name_short': 'formula'},
         {'name': 'Serotype', 'key': 'Predicted serotype', 'name_short': 'serotype'},
+        {'name': 'Identification', 'key': 'Predicted identification', 'name_short': 'identification'},
     ]
 
     def __init__(self) -> None:
