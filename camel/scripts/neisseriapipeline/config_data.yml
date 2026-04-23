@@ -26,6 +26,9 @@ analyses:
   human_read_scrubbing:
     dbs:
       - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
   mendevar:
     dbs:
       - mendevar
