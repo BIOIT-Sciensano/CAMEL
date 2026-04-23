@@ -57,8 +57,8 @@ QC_CHECKS_BY_KEY = {qc.key: qc for qc in [
     QCCheck(
         key='kraken_ont',
         full_name='Kraken 2: contaminants (ONT)',
-        threshold_warn=1.0,
-        threshold_fail=5.0,
+        threshold_warn=5.0,
+        threshold_fail=10.0,
         fmt_string_value='{:.2f}%',
         supported_input_types=['hybrid', 'ont'],
         value_should_exceed=False),
