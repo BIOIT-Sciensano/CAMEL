@@ -203,7 +203,9 @@ rule core_init_summary:
             ('analysis_date', analysis_date),
         ]
         if 'gene_detection' in config:
-            content.append(('detection_method', config['gene_detection']['options']['method']))
+            content.append(('gene_detection_method', config['gene_detection']['options']['method']))
+        if 'sequence_typing' in config:
+            content.append(('typing_method', config['sequence_typing']['options']['method']))
         snakemakeutils.export_summary(content, Path(output.OUT), str(params.ext))
 
 rule core_report_pickle_citations:

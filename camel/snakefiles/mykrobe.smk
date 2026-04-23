@@ -106,8 +106,8 @@ rule mykrobe_create_summary:
         # Create TSV output
         data_summary = [
             ('mykrobe_phylo_group', informs['phylo_group']),
-            ('mykrobe_species', informs['phylo_group']),
-            ('mykrobe_lineage', informs['phylo_group']),
+            ('mykrobe_species', informs['species']),
+            ('mykrobe_lineage', informs['lineage']),
         ]
         if params.show_amr is True:
             data_summary.append(('mykrobe_drug_susceptibility', informs['drug_susceptibility']))
