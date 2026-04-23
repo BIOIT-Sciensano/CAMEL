@@ -11,9 +11,6 @@ analyses:
   human_read_scrubbing:
     dbs:
       - ncbi_human_read_scrubber
-  innuendo_cgmlst:
-    dbs:
-      - innuendo_cgmlst
   kraken2:
     dbs:
       - kraken2
@@ -28,7 +25,7 @@ analyses:
       - mob_suite
   ncbi_stress:
     dbs:
-      - ncbi_stress
+      - gd_ncbi_stress
   plasmidfinder:
     dbs:
       - plasmidfinder
@@ -39,6 +36,7 @@ analyses:
     dbs:
       - rmlst
   serotype:
+    dbs:
       - serotype_h
       - serotype_o
   virulencefinder:
@@ -66,10 +64,6 @@ dbs:
     location: &db_confindr {DB_ROOT}/confindr/0.8.1
     required: false
     method: skip
-  innuendo_cgmlst:
-    location: &db_innuendo_cgmlst {DB_ROOT}/sequence_typing/ecoli/innuendo_cgmlst
-    required: false
-    method: mist
   kraken2:
     location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
     required: false
@@ -91,7 +85,7 @@ dbs:
     is_file: true
     required: false
     method: ftp
-  ncbi_stress:
+  gd_ncbi_stress:
     location: &db_ncbi_stress {DB_ROOT}/gene_detection/NCBI_STRESS
     required: false
     method: ftp
@@ -274,8 +268,6 @@ sequence_typing:
     cgmlst:
       path: *db_cgmlst
       blastn_task: blastn
-    innuendo_cgmlst:
-      path: *db_innuendo_cgmlst
     mlst_pasteur:
       path: *db_mlst_pasteur
     mlst_warwick:

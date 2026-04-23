@@ -68,7 +68,6 @@ rule report_command_section:
         INFORMS_mlst_pasteur = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_pasteur') if 'mlst_pasteur' in config['analyses_selected'] else [],
         INFORMS_mlst_warwick = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_warwick') if 'mlst_warwick' in config['analyses_selected'] else [],
         INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst') if 'cgmlst' in config['analyses_selected'] else [],
-        INFORMS_innuendo = sequence_typing.OUTPUT_INFORMS.format(scheme='innuendo_cgmlst') if 'innuendo_cgmlst' in config['analyses_selected'] else [],
         INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
@@ -112,7 +111,6 @@ rule report_combine_all:
         report_mlst_warwick = sequence_typing.get_sequence_typing_report('mlst_warwick', config),
         report_mlst_pasteur = sequence_typing.get_sequence_typing_report('mlst_pasteur', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
-        report_innuendo = sequence_typing.get_sequence_typing_report('innuendo_cgmlst', config),
         # Report
         report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_command_section.output.HTML
@@ -170,8 +168,8 @@ rule report_combine_all:
                 input.report_serotype_o_type, input.report_serotype_h_type, input.report_serotype)]),
             ('Plasmid characterization', 'plasmid', [Path(x) for x in (
                 input.report_plasmidfinder, input.report_mob_suite, input.report_genomic_context)]),
-            ('Sequence typing', 'st', [Path(x) for x  in (
-                input.report_mlst_warwick, input.report_mlst_pasteur, input.report_cgmlst, input.report_innuendo)]),
+            ('Sequence typing', 'st', [Path(x) for x in (
+                input.report_mlst_warwick, input.report_mlst_pasteur, input.report_cgmlst)]),
             ('Citations', 'citations', [Path(input.report_citations)]),
             ('Commands', 'commands', [Path(input.report_commands)])
         ])
@@ -209,8 +207,7 @@ rule summary_combine_all:
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_pasteur', ext=wildcards.ext) if 'mlst_pasteur' in config['analyses_selected'] else [],
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_warwick', ext=wildcards.ext) if 'mlst_warwick' in config['analyses_selected'] else [],
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='innuendo_cgmlst', ext=wildcards.ext) if 'innuendo_cgmlst' in config['analyses_selected'] else []
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:
