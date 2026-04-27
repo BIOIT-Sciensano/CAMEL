@@ -68,6 +68,7 @@ rule report_command_section:
         INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses_selected'] else [],
         INFORMS_virulence = str(gene_detection.OUTPUT_INFORMS).format(db='virulencefinder') if 'virulencefinder' in config['analyses_selected'] else [],
         INFORMS_virulence_shiga = str(gene_detection.OUTPUT_INFORMS).format(db='virulencefinder_shiga') if 'virulencefinder' in config['analyses_selected'] else [],
+        INFORMS_plasmidfinder = str(gene_detection.OUTPUT_INFORMS).format(db='plasmidfinder') if 'plasmidfinder' in config['analyses_selected'] else[],
         INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses_selected'] else [],
         INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst') if 'mlst' in config['analyses_selected'] else [],
         INFORMS_rmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='rmlst') if 'rmlst' in config['analyses_selected'] else []
@@ -100,6 +101,7 @@ rule combine_reports:
         report_virulence = gene_detection.get_gene_detection_report('virulencefinder', config),
         report_virulence_shiga = gene_detection.get_gene_detection_report('virulencefinder_shiga', config, 'virulencefinder'),
         # Plasmid characterization
+        report_plasmidfinder = gene_detection.get_gene_detection_report('plasmidfinder', config),
         report_mob_suite = (mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY),
         report_genomic_context = (mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY),
         # # Shigella serotyping
@@ -164,7 +166,7 @@ rule combine_reports:
             ('Virulence characterization', 'viru', [Path(x) for x in (
                 input.report_virulence, input.report_virulence_shiga)]),
             ('Plasmid characterization', 'plasmid', [Path(x) for x in (
-                input.report_mob_suite, input.report_genomic_context)]),
+                input.report_plasmidfinder, input.report_mob_suite, input.report_genomic_context)]),
             ('Sequence typing', 'st', [Path(x) for x in (
                 input.report_mlst_warwick, input.report_mlst_pasteur, input.report_cgmlst)]),
             ('Citations', 'citations', [Path(input.report_citations)]),
@@ -197,6 +199,7 @@ rule combine_summary_files:
         lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='virulencefinder', ext=wildcards.ext) if 'virulencefinder' in config['analyses_selected'] else [],
         lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='virulencefinder_shiga', ext=wildcards.ext) if 'virulencefinder' in config['analyses_selected'] else [],
         # Plasmid characterization
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='plasmidfinder', ext=wildcards.ext) if 'plasmidfinder' in config['analyses_selected'] else [],
         mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses_selected'] else [],
         # Sequence typing
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_pasteur', ext=wildcards.ext) if 'mlst_pasteur' in config['analyses_selected'] else [],

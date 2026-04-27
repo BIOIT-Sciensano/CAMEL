@@ -247,6 +247,11 @@ The following databases are available:
 
 ## 10. Plasmid characterization
 
+### PlasmidFinder
+
+Plasmid replicon detection is performed on the `DTU PlasmidFinder - Enterobacteriales` plasmid replicon database as 
+described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/).
+
 ### MOB-suite & genomic context
 
 The `MOB-recon` function of `MOB-suite 3.1.8` is used to reconstruct putative plasmids. The contigs assigned to putative

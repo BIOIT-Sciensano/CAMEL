@@ -26,6 +26,9 @@ analyses:
   mykrobe:
     dbs:
       - mykrobe
+  plasmidfinder:
+    dbs:
+      - gene_detection_plasmidfinder
   resfinder4:
     dbs:
       - resfinder4
@@ -59,6 +62,10 @@ dbs:
     location: &db_confindr {DB_ROOT}/confindr/0.8.1
     required: false
     method: skip
+  gene_detection_plasmidfinder:
+    location: &db_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-entero
+    required: false
+    method: ftp
   gene_detection_virulencefinder_ecoli:
     location: &db_gd_virulencefinder_ecoli {DB_ROOT}/gene_detection/VirulenceFinder-Ecoli
     required: false
@@ -217,6 +224,15 @@ variant_filtering: {{}}
 ############################
 gene_detection:
   dbs:
+    plasmidfinder:
+      path: *db_plasmidfinder
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
     virulencefinder:
       path: *db_gd_virulencefinder_ecoli
       metadata:
