@@ -189,7 +189,7 @@ The following variant filters are then applied, with threshold values listed in 
 
 ### SISTR
 
-`SISTR 1.1.1` is used on assembly input for serotype determination. The following options are used:
+`SISTR 1.1.3` is used on assembly input for serotype determination. The following options are used:
 ```
 --output-format json
 --use-full-cgmlst-db
