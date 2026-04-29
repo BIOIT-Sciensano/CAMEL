@@ -46,40 +46,27 @@ rule serotyping_sistr_dump_summary_info:
             json_data = json.load(handle)[0]
 
         # Reformat data
-        header_locus = ['Locus', 'serotype_or_group', '% Identity', 'HSP/Locus length', 'Contig', 'Position in contig']
-        if json_data['qc_status'] == 'PASS':
-            hits_dict_tsv = {
-                'serotype_antigenic_formula':':'.join([
-                    str(json_data['o_antigen']), str(json_data['h1']), str(json_data['h2'])]),
-                'serotype_serogroup': json_data['serogroup'],
-                'serotype_consensus': json_data['serovar'],
-                'qc_status' : 'PASS'
-            }
-            serotyping_sistr.sistr_output_parser(json_data['h1_flic_prediction'], 'fliC', 'h1', hits_dict_tsv)
-            serotyping_sistr.sistr_output_parser(json_data['h2_fljb_prediction'], 'fljB', 'h2', hits_dict_tsv)
-            serotyping_sistr.sistr_output_parser(json_data['serogroup_prediction']['wzx_prediction'], 'wzx', 'o', hits_dict_tsv)
-            serotyping_sistr.sistr_output_parser(json_data['serogroup_prediction']['wzy_prediction'], 'wzy', 'o', hits_dict_tsv)
-        else:
-            hits_dict_tsv = {
-                'serotype_antigenic_formula': '-',
-                'serotype_serogroup': '-',
-                'serotype_consensus': '-',
-                'qc_status': 'FAIL'}
-            for variable in ['hits_serotype_h1_fliC', 'hits_serotype_h2_fljB', 'hits_serotype_o_wzx', 'hits_serotype_o_wzy']:
-                hits_dict_tsv[variable] = '-'
+        rows_out = [
+            ('qc_status', json_data['qc_status']),
+            ('serotype_antigenic_formula', ':'.join([str(json_data['o_antigen']), str(json_data['h1']), str(json_data['h2'])])),
+            ('serotype_serogroup', json_data['serogroup']),
+            ('serotype_consensus', json_data['serovar']),
+            ('cgmlst_subspecies', json_data['cgmlst_subspecies']),
+            ('cgmlst_serovar', json_data['serovar_cgmlst']),
+            ('hits_h1', serotyping_sistr.format_sistr_hit(json_data['h1_flic_prediction'],'fliC', 'h1')),
+            ('hits_h2', serotyping_sistr.format_sistr_hit(json_data['h2_fljb_prediction'],'fljB', 'h2')),
+            ('hits_wzx', serotyping_sistr.format_sistr_hit(json_data['serogroup_prediction']['wzx_prediction'],'wzx', 'o')),
+            ('hits_wzy', serotyping_sistr.format_sistr_hit(json_data['serogroup_prediction']['wzy_prediction'],'wzy', 'o')),
+        ]
 
         # Tool information
         informs_sistr = snakemakeutils.load_object(Path(str(input.INFORMS)))
-        rows_out = [(f'sistr_{key}', value) for key, value in hits_dict_tsv.items()]
-        rows_out.extend([
-            (f'sistr_tool_version', informs_sistr['_name_full']),
-            (f'sistr_db_version', informs_sistr['last_update_date'])
-        ])
+        rows_out.append((f'tool_version', informs_sistr['_name_full']))
 
-        # Create JSON output
-        if params.ext == 'json':
-            entries = ['sistr_hits_serotype_h1_fliC', 'sistr_hits_serotype_h2_fljB', 'sistr_hits_serotype_o_wzx', 'sistr_hits_serotype_o_wzy']
-            rows_out = [(k, snakemakeutils.convert_list_to_dict([v.split(',')], header_locus)) if k in entries and v != '-' else (k, v) for k, v in rows_out]
+        # Add 'sistr_' prefix
+        rows_out = [(f'sistr_{k}', v) for k, v in rows_out]
+
+        # Create output
         snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), 'sistr')
 
 rule serotyping_sistr_report:

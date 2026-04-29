@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from camel.app.core.reports.htmlelement import HtmlElement
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
@@ -35,6 +35,13 @@ class SISTRReporter(Tool):
             ],
         },
     }
+    CGMLST_TABLE = [
+        {'key': 'cgmlst_ST', 'name': 'ST'},
+        {'key': 'cgmlst_found_loci', 'name': 'Detected loci'},
+        {'key': 'cgmlst_matching_alleles', 'name': 'Matching alleles'},
+        {'key': 'cgmlst_subspecies', 'name': 'Subspecies', 'fmt': lambda x: f'<i>{x}</i>'},
+        {'key': 'serovar_cgmlst', 'name': 'Serovar'},
+    ]
 
     def __init__(self) -> None:
         """
@@ -78,7 +85,6 @@ class SISTRReporter(Tool):
             self._section.add_warning_message(
                 'SISTR QC failed: the isolate may be contaminated or have insufficient sequencing coverage.'
             )
-            return
         self._section.add_header('Output', 3)
         self._section.add_header('H1 (<i>fliC</i>)-type', 4)
         self._add_antigen_serotype_table_sistr(data_sistr, 'h1')
@@ -86,8 +92,36 @@ class SISTRReporter(Tool):
         self._add_antigen_serotype_table_sistr(data_sistr, 'h2')
         self._section.add_header('O-type', 4)
         self._add_antigen_serotype_table_sistr(data_sistr, 'o')
+        self._add_cgmlst_results(data_sistr)
         self._section.add_header('Conclusion', 3)
         self._add_conclusion()
+
+    @staticmethod
+    def _fmt_value(val: Any, fmt: Callable | None = None) -> str:
+        """
+        Formats the given value.
+        :param val: value to format as str
+        :param: formatter function for formatting
+        :return: Formatted value
+        """
+        if val is None:
+            return 'n/a'
+        if fmt is not None:
+            return fmt(val)
+        return str(val)
+
+    def _add_cgmlst_results(self, data_sistr: dict) -> None:
+        """
+        Adds the cgMLST results.
+        :param data_sistr: Parsed SISTR data
+        :return: None
+        """
+        self._section.add_header('cgMLST', 3)
+        self._section.add_table(
+            [[SISTRReporter._fmt_value(data_sistr[r['key']], fmt=r.get('fmt')) for r in SISTRReporter.CGMLST_TABLE]],
+            column_names=[r['name'] for r in SISTRReporter.CGMLST_TABLE],
+            table_attributes=[('class', 'data')]
+        )
 
     def _add_antigen_serotype_table_sistr(self, data_sistr: dict, antigen: str) -> None:
         """
@@ -150,10 +184,10 @@ class SISTRReporter(Tool):
                     f"Predicted O antigen based on H antigens and serogroup: {data_sistr.get('o_antigen', 'N/A')}"
                 )
         elif antigen in ('h1', 'h2'):
-            self._section.add_paragraph(f"{locus_full[0]}: No match found")
+            self._section.add_paragraph(f"<i>{locus_full[0]}</i>: No match found")
         else:
             self._section.add_paragraph(
-                f"{locus_full[0]} and {locus_full[1]}: No match found"
+                f"<i>{locus_full[0]}</i> and <i>{locus_full[1]}</i>: No match found"
             )
 
     @staticmethod
@@ -183,7 +217,7 @@ class SISTRReporter(Tool):
             json_data = json.load(handle)[0]
         table_data = [
             (
-                'Antigenic profile (O:H1:H2)',
+                'Antigenic formula (O:H1:H2)',
                 ':'.join(
                     [
                         str(json_data['o_antigen']),

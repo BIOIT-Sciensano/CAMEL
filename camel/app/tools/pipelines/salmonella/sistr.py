@@ -1,11 +1,9 @@
-import json
-from pathlib import Path
-
+from camel.app.config import config
 from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
+from camel.app.core.utils import toolutils
 
 
 class Sistr(Tool):
@@ -16,9 +14,18 @@ class Sistr(Tool):
     def __init__(self) -> None:
         """
         Initialize tool.
-                :return: None
+        :return: None
         """
-        super().__init__('SISTR', '1.1.1')
+        super().__init__('SISTR', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _execute_tool(self):
         """
@@ -27,8 +34,6 @@ class Sistr(Tool):
         self.__build_command()
         self._execute_command()
         self.__set_output()
-        db_dir = self._tool_inputs['DIR'][0].path
-        self.__add_informs(db_dir)
 
     def _check_input(self) -> None:
         """
@@ -57,8 +62,9 @@ class Sistr(Tool):
             self._tool_command,
             '--output-format json',
             '--use-full-cgmlst-db',
+            f"{self._param_data['tmp_dir']['option']} {config.dir_temp}",
             '--qc',
-            '--verbose',
+            '-vv',
             *self._build_options(),
             str(self._tool_inputs['FASTA'][0].path)
         ])
@@ -71,17 +77,3 @@ class Sistr(Tool):
         :return: None
         """
         toolutils.check_tool_execution(self, command, exit_code=0)
-
-    def __add_informs(self, db_dir: Path) -> None:
-        """
-        Adds the informs by parsing the JSON file containing the metadata in the database directory.
-        :param db_dir: Input database directory
-        :return: None
-        """
-        db_metadata_file = db_dir / 'db_update_info.json'
-        if not db_metadata_file.is_file():
-            raise FileNotFoundError(f'Database metadata not found: {db_metadata_file}')
-        with db_metadata_file.open() as handle:
-            metadata = json.load(handle)
-        self._informs.update(metadata)
-        self._informs['db_path'] = str(db_dir)
