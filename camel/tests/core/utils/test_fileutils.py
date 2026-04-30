@@ -12,6 +12,16 @@ class TestFileUtils(CamelTestSuite):
     """
     test_file_dir = CamelTestSuite.get_test_file_dir('components')
 
+    def test_make_valid(self) -> None:
+        """
+        Test cases for the make valid function.
+        :return: None
+        """
+        self.assertEqual(fileutils.make_valid('file with spaces.txt'), 'file_with_spaces.txt')
+        self.assertEqual(fileutils.make_valid('file_with_(brackets).txt'), 'file_with_brackets.txt')
+        self.assertEqual(fileutils.make_valid('file_with_slash/.txt'), 'file_with_slash.txt')
+        self.assertEqual(fileutils.make_valid('file_with_*stars*.txt'), 'file_with_stars.txt')
+
     def test_hash_file(self) -> None:
         """
         Tests the hash file function.

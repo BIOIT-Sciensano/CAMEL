@@ -165,17 +165,28 @@ class ScriptInput(model.BaseInput):
         :return: List of symlinks (key, input path, symlink name)
         """
         links = []
+
         if self.type_ in {model.InputType.FASTA, model.InputType.FASTA_WITH_VCF}:
-            links.append(('fasta', self.fasta, self.fasta_name if self.fasta_name else self.fasta.name))
+            raw_name = self.fasta_name if self.fasta_name else self.fasta.name
+            links.append(('fasta', self.fasta, fileutils.make_valid(raw_name)))
+
         if self.type_ in {model.InputType.FASTA_WITH_VCF}:
-            links.append(('vcf_unfiltered', self.vcf_unfiltered, self.vcf_unfiltered.name if self.vcf_unfiltered.name else self.vcf_unfiltered.name))
+            raw_name = self.vcf_unfiltered.name
+            links.append(('vcf_unfiltered', self.vcf_unfiltered, fileutils.make_valid(raw_name)))
+
         if self.type_ in {model.InputType.ILLUMINA, model.InputType.HYBRID}:
+            name_r1 = self.fastq_pe_names[0] if self.fastq_pe_names else self.fastq_pe[0].name
+            name_r2 = self.fastq_pe_names[1] if self.fastq_pe_names else self.fastq_pe[1].name
             links.extend([
-                ('fastq_pe', self.fastq_pe[0], self.fastq_pe_names[0] if self.fastq_pe_names else self.fastq_pe[0].name),
-                ('fastq_pe', self.fastq_pe[1], self.fastq_pe_names[1] if self.fastq_pe_names else self.fastq_pe[1].name)
+                ('fastq_pe', self.fastq_pe[0], fileutils.make_valid(name_r1)),
+                ('fastq_pe', self.fastq_pe[1], fileutils.make_valid(name_r2))
             ])
+
         if self.type_ in {model.InputType.ONT, model.InputType.HYBRID}:
-            links.append(('fastq_se', self.fastq_se, self.fastq_se_name if self.fastq_se_name else self.fastq_se.name))
+            raw_name = self.fastq_se_name if self.fastq_se_name else self.fastq_se.name
+            links.append(('fastq_se', self.fastq_se, fileutils.make_valid(raw_name)))
+
         if len(links) == 0:
             raise ValueError(f"No symlinks found for input type {self.type_.value}.")
+
         return links

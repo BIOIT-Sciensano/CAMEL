@@ -234,6 +234,30 @@ class TestMockPipeline(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
+    def test_mock_pipeline_fasta_invalid_name(self) -> None:
+        """
+        Tests the mock pipeline with FASTA input data and an invalid name.
+        :return: None
+        """
+        path_report_out = Path(self.running_dir) / 'out' / 'report.html'
+        path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
+
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestMockPipeline.input_fasta),
+            '--fasta-name', 'my fasta file with (brackets) and spaces.fasta',
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
+            '--analyses', 'kraken2,ncbi_amr,human_read_scrubbing',
+            '--threads', '8',
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
     @longRunningTest()
     def test_mock_pipeline_fasta_with_kraken2(self) -> None:
         """
