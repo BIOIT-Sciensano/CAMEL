@@ -42,7 +42,8 @@ rule all:
     """
     input:
         config['output']['html'],
-        config['output']['tsv']
+        config['output']['tsv'],
+        config['output']['json'] if config['output'].get('json') is not None else []
 
 rule report_command_section:
     """
@@ -64,7 +65,8 @@ rule report_command_section:
         INFORMS_csb_rd = str(gene_detection.OUTPUT_INFORMS).format(db='csb_rd') if 'csb_rd' in config['analyses_selected'] else [],
         INFORMS_hsp65 = str(gene_detection.OUTPUT_INFORMS).format(db='hsp65') if 'hsp65' in config['analyses_selected'] else [],
         INFORMS_spoligo = spoligotyping.OUTPUT_INFORMS if 'spoligotyping' in config['analyses_selected'] else [],
-        INFORMS_amr = amrdetection.OUTPUT_INFORMS if 'amr' in config['analyses_selected'] else []
+        INFORMS_amr = amrdetection.OUTPUT_INFORMS if 'amr' in config['analyses_selected'] else [],
+        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst') if 'mlst' in config['analyses_selected'] else []
     output:
         HTML = 'report/html-commands.iob'
     params:
@@ -102,6 +104,7 @@ rule report_combine_all:
         # Typing
         report_mlst = sequence_typing.get_sequence_typing_report('mlst', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
+        report_cgmlst_ridom = sequence_typing.get_sequence_typing_report('cgmlst_ridom', config),
         # Report
         report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_command_section.output.HTML
@@ -162,7 +165,8 @@ rule report_combine_all:
             ('Spoligotyping and lineage', 'spoligotyping', [
                 Path(input.report_spoligo), Path(input.report_snp_lineage)]),
             ('AMR detection', 'amr', [Path(input.report_amr), Path(input.report_amr_genes)]),
-            ('Sequence typing', 'typing', [Path(input.report_mlst), Path(input.report_cgmlst)]),
+            ('Sequence typing', 'typing', [
+                Path(input.report_mlst), Path(input.report_cgmlst), Path(input.report_cgmlst_ridom)]),
             ('Citations', 'citations', [Path(input.report_citations)]),
             ('Commands', 'commands', [Path(input.report_commands)])
         ])
@@ -193,7 +197,8 @@ rule summary_combine_all:
         amrdetection.OUTPUT_SUMMARY if 'amr' in config['analyses_selected'] else [],
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst', ext=wildcards.ext) if 'mlst' in config['analyses_selected'] else [],
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else []
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_ridom', ext=wildcards.ext) if 'cgmlst_ridom' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:

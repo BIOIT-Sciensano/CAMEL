@@ -258,4 +258,5 @@ The following typing schemes are available:
 |--------------|------------|
 | Classic MLST | PubMLST    |
 | cgMLST       | PubMLST    |
+| cgMLST Ridom | cgMLST.org |
 | rMLST        | PubMLST    |

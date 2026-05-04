@@ -12,6 +12,9 @@ analyses:
   cgmlst:
     dbs:
       - typing_cgmlst
+  cgmlst_ridom:
+    dbs:
+      - typing_cgmlst_ridom
   confindr:
     dbs:
       - confindr
@@ -106,6 +109,10 @@ dbs:
     method: ftp
   typing_cgmlst:
     location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/mycobacterium/cgmlst
+    required: false
+    method: mist
+  typing_cgmlst_ridom:
+    location: &db_typing_cgmlst_ridom {DB_ROOT}/sequence_typing/mycobacterium/cgmlst_cgmlstorg
     required: false
     method: mist
   typing_mlst:
@@ -210,7 +217,8 @@ sequence_typing:
       path: *db_typing_mlst
     cgmlst:
       path: *db_typing_cgmlst
-      detection_method: blast
+    cgmlst_ridom:
+      path: *db_typing_cgmlst_ridom
     rmlst:
       path: *db_typing_rmlst
       message:
@@ -243,11 +251,9 @@ gene_detection:
       metadata:
         name: Antibiotics
         key: antibiotics
-
     csb_rd:
       path: *db_gd_csb_rd
       force_method: kma
-
     ncbi_16s:
       path: *db_gd_ncbi_16s
       params:
@@ -259,7 +265,6 @@ gene_detection:
       metadata:
         name: Species
         key: species
-
     hsp65:
       path: *db_gd_hsp65
       metadata:
