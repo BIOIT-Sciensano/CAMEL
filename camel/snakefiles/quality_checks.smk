@@ -69,9 +69,11 @@ rule quality_checks_typing_loci:
     output:
         JSON = 'quality_checks/typing_loci.json'
     params:
-        qc_check = quality_checks.QC_CHECKS_BY_KEY['typing_loci']
+        qc_check = quality_checks.QC_CHECKS_BY_KEY['typing_loci'],
     run:
         import json
+        import dataclasses
+
         if len(input.INFORMS) == 0:
             data_export = params.qc_check.to_dict()
         else:
@@ -80,7 +82,12 @@ rule quality_checks_typing_loci:
                 perc_detected = 100 * typing_stats['hits_found'] / typing_stats['nb_of_loci']
             else:
                 perc_detected = None
-            data_export = params.qc_check.to_dict(perc_detected)
+
+            # Fill in the scheme name in the explanation
+            qc_check = dataclasses.replace(params.qc_check,
+                explanation=params.qc_check.explanation.format(typing_stats['scheme_name']))
+            data_export = qc_check.to_dict(perc_detected)
+
         with open(output.JSON, 'w') as handle:
             json.dump(data_export, handle, indent=2)
 
