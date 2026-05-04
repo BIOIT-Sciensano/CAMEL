@@ -152,6 +152,8 @@ class TestMycobacteriumPipeline(CamelTestSuite):
                 str(TestMycobacteriumPipeline.input_fasta),
                 '--input-type',
                 'fasta',
+                '--typing-method',
+                'blast',
                 '--output-html',
                 str(path_report_out),
                 '--output-dir',
@@ -162,6 +164,40 @@ class TestMycobacteriumPipeline(CamelTestSuite):
                 str(self.running_dir),
                 '--analyses',
                 ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst')),
+                '--threads',
+                '4',
+            ],
+        )
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    @longRunningTest()
+    def test_fasta_mist(self) -> None:
+        """
+        Tests the Mycobacterium pipeline using FASTA as input with all assays.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(
+            main,
+            [
+                '--fasta',
+                str(TestMycobacteriumPipeline.input_fasta),
+                '--input-type',
+                'fasta',
+                '--typing-method',
+                'mist',
+                '--output-html',
+                str(path_report_out),
+                '--output-dir',
+                str(path_report_out.parent),
+                '--output-tsv',
+                str(path_summary_out),
+                '--working-dir',
+                str(self.running_dir),
+                '--analyses',
+                ','.join(a for a in CUSTOM_ANALYSES),
                 '--threads',
                 '4',
             ],
