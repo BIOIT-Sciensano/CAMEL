@@ -1,6 +1,9 @@
+from typing import Any
+
 import pandas as pd
 
 from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.tool import Tool
 from camel.app.core.utils import toolutils
 from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
@@ -47,41 +50,41 @@ class MixedHitAggregatingAndFiltering(Tool):
 
     def __combine_hits(self) -> list[GeneDetectionMixedHit]:
         """
-        Combines KMA + BLAST hits.
+        Combines KMA + BLAST hits into a GeneDetectionMixedHit list.
         :return: GeneDetectionMixedHit list
         """
         return [GeneDetectionMixedHit(self._tool_inputs['KMA_hits'][0].value.locus,
                                       self._tool_inputs['KMA_hits'][0].value.accession,
-                                      self._tool_inputs['BLAST_hits'][0].value,
-                                      self._tool_inputs['KMA_hits'][0].value)]
+                                      None if self._tool_inputs['BLAST_hits'] == [] else self._tool_inputs['BLAST_hits'][0].value,
+                                      None if self._tool_inputs['KMA_hits'] == [] else self._tool_inputs['KMA_hits'][0].value)]
 
-    def __create_summary_tables(self, combined_hits: list[GeneDetectionMixedHit]) -> list[pd.DataFrame]:
+    def __create_summary_tables(self, combined_hits: list[GeneDetectionMixedHit]) \
+            -> list[list[Any] | Any]:
         """
         Creates a summary table based on genes discovered by both methods.
         :return: pandas dataframe
         """
-        res_summary, res_complete = {}, {}
-        score = 0
+        res_summary, res_complete = [], {}
+        res_summary_to_return = {'header': ['Locus', 'Locus length', 'Accession'], 'values': []}
+
         for hit in combined_hits:
             the_locus = hit.locus
-            the_accession = hit.accession
-            kma_infos, blast_infos = [], []
-            locus_length = 0
-            if the_locus not in res_summary:
-                res_summary[the_locus] = []
+            if the_locus not in res_complete:
                 res_complete[the_locus] = []
             if hit.kma_hit():
                 kma_hit = hit.kma_hit()
-                locus_length = kma_hit._length
-                score += 1
-                kma_infos = [kma_hit.percent_identity, kma_hit.subject_coverage, kma_hit._depth]
+                locus_length = kma_hit.length
+                res_complete[the_locus].extend([kma_hit.percent_identity, kma_hit.subject_coverage, kma_hit.depth])
+            else:
+                res_complete[the_locus].extend(['-', '-', '-'])
             if hit.blast_hit():
                 blast_hit = hit.blast_hit()
                 locus_length = blast_hit.blast_stats.subject_length
-                score += 1
-                blast_infos = [blast_hit.blast_stats.percent_identity, blast_hit.blast_stats.length_statistic]
-            res_summary[the_locus] = [locus_length, 'str(the_accession)', score]
-            res_complete[the_locus].extend(kma_infos)
-            res_complete[the_locus].extend(blast_infos)
-        return [pd.DataFrame.from_dict(res_summary, orient='index'),
+                res_complete[the_locus].extend([
+                    blast_hit.blast_stats.percent_identity, blast_hit.blast_stats.length_statistic])
+            else:
+                res_complete[the_locus].extend(['-', '-'])
+            res_summary = [the_locus, locus_length, hit.accession]
+            res_summary_to_return['values'].append([HtmlTableCell(v, hit.color) for v in res_summary])
+        return [res_summary_to_return,
                 pd.DataFrame.from_dict(res_complete, orient='index')]

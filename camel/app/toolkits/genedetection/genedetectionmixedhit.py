@@ -30,15 +30,17 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         self.alignment_path = None
         self._cluster = None
 
-    def cluster(self) -> str:
+    def cluster(self) -> str | None:
         """
         Define cluster based on input.
-        :return: cluster as str
+        :return: Cluster as string
         """
         if self._kma_hit:
-            return self._kma_hit._cluster
+            return self._kma_hit.cluster
         elif self._blast_hit:
             return self._blast_hit.blast_stats.subject_id.split('__')[1]
+        else:
+            return None
 
     def is_perfect_hit(self) -> bool:
         """
@@ -78,11 +80,11 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         data = [
             self.cluster(),
             self.locus,
-            f'{self._kma_hit.percent_identity:.2f}',
-            f'{self._kma_hit.subject_coverage:.2f}',
-            f'{self._blast_hit.blast_stats.percent_identity:.2f}',
-            f'{self._blast_hit.blast_stats.subject_coverage:.2f}',
-            f'{self._kma_hit._depth}',
+            f'{self._kma_hit.percent_identity:.2f}' if self._kma_hit else '-',
+            f'{self._kma_hit.subject_coverage:.2f}' if self._kma_hit else '-',
+            f'{self._blast_hit.blast_stats.percent_identity:.2f}' if self._blast_hit else '-',
+            f'{self._blast_hit.blast_stats.subject_coverage:.2f}' if self._blast_hit else '-',
+            f'{self._kma_hit.depth:.2f}' if self._kma_hit else '-',
             self._accession if self._accession is not None else '-'
         ]
         for metadata in self._metadata:
@@ -121,3 +123,10 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         :return:
         """
         return self._blast_hit
+
+    def accession(self) -> str:
+        """
+        Returns the accession.
+        :return: accession
+        """
+        return self._accession

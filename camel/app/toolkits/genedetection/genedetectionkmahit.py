@@ -126,3 +126,27 @@ class GeneDetectionKMAHit(GeneDetectionHitBase):
         :return: % subject covered
         """
         return self._p_cov
+
+    @property
+    def depth(self) -> float:
+        """
+        Returns the depth of the alignment.
+        :return: Depth
+        """
+        return self._depth
+
+    @property
+    def cluster(self) -> str:
+        """
+        Returns the cluster of the alignment.
+        :return: Cluster
+        """
+        return self._cluster
+
+    @property
+    def length(self) -> int:
+        """
+        Returns the length of the gene.
+        :return: Length
+        """
+        return self._length

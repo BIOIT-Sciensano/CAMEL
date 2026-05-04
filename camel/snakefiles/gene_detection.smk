@@ -38,7 +38,7 @@ rule gene_detection_db_manager:
 rule aggregate_and_filter_hits:
     input:
         KMA_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='kma'),
-        BLAST_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='blast')
+        BLAST_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='blast'),
     output:
         VAL_hits = 'gene_detection/{db}/mixed/hits.iob',  # gene_detection.OUTPUT_HITS_METHOD
         INFORMS = 'gene_detection/{db}/mixed/informs.io',
@@ -46,7 +46,9 @@ rule aggregate_and_filter_hits:
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/mixed',
         min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_percent_identity', 90),
-        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_coverage', 60)
+        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_coverage', 60),
+        kma_informs = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method='kma'),
+        blast_informs = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method='blast')
     run:
         from camel.app.tools.pipelines.genedetection.mixedhitaggregatingandfiltering import MixedHitAggregatingAndFiltering
         mixed_hit = MixedHitAggregatingAndFiltering()
@@ -70,6 +72,7 @@ rule gene_detection_get_hits:
         TSV_summary = 'gene_detection/{db}/hit_selection/summary.iob'
     run:
         import shutil
+        import pandas as pd
         shutil.copyfile(str(input.VAL_hits), output.VAL_hits)
         # Add a tag for the database to distinguish commands in the output
         informs = snakemakeutils.load_object(Path(str(input.INFORMS_hits)))
@@ -153,7 +156,7 @@ rule gene_detection_get_column_names:
         elif params.detection_method == 'kma':
             empty_hit = GeneDetectionKMAHit('DB_cluster', 'Locus', None, '', 0, 0, 0.0, 0.0, 0.0)
         elif params.detection_method == 'mixed':
-            empty_hit = GeneDetectionMixedHit('A', 'B', None, None)
+            empty_hit = GeneDetectionMixedHit('Locus', 'Length', None, None)
         else:
             raise ValueError(f"Invalid detection method: {params.detection_method}")
 

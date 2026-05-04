@@ -17,8 +17,8 @@ class HtmlReporterGeneDetection(Tool):
 
     def __init__(self) -> None:
         """
-        Initialize this tool.
-                :return: None
+        Initializes this tool.
+        :return: None
         """
         super().__init__('Gene Detection: Report', '0.1')
         self._sub_folder = None
@@ -34,9 +34,7 @@ class HtmlReporterGeneDetection(Tool):
         if len(self._tool_inputs['VAL_Hits']) == 0:
             self._report_section.add_paragraph('No hits found.')
         else:
-            # PLACEHOLDER
-            if 'TSV_summary' in self._tool_inputs:
-                self.__add_summary_table()
+            self.__add_summary_table()
             self.__add_output_table([h.value for h in self._tool_inputs['VAL_Hits']])
         self.__add_database_information()
 
@@ -95,13 +93,11 @@ class HtmlReporterGeneDetection(Tool):
         Adds the summary table to the report.
         :return: None
         """
-        if not self._tool_inputs['TSV_summary'][0].value.empty:
+        if self._tool_inputs['TSV_summary'][0].value:
             self._report_section.add_paragraph('Summary table is HERE.')
-            self._report_section.add_table(list(self._tool_inputs['TSV_summary'][0].value.values),
-                                           column_names=list(self._tool_inputs['TSV_summary'][0].value.columns),
+            self._report_section.add_table(self._tool_inputs['TSV_summary'][0].value['values'],
+                                           column_names=list(self._tool_inputs['TSV_summary'][0].value['header']),
                                            table_attributes=[('class', 'data')])
-        else:
-            self._report_section.add_paragraph('No AMR genes were detected.')
 
     def __add_output_table(self, hits: list[GeneDetectionHitBase]) -> None:
         """
