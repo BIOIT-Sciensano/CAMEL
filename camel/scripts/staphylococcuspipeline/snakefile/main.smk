@@ -125,6 +125,7 @@ rule report_combine_all:
     params:
         output_dir = config['output']['dir'],
         pipeline_info = config['script_info'],
+        species_name = config['species_name'],
         input_dict = config['input'],
         citation_keys = config['citations'],
         gene_detection_method = config['gene_detection']['options']['method'],
@@ -145,6 +146,7 @@ rule report_combine_all:
             input_files=script_input.input_str,
             input_type=script_input.type_.value,
             extra_data=[
+                ('Selected species', f'<i>{params.species_name}</i>'),
                 ('Gene detection method', params.gene_detection_method),
                 ('Typing method', params.typing_method),
             ],

@@ -24,6 +24,7 @@ class TestStaphylococcusPipeline(CamelTestSuite):
     ]
     input_fastq_se = test_file_dir / 'pipelines' / 'Saureus-SRR14933399_ont-ds.fastq.gz'
     input_fasta = test_file_dir / 'pipelines' / 'Saureus-SRR10393587-ds.fasta'
+    input_fasta_spp = test_file_dir / 'pipelines' / 'Staphylococcus_spp-GCF_019329745.1.fasta'
 
     @longRunningTest()
     def test_illumina_blast(self) -> None:
@@ -38,6 +39,7 @@ class TestStaphylococcusPipeline(CamelTestSuite):
             str(TestStaphylococcusPipeline.input_fastq_pe[0]),
             str(TestStaphylococcusPipeline.input_fastq_pe[1]),
             '--input-type', 'illumina',
+            '--typing-method', 'blast',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
@@ -82,11 +84,34 @@ class TestStaphylococcusPipeline(CamelTestSuite):
         result = cliutils.invoke(main, [
             '--fasta', str(TestStaphylococcusPipeline.input_fasta),
             '--input-type', 'fasta',
+            '--typing-method', 'blast',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
             '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a != 'cgmlst'),
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    @longRunningTest()
+    def test_fasta_spp(self) -> None:
+        """
+        Tests the Staphylococcus pipeline on generic staphylococcus.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestStaphylococcusPipeline.input_fasta_spp),
+            '--input-type', 'fasta',
+            '--species', 'spp',
+            '--typing-method', 'mist',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if a not in {'cgmlst', 'mlst'}),
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)

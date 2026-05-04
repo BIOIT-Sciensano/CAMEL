@@ -4,6 +4,7 @@ import dataclasses
 import click
 import yaml
 
+from camel.app.cli import cliutils
 from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import initialize_logging
@@ -23,6 +24,10 @@ class Options(model.BaseOptions):
     Pipeline-specific options.
     """
 
+    species: str = dataclasses.field(
+        default='aureus',
+        metadata={'choices': ['aureus', 'spp']}
+    )
     analyses: list[str] = dataclasses.field(default_factory=list)
 
 
@@ -63,8 +68,22 @@ class MainStaphylococcusPipeline(BasePipe):
         :param config_data: Config data
         :return: True if valid, False otherwise
         """
+        if self._opts_custom.species == 'spp':
+            unsupported_assays = {'cgmlst', 'mlst'}
+            for assay in unsupported_assays:
+                if assay in self._opts_custom.analyses:
+                    raise click.UsageError(f"Assay '{assay}' is not supported for generic Staphylococcus")
         self.check_dbs(config_data)
         return True
+
+    def _get_qc_typing_scheme(self) -> str:
+        """
+        Returns the key of the typing scheme used for QC.
+        :return: Typing scheme
+        """
+        if self._opts_custom.species == "aureus":
+            return 'cgmlst' if 'cgmlst' in self._opts_custom.analyses else 'mlst'
+        return 'rmlst'
 
     def _build_config(self) -> dict:
         """
@@ -77,7 +96,7 @@ class MainStaphylococcusPipeline(BasePipe):
         yaml_text = yaml_text.format(
             COV_MAX=self._script_opts.cov_max,
             DB_ROOT=config.dir_db,
-            QC_SCHEME='cgmlst' if 'cgmlst' in self._opts_custom.analyses else 'mlst',
+            QC_SCHEME=self._get_qc_typing_scheme(),
             EXPORT_BAM=self._script_opts.include_bam,
         )
         data_template = yaml.safe_load(yaml_text)
@@ -86,6 +105,9 @@ class MainStaphylococcusPipeline(BasePipe):
         # Add the base config data
         config_data = self.get_config_data()
         basepipeutils.dict_merge(config_data, data_template)
+        config_data['species_name'] = data_template['species'][
+            self._opts_custom.species
+        ]['full_name']
         config_data['analyses_selected'] = self._opts_custom.analyses
         config_data['sequence_typing']['options'] = {
             'method': self._script_opts.typing_method
@@ -93,6 +115,11 @@ class MainStaphylococcusPipeline(BasePipe):
         config_data['gene_detection']['options'] = {
             'method': self._script_opts.gene_detection_method
         }
+
+        # Resolve species specific values
+        config_data = basepipeutils.resolve_config(
+            config_data, self._opts_custom.species
+        )
         return config_data
 
     def _execute(self) -> None:
@@ -127,6 +154,7 @@ class MainStaphylococcusPipeline(BasePipe):
     type=str,
     help=f"Comma-separated list of analyses to run ({', '.join(basepipeutils.get_custom_analyses(CONFIG_DATA))})",
 )
+@cliutils.add_click_options_from_dataclass(Options, skip=['analyses'])
 def main(**kwargs) -> None:
     """
     Pipeline for the complete characterization of Staphylococcus aureus isolates.
@@ -136,6 +164,7 @@ def main(**kwargs) -> None:
     script_opts = basescriptutils.parse_script_opts(kwargs)
     custom_opts = Options(
         analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
+        species=kwargs['species'],
     )
     pipeline = MainStaphylococcusPipeline(
         script_input, script_out, script_opts, custom_opts

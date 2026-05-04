@@ -220,7 +220,7 @@ Note: SCC*mec* is only executed when the input type is `illumina` or `ONT` (KMA 
 
 The database version is indicated in the output report and summary output file.
 
-The `--organism` option is set to the `Staphylococcus aureus`.
+The `--organism` option is set to the `Staphylococcus aureus` (if the species is set to `aureus`).
 
 ### ResFinder4
 
@@ -232,7 +232,7 @@ The database version is indicated in the output report and summary output file.
 --min_cov 0.6
 --acquired
 --threshold 0.9
---species 'Staphylococcus aureus'
+--species 'Staphylococcus aureus'  # if the species is set to `aureus`
 ```
 
 ## 9. Virulence detection
@@ -288,3 +288,5 @@ The following typing schemes are available:
 | rMLST        | PubMLST    |
 | Classic MLST | PubMLST    |
 | cgMLST       | PubMLST    |
+
+Note that MLST and cgMLST typing is only available when the species option is set `aureus`.
