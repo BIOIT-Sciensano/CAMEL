@@ -198,3 +198,31 @@ class ScriptInput(model.BaseInput):
             raise ValueError(f"No symlinks found for input type {self.type_.value}.")
 
         return links
+
+    def symlink(self, dir_out: Path) -> 'ScriptInput':
+        """
+        Creates symlinks for the input files.
+        :param dir_out: Directory to create the symlinks in.
+        :return: Updated script input
+        """
+        if not dir_out.exists():
+            raise ValueError(f"Output directory does not exist: {dir_out}")
+
+        to_replace = {}
+        for key, path, link_name in self.get_symlinks():
+            # Create the symlink
+            path_link_out = dir_out / link_name
+            if path_link_out.is_symlink():
+                logger.debug(f'Symlink already exists: {path_link_out}')
+            else:
+                target_path = (dir_out / link_name).absolute()
+                target_path.symlink_to(path.resolve().absolute())
+
+            # Save the updated path
+            if key not in to_replace:
+                to_replace[key] = path_link_out
+            else:
+                to_replace[key] = [to_replace[key], path_link_out]
+
+        # Update the script input
+        return dataclasses.replace(self, **to_replace)
