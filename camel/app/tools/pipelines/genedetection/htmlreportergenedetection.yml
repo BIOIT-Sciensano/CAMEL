@@ -1,9 +1,32 @@
 dependencies: []
 parameters:
-  forced_detection_method: {default: false, mandatory: false, option: null, value: blast}
-  hidden: {default: false, mandatory: false, option: null, value: null}
-  message: {default: false, mandatory: false, option: null, value: null}
-  message_category: {default: true, mandatory: true, option: null, value: info}
-  output_filename: {default: false, mandatory: false, option: null, value: report.html}
-  pseudo_reads: {default: false, mandatory: false, option: null, value: null}
+  forced_detection_method:
+    default: false
+    mandatory: false
+    option: null
+    value: blast
+  hidden:
+    default: false
+    mandatory: false
+    flag: true
+  message:
+    default: false
+    mandatory: false
+    option: null
+    value: null
+  message_category:
+    default: true
+    mandatory: true
+    option: null
+    value: info
+  output_filename:
+    default: false
+    mandatory: false
+    option: null
+    value: report.html
+  pseudo_reads:
+    default: false
+    mandatory: false
+    option: null
+    value: null
 tool_command: null

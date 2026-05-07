@@ -106,7 +106,7 @@ class HtmlReporterGeneDetection(Tool):
         """
         table_data = [hit.to_html_row(self._report_section, self._sub_folder) for hit in sorted(
             hits, key=lambda x: x.locus)]
-        if 'hidden' in self._parameters:
+        if self.get_param_value('hidden') is True:
             div = HtmlExpandableDiv('table-{}'.format(
                 self._input_informs['db_info']['name']), f'hits ({len(hits):,})')
             div.add_table(table_data, hits[0].html_column_names, [('class', 'data')])

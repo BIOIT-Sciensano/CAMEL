@@ -79,7 +79,7 @@ class BlastHitFiltering(Tool):
         hits = BlastHitFilteringHelper.filter_percent_identity(hits, float(
             self._parameters['min_percent_identity'].value))
         hits = BlastHitFilteringHelper.filter_coverage(hits, float(self._parameters['min_coverage'].value))
-        logger.info("Filtering method: '{}'".format(self._parameters['filtering_method'].value))
+        logger.info(f"Filtering method: '{self._parameters['filtering_method'].value}'")
 
         # Report best hit(s) for each database cluster
         if self._parameters['filtering_method'].value == 'cluster':

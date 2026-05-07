@@ -75,7 +75,7 @@ dbs:
     required: false
     method: ftp
   gene_detection_virulencefinder:
-    location: &db_gd_virulencefinder {DB_ROOT}/gene_detection/VirulenceFinder-Enterococcus
+    location: &db_gd_virulencefinder {DB_ROOT}/gene_detection/VirulenceFinder-Listeria
     required: false
     method: ftp
   kraken2:
@@ -234,7 +234,7 @@ gene_detection:
     virulencefinder:
       path: *db_gd_virulencefinder
       perc_identity_cutoff: 90
-      extra_column:
+      metadata:
         name: Protein function
         key: protein_function
       hidden: true
