@@ -35,14 +35,15 @@ rule gene_detection_db_manager:
         step.run()
         snakemakeutils.dump_tool_outputs(db_manager, output)
 
-rule aggregate_and_filter_hits:
+rule aggregate_hits:
     input:
         KMA_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='kma'),
         BLAST_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='blast'),
+        INFORMS_db = rules.gene_detection_db_manager.output.INFORMS,
     output:
         VAL_hits = 'gene_detection/{db}/mixed/hits.iob',  # gene_detection.OUTPUT_HITS_METHOD
         INFORMS = 'gene_detection/{db}/mixed/informs.io',
-        TSV_summary = 'gene_detection/{db}/mixed/summary.iob'
+        TSV_aggregated = 'gene_detection/{db}/mixed/tsv-aggregated.iob'
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/mixed',
         min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_percent_identity', 90),
@@ -63,13 +64,13 @@ rule gene_detection_get_hits:
     """
     input:
         INFORMS_DB = rules.gene_detection_db_manager.output.INFORMS,
-        TSV_summary = lambda wildcards: rules.aggregate_and_filter_hits.output.TSV_summary if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
+        TSV_aggregated = lambda wildcards: rules.aggregate_hits.output.TSV_aggregated if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
         VAL_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db)),
         INFORMS_hits = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db))
     output:
         VAL_hits = 'gene_detection/{db}/hit_selection/hits-standardized.iob',
         INFORMS = 'gene_detection/{db}/hit_selection/informs.io',  # gene_detection.OUTPUT_INFORMS
-        TSV_summary = 'gene_detection/{db}/hit_selection/summary.iob'
+        TSV_aggregated = 'gene_detection/{db}/hit_selection/tsv-aggregated.iob'
     run:
         import shutil
         import pandas as pd
@@ -80,11 +81,10 @@ rule gene_detection_get_hits:
         if not '_command' in informs:
             informs['_command'] = 'test'
         snakemakeutils.dump_object(informs, Path(output.INFORMS))
-        if input.TSV_summary:
-            shutil.copyfile(str(input.TSV_summary), output.TSV_summary)
+        if input.TSV_aggregated:
+            shutil.copyfile(str(input.TSV_aggregated), output.TSV_aggregated)
         else:
-            empty_df = pd.DataFrame()
-            snakemakeutils.dump_object(empty_df, Path(output.TSV_summary))
+            snakemakeutils.dump_object(input.TSV_aggregated, Path(output.TSV_aggregated))
 
 rule gene_detection_map_names:
     """
@@ -175,7 +175,7 @@ rule gene_detection_report:
     input:
         VAL_Hits = rules.gene_detection_map_names.output.HITS,
         TSV = rules.gene_detection_map_names.output.TSV,
-        TSV_summary = rules.gene_detection_get_hits.output.TSV_summary,
+        TSV_aggregated = rules.gene_detection_get_hits.output.TSV_aggregated,
         INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS,
         INFORMS_detection = rules.gene_detection_get_hits.output.INFORMS
     output:
