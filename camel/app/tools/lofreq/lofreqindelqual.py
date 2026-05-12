@@ -16,7 +16,7 @@ class LofreqIndelqual(Lofreq):
         Initializes Lofreq indelqual.
         :return: None
         """
-        super().__init__('Lofreq indelqual', '2.1.5')
+        super().__init__('Lofreq indelqual', version=None)
 
     def _check_input(self) -> None:
         """
@@ -33,8 +33,8 @@ class LofreqIndelqual(Lofreq):
         Executes Lofreq indelqual.
         :return: None
         """
-        fasta_input = Path(str(self._tool_inputs['FASTA'][0]))
-        bam_input = Path(str(self._tool_inputs['BAM'][0]))
+        fasta_input = self._tool_inputs['FASTA'][0].path
+        bam_input = self._tool_inputs['BAM'][0].path
         self.__build_command(fasta_input, bam_input)
         self._execute_command()
         self.__set_output()

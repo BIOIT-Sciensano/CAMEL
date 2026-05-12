@@ -10,57 +10,52 @@ from camel.snakefiles import trimming_illumina, trimming, variant_calling
 include: trimming_illumina.SNAKEFILE
 include: variant_calling.SNAKEFILE
 
-rule all:
-    input:
-        VCF='variant_calling/vcf.io',
-        HTML='variant_calling/report/html.iob'
-
 rule link_fastq_to_trimming_input:
     """
     Creates the FASTQ input for the human read scrubbing step.
     """
     output:
-        FASTQ_PE=trimming_illumina.INPUT_FASTQ
+        FASTQ_PE = trimming_illumina.INPUT_FASTQ
     params:
-        input_dict=config['input']
+        input_dict = config['input']
     run:
         from camel.app.core.io.tooliofile import ToolIOFile
 
         snakemakeutils.dump_object([
-            ToolIOFile(Path(x['path'])) for x in params.input_dict['fastq_pe']],Path(output.FASTQ_PE))
+            ToolIOFile(Path(x['path'])) for x in params.input_dict['fastq_pe']], Path(output.FASTQ_PE))
 
 rule bt2_index:
     """
     Creates a bowtie2 index for the reference genome.
     """
     input:
-        FASTA_REF=rules.variant_calling_prep_reference.output.FASTA
+        FASTA_REF = rules.variant_calling_prep_reference.output.FASTA
     output:
-        INDEX_GENOME_PREFIX='variant_calling/reference/genome_prefix_index.io'
+        INDEX_GENOME_PREFIX = 'variant_calling/reference/genome_prefix_index.io'
     params:
-        dir_='variant_calling/reference'
+        dir_ = 'variant_calling/reference'
     run:
         from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
 
         bowtie2_index = Bowtie2Index()
-        step = Step(rule_name=str(rule),tool=bowtie2_index,dir_=Path(params.dir_))
-        snakemakeutils.add_pickle_inputs(bowtie2_index,input)
+        step = Step(rule_name=str(rule), tool=bowtie2_index, dir_=Path(params.dir_))
+        snakemakeutils.add_pickle_inputs(bowtie2_index, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(bowtie2_index,output)
+        snakemakeutils.dump_tool_outputs(bowtie2_index, output)
 
 rule variant_calling_map_reads_illumina_lofreq:
     """
     Maps the trimmed illumina reads to the reference sequence.
     """
     input:
-        IO=trimming_illumina.select_fastq_output(config),
-        INDEX_GENOME_PREFIX=rules.bt2_index.output.INDEX_GENOME_PREFIX
+        IO = trimming_illumina.select_fastq_output(config),
+        INDEX_GENOME_PREFIX = rules.bt2_index.output.INDEX_GENOME_PREFIX
     output:
-        BAM='variant_calling/read_mapping/illumina/bam.io',
-        INFORMS='variant_calling/read_mapping/illumina/informs.io'
+        BAM = 'variant_calling/read_mapping/illumina/bam.io',
+        INFORMS = 'variant_calling/read_mapping/illumina/informs.io'
     params:
-        dir_='variant_calling/read_mapping/illumina',
-        input_type=config['input']['type']
+        dir_ = 'variant_calling/read_mapping/illumina',
+        input_type = config['input']['type']
     threads: 4
     priority: 1
     run:
@@ -71,88 +66,97 @@ rule variant_calling_map_reads_illumina_lofreq:
 
         # Bowtie 2
         bowtie2_map = Bowtie2Map()
-        snakemakeutils.add_pickle_input(bowtie2_map,'FASTQ_PE',Path(input.IO))
+        snakemakeutils.add_pickle_input(bowtie2_map, 'FASTQ_PE', Path(input.IO))
         bowtie2_map.update_parameters(threads=threads)
-        snakemakeutils.add_pickle_input(bowtie2_map,'INDEX_GENOME_PREFIX',Path(input.INDEX_GENOME_PREFIX))
+        snakemakeutils.add_pickle_input(bowtie2_map, 'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
 
         # Initialize tools
         samtools_view = SamtoolsView()
         samtools_sort = SamtoolsSort()
         samtools_sort.update_parameters(threads=threads)
-        pipeutils.run_as_pipe([bowtie2_map, samtools_view, samtools_sort],Path(params.dir_).absolute())
+        pipeutils.run_as_pipe([bowtie2_map, samtools_view, samtools_sort], Path(params.dir_).absolute())
 
         # Save output
-        snakemakeutils.dump_tool_output(samtools_sort,'BAM',Path(output.BAM))
-        snakemakeutils.dump_object(bowtie2_map.informs,Path(output.INFORMS))
+        snakemakeutils.dump_tool_output(samtools_sort, 'BAM', Path(output.BAM))
+        snakemakeutils.dump_object(bowtie2_map.informs, Path(output.INFORMS))
 
 rule lofreq_indel_qualities:
+    """
+    Inserts indel qualities into the BAM file, using LoFreq indelqual, necessary for calling indels.
+    """
     input:
-        BAM=rules.variant_calling_map_reads_illumina_lofreq.output.BAM,
-        FASTA=rules.variant_calling_prep_reference.output.FASTA
+        BAM = rules.variant_calling_map_reads_illumina_lofreq.output.BAM,
+        FASTA = rules.variant_calling_prep_reference.output.FASTA
     output:
-        BAM='variant_calling/read_mapping/illumina/bam-indelqual.io',
-        INFORMS='variant_calling/read_mapping/illumina/indelqual_informs.io'
+        BAM = 'variant_calling/read_mapping/illumina/bam-indelqual.io',
+        INFORMS = 'variant_calling/read_mapping/illumina/indelqual_informs.io'
     params:
-        dir_='variant_calling/read_mapping/illumina'
+        dir_ = 'variant_calling/read_mapping/illumina'
     run:
         from camel.app.tools.lofreq.lofreqindelqual import LofreqIndelqual
 
         lofreq_indelqual = LofreqIndelqual()
-        snakemakeutils.add_pickle_inputs(lofreq_indelqual,input)
-        step = Step(rule_name=str(rule),tool=lofreq_indelqual,dir_=Path(str(params.dir_)))
+        snakemakeutils.add_pickle_inputs(lofreq_indelqual, input)
+        step = Step(rule_name=str(rule), tool=lofreq_indelqual, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(lofreq_indelqual,output)
+        snakemakeutils.dump_tool_outputs(lofreq_indelqual, output)
 
 rule variant_calling_with_lofreq:
+    """
+    Executes the variant calling with LoFreq call.
+    """
     input:
-        BAM=rules.lofreq_indel_qualities.output.BAM if config['variant_calling']['call_indels'] is True
+        BAM = rules.lofreq_indel_qualities.output.BAM if config['variant_calling']['call_indels'] is True
         else rules.variant_calling_map_reads_illumina_lofreq.output.BAM,
-        FASTA=rules.variant_calling_prep_reference.output.FASTA
+        FASTA = rules.variant_calling_prep_reference.output.FASTA
     output:
-        VCF='variant_calling/vcf.io',
-        INFORMS='variant_calling/informs.io'
+        VCF = 'variant_calling/vcf.io',
+        INFORMS = 'variant_calling/informs.io'
     params:
-        dir_='variant_calling',
-        call_indels=config.get('variant_calling',{}).get('call_indels',None)
+        dir_ = 'variant_calling',
+        call_indels = config.get('variant_calling', {}).get('call_indels', None)
     threads: 8
     run:
         from camel.app.tools.lofreq.lofreqcall import LofreqCall
 
         lofreq_call = LofreqCall()
-        snakemakeutils.add_pickle_inputs(lofreq_call,input)
+        snakemakeutils.add_pickle_inputs(lofreq_call, input)
         lofreq_call.update_parameters(call_indels=True if params.call_indels else False)
-        step = Step(rule_name=str(rule),tool=lofreq_call,dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=lofreq_call, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(lofreq_call,output)
+        snakemakeutils.dump_tool_outputs(lofreq_call, output)
 
 rule annotate_variants_csq:
     """
     Determines the consequence of the mutation using bcftools csq.
     """
     input:
-        VCF=rules.variant_calling_with_lofreq.output.VCF,
-        FASTA=rules.variant_calling_prep_reference.output.FASTA
+        VCF = rules.variant_calling_with_lofreq.output.VCF,
+        FASTA = rules.variant_calling_prep_reference.output.FASTA
     output:
-        VCF='variant_calling/csq/vcf_csq.io',
-        INFORMS='variant_calling/csq/csq_informs.io'
+        VCF = 'variant_calling/csq/vcf_csq.io',
+        INFORMS = 'variant_calling/csq/csq_informs.io'
     params:
-        dir_='variant_calling/csq/',
-        gff=config['reference']['gff']
+        dir_ = 'variant_calling/csq/',
+        gff = config.get('reference', {}.get('gff', None))
     run:
         from camel.app.tools.bcftools.bcftoolscsq import BcftoolsCsq
         from camel.app.core.io.tooliofile import ToolIOFile
 
         csq = BcftoolsCsq()
-        snakemakeutils.add_pickle_inputs(csq,input)
+        snakemakeutils.add_pickle_inputs(csq, input)
         csq.add_input_files({'GFF': [ToolIOFile(Path(params.gff))]})
-        step = Step(rule_name=str(rule),tool=csq,dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=csq, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(csq,output)
+        snakemakeutils.dump_tool_outputs(csq, output)
 
 rule extract_variants_effect_from_vcf:
+    """
+    Extracts all variants and the consequence (if applied) and stores them in a TSV.
+    """
     input:
-        VCF = rules.annotate_variants_csq.output.VCF if config[
-                                                    'variant_calling'].get('csq',False) is True else rules.variant_calling_with_lofreq.output.VCF
+        VCF = rules.annotate_variants_csq.output.VCF if config['variant_calling'].get('csq', False) is True
+        else rules.variant_calling_with_lofreq.output.VCF
     output:
         TSV = 'variant_calling/variants_list/tsv.iob'
     params:
@@ -163,74 +167,73 @@ rule extract_variants_effect_from_vcf:
         step = Step(rule_name=str(rule), tool=extract_variants, dir_=Path(params.dir_))
         snakemakeutils.add_pickle_inputs(extract_variants, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(extract_variants,output)
+        snakemakeutils.dump_tool_outputs(extract_variants, output)
 
 rule lofreq_reporter:
     input:
-        VCF=rules.annotate_variants_csq.output.VCF if config[
-                                                          'variant_calling'].get('csq',False) is True else rules.variant_calling_with_lofreq.output.VCF,
-        INFORMS_reference=rules.variant_calling_prep_reference.output.INFORMS,
-        INFORMS_mapping=variant_calling.get_mapping_informs(config),
-        INFORMS_map_rate=rules.variant_calling_calculate_mapping_rate.output.INFORMS,
-        INFORMS_depth=rules.variant_calling_calculate_depth.output.INFORMS,
-        INFORMS_lofreq=rules.variant_calling_with_lofreq.output.INFORMS,
-        BAM='variant_calling/read_mapping/illumina/bam.io',
-        TSV_depth=rules.variant_calling_calculate_depth.output.TSV,
-        TSV_list=rules.extract_variants_effect_from_vcf.output.TSV
+        VCF = rules.annotate_variants_csq.output.VCF if config['variant_calling'].get('csq', False) is True
+        else rules.variant_calling_with_lofreq.output.VCF,
+        INFORMS_reference = rules.variant_calling_prep_reference.output.INFORMS,
+        INFORMS_mapping = variant_calling.get_mapping_informs(config),
+        INFORMS_map_rate = rules.variant_calling_calculate_mapping_rate.output.INFORMS,
+        INFORMS_depth = rules.variant_calling_calculate_depth.output.INFORMS,
+        INFORMS_lofreq = rules.variant_calling_with_lofreq.output.INFORMS,
+        BAM = 'variant_calling/read_mapping/illumina/bam.io',
+        TSV_depth = rules.variant_calling_calculate_depth.output.TSV,
+        TSV_list = rules.extract_variants_effect_from_vcf.output.TSV
     output:
-        VAL_HTML='variant_calling/report/html-lofreq.iob',  # variant_calling_lofreq.OUTPUT_REPORT_LOFREQ
-        INFORMS='variant_calling/report/informs.io'
+        VAL_HTML = 'variant_calling/report/html-lofreq.iob',  # variant_calling_lofreq.OUTPUT_REPORT_LOFREQ
+        INFORMS = 'variant_calling/report/informs.io'
     params:
-        dir_='variant_calling/report',
-        sample_name=config['input']['sample_name'],
-        include_bam=config.get('variant_calling',{}).get('report_include_bam',False),
-        min_af=config.get('variant_calling',{}).get('min_af',0),
-        csq=config.get('variant_calling',{}).get('csq',False)
+        dir_ = 'variant_calling/report',
+        sample_name = config['input']['sample_name'],
+        include_bam = config.get('variant_calling', {}).get('report_include_bam', False),
+        min_af = config.get('variant_calling', {}).get('min_af', 0),
+        csq = config.get('variant_calling', {}).get('csq', False)
     run:
         from camel.app.core.io.tooliovalue import ToolIOValue
 
         reporter = LofreqReporter()
-        step = Step(rule_name=str(rule),tool=reporter,dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         snakemakeutils.add_pickle_inputs(reporter, input)
         reporter.add_input_files({'VAL_Sample': [ToolIOValue(params.sample_name)]})
-        reporter.update_parameters(export_bam='true' if params.include_bam else 'false', min_af=params.min_af, sample_name=params.sample_name)
+        reporter.update_parameters(export_bam='true' if params.include_bam else 'false',
+            min_af=params.min_af, sample_name=params.sample_name)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter,output)
+        snakemakeutils.dump_tool_outputs(reporter, output)
 
 rule report_create_commands_section:
     """
     Creates the section with the commands.
     """
     input:
-        INFORMS_trimming=trimming.get_command_informs(config),
-        INFORMS_indelqual=variant_calling_lofreq.OUTPUT_INDELQUAL_INFORMS if config['variant_calling'][
-                                                                                 'call_indels'] is True else [],
-        INFORMS_lofreq=variant_calling_lofreq.OUTPUT_LOFREQ_INFORMS
+        INFORMS_trimming = trimming.get_command_informs(config),
+        INFORMS_indelqual = variant_calling_lofreq.OUTPUT_INDELQUAL_INFORMS if
+        config.get('variant_calling', {}.get('call_indels', False)) is True else [],
+        INFORMS_lofreq = variant_calling_lofreq.OUTPUT_LOFREQ_INFORMS
     output:
-        HTML='report/html-commands.iob'
+        HTML = 'report/html-commands.iob'
     params:
-        dir_=config['working_dir']
+        dir_ = config['working_dir']
     run:
         from camel.app.scriptutils.basepipe import basepipeutils
 
-        basepipeutils.export_command_section(input,Path(output.HTML),params.dir_)
+        basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 rule generate_report:
     input:
-        report_trimming=trimming.get_reports(config),
-        report_lofreq=variant_calling_lofreq.OUTPUT_REPORT_LOFREQ,
-        report_commands=rules.report_create_commands_section.output.HTML
+        report_trimming = trimming.get_reports(config),
+        report_lofreq = variant_calling_lofreq.OUTPUT_REPORT_LOFREQ,
+        report_commands = rules.report_create_commands_section.output.HTML
     output:
-        HTML=config['output']['html']
+        HTML = config['output']['html']
     params:
-        output_dir=config['output']['dir'],
-        name=config['script_info']['name'],
-        version=config['script_info']['version'],
-        input_dict=config['input'],
-        pipeline_info=config['script_info']
+        output_dir = config['output']['dir'],
+        name = config['script_info']['name'],
+        version = config['script_info']['version'],
+        input_dict = config['input'],
+        pipeline_info = config['script_info']
     run:
-        import datetime
-
         # Initialize report
         report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML),Path(params.output_dir),params.pipeline_info)

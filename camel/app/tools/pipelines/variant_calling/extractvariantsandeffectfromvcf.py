@@ -1,13 +1,37 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 from vcf.model import _Record as VcfRecord
 
-from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 from camel.app.core.utils import toolutils
 from camel.app.core.utils.vcfutils import retrieve_variants
 from camel.app.loggers import logger
+from camel.app.toolkits.export.tsvexporter import TsvExporter
+
+
+@dataclass
+class Variant:
+    """
+    This class represents a variant from a VCF file.
+    """
+    position: int
+    type_of_variant: str
+    variant: str
+    effect: str
+    gene: str
+    allele_freq: float
+    quality: float
+
+    def to_list(self) -> list:
+        """
+        Returns the variant information as a list.
+        :return: list
+        """
+        return [self.position, self.type_of_variant, self.variant, self.effect, self.gene, self.allele_freq,
+                self.quality]
 
 
 class ExtractVariantsAndEffectFromVCF(Tool):
@@ -18,8 +42,6 @@ class ExtractVariantsAndEffectFromVCF(Tool):
     Effect (if BCSQ field is present), Gene (if BCSQ field is present), Allele Frequency, QUAL score
     """
 
-    SUB_FOLDER = 'variant_calling/variants_list'
-
     def __init__(self) -> None:
         """
         Initializes this tool.
@@ -27,7 +49,7 @@ class ExtractVariantsAndEffectFromVCF(Tool):
         """
         super().__init__("Extract Variants From VCF", "0.1")
 
-    def _check_input(self):
+    def _check_input(self) -> None:
         """
         Checks if the input is valid.
         :return: None
@@ -40,7 +62,9 @@ class ExtractVariantsAndEffectFromVCF(Tool):
         :return: None
         """
         variants_dataframe = self.__parse_variants_for_output_table(self._tool_inputs['VCF'][0].path)
-        self._tool_outputs['TSV'] = [ToolIOValue(variants_dataframe)]
+        table_path = self._folder / 'all_variants.tsv'
+        TsvExporter.export(variants_dataframe.values.tolist(), list(variants_dataframe.columns), table_path)
+        self._tool_outputs['TSV'] = [ToolIOFile(table_path)]
 
     @staticmethod
     def __parse_effect(vcf_record: VcfRecord) -> tuple[str | None, str | None]:
@@ -78,7 +102,9 @@ class ExtractVariantsAndEffectFromVCF(Tool):
             type_of_var = 'Indel' if var.INFO.get('INDEL', False) is True else var.var_type
             if effect is None:
                 effect, gene = 'Unknown', 'Unknown'
-            output_dictionary[var.POS] = [var.POS, type_of_var, variant, effect, gene, var.INFO.get('AF', 0), var.QUAL]
+            output_dictionary[var.POS] = Variant(position=var.POS, type_of_variant=type_of_var,
+                                                 variant=variant, effect=effect, gene=gene,
+                                                 allele_freq=var.INFO.get('AF', 0), quality=var.QUAL)
 
             # This condition checks whether the variant effect is a copy of another (symbolized by the '@')
             # I'm therefore storing the position the VCF entry refers to
@@ -87,8 +113,8 @@ class ExtractVariantsAndEffectFromVCF(Tool):
 
         # For each position with an @, I replace the empty effect and gene with the referenced ones
         for unknown_pos, ref_pos in positions_to_check_at_the_end.items():
-            output_dictionary[unknown_pos][3] = output_dictionary[ref_pos][3]
-            output_dictionary[unknown_pos][4] = output_dictionary[ref_pos][4]
-        output_dataframe = pd.DataFrame(data=[v for k, v in output_dictionary.items()],
+            output_dictionary[unknown_pos].effect = output_dictionary[ref_pos].effect
+            output_dictionary[unknown_pos].gene = output_dictionary[ref_pos].gene
+        output_dataframe = pd.DataFrame(data=[var.to_list() for key, var in output_dictionary.items()],
                                         columns=['Position', 'Type', 'Variant', 'Effect', 'Gene', 'AF', 'Quality'])
         return output_dataframe
