@@ -16,7 +16,7 @@ class LofreqCall(Lofreq):
         Initializes Lofreq call.
         :return: None
         """
-        super().__init__('Lofreq call', '2.1.5')
+        super().__init__('Lofreq call', version=None)
 
     def _check_input(self) -> None:
         """

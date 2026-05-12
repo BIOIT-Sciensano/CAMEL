@@ -27,7 +27,7 @@ class Options(model.BaseOptions):
     Defines the custom options for the script.
     """
     reference: Path = dataclasses.field(metadata={'help': 'Reference FASTA file'})
-    output_vcf: Path = dataclasses.field(metadata={'help': 'Output VCF file'})
+    output_vcf: Path = dataclasses.field(default='output.vcf', metadata={'help': 'Output VCF file'})
     gff: Path = dataclasses.field(default=None, metadata={'help': 'GFF file'})
     reference_name: str | None = dataclasses.field(default=None, metadata={'help': 'Reference genome name'})
 
@@ -51,6 +51,8 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
     """
     Class to perform variant calling from a BAM file.
     """
+
+    VARIANT_CALLING_OPTS = ['call_indels', 'only_indels', 'min_af']
 
     def __init__(self, in_: ScriptInput, out_: ScriptOutput, opts: Options) -> None:
         """
@@ -83,6 +85,8 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         # Reference genome
         path_ref = dir_symlinks / f'{self._script_opts.name}.fasta'
         to_replace = {'reference': path_ref}
+        if not path_ref.is_symlink():
+            path_ref.symlink_to(self._script_opts.reference.resolve().absolute())
 
         # GFF file (if provided)
         if self._script_opts.gff is not None:
@@ -111,7 +115,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         snakepipelineutils.run_snakemake(
             snakefile=SNAKEFILE,
             config_path=config_file,
-            targets=[Path(self._script_out.html)],
+            targets=[Path(self._script_out.html), Path(variant_calling_lofreq.OUTPUT_UNFILTERED_VCF)],
             working_dir=self._script_opts.working_dir,
             threads=self._script_opts.threads)
 
@@ -153,9 +157,15 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
             'variant_filtering': {},
             'working_dir': str(self._script_opts.working_dir),
         }
-        for k in ['call_indels', 'only_indels', 'min_af']:
-            if self._script_opts.__getattribute__(k) is not None:
-                config_data['variant_calling'][k] = self._script_opts.__getattribute__(k)
+        variant_calling_config = {
+            k: getattr(self._script_opts, k)
+            for k in MainCalling.VARIANT_CALLING_OPTS
+            if getattr(self._script_opts, k, None) is not None
+        }
+        config_data['variant_calling'].update(variant_calling_config)
+        # for k in ['call_indels', 'only_indels', 'min_af']:
+        #     if self._script_opts.__getattribute__(k) is not None:
+        #         config_data['variant_calling'][k] = self._script_opts.__getattribute__(k)
         if self._script_opts.__getattribute__('gff') is not None:
             config_data['variant_calling']['csq'] = True
         return config_data

@@ -69,7 +69,7 @@ class LofreqReporter(Tool):
         self.__add_mapping_info()
         self.__add_breadth_of_coverage_table()
         self.__add_summary_variants_section()
-        self.__create_coverage_variant_plot()
+        self.__add_coverage_visualization()
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._section)]
 
     def __add_reference_link(self) -> None:
@@ -145,6 +145,9 @@ class LofreqReporter(Tool):
         with open(self._tool_inputs['VCF'][0].path) as handle:
             variants = list(vcf.Reader(handle))
         af_and_variants_df = pd.DataFrame({'AF': v.INFO['AF'], 'var_type': v.var_type} for v in variants)
+        if af_and_variants_df.empty:
+            return af_and_variants_df
+
         # Construct the labels
         af_labels = [
             (f"{LofreqReporter.AF_THRESHOLDS[i - 1]['af']:.2f} <= " if i > 0 else '')
@@ -167,7 +170,7 @@ class LofreqReporter(Tool):
         Adds the complete list of variants to the report as a div HTML object.
         :return: None
         """
-        complete_table = self._tool_inputs['TSV_list'][0].value
+        complete_table = pd.read_table(self._tool_inputs['TSV_list'][0].path, sep='\t')
         if not complete_table.empty:
             header_complete_table = list(complete_table.columns)
             div = HtmlExpandableDiv('varlist', 'Complete list of variants detected.')
@@ -214,8 +217,9 @@ class LofreqReporter(Tool):
 
         # Subsection: Variants detected by AF categories
         variant_table_afs = self.__retrieve_vars_at_specific_af()
-        self._section.add_paragraph('Number of variants detected per allele frequency categories.')
-        self._section.add_table(variant_table_afs.values.tolist(), ['AF', '# SNPs', '# Indels'], [('class', 'data')])
+        if not variant_table_afs.empty:
+            self._section.add_paragraph('Number of variants detected per allele frequency categories.')
+            self._section.add_table(variant_table_afs.values.tolist(), ['AF', '# SNPs', '# Indels'], [('class', 'data')])
 
         # Subsection: Complete table of variants with effect and allele frequency
         self.__add_complete_list_variants_table()
@@ -250,7 +254,7 @@ class LofreqReporter(Tool):
         final_binned_df[column_for_binning] = final_binned_df[column_for_binning].astype(float)
         return final_binned_df
 
-    def __create_coverage_variant_plot(self) -> None:
+    def __add_coverage_visualization(self) -> None:
         """
         Creates the coverage variant plot.
         :return: None
