@@ -16,7 +16,7 @@ class LofreqIndelqual(Lofreq):
         Initializes Lofreq indelqual.
         :return: None
         """
-        super().__init__('Lofreq indelqual', version=None)
+        super().__init__('Lofreq indelqual', None)
 
     def _check_input(self) -> None:
         """

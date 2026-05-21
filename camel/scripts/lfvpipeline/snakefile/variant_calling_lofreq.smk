@@ -24,12 +24,50 @@ rule link_fastq_to_trimming_input:
         snakemakeutils.dump_object([
             ToolIOFile(Path(x['path'])) for x in params.input_dict['fastq_pe']], Path(output.FASTQ_PE))
 
+rule fai_index:
+    """
+    Creates a bowtie2 index for the reference genome.
+    """
+    input:
+        FASTA = rules.variant_calling_prep_reference.output.FASTA
+    output:
+        FASTA = 'variant_calling/reference/genome_prefix_index_fai.io'
+    params:
+        dir_ = 'variant_calling/reference'
+    run:
+        from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
+
+        samtools_index = SamtoolsFastaIndex()
+        step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(params.dir_))
+        snakemakeutils.add_pickle_inputs(samtools_index, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(samtools_index, output)
+
+rule create_sequence_dictionary:
+    """
+    Creates a sequence dictionary for the reference genome.
+    """
+    input:
+        FASTA_REF = rules.fai_index.output.FASTA
+    output:
+        FASTA_REF = 'variant_calling/reference/fasta_sequence_dictionary.io'
+    params:
+        dir_ = 'variant_calling/reference'
+    run:
+        from camel.app.tools.picard.createsequencedictionary import CreateSequenceDictionary
+
+        create_dictionary = CreateSequenceDictionary()
+        step = Step(rule_name=str(rule), tool=create_dictionary, dir_=Path(params.dir_))
+        snakemakeutils.add_pickle_inputs(create_dictionary, input)
+        step.run()
+        snakemakeutils.dump_tool_outputs(create_dictionary, output)
+
 rule bt2_index:
     """
     Creates a bowtie2 index for the reference genome.
     """
     input:
-        FASTA_REF = rules.variant_calling_prep_reference.output.FASTA
+        FASTA_REF = rules.fai_index.output.FASTA
     output:
         INDEX_GENOME_PREFIX = 'variant_calling/reference/genome_prefix_index.io'
     params:
@@ -80,12 +118,84 @@ rule variant_calling_map_reads_illumina_lofreq:
         snakemakeutils.dump_tool_output(samtools_sort, 'BAM', Path(output.BAM))
         snakemakeutils.dump_object(bowtie2_map.informs, Path(output.INFORMS))
 
+rule picard_add_readgroups:
+    """
+    Add readgroup information to the BAM files. Necessary for the IndelRealigner
+    """
+    input:
+        BAM = rules.variant_calling_map_reads_illumina_lofreq.output.BAM
+    output:
+        BAM = 'variant_calling/read_mapping/illumina/bam-rg.io'
+    params:
+        dir_ = 'variant_calling/read_mapping/illumina'
+    run:
+        from camel.app.tools.picard.addorreplacereadgroups import AddOrReplaceReadGroups
+
+        add_rg = AddOrReplaceReadGroups()
+        snakemakeutils.add_pickle_inputs(add_rg, input)
+        step = Step(rule_name=str(rule), tool=add_rg, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(add_rg, output)
+
+rule bam_index:
+    """
+    Add readgroup information to the BAM files.
+    """
+    input:
+        BAM = rules.picard_add_readgroups.output.BAM
+    output:
+        BAM = 'variant_calling/read_mapping/illumina/bam-rg-index.io'
+    params:
+        dir_ = 'variant_calling/read_mapping/illumina'
+    run:
+        from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
+
+        samtools_index = SamtoolsIndex()
+        snakemakeutils.add_pickle_inputs(samtools_index, input)
+        step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(samtools_index, output)
+
+rule gatk_realigner_target_creator:
+    input:
+        BAM = rules.bam_index.output.BAM,
+        FASTA_REF = rules.create_sequence_dictionary.output.FASTA_REF
+    output:
+        TXT_realign_intervals = 'variant_calling/read_mapping/illumina/txt-realign-intervals.io'
+    params:
+        dir_ = 'variant_calling/read_mapping/illumina'
+    run:
+        from camel.app.tools.gatk.gatkrealignertargetcreator import GATKRealignerTargetCreator
+        gatk_realigner = GATKRealignerTargetCreator()
+        snakemakeutils.add_pickle_inputs(gatk_realigner, input)
+        step = Step(rule_name=str(rule), tool=gatk_realigner, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(gatk_realigner, output)
+
+rule gatk_indel_realigner:
+    input:
+        BAM = rules.bam_index.output.BAM,
+        FASTA_REF = rules.create_sequence_dictionary.output.FASTA_REF,
+        TXT_realign_intervals = rules.gatk_realigner_target_creator.output.TXT_realign_intervals
+    output:
+        BAM = 'variant_calling/read_mapping/illumina/bam_realigned/bam.io',
+        INFORMS = 'variant_calling/read_mapping/illumina/bam_realigned/informs.io'
+    params:
+        dir_ = 'variant_calling/read_mapping/illumina/bam_realigned'
+    run:
+        from camel.app.tools.gatk.gatkindelrealigner import GATKIndelRealigner
+        gatk_realigner = GATKIndelRealigner()
+        snakemakeutils.add_pickle_inputs(gatk_realigner,input)
+        step = Step(rule_name=str(rule),tool=gatk_realigner,dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_tool_outputs(gatk_realigner,output)
+
 rule lofreq_indel_qualities:
     """
     Inserts indel qualities into the BAM file, using LoFreq indelqual, necessary for calling indels.
     """
     input:
-        BAM = rules.variant_calling_map_reads_illumina_lofreq.output.BAM,
+        BAM = rules.gatk_indel_realigner.output.BAM,
         FASTA = rules.variant_calling_prep_reference.output.FASTA
     output:
         BAM = 'variant_calling/read_mapping/illumina/bam-indelqual.io',
@@ -107,7 +217,7 @@ rule variant_calling_with_lofreq:
     """
     input:
         BAM = rules.lofreq_indel_qualities.output.BAM if config['variant_calling']['call_indels'] is True
-        else rules.variant_calling_map_reads_illumina_lofreq.output.BAM,
+        else rules.gatk_indel_realigner.output.BAM,
         FASTA = rules.variant_calling_prep_reference.output.FASTA
     output:
         VCF = 'variant_calling/vcf.io',
@@ -138,14 +248,15 @@ rule annotate_variants_csq:
         INFORMS = 'variant_calling/csq/csq_informs.io'
     params:
         dir_ = 'variant_calling/csq/',
-        gff = config.get('reference', {}.get('gff', None))
+        gff = config.get('reference', {}).get('gff', None)
     run:
         from camel.app.tools.bcftools.bcftoolscsq import BcftoolsCsq
         from camel.app.core.io.tooliofile import ToolIOFile
 
         csq = BcftoolsCsq()
         snakemakeutils.add_pickle_inputs(csq, input)
-        csq.add_input_files({'GFF': [ToolIOFile(Path(params.gff))]})
+        if params.gff:
+            csq.add_input_files({'GFF': [ToolIOFile(Path(params.gff))]})
         step = Step(rule_name=str(rule), tool=csq, dir_=Path(str(params.dir_)))
         step.run()
         snakemakeutils.dump_tool_outputs(csq, output)
@@ -191,14 +302,13 @@ rule lofreq_reporter:
         min_af = config.get('variant_calling', {}).get('min_af', 0),
         csq = config.get('variant_calling', {}).get('csq', False)
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
-
         reporter = LofreqReporter()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
         snakemakeutils.add_pickle_inputs(reporter, input)
-        reporter.add_input_files({'VAL_Sample': [ToolIOValue(params.sample_name)]})
-        reporter.update_parameters(export_bam='true' if params.include_bam else 'false',
-            min_af=params.min_af, sample_name=params.sample_name)
+        reporter.update_parameters(
+            export_bam='true' if params.include_bam else 'false',
+            min_af=params.min_af,
+            sample_name=params.sample_name)
         step.run()
         snakemakeutils.dump_tool_outputs(reporter, output)
 
