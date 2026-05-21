@@ -23,6 +23,8 @@ class Variant:
     effect: str
     gene: str
     allele_freq: float
+    strand_bias: float
+    depth: float
     quality: float
 
     def to_list(self) -> list:
@@ -31,7 +33,7 @@ class Variant:
         :return: list
         """
         return [self.position, self.type_of_variant, self.variant, self.effect, self.gene, self.allele_freq,
-                self.quality]
+                self.strand_bias, self.depth, self.quality]
 
 
 class ExtractVariantsAndEffectFromVCF(Tool):
@@ -104,7 +106,8 @@ class ExtractVariantsAndEffectFromVCF(Tool):
                 effect, gene = 'Unknown', 'Unknown'
             output_dictionary[var.POS] = Variant(position=var.POS, type_of_variant=type_of_var,
                                                  variant=variant, effect=effect, gene=gene,
-                                                 allele_freq=var.INFO.get('AF', 0), quality=var.QUAL)
+                                                 allele_freq=var.INFO.get('AF', 0), quality=var.QUAL,
+                                                 strand_bias=var.INFO.get('SB', 0), depth=var.INFO.get('DP', 0))
 
             # This condition checks whether the variant effect is a copy of another (symbolized by the '@')
             # I'm therefore storing the position the VCF entry refers to
@@ -116,5 +119,6 @@ class ExtractVariantsAndEffectFromVCF(Tool):
             output_dictionary[unknown_pos].effect = output_dictionary[ref_pos].effect
             output_dictionary[unknown_pos].gene = output_dictionary[ref_pos].gene
         output_dataframe = pd.DataFrame(data=[var.to_list() for key, var in output_dictionary.items()],
-                                        columns=['Position', 'Type', 'Variant', 'Effect', 'Gene', 'AF', 'Quality'])
+                                        columns=['Position', 'Type', 'Variant', 'Effect', 'Gene', 'AF', 'Strand bias',
+                                                 'Depth', 'Quality'])
         return output_dataframe

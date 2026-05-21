@@ -118,8 +118,7 @@ class LofreqReporter(Tool):
             len_genome = len(self._coverage_table)
             for cov in LofreqReporter.COVERAGE_THRESHOLDS_FOR_BREADTH:
                 cov_fraction_above_thresh = len(self._coverage_table[self._coverage_table["depth"] >= cov]) / len_genome
-                res[
-                    f'{cov}X'] = f'{cov_fraction_above_thresh * 100:.2f}'
+                res[f'{cov}X'] = f'{cov_fraction_above_thresh * 100:.2f}'
             self._section.add_paragraph('Breadth of coverage at different thresholds.')
             self._section.add_table(list(res.items()), ['Coverage threshold', '% covered'], [('class', 'data')])
         else:
@@ -150,7 +149,7 @@ class LofreqReporter(Tool):
 
         # Construct the labels
         af_labels = [
-            (f"{LofreqReporter.AF_THRESHOLDS[i - 1]['af']:.2f} <= " if i > 0 else '')
+            (f"{LofreqReporter.AF_THRESHOLDS[i - 1]['af']:.2f} < " if i > 0 else '')
             + f"AF <= {LofreqReporter.AF_THRESHOLDS[i]['af']:.2f}"
             for i in range(len(LofreqReporter.AF_THRESHOLDS))
         ]
@@ -162,7 +161,12 @@ class LofreqReporter(Tool):
             labels=af_labels,
             include_lowest=True,
         )
-        dataframe_with_counts = af_and_variants_df.groupby(['AF_bin']).count().reset_index('AF_bin')
+        dataframe_with_counts = af_and_variants_df.groupby('AF_bin').var_type.value_counts().unstack(fill_value=0)
+        dataframe_with_counts.reset_index('AF_bin', inplace=True)
+        dataframe_with_counts.rename(
+            columns={'AF_bin': 'Allele Freq. category', 'indel': '# Indels', 'snp': '# SNPs'},
+            inplace=True
+        )
         return dataframe_with_counts
 
     def __add_complete_list_variants_table(self) -> None:
@@ -172,20 +176,24 @@ class LofreqReporter(Tool):
         """
         complete_table = pd.read_table(self._tool_inputs['TSV_list'][0].path, sep='\t')
         if not complete_table.empty:
+            complete_table['AF'] = complete_table['AF'].map('{:.2f}'.format)
             header_complete_table = list(complete_table.columns)
+            columns_to_keep_for_report = ['Position', 'Type', 'Variant', 'Effect', 'Gene', 'AF']
+            sub_table_for_report = complete_table[columns_to_keep_for_report]
             div = HtmlExpandableDiv('varlist', 'Complete list of variants detected.')
             div.add_table(
-                data=complete_table.values.tolist(),
-                column_names=list(complete_table.columns),
-                table_attributes=[('class', 'data')])
+                data=sub_table_for_report.values.tolist(),
+                column_names=list(sub_table_for_report.columns),
+                table_attributes=[('class', 'data')]
+            )
             self._section.add_html_object(div)
             table_path = self._folder / f'all_variants-{fileutils.make_valid(self.get_param_value("sample_name"))}.tsv'
             TsvExporter.export(complete_table.values.tolist(), header_complete_table, table_path)
             relative_path = Path(LofreqReporter.SUB_FOLDER) / table_path.name
             self._section.add_file(table_path, relative_path)
             self._section.add_link_to_file('Download (TSV)', relative_path)
-            self._section.add_paragraph(
-                "This table contains all the variants detected by LoFreq with their associated effect and allele frequency.")
+            self._section.add_paragraph('This table contains all the variants detected by LoFreq '
+                                        'with their associated effect and allele frequency.')
             self._section.add_paragraph(
                 'The Quality value is a phred-scaled p-value describing how likely a reported SNV is a false positive. '
                 'LoFreq will only report SNVs with a p-value < 5% (i.e., quality of 13) after multiple testing correction.')
@@ -219,7 +227,11 @@ class LofreqReporter(Tool):
         variant_table_afs = self.__retrieve_vars_at_specific_af()
         if not variant_table_afs.empty:
             self._section.add_paragraph('Number of variants detected per allele frequency categories.')
-            self._section.add_table(variant_table_afs.values.tolist(), ['AF', '# SNPs', '# Indels'], [('class', 'data')])
+            self._section.add_table(
+                variant_table_afs.values.tolist(),
+                list(variant_table_afs.columns),
+                [('class', 'data')]
+            )
 
         # Subsection: Complete table of variants with effect and allele frequency
         self.__add_complete_list_variants_table()
@@ -281,11 +293,11 @@ class LofreqReporter(Tool):
         p += plotnine.scale_y_log10()
         p += plotnine.labs(x='Position', y='Value (log-scale)')
         p.save(f'{self._folder}/figure_coverage_and_variants.png', dpi=300)
-        self.__add_visualization(Path(f'{self._folder}/figure_coverage_and_variants.png'))
+        self.__add_visualization_section(Path(f'{self._folder}/figure_coverage_and_variants.png'))
 
-    def __add_visualization(self, image_path: Path) -> None:
+    def __add_visualization_section(self, image_path: Path) -> None:
         """
-        Adds the visualization of the mutations.
+        Adds the section containing the visualization of the mutations.
         :param image_path: Image path
         :return: None
         """

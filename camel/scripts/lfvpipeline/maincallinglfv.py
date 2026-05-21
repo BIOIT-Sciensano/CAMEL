@@ -63,7 +63,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         :return: None
         """
         super().__init__(
-            name='Low-frequency variant calling pipeline',
+            name='Low-frequency variant detection pipeline',
             version='1.0',
             title=None,
             script_in=in_,
@@ -83,7 +83,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         self._script_in = self._script_in.symlink(dir_symlinks)
 
         # Reference genome
-        path_ref = dir_symlinks / f'{self._script_opts.name}.fasta'
+        path_ref = dir_symlinks / f'{self._script_opts.name}'
         to_replace = {'reference': path_ref}
         if not path_ref.is_symlink():
             path_ref.symlink_to(self._script_opts.reference.resolve().absolute())
@@ -163,9 +163,6 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
             if getattr(self._script_opts, k, None) is not None
         }
         config_data['variant_calling'].update(variant_calling_config)
-        # for k in ['call_indels', 'only_indels', 'min_af']:
-        #     if self._script_opts.__getattribute__(k) is not None:
-        #         config_data['variant_calling'][k] = self._script_opts.__getattribute__(k)
         if self._script_opts.__getattribute__('gff') is not None:
             config_data['variant_calling']['csq'] = True
         return config_data
