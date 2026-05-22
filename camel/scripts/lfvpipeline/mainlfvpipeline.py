@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import dataclasses
 import shutil
 from pathlib import Path
@@ -8,8 +7,8 @@ from typing import Any
 import click
 
 from camel.app.cli import cliutils
-from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipeutils import dict_merge
@@ -47,7 +46,7 @@ class Options(model.BaseOptions):
     min_af: float = dataclasses.field(default=0.0, metadata={'help': 'Minimum allele frequency'})
 
 
-class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
+class MainLFVPipeline(BaseScript[ScriptInput, ScriptOutput, Options]):
     """
     Class to perform variant calling from a BAM file.
     """
@@ -159,7 +158,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
         }
         variant_calling_config = {
             k: getattr(self._script_opts, k)
-            for k in MainCalling.VARIANT_CALLING_OPTS
+            for k in MainLFVPipeline.VARIANT_CALLING_OPTS
             if getattr(self._script_opts, k, None) is not None
         }
         config_data['variant_calling'].update(variant_calling_config)
@@ -181,7 +180,7 @@ def main(**kwargs) -> None:
     script_input = basescriptutils.parse_script_input(kwargs)
     script_out = basescriptutils.parse_script_output(kwargs)
 
-    script = MainCalling(
+    script = MainLFVPipeline(
         in_=script_input,
         out_=script_out,
         opts=Options(**cliutils.from_kwargs(Options, kwargs))

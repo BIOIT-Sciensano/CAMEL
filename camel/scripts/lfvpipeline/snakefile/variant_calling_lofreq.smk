@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.core.reports import reportutils
 from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.core.snakemake.step import Step
 from camel.app.tools.lofreq.lofreqreporter import LofreqReporter
@@ -19,8 +18,7 @@ rule link_fastq_to_trimming_input:
     params:
         input_dict = config['input']
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
-
+        from camelcore.app.io.tooliofile import ToolIOFile
         snakemakeutils.dump_object([
             ToolIOFile(Path(x['path'])) for x in params.input_dict['fastq_pe']], Path(output.FASTQ_PE))
 
@@ -39,9 +37,9 @@ rule fai_index:
 
         samtools_index = SamtoolsFastaIndex()
         step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(params.dir_))
-        snakemakeutils.add_pickle_inputs(samtools_index, input)
+        snakemakeutils.add_io_inputs(samtools_index, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_index, output)
+        snakemakeutils.dump_io_outputs(samtools_index, output)
 
 rule create_sequence_dictionary:
     """
@@ -58,9 +56,9 @@ rule create_sequence_dictionary:
 
         create_dictionary = CreateSequenceDictionary()
         step = Step(rule_name=str(rule), tool=create_dictionary, dir_=Path(params.dir_))
-        snakemakeutils.add_pickle_inputs(create_dictionary, input)
+        snakemakeutils.add_io_inputs(create_dictionary, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(create_dictionary, output)
+        snakemakeutils.dump_io_outputs(create_dictionary, output)
 
 rule bt2_index:
     """
@@ -77,9 +75,9 @@ rule bt2_index:
 
         bowtie2_index = Bowtie2Index()
         step = Step(rule_name=str(rule), tool=bowtie2_index, dir_=Path(params.dir_))
-        snakemakeutils.add_pickle_inputs(bowtie2_index, input)
+        snakemakeutils.add_io_inputs(bowtie2_index, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(bowtie2_index, output)
+        snakemakeutils.dump_io_outputs(bowtie2_index, output)
 
 rule variant_calling_map_reads_illumina_lofreq:
     """
@@ -104,9 +102,9 @@ rule variant_calling_map_reads_illumina_lofreq:
 
         # Bowtie 2
         bowtie2_map = Bowtie2Map()
-        snakemakeutils.add_pickle_input(bowtie2_map, 'FASTQ_PE', Path(input.IO))
+        snakemakeutils.add_io_input(bowtie2_map, 'FASTQ_PE', Path(input.IO))
         bowtie2_map.update_parameters(threads=threads)
-        snakemakeutils.add_pickle_input(bowtie2_map, 'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
+        snakemakeutils.add_io_input(bowtie2_map, 'INDEX_GENOME_PREFIX', Path(input.INDEX_GENOME_PREFIX))
 
         # Initialize tools
         samtools_view = SamtoolsView()
@@ -115,7 +113,7 @@ rule variant_calling_map_reads_illumina_lofreq:
         pipeutils.run_as_pipe([bowtie2_map, samtools_view, samtools_sort], Path(params.dir_).absolute())
 
         # Save output
-        snakemakeutils.dump_tool_output(samtools_sort, 'BAM', Path(output.BAM))
+        snakemakeutils.dump_io_output(samtools_sort, 'BAM', Path(output.BAM))
         snakemakeutils.dump_object(bowtie2_map.informs, Path(output.INFORMS))
 
 rule picard_add_readgroups:
@@ -132,10 +130,10 @@ rule picard_add_readgroups:
         from camel.app.tools.picard.addorreplacereadgroups import AddOrReplaceReadGroups
 
         add_rg = AddOrReplaceReadGroups()
-        snakemakeutils.add_pickle_inputs(add_rg, input)
+        snakemakeutils.add_io_inputs(add_rg, input)
         step = Step(rule_name=str(rule), tool=add_rg, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(add_rg, output)
+        snakemakeutils.dump_io_outputs(add_rg, output)
 
 rule bam_index:
     """
@@ -151,10 +149,10 @@ rule bam_index:
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
 
         samtools_index = SamtoolsIndex()
-        snakemakeutils.add_pickle_inputs(samtools_index, input)
+        snakemakeutils.add_io_inputs(samtools_index, input)
         step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(samtools_index, output)
+        snakemakeutils.dump_io_outputs(samtools_index, output)
 
 rule gatk_realigner_target_creator:
     input:
@@ -167,10 +165,10 @@ rule gatk_realigner_target_creator:
     run:
         from camel.app.tools.gatk.gatkrealignertargetcreator import GATKRealignerTargetCreator
         gatk_realigner = GATKRealignerTargetCreator()
-        snakemakeutils.add_pickle_inputs(gatk_realigner, input)
+        snakemakeutils.add_io_inputs(gatk_realigner, input)
         step = Step(rule_name=str(rule), tool=gatk_realigner, dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(gatk_realigner, output)
+        snakemakeutils.dump_io_outputs(gatk_realigner, output)
 
 rule gatk_indel_realigner:
     input:
@@ -185,10 +183,10 @@ rule gatk_indel_realigner:
     run:
         from camel.app.tools.gatk.gatkindelrealigner import GATKIndelRealigner
         gatk_realigner = GATKIndelRealigner()
-        snakemakeutils.add_pickle_inputs(gatk_realigner,input)
+        snakemakeutils.add_io_inputs(gatk_realigner,input)
         step = Step(rule_name=str(rule),tool=gatk_realigner,dir_=Path(params.dir_))
         step.run()
-        snakemakeutils.dump_tool_outputs(gatk_realigner,output)
+        snakemakeutils.dump_io_outputs(gatk_realigner,output)
 
 rule lofreq_indel_qualities:
     """
@@ -206,10 +204,10 @@ rule lofreq_indel_qualities:
         from camel.app.tools.lofreq.lofreqindelqual import LofreqIndelqual
 
         lofreq_indelqual = LofreqIndelqual()
-        snakemakeutils.add_pickle_inputs(lofreq_indelqual, input)
+        snakemakeutils.add_io_inputs(lofreq_indelqual, input)
         step = Step(rule_name=str(rule), tool=lofreq_indelqual, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(lofreq_indelqual, output)
+        snakemakeutils.dump_io_outputs(lofreq_indelqual, output)
 
 rule variant_calling_with_lofreq:
     """
@@ -230,11 +228,11 @@ rule variant_calling_with_lofreq:
         from camel.app.tools.lofreq.lofreqcall import LofreqCall
 
         lofreq_call = LofreqCall()
-        snakemakeutils.add_pickle_inputs(lofreq_call, input)
+        snakemakeutils.add_io_inputs(lofreq_call, input)
         lofreq_call.update_parameters(call_indels=True if params.call_indels else False)
         step = Step(rule_name=str(rule), tool=lofreq_call, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(lofreq_call, output)
+        snakemakeutils.dump_io_outputs(lofreq_call, output)
 
 rule annotate_variants_csq:
     """
@@ -251,15 +249,15 @@ rule annotate_variants_csq:
         gff = config.get('reference', {}).get('gff', None)
     run:
         from camel.app.tools.bcftools.bcftoolscsq import BcftoolsCsq
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
 
         csq = BcftoolsCsq()
-        snakemakeutils.add_pickle_inputs(csq, input)
+        snakemakeutils.add_io_inputs(csq, input)
         if params.gff:
             csq.add_input_files({'GFF': [ToolIOFile(Path(params.gff))]})
         step = Step(rule_name=str(rule), tool=csq, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(csq, output)
+        snakemakeutils.dump_io_outputs(csq, output)
 
 rule extract_variants_effect_from_vcf:
     """
@@ -276,9 +274,9 @@ rule extract_variants_effect_from_vcf:
         from camel.app.tools.pipelines.variant_calling.extractvariantsandeffectfromvcf import ExtractVariantsAndEffectFromVCF
         extract_variants = ExtractVariantsAndEffectFromVCF()
         step = Step(rule_name=str(rule), tool=extract_variants, dir_=Path(params.dir_))
-        snakemakeutils.add_pickle_inputs(extract_variants, input)
+        snakemakeutils.add_io_inputs(extract_variants, input)
         step.run()
-        snakemakeutils.dump_tool_outputs(extract_variants, output)
+        snakemakeutils.dump_io_outputs(extract_variants, output)
 
 rule lofreq_reporter:
     input:
@@ -304,13 +302,13 @@ rule lofreq_reporter:
     run:
         reporter = LofreqReporter()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input)
         reporter.update_parameters(
             export_bam='true' if params.include_bam else 'false',
             min_af=params.min_af,
             sample_name=params.sample_name)
         step.run()
-        snakemakeutils.dump_tool_outputs(reporter, output)
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule report_create_commands_section:
     """
@@ -344,19 +342,20 @@ rule generate_report:
         input_dict = config['input'],
         pipeline_info = config['script_info']
     run:
+        from camelcore.app.utils import reportutils
+
         # Initialize report
         report = snakepipelineutils.init_pipeline_report(
-            Path(output.HTML),Path(params.output_dir),params.pipeline_info)
+            Path(output.HTML),Path(params.output_dir), params.pipeline_info)
         report.add_html_object(reportutils.create_overview_section(
             version=params.version,
             dataset_name=params.input_dict['name'],
             input_file_str=params.input_dict['input_str']
         ))
-
-        report_structure = []
-
-        report_structure.append(('Trimming', 'trimming', [Path(input.report_trimming[0])]))
-        report_structure.append(('Variant Calling', 'var_calling', [Path(input.report_lofreq)]))
-        report_structure.append(('Commands', 'commands', [Path(input.report_commands)]))
+        report_structure = [
+            ('Trimming', 'trimming', [Path(input.report_trimming[0])]),
+            ('Variant Calling', 'var_calling', [Path(input.report_lofreq)]),
+            ('Commands', 'commands', [Path(input.report_commands)])
+        ]
         snakepipelineutils.add_report_content(report, report_structure)
         report.save()

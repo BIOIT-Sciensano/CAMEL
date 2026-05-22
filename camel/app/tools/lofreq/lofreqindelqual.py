@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.utils import toolutils
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.tools.lofreq.lofreq import Lofreq
 
 
