@@ -28,7 +28,7 @@ class LofreqCall(Lofreq):
         if 'BAM' not in self._tool_inputs:
             raise InvalidToolInputError('BAM alignment file is required')
         if len(self._tool_inputs['BAM']) != 1:
-            raise ValueError("Exactly one BAM input file expected")
+            raise InvalidToolInputError("Exactly one BAM input file expected")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -60,5 +60,5 @@ class LofreqCall(Lofreq):
         Sets the output of Lofreq call.
         :return: None
         """
-        output_file_path = self.folder / self._parameters['output_filename'].value
+        output_file_path = self.folder / self.get_param_value('output_filename')
         self._tool_outputs['VCF'] = [ToolIOFile(output_file_path)]

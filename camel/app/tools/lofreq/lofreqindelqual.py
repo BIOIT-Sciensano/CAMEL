@@ -3,6 +3,7 @@ from pathlib import Path
 from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.lofreq.lofreq import Lofreq
 
 
@@ -26,7 +27,7 @@ class LofreqIndelqual(Lofreq):
         """
         toolutils.check_input(self, keys_required=['FASTA', 'BAM'])
         if len(self._tool_inputs['BAM']) != 1:
-            raise ValueError("Exactly one BAM input file expected")
+            raise InvalidToolInputError("Exactly one BAM input file expected")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -58,5 +59,5 @@ class LofreqIndelqual(Lofreq):
         Sets the output of Lofreq indelqual.
         :return: None
         """
-        output_file_path = self.folder / self._parameters['output_filename'].value
+        output_file_path = self.folder / self.get_param_value('output_filename')
         self._tool_outputs['BAM'] = [ToolIOFile(output_file_path)]

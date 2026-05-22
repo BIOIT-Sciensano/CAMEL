@@ -3,8 +3,7 @@ parameters:
   export_bam:
     default: true
     mandatory: false
-    option: null
-    value: 'false'
+    flag: true
   sample_name:
     default: false
     mandatory: false

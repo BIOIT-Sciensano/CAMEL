@@ -167,12 +167,10 @@ class LofreqReporter(Tool):
         From a list of vcf record, extracts variants at specific allele frequencies.
         :return: Pandas DF of allele frequency categories and variant counts for each category
         """
-        variants = vcfutils.parse_all_variants(self.tool_inputs['VCF'][0].path)
+        variants = vcfutils.parse_all_variants(self._tool_inputs['VCF'][0].path)
         af_and_variants_df = pd.DataFrame(
-            {'AF': v.INFO['AF'], 'var_type': v.var_type} for v in variants
+            {'AF': v.INFO.get('AF', 0), 'var_type': v.var_type} for v in variants
         )
-        import pprint
-        pprint.pprint(af_and_variants_df.head())
         if af_and_variants_df.empty:
             return af_and_variants_df
 
@@ -269,9 +267,7 @@ class LofreqReporter(Tool):
             for var in self._all_variants
             if var.INFO.get('AF', 0) >= minimum_allele_frequency
         ]
-        all_indels = [
-            var for var in self._all_variants if var.INFO.get('INDEL', False) is True
-        ]
+        all_indels = [var for var in self._all_variants if var.is_indel]
         all_snps = [var for var in self._all_variants if var.var_type == 'snp']
 
         # Subsection: Total number of variants detected
@@ -369,6 +365,9 @@ class LofreqReporter(Tool):
         Creates the coverage variant plot.
         :return: None
         """
+        if self._coverage_table is None:
+            return
+
         # For each AF threshold in the AF_TO_REPORT table, associate them in the depth table
         depth_table = pd.DataFrame(
             self._coverage_table[['position', 'depth']], dtype='int'
@@ -376,10 +375,10 @@ class LofreqReporter(Tool):
 
         for af in [x['af'] for x in LofreqReporter.AF_THRESHOLDS][::-1]:
             var_of_interest = [
-                var.POS for var in self._all_variants if var.INFO['AF'] >= af
+                var.POS for var in self._all_variants if var.INFO.get('AF', 0) >= af
             ]
             depth_table[f'AF={af}'] = 0
-            depth_table[f'AF={af}'][depth_table['position'].isin(var_of_interest)] = 1
+            depth_table.loc[depth_table['position'].isin(var_of_interest), f'AF={af}'] = 1
 
         p = plotnine.ggplot()
 

@@ -214,7 +214,7 @@ rule variant_calling_with_lofreq:
     Executes the variant calling with LoFreq call.
     """
     input:
-        BAM = rules.lofreq_indel_qualities.output.BAM if config['variant_calling']['call_indels'] is True
+        BAM = rules.lofreq_indel_qualities.output.BAM if config['variant_calling'].get('call_indels', False) is True
         else rules.gatk_indel_realigner.output.BAM,
         FASTA = rules.variant_calling_prep_reference.output.FASTA
     output:
@@ -317,7 +317,7 @@ rule report_create_commands_section:
     input:
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_indelqual = variant_calling_lofreq.OUTPUT_INDELQUAL_INFORMS if
-        config.get('variant_calling', {}.get('call_indels', False)) is True else [],
+        config.get('variant_calling', {}).get('call_indels', False) is True else [],
         INFORMS_lofreq = variant_calling_lofreq.OUTPUT_LOFREQ_INFORMS
     output:
         HTML = 'report/html-commands.iob'
@@ -325,7 +325,6 @@ rule report_create_commands_section:
         dir_ = config['working_dir']
     run:
         from camel.app.scriptutils.basepipe import basepipeutils
-
         basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 rule generate_report:

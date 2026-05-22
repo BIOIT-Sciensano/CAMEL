@@ -221,6 +221,8 @@ class ScriptInput(model.BaseInput):
             # Save the updated path
             if key not in to_replace:
                 to_replace[key] = path_link_out
+            elif isinstance(to_replace[key], list):
+                to_replace[key].append(path_link_out)
             else:
                 to_replace[key] = [to_replace[key], path_link_out]
 
