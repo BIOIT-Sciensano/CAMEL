@@ -26,7 +26,7 @@ class Options(model.BaseOptions):
     Defines the custom options for the script.
     """
     reference: Path = dataclasses.field(metadata={'help': 'Reference FASTA file'})
-    output_vcf: Path = dataclasses.field(default='output.vcf', metadata={'help': 'Output VCF file'})
+    output_vcf: Path = dataclasses.field(default=Path('output.vcf'), metadata={'help': 'Output VCF file'})
     gff: Path = dataclasses.field(default=None, metadata={'help': 'GFF file'})
     reference_name: str | None = dataclasses.field(default=None, metadata={'help': 'Reference genome name'})
 
@@ -39,7 +39,7 @@ class Options(model.BaseOptions):
         name = self.reference_name if self.reference_name is not None else self.reference.name
         return name
 
-    working_dir: Path = dataclasses.field(default=Path.cwd(), metadata={'help': 'Working directory'})
+    working_dir: Path = dataclasses.field(default_factory=Path.cwd, metadata={'help': 'Working directory'})
     call_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call indels'})
     only_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call only indels'})
     threads: int = dataclasses.field(default=8, metadata={'help': 'Number of threads'})
