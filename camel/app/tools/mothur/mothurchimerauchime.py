@@ -1,7 +1,18 @@
+import re
+
+from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.loggers import logger
 from camel.app.tools.mothur.mothur import Mothur
+
+# When chimera.uchime is run with a grouped count table, mothur tries to open per-sample
+# split files (e.g. file.A.fasta / file.A.count_table) that don't exist separately.
+# These [ERROR] lines are non-fatal — mothur continues and produces correct output —
+# but they cause mothur to exit with a non-zero code, which would otherwise be treated
+# as a tool failure.
+_SPLIT_FILE_ERROR = re.compile(r'\[ERROR]: Could not open .+\.\w+\.(fasta|count_table)')
 
 
 class MothurChimeraUchime(Mothur):
@@ -36,6 +47,23 @@ class MothurChimeraUchime(Mothur):
             raise InvalidToolInputError('Either TSV_Counts or TSV_Names is required')
         super()._check_input()
 
+    def _check_command_output(self, command: Command) -> None:
+        """
+        Checks command output, tolerating the non-fatal per-sample split-file errors that
+        chimera.uchime emits when a grouped count table is used but the per-sample FASTA /
+        count_table files do not exist separately on disk. All other non-zero exits raise
+        a ToolExecutionError.
+        :return: None
+        """
+        if command.exit_code == 0:
+            return
+        error_lines = [line for line in command.stdout.splitlines() if line.startswith('[ERROR]')]
+        if error_lines and all(_SPLIT_FILE_ERROR.search(line) for line in error_lines):
+            for line in error_lines:
+                logger.warning(f'Ignoring non-fatal per-sample split-file error: {line.strip()}')
+            return
+        raise ToolExecutionError(self.name, f"Error executing '{self.name}', exit code: {command.exit_code}")
+
     def _build_input_string(self) -> str:
         """
         Creates the string with the input files and output directories
@@ -56,9 +84,10 @@ class MothurChimeraUchime(Mothur):
     def _set_output(self) -> None:
         """
         Sets the name of the output files, and fills the common stream object with them.
-        When dereplicate=false (default), mothur internally runs remove.seqs and the cleaned
-        FASTA/count outputs carry a .pick prefix. When dereplicate=true, mothur only modifies
-        the count table and keeps the .denovo.uchime prefix for all outputs.
+        chimera.uchime always writes the non-chimeric sequences to .denovo.uchime.fasta and
+        .denovo.uchime.count_table directly in outputdir, regardless of the dereplicate setting.
+        When dereplicate=false mothur also runs remove.seqs internally which produces .pick.*
+        intermediates, but those are not guaranteed to land in outputdir and must not be used.
         :return: None
         """
         basename = self._get_basename()
@@ -68,23 +97,13 @@ class MothurChimeraUchime(Mothur):
         self._tool_outputs['TSV_Accnos'] = [
             ToolIOFile(basename.with_suffix('.denovo.uchime.accnos'))
         ]
-        dereplicate = ('dereplicate' in self._parameters and self.get_param_value('dereplicate') == 'true')
-        if dereplicate:
-            self._tool_outputs['FASTA'] = [
-                ToolIOFile(basename.with_suffix('.denovo.uchime.fasta'))
+        self._tool_outputs['FASTA'] = [
+            ToolIOFile(basename.with_suffix('.denovo.uchime.fasta'))
+        ]
+        if 'TSV_Counts' in self._tool_inputs:
+            self._tool_outputs['TSV_Counts'] = [
+                ToolIOFile(basename.with_suffix('.denovo.uchime.count_table'))
             ]
-            if 'TSV_Counts' in self._tool_inputs:
-                self._tool_outputs['TSV_Counts'] = [
-                    ToolIOFile(basename.with_suffix('.denovo.uchime.count_table'))
-                ]
-        else:
-            self._tool_outputs['FASTA'] = [
-                ToolIOFile(basename.with_suffix('.pick.fasta'))
-            ]
-            if 'TSV_Counts' in self._tool_inputs:
-                self._tool_outputs['TSV_Counts'] = [
-                    ToolIOFile(basename.with_suffix('.pick.count_table'))
-                ]
         if 'TSV_Names' in self._tool_inputs:
             raise RuntimeError(
                 'The use of a names file is not yet implemented for chimera.uchime as the '
