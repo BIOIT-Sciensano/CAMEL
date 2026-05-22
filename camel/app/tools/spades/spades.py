@@ -3,8 +3,8 @@ from pathlib import Path
 
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class SPAdes(Tool):
@@ -19,7 +19,7 @@ class SPAdes(Tool):
     def __init__(self) -> None:
         """
         Initialize tool
-                :return: None
+        :return: None
         """
         super().__init__('SPAdes', '3.15.5')
         self._input_string = None

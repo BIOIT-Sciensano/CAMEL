@@ -1,3 +1,9 @@
+conda:
+  name: nanoplot
+  packages:
+    - nanoplot=1.41.6
+    - python<3.12
+    - python-kaleido<1
 dependencies:
   - nanoplot/1.41.6
 parameters:

@@ -1,3 +1,7 @@
+conda:
+  name: nextclade
+  packages:
+    - nextclade=3.18.1
 dependencies:
   - nextclade/3.18.1
 parameters:

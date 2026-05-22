@@ -1,11 +1,57 @@
-dependencies: [multiqc/1.11]
+conda:
+  name: multiqc
+  packages:
+    - multiqc=1.11
+    - setuptools<81
+dependencies:
+  - multiqc/1.11
 parameters:
-  report_name: {default: true, mandatory: false, option: --filename, p_index: 0, value: 'multiqc_report.html'}
-  force: {default: false, mandatory: false, option: -f, p_index: 0, value: ''}
-  ignore: {default: false, mandatory: false, option: --ignore, p_index: 0, value: 'fileA.txt;fileB.txt'}
-  ignore_symlinks: {default: false, mandatory: false, option: --ignore-symlinks, p_index: 0, value: ''}
-  output_directory: {default: false, mandatory: false, option: -o, p_index: 0, value: 'outdir'}
-  prefix_names: {default: false, mandatory: false, option: -d, p_index: 0, value: ''}
-  prefix_names_depth: {default: false, mandatory: false, option: -dd, p_index: 0, value: '-1'}
-  template: {default: false, mandatory: false, option: --template, p_index: 0, value: 'default'}
+  report_name:
+    default: true
+    mandatory: false
+    option: '--filename'
+    p_index: 0
+    value: multiqc_report.html
+  force:
+    default: false
+    mandatory: false
+    option: '-f'
+    p_index: 0
+    value: ''
+  ignore:
+    default: false
+    mandatory: false
+    option: '--ignore'
+    p_index: 0
+    value: fileA.txt;fileB.txt
+  ignore_symlinks:
+    default: false
+    mandatory: false
+    option: '--ignore-symlinks'
+    p_index: 0
+    value: ''
+  output_directory:
+    default: false
+    mandatory: false
+    option: '-o'
+    p_index: 0
+    value: outdir
+  prefix_names:
+    default: false
+    mandatory: false
+    option: '-d'
+    p_index: 0
+    value: ''
+  prefix_names_depth:
+    default: false
+    mandatory: false
+    option: '-dd'
+    p_index: 0
+    value: '-1'
+  template:
+    default: false
+    mandatory: false
+    option: '--template'
+    p_index: 0
+    value: default
 tool_command: multiqc

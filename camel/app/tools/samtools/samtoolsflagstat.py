@@ -16,7 +16,7 @@ class SamtoolsFlagstat(SamtoolsBasePipeable):
         Initializes this tool.
         :return: None
         """
-        super().__init__('samtools flagstat', '1.17')
+        super().__init__('samtools flagstat', version=None)
 
     def _check_input(self) -> None:
         """
@@ -34,7 +34,7 @@ class SamtoolsFlagstat(SamtoolsBasePipeable):
         self.__build_command()
         self._execute_command()
         self.__set_output()
-        self._check_stderr()
+        self._check_stderr(self._command)
 
     def __build_command(self, pipe_in: bool = False, pipe_out: bool = False) -> None:
         """

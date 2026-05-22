@@ -1,3 +1,7 @@
+conda:
+  name: sniffles
+  packages:
+    - sniffles=2.2
 dependencies:
   - sniffles/2.2
 parameters:
@@ -5,7 +9,7 @@ parameters:
     default: false
     mandatory: false
     option: '--allow-overwrite'
-    value: None
+    flag: true
   mapq:
     default: false
     mandatory: false
@@ -25,12 +29,12 @@ parameters:
     default: false
     mandatory: false
     option: '--no-consensus'
-    value: None
+    flag: true
   non_germline:
     default: false
     mandatory: false
     option: '--non-germline'
-    value: None
+    flag: tu
   phase:
     default: false
     mandatory: false

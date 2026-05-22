@@ -17,7 +17,7 @@ class SeqkitSplit2(SeqkitBase):
     def __init__(self) -> None:
         """
         Initializes this tool.
-                :return: None
+        :return: None
         """
         super().__init__('Seqkit split2', version=None)
 

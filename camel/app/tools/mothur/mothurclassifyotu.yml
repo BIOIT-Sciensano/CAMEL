@@ -1,9 +1,44 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  basis: {default: false, mandatory: false, option: basis, p_index: 0, value: otu}
-  cutoff: {default: false, mandatory: false, option: cutoff, p_index: 0, value: '51'}
-  label: {default: false, mandatory: false, option: label, p_index: 0, value: 0.10-0.30}
-  persample: {default: false, mandatory: false, option: persample, p_index: 0, value: 'false'}
-  probs: {default: false, mandatory: false, option: probs, p_index: 0, value: 'true'}
-  threshold: {default: false, mandatory: false, option: threshold, p_index: 0, value: '90'}
+  basis:
+    default: false
+    mandatory: false
+    option: basis
+    p_index: 0
+    value: otu
+  cutoff:
+    default: false
+    mandatory: false
+    option: cutoff
+    p_index: 0
+    value: '51'
+  label:
+    default: false
+    mandatory: false
+    option: label
+    p_index: 0
+    value: 0.10-0.30
+  persample:
+    default: false
+    mandatory: false
+    option: persample
+    p_index: 0
+    value: 'false'
+  probs:
+    default: false
+    mandatory: false
+    option: probs
+    p_index: 0
+    value: 'true'
+  threshold:
+    default: false
+    mandatory: false
+    option: threshold
+    p_index: 0
+    value: '90'
 tool_command: mothur "#classify.otu({0}{1})"

@@ -44,7 +44,7 @@ class MultiQC(Tool):
     def __init__(self) -> None:
         """
         Initialize tool
-                :return: None
+        :return: None
         """
         super().__init__('multiqc', '1.11')
         self._input_string = ''

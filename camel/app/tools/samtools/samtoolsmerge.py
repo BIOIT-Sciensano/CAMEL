@@ -27,7 +27,7 @@ class SamtoolsMerge(SamtoolsBase):
         Initializes this tool.
         :return: None
         """
-        super().__init__('samtools merge', '1.17')
+        super().__init__('samtools merge', version=None)
 
     def _check_input(self) -> None:
         """
@@ -94,5 +94,5 @@ class SamtoolsMerge(SamtoolsBase):
         Checks the command output.
         Supersedes function in Tool class because warnings printed to stderr can cause false abort.
         """
-        self._check_stderr()
+        self._check_stderr(command)
         toolutils.check_tool_execution(self, command, exit_code=0)

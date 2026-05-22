@@ -35,7 +35,7 @@ class DBManager(Tool):
     def __init__(self) -> None:
         """
         Initialize this tool.
-                :return: None
+        :return: None
         """
         super().__init__('Gene Detection: DB Manager', '0.1')
 

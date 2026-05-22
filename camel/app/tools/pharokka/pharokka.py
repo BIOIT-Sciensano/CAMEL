@@ -1,12 +1,12 @@
-import pandas as pd
 from pathlib import Path
 
+import pandas as pd
+
 from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
-from camel.app.core.errors import ToolExecutionError
-from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
+from camel.app.core.utils import toolutils
 
 
 class Pharokka(Tool):
@@ -25,9 +25,18 @@ class Pharokka(Tool):
     def __init__(self) -> None:
         """
         Initializes this tool.
-                :return: None
+        :return: None
         """
-        super().__init__('Pharokka', '1.7.3')
+        super().__init__('Pharokka', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.strip()
 
     def _execute_tool(self) -> None:
         """

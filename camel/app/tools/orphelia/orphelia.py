@@ -19,7 +19,7 @@ class Orphelia(Tool):
     def __init__(self):
         """
         Initialize tool
-                :return: None
+        :return: None
         """
         super().__init__('orphelia', '74')
 

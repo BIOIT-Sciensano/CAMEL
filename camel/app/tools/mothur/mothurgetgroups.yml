@@ -1,4 +1,14 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  groups: {default: false, mandatory: false, option: groups, p_index: 0, value: group1-group2}
+  groups:
+    default: false
+    mandatory: false
+    option: groups
+    p_index: 0
+    value: group1-group2
 tool_command: mothur "#get.groups({0}{1})"

@@ -1,3 +1,7 @@
+conda:
+  name: cfsan_snp_pipeline
+  packages:
+    - snp-pipeline=2.2.1
 dependencies:
   - java/1.8.0_172
   - bowtie2/2.5.1

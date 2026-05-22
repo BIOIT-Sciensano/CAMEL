@@ -1,3 +1,7 @@
+conda:
+  name: clair3
+  packages:
+    - clair3=1.0.4
 dependencies:
   - clair3/1.0.4
 parameters:

@@ -15,7 +15,7 @@ class MothurCountSeqs(Mothur):
         Initialize tool
         :return: None
         """
-        super().__init__('mothur_count_seqs', '1.39.1')
+        super().__init__('mothur_count_seqs', version=None)
 
     def _check_input(self):
         """

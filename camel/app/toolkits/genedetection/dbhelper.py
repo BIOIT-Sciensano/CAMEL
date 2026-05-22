@@ -59,7 +59,7 @@ class DBHelper:
         :return: List of clusters
         """
         cdhit = CDHitEst()
-        cdhit.update_parameters(identitiy_threshold=str(clustering_cutoff / 100))
+        cdhit.update_parameters(identity_threshold=str(clustering_cutoff / 100))
         cdhit.add_input_files({'FASTA': [ToolIOFile(fasta_file)]})
         cdhit.update_parameters(threads=threads)
         cdhit.run(self.get_working_subdir('clustering'))

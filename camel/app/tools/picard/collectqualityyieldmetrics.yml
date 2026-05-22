@@ -1,5 +1,21 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  original_qualities: { default: false, mandatory: false, option: OQ, p_index: 0, value: true }
-  output: { default: true, mandatory: true, option: O, p_index: 0, value: unmapped.quality_yield_metrics }
+  original_qualities:
+    default: false
+    mandatory: false
+    option: OQ
+    p_index: 0
+    value: true
+  output:
+    default: true
+    mandatory: true
+    option: O
+    p_index: 0
+    value: unmapped.quality_yield_metrics
 tool_command: CollectQualityYieldMetrics

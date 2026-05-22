@@ -1,3 +1,7 @@
+conda:
+  name: vep
+  packages:
+    - ensembl-vep=93.4
 dependencies:
   - vep/93
 parameters:

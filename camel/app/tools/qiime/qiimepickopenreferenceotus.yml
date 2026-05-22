@@ -1,30 +1,95 @@
-dependencies: [qiime/1.9.1, uclust/1.2.22, blast/2.2.22, ea-utils/27a4809]
+conda:
+  name: qiime
+  packages:
+    - qiime=1.9.1
+dependencies:
+  - qiime/1.9.1
+  - uclust/1.2.22
+  - blast/2.2.22
+  - ea-utils/27a4809
 parameters:
-  assign_taxonomy:assignment_method: {default: false, mandatory: false, option: 'assign_taxonomy:assignment_method',
-    p_index: 0, value: uclust}
-  assign_taxonomy:id_to_taxonomy_fp: {default: false, mandatory: false, option: 'assign_taxonomy:id_to_taxonomy_fp',
-    p_index: 0, value: /data/unite_itsdb/qiime/v7/unite_insd_s/sh_taxonomy_qiime_ver7_97_s_31.01.2016.txt}
-  assign_taxonomy:reference_seqs_fp: {default: false, mandatory: false, option: 'assign_taxonomy:reference_seqs_fp',
-    p_index: 0, value: /data/unite_itsdb/qiime/v7/unite_insd_s/sh_refs_qiime_ver7_97_s_31.01.2016.fasta}
-  jobs_to_start: {default: false, mandatory: false, option: --jobs_to_start, p_index: 0,
-    value: '1'}
-  min_otu_size: {default: false, mandatory: false, option: --min_otu_size, p_index: 0,
-    value: '2'}
-  minimum_failure_threshold: {default: false, mandatory: false, option: --minimum_failure_threshold,
-    p_index: 0, value: '100000'}
-  otu_picking_method: {default: false, mandatory: false, option: --otu_picking_method,
-    p_index: 0, value: uclust}
-  parallel: {default: false, mandatory: false, option: --parallel, p_index: 0, value: 'False'}
-  percent_subsample: {default: false, mandatory: false, option: --percent_subsample,
-    p_index: 0, value: '0.001'}
-  pick_otus:enable_rev_strand_match: {default: false, mandatory: false, option: 'pick_otus:enable_rev_strand_match',
-    p_index: 0, value: 'False'}
-  prefilter_percent_id: {default: false, mandatory: false, option: --prefilter_percent_id,
-    p_index: 0, value: '0.0'}
-  suppress_align_and_tree: {default: false, mandatory: false, option: --suppress_align_and_tree,
-    p_index: 0, value: 'False'}
-  suppress_step4: {default: false, mandatory: false, option: --suppress_step4, p_index: 0,
-    value: 'False'}
-  suppress_taxonomy_assignment: {default: false, mandatory: false, option: --suppress_taxonomy_assignment,
-    p_index: 0, value: 'False'}
+  assign_taxonomy:assignment_method:
+    default: false
+    mandatory: false
+    option: assign_taxonomy:assignment_method
+    p_index: 0
+    value: uclust
+  assign_taxonomy:id_to_taxonomy_fp:
+    default: false
+    mandatory: false
+    option: assign_taxonomy:id_to_taxonomy_fp
+    p_index: 0
+    value: /data/unite_itsdb/qiime/v7/unite_insd_s/sh_taxonomy_qiime_ver7_97_s_31.01.2016.txt
+  assign_taxonomy:reference_seqs_fp:
+    default: false
+    mandatory: false
+    option: assign_taxonomy:reference_seqs_fp
+    p_index: 0
+    value: /data/unite_itsdb/qiime/v7/unite_insd_s/sh_refs_qiime_ver7_97_s_31.01.2016.fasta
+  jobs_to_start:
+    default: false
+    mandatory: false
+    option: --jobs_to_start
+    p_index: 0
+    value: "1"
+  min_otu_size:
+    default: false
+    mandatory: false
+    option: --min_otu_size
+    p_index: 0
+    value: "2"
+  minimum_failure_threshold:
+    default: false
+    mandatory: false
+    option: --minimum_failure_threshold
+    p_index: 0
+    value: "100000"
+  otu_picking_method:
+    default: false
+    mandatory: false
+    option: --otu_picking_method
+    p_index: 0
+    value: uclust
+  parallel:
+    default: false
+    mandatory: false
+    option: --parallel
+    p_index: 0
+    value: "False"
+  percent_subsample:
+    default: false
+    mandatory: false
+    option: --percent_subsample
+    p_index: 0
+    value: "0.001"
+  pick_otus:enable_rev_strand_match:
+    default: false
+    mandatory: false
+    option: pick_otus:enable_rev_strand_match
+    p_index: 0
+    value: "False"
+  prefilter_percent_id:
+    default: false
+    mandatory: false
+    option: --prefilter_percent_id
+    p_index: 0
+    value: "0.0"
+  suppress_align_and_tree:
+    default: false
+    mandatory: false
+    option: --suppress_align_and_tree
+    p_index: 0
+    value: "False"
+  suppress_step4:
+    default: false
+    mandatory: false
+    option: --suppress_step4
+    p_index: 0
+    value: "False"
+  suppress_taxonomy_assignment:
+    default: false
+    mandatory: false
+    option: --suppress_taxonomy_assignment
+    p_index: 0
+    value: "False"
 tool_command: pick_open_reference_otus.py

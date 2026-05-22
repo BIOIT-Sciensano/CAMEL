@@ -1,11 +1,56 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  end: {default: false, mandatory: false, option: end, p_index: 0, value: '0'}
-  keepdots: {default: false, mandatory: false, option: keepdots, p_index: 0, value: 'true'}
-  keepprimer: {default: false, mandatory: false, option: keepprimer, p_index: 0, value: 'false'}
-  nomatch: {default: false, mandatory: false, option: nomatch, p_index: 0, value: reject}
-  pdiffs: {default: false, mandatory: false, option: pdiffs, p_index: 0, value: '0'}
-  processors: {default: true, mandatory: false, option: processors, p_index: 0, value: '1'}
-  rdiffs: {default: false, mandatory: false, option: rdiffs, p_index: 0, value: '0'}
-  start: {default: false, mandatory: false, option: start, p_index: 0, value: '0'}
+  end:
+    default: false
+    mandatory: false
+    option: end
+    p_index: 0
+    value: '0'
+  keepdots:
+    default: false
+    mandatory: false
+    option: keepdots
+    p_index: 0
+    value: 'true'
+  keepprimer:
+    default: false
+    mandatory: false
+    option: keepprimer
+    p_index: 0
+    value: 'false'
+  nomatch:
+    default: false
+    mandatory: false
+    option: nomatch
+    p_index: 0
+    value: reject
+  pdiffs:
+    default: false
+    mandatory: false
+    option: pdiffs
+    p_index: 0
+    value: '0'
+  processors:
+    default: true
+    mandatory: false
+    option: processors
+    p_index: 0
+    value: '1'
+  rdiffs:
+    default: false
+    mandatory: false
+    option: rdiffs
+    p_index: 0
+    value: '0'
+  start:
+    default: false
+    mandatory: false
+    option: start
+    p_index: 0
+    value: '0'
 tool_command: mothur "#pcr.seqs({0}{1})"

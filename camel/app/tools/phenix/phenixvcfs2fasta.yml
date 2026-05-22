@@ -1,10 +1,41 @@
-dependencies: [java/1.8.0, bwa/0.7.15, bowtie2/2.3.0, picard/2.8.3, gatk/3.7, PHEnix/1.4.1,
-  bcftools/1.9, samtools/1.9]
+dependencies:
+  - java/1.8.0
+  - bwa/0.7.15
+  - bowtie2/2.3.0
+  - picard/2.8.3
+  - gatk/3.7
+  - PHEnix/1.4.1
+  - bcftools/1.9
+  - samtools/1.9
 parameters:
-  column_Ns: {default: false, mandatory: false, option: --column-Ns, value: '0.50'}
-  column_gaps: {default: false, mandatory: false, option: --column-gaps, value: '0.50'}
-  output_filename: {default: true, mandatory: true, option: --out, value: snp_matrix.fasta}
-  regexp: {default: false, mandatory: false, option: --regexp, value: '"*.vcf"'}
-  sample_Ns: {default: false, mandatory: false, option: --sample-Ns, value: '0.50'}
-  sample_gaps: {default: false, mandatory: false, option: --sample-gaps, value: '0.50'}
+  column_Ns:
+    default: false
+    mandatory: false
+    option: --column-Ns
+    value: "0.50"
+  column_gaps:
+    default: false
+    mandatory: false
+    option: --column-gaps
+    value: "0.50"
+  output_filename:
+    default: true
+    mandatory: true
+    option: --out
+    value: snp_matrix.fasta
+  regexp:
+    default: false
+    mandatory: false
+    option: --regexp
+    value: '"*.vcf"'
+  sample_Ns:
+    default: false
+    mandatory: false
+    option: --sample-Ns
+    value: "0.50"
+  sample_gaps:
+    default: false
+    mandatory: false
+    option: --sample-gaps
+    value: "0.50"
 tool_command: phenix.py vcf2fasta

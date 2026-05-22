@@ -2,11 +2,12 @@ from pathlib import Path
 
 from Bio import Phylo
 
+from camel.app.config import config
 from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
+from camel.app.core.utils import toolutils
 
 
 class FigTree(Tool):
@@ -29,6 +30,15 @@ class FigTree(Tool):
             raise InvalidToolInputError('Newick input is required (NWK)')
         super()._check_input()
 
+    def _get_tool_command(self) -> str:
+        """
+        Returns the tool command.
+        :return: String representing the command
+        """
+        if config.dependency_service == 'lmod':
+            return 'java -jar $JAR_FIGTREE'
+        return self._tool_command
+
     def _execute_tool(self) -> None:
         """
         Executes this tool.
@@ -44,7 +54,7 @@ class FigTree(Tool):
 
         # Construct and execute command
         self._command.command = ' '.join([
-            self._tool_command,
+            self._get_tool_command(),
             '-graphic PNG',
             *self._build_options(excluded_parameters=['output_path']),
             str(input_file),

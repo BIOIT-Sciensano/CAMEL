@@ -1,5 +1,20 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  aligned: {default: false, mandatory: false, option: aligned, p_index: 0, value: 'true'}
-  processors: {default: true, mandatory: false, option: processors, p_index: 0, value: '1'}
+  aligned:
+    default: false
+    mandatory: false
+    option: aligned
+    p_index: 0
+    value: 'true'
+  processors:
+    default: true
+    mandatory: false
+    option: processors
+    p_index: 0
+    value: '1'
 tool_command: mothur "#seq.error({0}{1})"

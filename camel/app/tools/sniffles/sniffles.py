@@ -1,10 +1,10 @@
 from pathlib import Path
 
 from camel.app.core.command import Command
-from camel.app.core.utils import toolutils, fastautils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
+from camel.app.core.utils import fastautils, toolutils
 
 
 class Sniffles(Tool):
@@ -16,9 +16,18 @@ class Sniffles(Tool):
     def __init__(self) -> None:
         """
         Initializes Sniffles 2.0.7.
-                :return: None
+        :return: None
         """
-        super().__init__('Sniffles', '2.2')
+        super().__init__('Sniffles', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _check_input(self) -> None:
         """

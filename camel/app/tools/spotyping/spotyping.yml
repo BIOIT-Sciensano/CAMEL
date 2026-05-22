@@ -1,3 +1,7 @@
+conda:
+  name: spotyping
+  packages:
+    - spotyping3=3.0
 dependencies:
   - blast/2.14.0
   - SpoTyping/2.1_python3
@@ -18,8 +22,7 @@ parameters:
     default: true
     mandatory: false
     option: '--noQuery'
-    p_index: 0
-    value: null
+    flag: true
   output_basename:
     default: true
     mandatory: true
@@ -36,5 +39,5 @@ parameters:
     default: false
     mandatory: false
     option: '--seq'
-    value: null
-tool_command: SpoTyping
+    flag: true
+tool_command: SpoTyping.py

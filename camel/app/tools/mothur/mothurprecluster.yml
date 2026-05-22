@@ -1,12 +1,62 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  align: {default: false, mandatory: false, option: align, p_index: 0, value: needleman}
-  diffs: {default: false, mandatory: false, option: diffs, p_index: 0, value: '1'}
-  gapextend: {default: false, mandatory: false, option: gapextend, p_index: 0, value: '-1'}
-  gapopen: {default: false, mandatory: false, option: gapopen, p_index: 0, value: '-2'}
-  match: {default: false, mandatory: false, option: match, p_index: 0, value: '1'}
-  mismatch: {default: false, mandatory: false, option: mismatch, p_index: 0, value: '-1'}
-  processors: {default: true, mandatory: false, option: processors, p_index: 0, value: '1'}
-  skip_step: {default: false, mandatory: false, option: null, p_index: 0, value: 'False'}
-  topdown: {default: false, mandatory: false, option: topdown, p_index: 0, value: 'true'}
+  align:
+    default: false
+    mandatory: false
+    option: align
+    p_index: 0
+    value: needleman
+  diffs:
+    default: false
+    mandatory: false
+    option: diffs
+    p_index: 0
+    value: '1'
+  gapextend:
+    default: false
+    mandatory: false
+    option: gapextend
+    p_index: 0
+    value: '-1'
+  gapopen:
+    default: false
+    mandatory: false
+    option: gapopen
+    p_index: 0
+    value: '-2'
+  match:
+    default: false
+    mandatory: false
+    option: match
+    p_index: 0
+    value: '1'
+  mismatch:
+    default: false
+    mandatory: false
+    option: mismatch
+    p_index: 0
+    value: '-1'
+  processors:
+    default: true
+    mandatory: false
+    option: processors
+    p_index: 0
+    value: '1'
+  skip_step:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: 'False'
+  topdown:
+    default: false
+    mandatory: false
+    option: topdown
+    p_index: 0
+    value: 'true'
 tool_command: mothur "#pre.cluster({0}{1})"

@@ -1,6 +1,24 @@
-dependencies: [java/18.0.1.1, figtree/1.4.4]
+conda:
+  name: figtree
+  packages:
+    - figtree=1.4.4
+dependencies:
+  - java/18.0.1.1
+  - figtree/1.4.4
 parameters:
-  width: {default: true, mandatory: false, option: -width, value: 640}
-  height: {default: true, mandatory: false, option: -height, value: 480}
-  output_path: {default: true, mandatory: false, option: null, value: figtree.png}
-tool_command: java -jar $JAR_FIGTREE
+  width:
+    default: true
+    mandatory: false
+    option: '-width'
+    value: 640
+  height:
+    default: true
+    mandatory: false
+    option: '-height'
+    value: 480
+  output_path:
+    default: true
+    mandatory: false
+    option: null
+    value: figtree.png
+tool_command: figtree

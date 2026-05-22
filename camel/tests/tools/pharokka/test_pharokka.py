@@ -6,6 +6,7 @@ from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pharokka.pharokka import Pharokka
 from camel.app.tools.pharokka.pharokkamultiplotter import PharokkaMultiplotter
 from camel.app.tools.pharokka.pharokkareporter import PharokkaReporter
+from camel.tests import requires_dependency_service
 
 
 class TestPharokka(CamelTestSuite):
@@ -17,6 +18,7 @@ class TestPharokka(CamelTestSuite):
     fasta = test_file_dir / 'S_20_721_prophage.fasta'
     #fasta = test_file_dir / 'pBAD33.fasta'
 
+    @requires_dependency_service('lmod')
     def test_pharokka(self) -> None:
         """
         Tests the Pharokka tool.
@@ -31,6 +33,7 @@ class TestPharokka(CamelTestSuite):
         self.verify_output_files(pharokka, 'TSV_VFDB')
         self.verify_output_files(pharokka, 'TSV_INPHARED')
 
+    @requires_dependency_service('lmod')
     def test_pharokka_multiplotter(self) -> None:
         """
         Tests the Pharokka multiplotter.
@@ -46,6 +49,7 @@ class TestPharokka(CamelTestSuite):
         multiplotter.add_input_files({'GBK': pharokka.tool_outputs['GBK']})
         multiplotter.run(self.running_dir)
 
+    @requires_dependency_service('lmod')
     def test_pharokka_reporter(self) -> None:
         """
         Tests the PharokkaReporter tool.

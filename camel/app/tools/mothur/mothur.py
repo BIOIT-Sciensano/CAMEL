@@ -17,7 +17,7 @@ class Mothur(Tool):
     Mothur commands.
     """
 
-    def __init__(self, name, version):
+    def __init__(self, name, version=None):
         """
         Initialize tool
         :param name: Name of the tool
@@ -30,6 +30,15 @@ class Mothur(Tool):
         logger.debug(f'Set seed to: {self._seed}')
         self.__symlinks = []
         self.__temp_dir = tempfile.mkdtemp(dir='/scratch/temp')
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command.split()[0]} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split('=')[1].splitlines()[0].strip()
 
     def _execute_tool(self):
         """

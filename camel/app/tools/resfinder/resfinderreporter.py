@@ -3,13 +3,13 @@ from pathlib import Path
 
 import pandas as pd
 
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.reports.htmltablecell import HtmlTableCell
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class ResFinderReporter(Tool):
@@ -25,7 +25,7 @@ class ResFinderReporter(Tool):
     def __init__(self) -> None:
         """
         Initializes the tool.
-                :return: None
+        :return: None
         """
         super().__init__('ResFinder Reporter', '0.1')
 

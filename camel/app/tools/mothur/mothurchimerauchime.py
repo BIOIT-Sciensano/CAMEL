@@ -13,7 +13,7 @@ class MothurChimeraUchime(Mothur):
         Initialize tool
         :return: None
         """
-        super().__init__('mothur_chimera_uchime', '1.39.1')
+        super().__init__('mothur_chimera_uchime', version=None)
 
     def _check_input(self):
         """

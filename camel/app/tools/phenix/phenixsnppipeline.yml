@@ -1,12 +1,41 @@
-dependencies: [java/jdk-1.8.0_172, bwa/0.7.15, bowtie2/2.3.0, picard/2.8.3, gatk/3.7, PHEnix/1.4.1,
-  bcftools/1.9, samtools/1.9]
+dependencies:
+  - java/jdk-1.8.0_172
+  - bwa/0.7.15
+  - bowtie2/2.3.0
+  - picard/2.8.3
+  - gatk/3.7
+  - PHEnix/1.4.1
+  - bcftools/1.9
+  - samtools/1.9
 parameters:
-  filters: {default: true, mandatory: false, option: --filters, value: 'min_depth:5,mq_score:30,min_depth:10,ad_ratio:0.90'}
-  keep_temp: {default: true, mandatory: false, option: --keep-temp, value: null}
-  mapper: {default: true, mandatory: false, option: --mapper, value: bwa}
-  mapper_options: {default: true, mandatory: false, option: --mapper-options, value: '"-t
-      20"'}
-  variant: {default: true, mandatory: false, option: --variant, value: gatk}
-  variant_options: {default: true, mandatory: false, option: --variant-options, value: '"-nt
-      10 -ploidy 1"'}
+  filters:
+    default: true
+    mandatory: false
+    option: --filters
+    value: min_depth:5,mq_score:30,min_depth:10,ad_ratio:0.90
+  keep_temp:
+    default: true
+    mandatory: false
+    option: --keep-temp
+    value: null
+  mapper:
+    default: true
+    mandatory: false
+    option: --mapper
+    value: bwa
+  mapper_options:
+    default: true
+    mandatory: false
+    option: --mapper-options
+    value: '"-t 20"'
+  variant:
+    default: true
+    mandatory: false
+    option: --variant
+    value: gatk
+  variant_options:
+    default: true
+    mandatory: false
+    option: --variant-options
+    value: '"-nt 10 -ploidy 1"'
 tool_command: phenix.py run_snp_pipeline

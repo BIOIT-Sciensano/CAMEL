@@ -1,8 +1,38 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  cutoff: {default: false, mandatory: false, option: cutoff, p_index: 0, value: '0.15'}
-  groups: {default: false, mandatory: false, option: groups, p_index: 0, value: Group1-Group2}
-  label: {default: false, mandatory: false, option: label, p_index: 0, value: unique-0.03-0.05-0.10}
-  large: {default: false, mandatory: false, option: large, p_index: 0, value: 'false'}
-  sorted: {default: false, mandatory: false, option: sorted, p_index: 0, value: size}
+  cutoff:
+    default: false
+    mandatory: false
+    option: cutoff
+    p_index: 0
+    value: '0.15'
+  groups:
+    default: false
+    mandatory: false
+    option: groups
+    p_index: 0
+    value: Group1-Group2
+  label:
+    default: false
+    mandatory: false
+    option: label
+    p_index: 0
+    value: unique-0.03-0.05-0.10
+  large:
+    default: false
+    mandatory: false
+    option: large
+    p_index: 0
+    value: 'false'
+  sorted:
+    default: false
+    mandatory: false
+    option: sorted
+    p_index: 0
+    value: size
 tool_command: mothur "#get.oturep({0}{1})"

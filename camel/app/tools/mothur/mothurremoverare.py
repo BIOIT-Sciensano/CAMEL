@@ -16,7 +16,7 @@ class MothurRemoveRare(Mothur):
         Initialize tool
         :return: None
         """
-        super().__init__('mothur_remove_rare', '1.39.1')
+        super().__init__('mothur_remove_rare', version=None)
 
     def _check_input(self):
         """

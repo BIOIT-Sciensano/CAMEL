@@ -1,5 +1,5 @@
-from camel.app.tools.vcftools.vcftools import VCFtools
 from camel.app.core.errors import InvalidToolInputError
+from camel.app.tools.vcftools.vcftools import VCFtools
 
 
 class VCFtoolsAnnotate(VCFtools):
@@ -11,7 +11,7 @@ class VCFtoolsAnnotate(VCFtools):
     def __init__(self) -> None:
         """
         Initialize vcf-annotate tool.
-                :return: None
+        :return: None
         """
         super().__init__('VCFtools vcf-annotate', '0.1.16')
         self._specific_parameters = ['output']

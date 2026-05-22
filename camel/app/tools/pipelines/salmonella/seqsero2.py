@@ -17,7 +17,7 @@ class SeqSero2(Tool):
     def __init__(self) -> None:
         """
         Initialize tool.
-                :return: None
+        :return: None
         """
         super().__init__('SeqSero2', version=None)
 

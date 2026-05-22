@@ -18,7 +18,7 @@ class LegacyBlastx(Tool):
     def __init__(self):
         """
         Initialize tool
-                :return: None
+        :return: None
         """
         super().__init__('legacy_blastx', '2.2.22')
         self._fasta = None

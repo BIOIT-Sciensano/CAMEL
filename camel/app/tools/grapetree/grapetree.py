@@ -1,8 +1,9 @@
+from camel.app.config import config
 from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
+from camel.app.core.utils import toolutils
 
 
 class GrapeTree(Tool):
@@ -14,7 +15,16 @@ class GrapeTree(Tool):
         """
         Initializes this tool.
         """
-        super().__init__('GrapeTree', '2.2')
+        super().__init__('GrapeTree', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        if config.dependency_service == 'lmod':
+            return '2.2'
+        return '2.1'
 
     def _check_input(self) -> None:
         """

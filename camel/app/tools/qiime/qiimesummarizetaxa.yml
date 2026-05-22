@@ -1,17 +1,59 @@
-dependencies: [qiime/1.9.1, uclust/1.2.22, blast/2.2.22, ea-utils/27a4809]
+conda:
+  name: qiime
+  packages:
+    - qiime=1.9.1
+dependencies:
+  - qiime/1.9.1
+  - uclust/1.2.22
+  - blast/2.2.22
+  - ea-utils/27a4809
 parameters:
-  absolute_abundance: {default: false, mandatory: false, option: --absolute_abundance,
-    p_index: 0, value: 'False'}
-  delimiter: {default: false, mandatory: false, option: --delimeter, p_index: 0, value: ;}
-  level: {default: false, mandatory: false, option: --level, p_index: 0, value: '2,3,4,5,6'}
-  lower_percentage: {default: false, mandatory: false, option: --lower_percentage,
-    p_index: 0, value: '0.05'}
-  md_as_string: {default: false, mandatory: false, option: --md_as_string, p_index: 0,
-    value: null}
-  md_identifier: {default: false, mandatory: false, option: --md_identifier, p_index: 0,
-    value: taxonomy}
-  transposed_output: {default: false, mandatory: false, option: --transposed_output,
-    p_index: 0, value: null}
-  upper_percentage: {default: false, mandatory: false, option: --upper_percentage,
-    p_index: 0, value: '0.45'}
+  absolute_abundance:
+    default: false
+    mandatory: false
+    option: --absolute_abundance
+    p_index: 0
+    value: "False"
+  delimiter:
+    default: false
+    mandatory: false
+    option: --delimeter
+    p_index: 0
+    value: ;
+  level:
+    default: false
+    mandatory: false
+    option: --level
+    p_index: 0
+    value: 2,3,4,5,6
+  lower_percentage:
+    default: false
+    mandatory: false
+    option: --lower_percentage
+    p_index: 0
+    value: "0.05"
+  md_as_string:
+    default: false
+    mandatory: false
+    option: --md_as_string
+    p_index: 0
+    value: null
+  md_identifier:
+    default: false
+    mandatory: false
+    option: --md_identifier
+    p_index: 0
+    value: taxonomy
+  transposed_output:
+    default: false
+    mandatory: false
+    option: --transposed_output
+    p_index: 0
+    value: null
+  upper_percentage:
+    default: false
+    mandatory: false
+    option: --upper_percentage
+    p_index: 0
+    value: "0.45"
 tool_command: summarize_taxa.py

@@ -17,7 +17,7 @@ class SamtoolsMPileup(SamtoolsBasePipeable):
         Initializes this tool.
         :return: None
         """
-        super().__init__('samtools mpileup', '1.17')
+        super().__init__('samtools mpileup', version=None)
 
     def _check_input(self) -> None:
         """
@@ -76,7 +76,7 @@ class SamtoolsMPileup(SamtoolsBasePipeable):
         Checks the command output.
         Supersedes function in Tool class because warnings printed to stderr can cause false abort.
         """
-        self._check_stderr()
+        self._check_stderr(command)
         if command.exit_code != 0:
             raise ToolExecutionError(self.name, f"Error executing {self.name}: {command.stderr}")
 

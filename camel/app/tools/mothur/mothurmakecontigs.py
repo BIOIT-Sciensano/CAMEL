@@ -15,7 +15,7 @@ class MothurMakeContigs(Mothur):
         Initialize tool
         :return: None
         """
-        super().__init__('mothur_make_contigs', '1.39.1')
+        super().__init__('mothur_make_contigs', version=None)
 
     def _check_input(self):
         """

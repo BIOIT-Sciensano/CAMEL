@@ -14,7 +14,7 @@ class ResistanceMetadataExtractor(Tool):
     def __init__(self) -> None:
         """
         Initializes the metadata extractor.
-                :return: None
+        :return: None
         """
         super().__init__('Neisseria: resistance metadata extractor', '0.1')
 

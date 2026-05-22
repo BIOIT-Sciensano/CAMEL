@@ -1,6 +1,27 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  output: {default: true, mandatory: false, option: O, p_index: 0, value: gathered_files.bam}
-  create_index: {default: false, mandatory: false, option: CREATE_INDEX, p_index: 10, value: false}
-  create_md5_file: {default: false, mandatory: false, option: CREATE_MD5_FILE, p_index: 10, value: false}
+  output:
+    default: true
+    mandatory: false
+    option: O
+    p_index: 0
+    value: gathered_files.bam
+  create_index:
+    default: false
+    mandatory: false
+    option: CREATE_INDEX
+    p_index: 10
+    value: false
+  create_md5_file:
+    default: false
+    mandatory: false
+    option: CREATE_MD5_FILE
+    p_index: 10
+    value: false
 tool_command: GatherBamFiles

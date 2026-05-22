@@ -9,7 +9,7 @@ class SamtoolsBasePipeable(ToolPipeable, SamtoolsBase, metaclass=abc.ABCMeta):
     Super class for pipeable samtools.
     """
 
-    def __init__(self, tool_name: str, version: str) -> None:
+    def __init__(self, tool_name: str, version: str = None) -> None:
         """
         Initialize a samtools tool.
         :param tool_name: Tool name

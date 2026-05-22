@@ -41,7 +41,7 @@ class AntiviralsReporter(Tool):
     def __init__(self) -> None:
         """
         Initializes this tool.
-                :return: None
+        :return: None
         """
         super().__init__('antiviral reporter', '0.1')
 

@@ -14,7 +14,7 @@ class Prinseq(Tool):
     def __init__(self):
         """
         Initialize tool
-                :return: None
+        :return: None
         """
         super().__init__('prinseq', '0.20.4')
 
@@ -30,7 +30,7 @@ class Prinseq(Tool):
     def _check_input(self):
         """
         Checks whether the given inputs are valid:
-        - FASTQ_PE, FASTQ_SE, FASTA_PE or FASTA_SE key is required
+        - FASTQ_PE, FASTQ_SE, FASTA_PE, or FASTA_SE key is required
         - Only one input file allowed for FASTQ_SE or FASTA_SE
         - Only two input files allowed for FASTQ_PE or FASTA_SE
         - No other input keys are allowed

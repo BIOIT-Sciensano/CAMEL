@@ -1,11 +1,39 @@
-dependencies: [java/1.8.0, gatk/3.7]
+conda:
+  name: gatk
+  packages:
+    - gatk=3.7
+dependencies:
+  - java/1.8.0
+  - gatk/3.7
 parameters:
-  includeNonVariantSites: {default: false, mandatory: false, option: -allSites, p_index: 50,
-    value: null}
-  output: {default: true, mandatory: false, option: -o, p_index: 0, value: genotype_gvcf_multisample.vcf}
-  ploidy: {default: true, mandatory: false, option: -ploidy, p_index: 10, value: '1'}
-  stand_call_conf: {default: true, mandatory: false, option: -stand_call_conf, p_index: 20,
-    value: '30'}
-  stand_emit_conf: {default: false, mandatory: false, option: -stand_emit_conf, p_index: 30,
-    value: '10'}
+  includeNonVariantSites:
+    default: false
+    mandatory: false
+    option: -allSites
+    p_index: 50
+    value: null
+  output:
+    default: true
+    mandatory: false
+    option: -o
+    p_index: 0
+    value: genotype_gvcf_multisample.vcf
+  ploidy:
+    default: true
+    mandatory: false
+    option: -ploidy
+    p_index: 10
+    value: "1"
+  stand_call_conf:
+    default: true
+    mandatory: false
+    option: -stand_call_conf
+    p_index: 20
+    value: "30"
+  stand_emit_conf:
+    default: false
+    mandatory: false
+    option: -stand_emit_conf
+    p_index: 30
+    value: "10"
 tool_command: run_gatk.sh -T GenotypeGVCFs

@@ -1,31 +1,122 @@
-dependencies: [idba/1.1.1]
+conda:
+  name: idba
+  packages:
+    - idba=1.1.1
+dependencies:
+  - idba/1.1.1
 parameters:
-  inner_mink: {default: false, mandatory: false, option: --inner_mink, p_index: 0,
-    value: '10'}
-  inner_step: {default: false, mandatory: false, option: --inner_step, p_index: 0,
-    value: '5'}
-  max_mismatch: {default: false, mandatory: false, option: --max_mismatch, p_index: 0,
-    value: '3'}
-  maxk: {default: false, mandatory: false, option: --maxk, p_index: 0, value: '100'}
-  min_contig: {default: false, mandatory: false, option: --min_contig, p_index: 0,
-    value: '200'}
-  min_count: {default: false, mandatory: false, option: --min_count, p_index: 0, value: '2'}
-  min_pairs: {default: false, mandatory: false, option: --min_pairs, p_index: 0, value: '3'}
-  min_support: {default: false, mandatory: false, option: --min_support, p_index: 0,
-    value: '1'}
-  mink: {default: false, mandatory: false, option: --mink, p_index: 0, value: '20'}
-  no_bubble: {default: false, mandatory: false, option: --no_bubble, p_index: 0, value: null}
-  no_correct: {default: false, mandatory: false, option: --no_correct, p_index: 0,
-    value: null}
-  no_coverage: {default: false, mandatory: false, option: --no_coverage, p_index: 0,
-    value: null}
-  no_local: {default: false, mandatory: false, option: --no_local, p_index: 0, value: null}
-  num_threads: {default: false, mandatory: false, option: --num_threads, p_index: 0,
-    value: '16'}
-  pre_correction: {default: false, mandatory: false, option: --pre_correction, p_index: 0,
-    value: null}
-  prefix: {default: false, mandatory: false, option: --prefix, p_index: 0, value: '3'}
-  seed_kmer: {default: false, mandatory: false, option: --seed_kmer, p_index: 0, value: '30'}
-  similar: {default: false, mandatory: false, option: --similar, p_index: 0, value: '0.95'}
-  step: {default: false, mandatory: false, option: --step, p_index: 0, value: '20'}
+  inner_mink:
+    default: false
+    mandatory: false
+    option: --inner_mink
+    p_index: 0
+    value: "10"
+  inner_step:
+    default: false
+    mandatory: false
+    option: --inner_step
+    p_index: 0
+    value: "5"
+  max_mismatch:
+    default: false
+    mandatory: false
+    option: --max_mismatch
+    p_index: 0
+    value: "3"
+  maxk:
+    default: false
+    mandatory: false
+    option: --maxk
+    p_index: 0
+    value: "100"
+  min_contig:
+    default: false
+    mandatory: false
+    option: --min_contig
+    p_index: 0
+    value: "200"
+  min_count:
+    default: false
+    mandatory: false
+    option: --min_count
+    p_index: 0
+    value: "2"
+  min_pairs:
+    default: false
+    mandatory: false
+    option: --min_pairs
+    p_index: 0
+    value: "3"
+  min_support:
+    default: false
+    mandatory: false
+    option: --min_support
+    p_index: 0
+    value: "1"
+  mink:
+    default: false
+    mandatory: false
+    option: --mink
+    p_index: 0
+    value: "20"
+  no_bubble:
+    default: false
+    mandatory: false
+    option: --no_bubble
+    p_index: 0
+    value: null
+  no_correct:
+    default: false
+    mandatory: false
+    option: --no_correct
+    p_index: 0
+    value: null
+  no_coverage:
+    default: false
+    mandatory: false
+    option: --no_coverage
+    p_index: 0
+    value: null
+  no_local:
+    default: false
+    mandatory: false
+    option: --no_local
+    p_index: 0
+    value: null
+  num_threads:
+    default: false
+    mandatory: false
+    option: --num_threads
+    p_index: 0
+    value: "16"
+  pre_correction:
+    default: false
+    mandatory: false
+    option: --pre_correction
+    p_index: 0
+    value: null
+  prefix:
+    default: false
+    mandatory: false
+    option: --prefix
+    p_index: 0
+    value: "3"
+  seed_kmer:
+    default: false
+    mandatory: false
+    option: --seed_kmer
+    p_index: 0
+    value: "30"
+  similar:
+    default: false
+    mandatory: false
+    option: --similar
+    p_index: 0
+    value: "0.95"
+  step:
+    default: false
+    mandatory: false
+    option: --step
+    p_index: 0
+    value: "20"
 tool_command: idba_ud

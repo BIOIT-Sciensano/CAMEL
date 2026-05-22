@@ -1,8 +1,39 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  output: {default: true, mandatory: false, option: O, p_index: 0, value: fixed.bam}
-  max_records_in_ram: {default: false, mandatory: false, option: MAX_RECORDS_IN_RAM, p_index: 10, value: 500000}
-  set_only_uq: {default: false, mandatory: false, option: SET_ONLY_UQ, p_index: 10, value: false}
-  is_bisulfite_sequence: {default: false, mandatory: false, option: IS_BISULFITE_SEQUENCE, p_index: 10, value: false}
-  create_index: {default: false, mandatory: false, option: CREATE_INDEX, p_index: 10, value: false}
+  output:
+    default: true
+    mandatory: false
+    option: O
+    p_index: 0
+    value: fixed.bam
+  max_records_in_ram:
+    default: false
+    mandatory: false
+    option: MAX_RECORDS_IN_RAM
+    p_index: 10
+    value: 500000
+  set_only_uq:
+    default: false
+    mandatory: false
+    option: SET_ONLY_UQ
+    p_index: 10
+    value: false
+  is_bisulfite_sequence:
+    default: false
+    mandatory: false
+    option: IS_BISULFITE_SEQUENCE
+    p_index: 10
+    value: false
+  create_index:
+    default: false
+    mandatory: false
+    option: CREATE_INDEX
+    p_index: 10
+    value: false
 tool_command: SetNmMdAndUqTags

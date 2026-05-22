@@ -1,3 +1,7 @@
+conda:
+  name: bedtools
+  packages:
+    - bedtools=2.31.0
 dependencies:
   - bedtools/2.31.0
 parameters:

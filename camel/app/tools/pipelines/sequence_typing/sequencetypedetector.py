@@ -32,7 +32,7 @@ class SequenceTypeDetector(Tool):
     def __init__(self):
         """
         Initialize this tool.
-                :return: None
+        :return: None
         """
         super().__init__('Typing: Sequence Type Detector', '0.1')
         self._wildcards = None

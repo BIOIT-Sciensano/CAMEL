@@ -18,7 +18,7 @@ class RefCovSort(Tool):
     def __init__(self):
         """
         Initialize tool
-                :return: None
+        :return: None
         """
         super().__init__('refcov_sort', '0.3')
 

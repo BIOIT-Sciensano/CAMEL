@@ -1,9 +1,44 @@
-dependencies: [oncotator/1.9.9.0]
+conda:
+  name: oncotator
+  packages:
+    - oncotator=1.9.9.0
+dependencies:
+  - oncotator/1.9.9.0
 parameters:
-  canonical_tx_file: {default: false, mandatory: false, option: -c, p_index: 0, value: null}
-  db_dir: {default: true, mandatory: true, option: --db-dir, p_index: 0, value: ''}
-  input_format: {default: false, mandatory: false, option: -i, p_index: 0, value: VCF}
-  output_file_name: {default: true, mandatory: true, option: null, p_index: 0, value: oncotator.tsv}
-  output_format: {default: false, mandatory: false, option: -o, p_index: 0, value: SIMPLE_TSV}
-  tx_mode: {default: true, mandatory: false, option: --tx-mode, p_index: 0, value: EFFECT}
+  canonical_tx_file:
+    default: false
+    mandatory: false
+    option: -c
+    p_index: 0
+    value: null
+  db_dir:
+    default: true
+    mandatory: true
+    option: --db-dir
+    p_index: 0
+    value: ""
+  input_format:
+    default: false
+    mandatory: false
+    option: -i
+    p_index: 0
+    value: VCF
+  output_file_name:
+    default: true
+    mandatory: true
+    option: null
+    p_index: 0
+    value: oncotator.tsv
+  output_format:
+    default: false
+    mandatory: false
+    option: -o
+    p_index: 0
+    value: SIMPLE_TSV
+  tx_mode:
+    default: true
+    mandatory: false
+    option: --tx-mode
+    p_index: 0
+    value: EFFECT
 tool_command: oncotator

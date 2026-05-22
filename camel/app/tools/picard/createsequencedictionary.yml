@@ -1,6 +1,27 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  output_ext: {default: true, mandatory: false, option: null, p_index: 0, value: .dict}
-  species: {default: false, mandatory: false, option: SPECIES, p_index: 30, value: NA}
-  symlink: {default: true, mandatory: false, option: null, p_index: 0, value: ''}
+  output_ext:
+    default: true
+    mandatory: false
+    option: null
+    p_index: 0
+    value: .dict
+  species:
+    default: false
+    mandatory: false
+    option: SPECIES
+    p_index: 30
+    value: NA
+  symlink:
+    default: true
+    mandatory: false
+    option: null
+    p_index: 0
+    value: ''
 tool_command: CreateSequenceDictionary

@@ -1,3 +1,7 @@
+conda:
+  name: lofreq
+  packages:
+    - lofreq=2.1.5
 dependencies:
   - lofreq_star/2.1.5
 parameters:

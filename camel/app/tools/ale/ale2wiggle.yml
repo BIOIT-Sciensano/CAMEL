@@ -1,3 +1,7 @@
+conda:
+  name: ale
+  packages:
+    - ale-core=20220503
 dependencies:
   - ale/2022.05.03
 parameters: {}

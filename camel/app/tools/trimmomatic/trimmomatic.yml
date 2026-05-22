@@ -1,3 +1,7 @@
+conda:
+  name: trimmomatic
+  packages:
+    - trimmomatic=0.39
 dependencies:
   - java
   - trimmomatic/0.39

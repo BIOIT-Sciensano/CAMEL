@@ -13,7 +13,7 @@ class MothurSeqError(Mothur):
         Initialize tool
         :return: None
         """
-        super().__init__('mothur_seq_error', '1.39.1')
+        super().__init__('mothur_seq_error', version=None)
 
     def _check_input(self):
         """

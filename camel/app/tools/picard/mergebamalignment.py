@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from camel.app.tools.picard.picard import Picard
 
@@ -61,11 +60,11 @@ class MergeBamAlignment(Picard):
         option_string = " ".join(build_options)
 
         self._command.command = " ".join([
-            "java", self._java_options, "-jar $PICARD_JAR", self._tool_command, self._java_options_temp_dir,
+            *self._get_base_command(), self._java_options_temp_dir,
             self._input_string, self._output_string, option_string
         ])
 
-    def _set_informs(self, stderr: Optional[str] = None) -> None:
+    def _set_informs(self, stderr: str | None = None) -> None:
         """
         Analyse the result of picard run and update tool.informs
         :return: None

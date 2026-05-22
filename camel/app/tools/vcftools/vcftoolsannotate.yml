@@ -1,3 +1,7 @@
+conda:
+  name: vcftools
+  packages:
+    - vcftools=0.1.16
 dependencies:
   - vcftools/0.1.16
 parameters:

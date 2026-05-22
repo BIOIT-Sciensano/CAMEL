@@ -14,7 +14,7 @@ class MothurRarefactionSingle(Mothur):
         Initialize tool
         :return: None
         """
-        super().__init__('mothur_rarefaction_single', '1.39.1')
+        super().__init__('mothur_rarefaction_single', version=None)
 
     def _check_input(self):
         """

@@ -1,10 +1,10 @@
 from pathlib import Path
 
 from camel.app.core.command import Command
-from camel.app.core.utils import toolutils, fastautils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
+from camel.app.core.utils import fastautils, toolutils
 
 
 class Polypolish(Tool):
@@ -23,9 +23,18 @@ class Polypolish(Tool):
     def __init__(self) -> None:
         """
         Initializes Polypolish.
-                :return: None
+        :return: None
         """
-        super().__init__('Polypolish', '0.6.0')
+        super().__init__('Polypolish', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command.split()[0]} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _execute_tool(self) -> None:
         """

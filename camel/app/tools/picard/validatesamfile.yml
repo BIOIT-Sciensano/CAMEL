@@ -1,9 +1,45 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  output: {default: true, mandatory: false, option: OUTPUT, p_index: 0, value: 'report.txt'}
-  max_output: {default: false, mandatory: false, option: MAX_OUTPUT, p_index: 10, value: '100'}
-  ignore: {default: false, mandatory: false, option: IGNORE, p_index: 10, value: 'MISSING_TAG_NM'}
-  mode: {default: false, mandatory: false, option: MODE, p_index: 10, value: 'VERBOSE'}
-  is_bisulfite_sequenced: {default: false, mandatory: false, option: IS_BISULFITE_SEQUENCED, p_index: 10, value: 'false'}
-  max_records_in_ram: {default: false, mandatory: false, option: MAX_RECORDS_IN_RAM, p_index: 10, value: '500000'}
+  output:
+    default: true
+    mandatory: false
+    option: OUTPUT
+    p_index: 0
+    value: report.txt
+  max_output:
+    default: false
+    mandatory: false
+    option: MAX_OUTPUT
+    p_index: 10
+    value: '100'
+  ignore:
+    default: false
+    mandatory: false
+    option: IGNORE
+    p_index: 10
+    value: MISSING_TAG_NM
+  mode:
+    default: false
+    mandatory: false
+    option: MODE
+    p_index: 10
+    value: VERBOSE
+  is_bisulfite_sequenced:
+    default: false
+    mandatory: false
+    option: IS_BISULFITE_SEQUENCED
+    p_index: 10
+    value: 'false'
+  max_records_in_ram:
+    default: false
+    mandatory: false
+    option: MAX_RECORDS_IN_RAM
+    p_index: 10
+    value: '500000'
 tool_command: ValidateSamFile

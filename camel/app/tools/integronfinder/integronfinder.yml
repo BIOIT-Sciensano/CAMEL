@@ -1,3 +1,7 @@
+conda:
+  name: integronfinder
+  packages:
+    - integron_finder=2.0.2
 dependencies:
   - integronfinder/2.0.2
   - prodigal/2.6.3

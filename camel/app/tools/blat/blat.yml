@@ -1,28 +1,136 @@
-dependencies: [blat/36x2]
+dependencies:
+  - blat/36x2
 parameters:
-  dots: {default: false, mandatory: false, option: -dots=, p_index: 0, value: '100'}
-  extendThroughN: {default: false, mandatory: false, option: -extendThroughN, p_index: 0,
-    value: null}
-  fastMap: {default: false, mandatory: false, option: -fastMap, p_index: 0, value: null}
-  fine: {default: false, mandatory: false, option: -fine, p_index: 0, value: null}
-  mask: {default: false, mandatory: false, option: -mask=, p_index: 0, value: lower}
-  maxGap: {default: false, mandatory: false, option: -maxGap=, p_index: 0, value: '2'}
-  maxIntron: {default: false, mandatory: false, option: -maxIntron=, p_index: 0, value: '750000'}
-  minIdentity: {default: false, mandatory: false, option: -minIdentity=, p_index: 0,
-    value: '90'}
-  minMatch: {default: false, mandatory: false, option: -minMatch=, p_index: 0, value: '2'}
-  minRepDivergence: {default: false, mandatory: false, option: -minRepDivergence=,
-    p_index: 0, value: '15'}
-  minScore: {default: false, mandatory: false, option: -minScore=, p_index: 0, value: '30'}
-  noHead: {default: false, mandatory: false, option: -noHead, p_index: 0, value: null}
-  noTrimA: {default: false, mandatory: false, option: -noTrimA, p_index: 0, value: null}
-  oneOff: {default: false, mandatory: false, option: -oneOff=, p_index: 0, value: '0'}
-  out: {default: false, mandatory: false, option: -out=, p_index: 0, value: psl}
-  qMask: {default: false, mandatory: false, option: -qMask=, p_index: 0, value: lower}
-  repMatch: {default: false, mandatory: false, option: -repMatch=, p_index: 0, value: '1024'}
-  repeats: {default: false, mandatory: false, option: -repeats=, p_index: 0, value: lower}
-  stepSize: {default: false, mandatory: false, option: -stepSize=, p_index: 0, value: '11'}
-  tileSize: {default: false, mandatory: false, option: -tileSize=, p_index: 0, value: '11'}
-  trimHardA: {default: false, mandatory: false, option: -trimHardA, p_index: 0, value: null}
-  trimT: {default: false, mandatory: false, option: -trimT, p_index: 0, value: null}
+  dots:
+    default: false
+    mandatory: false
+    option: '-dots='
+    p_index: 0
+    value: '100'
+  extendThroughN:
+    default: false
+    mandatory: false
+    option: '-extendThroughN'
+    p_index: 0
+    value: null
+  fastMap:
+    default: false
+    mandatory: false
+    option: '-fastMap'
+    p_index: 0
+    value: null
+  fine:
+    default: false
+    mandatory: false
+    option: '-fine'
+    p_index: 0
+    value: null
+  mask:
+    default: false
+    mandatory: false
+    option: '-mask='
+    p_index: 0
+    value: lower
+  maxGap:
+    default: false
+    mandatory: false
+    option: '-maxGap='
+    p_index: 0
+    value: '2'
+  maxIntron:
+    default: false
+    mandatory: false
+    option: '-maxIntron='
+    p_index: 0
+    value: '750000'
+  minIdentity:
+    default: false
+    mandatory: false
+    option: '-minIdentity='
+    p_index: 0
+    value: '90'
+  minMatch:
+    default: false
+    mandatory: false
+    option: '-minMatch='
+    p_index: 0
+    value: '2'
+  minRepDivergence:
+    default: false
+    mandatory: false
+    option: '-minRepDivergence='
+    p_index: 0
+    value: '15'
+  minScore:
+    default: false
+    mandatory: false
+    option: '-minScore='
+    p_index: 0
+    value: '30'
+  noHead:
+    default: false
+    mandatory: false
+    option: '-noHead'
+    p_index: 0
+    value: null
+  noTrimA:
+    default: false
+    mandatory: false
+    option: '-noTrimA'
+    p_index: 0
+    value: null
+  oneOff:
+    default: false
+    mandatory: false
+    option: '-oneOff='
+    p_index: 0
+    value: '0'
+  out:
+    default: false
+    mandatory: false
+    option: '-out='
+    p_index: 0
+    value: psl
+  qMask:
+    default: false
+    mandatory: false
+    option: '-qMask='
+    p_index: 0
+    value: lower
+  repMatch:
+    default: false
+    mandatory: false
+    option: '-repMatch='
+    p_index: 0
+    value: '1024'
+  repeats:
+    default: false
+    mandatory: false
+    option: '-repeats='
+    p_index: 0
+    value: lower
+  stepSize:
+    default: false
+    mandatory: false
+    option: '-stepSize='
+    p_index: 0
+    value: '11'
+  tileSize:
+    default: false
+    mandatory: false
+    option: '-tileSize='
+    p_index: 0
+    value: '11'
+  trimHardA:
+    default: false
+    mandatory: false
+    option: '-trimHardA'
+    p_index: 0
+    value: null
+  trimT:
+    default: false
+    mandatory: false
+    option: '-trimT'
+    p_index: 0
+    value: null
 tool_command: blat

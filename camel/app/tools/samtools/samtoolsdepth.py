@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Union
 
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
@@ -15,16 +14,15 @@ class SamtoolsDepth(SamtoolsBase):
         Initializes this tool.
         :return: None
         """
-        super().__init__('samtools depth', '1.17')
+        super().__init__('samtools depth', version=None)
 
     def _check_input(self) -> None:
         """
         Checks the input.
         :return: None
         """
-        if 'BAM' not in self._tool_inputs:
-            if 'CRAM' not in self._tool_inputs:
-                raise ValueError("No BAM or CRAM input file found")
+        if not any(key in self._tool_inputs for key in ('BAM', 'CRAM')):
+            raise ValueError("No BAM or CRAM input file found")
         if len(self._tool_inputs['BAM']) != 1:
             raise ValueError("Exactly one BAM input file expected")
         super()._check_input()
@@ -65,7 +63,7 @@ class SamtoolsDepth(SamtoolsBase):
         self._informs['median_depth'] = SamtoolsDepth.calculate_median_coverage(output_file_path)
 
     @staticmethod
-    def median(input_list: list[int]) -> Union[float, int]:
+    def median(input_list: list[int]) -> float | int:
         """
         Returns the median value of a list.
         :return:
@@ -81,7 +79,7 @@ class SamtoolsDepth(SamtoolsBase):
             return median
 
     @staticmethod
-    def calculate_median_coverage(output_path: Path) -> Union[float, int]:
+    def calculate_median_coverage(output_path: Path) -> float | int:
         """
         Calculates the median coverage.
         :param output_path: Path to the output files.

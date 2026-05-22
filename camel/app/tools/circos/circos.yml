@@ -1,3 +1,8 @@
-dependencies: [circos/0.69-8]
+conda:
+  name: circos
+  packages:
+    - circos=0.69-8
+dependencies:
+  - circos/0.69-8
 parameters: {}
 tool_command: circos

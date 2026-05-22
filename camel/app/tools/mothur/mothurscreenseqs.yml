@@ -1,16 +1,86 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  criteria: {default: false, mandatory: false, option: criteria, p_index: 0, value: '90'}
-  end: {default: false, mandatory: false, option: end, p_index: 0, value: '0'}
-  maxambig: {default: false, mandatory: false, option: maxambig, p_index: 0, value: '0'}
-  maxhomop: {default: false, mandatory: false, option: maxhomop, p_index: 0, value: '0'}
-  maxinsert: {default: false, mandatory: false, option: maxinsert, p_index: 0, value: '0'}
-  maxlength: {default: false, mandatory: false, option: maxlength, p_index: 0, value: '0'}
-  maxn: {default: false, mandatory: false, option: maxn, p_index: 0, value: '0'}
-  minlength: {default: false, mandatory: false, option: minlength, p_index: 0, value: '0'}
-  minscore: {default: false, mandatory: false, option: minscore, p_index: 0, value: '0'}
-  minsim: {default: false, mandatory: false, option: minsim, p_index: 0, value: '0'}
-  optimize: {default: false, mandatory: false, option: optimize, p_index: 0, value: start}
-  processors: {default: true, mandatory: false, option: processors, p_index: 0, value: '1'}
-  start: {default: false, mandatory: false, option: start, p_index: 0, value: '0'}
+  criteria:
+    default: false
+    mandatory: false
+    option: criteria
+    p_index: 0
+    value: '90'
+  end:
+    default: false
+    mandatory: false
+    option: end
+    p_index: 0
+    value: '0'
+  maxambig:
+    default: false
+    mandatory: false
+    option: maxambig
+    p_index: 0
+    value: '0'
+  maxhomop:
+    default: false
+    mandatory: false
+    option: maxhomop
+    p_index: 0
+    value: '0'
+  maxinsert:
+    default: false
+    mandatory: false
+    option: maxinsert
+    p_index: 0
+    value: '0'
+  maxlength:
+    default: false
+    mandatory: false
+    option: maxlength
+    p_index: 0
+    value: '0'
+  maxn:
+    default: false
+    mandatory: false
+    option: maxn
+    p_index: 0
+    value: '0'
+  minlength:
+    default: false
+    mandatory: false
+    option: minlength
+    p_index: 0
+    value: '0'
+  minscore:
+    default: false
+    mandatory: false
+    option: minscore
+    p_index: 0
+    value: '0'
+  minsim:
+    default: false
+    mandatory: false
+    option: minsim
+    p_index: 0
+    value: '0'
+  optimize:
+    default: false
+    mandatory: false
+    option: optimize
+    p_index: 0
+    value: start
+  processors:
+    default: true
+    mandatory: false
+    option: processors
+    p_index: 0
+    value: '1'
+  start:
+    default: false
+    mandatory: false
+    option: start
+    p_index: 0
+    value: '0'
 tool_command: mothur "#screen.seqs({0}{1})"

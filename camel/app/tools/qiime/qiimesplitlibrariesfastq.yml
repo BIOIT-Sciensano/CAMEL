@@ -1,26 +1,83 @@
-dependencies: [qiime/1.9.1, uclust/1.2.22, blast/2.2.22, ea-utils/27a4809]
+conda:
+  name: qiime
+  packages:
+    - qiime=1.9.1
+dependencies:
+  - qiime/1.9.1
+  - uclust/1.2.22
+  - blast/2.2.22
+  - ea-utils/27a4809
 parameters:
-  barcode_type: {default: false, mandatory: false, option: --barcode_type, p_index: 0,
-    value: '''not-barcoded'''}
-  max_bad_run_length: {default: false, mandatory: false, option: --max_bad_run_length,
-    p_index: 0, value: '3'}
-  max_barcode_errors: {default: false, mandatory: false, option: --max_barcode_errors,
-    p_index: 0, value: '1.5'}
-  min_per_read_length_fraction: {default: false, mandatory: false, option: --min_per_read_length_fraction,
-    p_index: 0, value: '0.75'}
-  phred_offset: {default: false, mandatory: false, option: --phred_offset, p_index: 0,
-    value: '33'}
-  phred_quality_threshold: {default: false, mandatory: false, option: --phred_quality_threshold,
-    p_index: 0, value: '3'}
-  rev_comp: {default: false, mandatory: false, option: --rev_comp, p_index: 0, value: 'False'}
-  rev_comp_barcode: {default: false, mandatory: false, option: --rev_comp_barcode,
-    p_index: 0, value: 'False'}
-  rev_comp_mapping_barcodes: {default: false, mandatory: false, option: --rev_comp_mapping_barcodes,
-    p_index: 0, value: 'False'}
-  sample_ids: {default: false, mandatory: false, option: --sample_ids, p_index: 0,
-    value: '''TestSample'''}
-  sequence_max_n: {default: false, mandatory: false, option: --sequence_max_n, p_index: 0,
-    value: '0'}
-  start_seq_id: {default: false, mandatory: false, option: --start_seq_id, p_index: 0,
-    value: '0'}
+  barcode_type:
+    default: false
+    mandatory: false
+    option: --barcode_type
+    p_index: 0
+    value: '''not-barcoded'''
+  max_bad_run_length:
+    default: false
+    mandatory: false
+    option: --max_bad_run_length
+    p_index: 0
+    value: "3"
+  max_barcode_errors:
+    default: false
+    mandatory: false
+    option: --max_barcode_errors
+    p_index: 0
+    value: "1.5"
+  min_per_read_length_fraction:
+    default: false
+    mandatory: false
+    option: --min_per_read_length_fraction
+    p_index: 0
+    value: "0.75"
+  phred_offset:
+    default: false
+    mandatory: false
+    option: --phred_offset
+    p_index: 0
+    value: "33"
+  phred_quality_threshold:
+    default: false
+    mandatory: false
+    option: --phred_quality_threshold
+    p_index: 0
+    value: "3"
+  rev_comp:
+    default: false
+    mandatory: false
+    option: --rev_comp
+    p_index: 0
+    value: "False"
+  rev_comp_barcode:
+    default: false
+    mandatory: false
+    option: --rev_comp_barcode
+    p_index: 0
+    value: "False"
+  rev_comp_mapping_barcodes:
+    default: false
+    mandatory: false
+    option: --rev_comp_mapping_barcodes
+    p_index: 0
+    value: "False"
+  sample_ids:
+    default: false
+    mandatory: false
+    option: --sample_ids
+    p_index: 0
+    value: '''TestSample'''
+  sequence_max_n:
+    default: false
+    mandatory: false
+    option: --sequence_max_n
+    p_index: 0
+    value: "0"
+  start_seq_id:
+    default: false
+    mandatory: false
+    option: --start_seq_id
+    p_index: 0
+    value: "0"
 tool_command: split_libraries_fastq.py

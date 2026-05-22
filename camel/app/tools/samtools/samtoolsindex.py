@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from camel.app.core.command import Command
 from camel.app.core.errors import ToolExecutionError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
@@ -15,7 +16,7 @@ class SamtoolsIndex(SamtoolsBase):
         Initializes this tool.
         :return: None
         """
-        super().__init__('samtools index', '1.17')
+        super().__init__('samtools index', version=None)
 
     def _check_input(self) -> None:
         """
@@ -36,7 +37,7 @@ class SamtoolsIndex(SamtoolsBase):
         input_file_path = self.__symlink_input()
         self.__build_command(input_file_path)
         self._execute_command()
-        self._check_stderr()
+        self._check_stderr(self._command)
         self._tool_outputs['BAM'] = [ToolIOFile(Path(input_file_path))]
 
     def __symlink_input(self) -> Path:
@@ -65,11 +66,12 @@ class SamtoolsIndex(SamtoolsBase):
             *self._build_options(excluded_parameters=['output_filename']),
             str(input_file_path)])
 
-    def _check_stderr(self) -> None:
+    def _check_stderr(self, command: Command) -> None:
         """
         Validates the stderr.
+        :param command: Command to check
         :return: None
         """
-        if 'unsorted positions' in self._command.stderr:
+        if 'unsorted positions' in command.stderr:
             raise ToolExecutionError(self.name, 'BAM file is not sorted.')
-        super()._check_stderr()
+        super()._check_stderr(command)

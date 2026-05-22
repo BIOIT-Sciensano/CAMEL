@@ -1,6 +1,23 @@
-dependencies: [qiime/1.9.1, uclust/1.2.22, blast/2.2.22, ea-utils/27a4809]
+conda:
+  name: qiime
+  packages:
+    - qiime=1.9.1
+dependencies:
+  - qiime/1.9.1
+  - uclust/1.2.22
+  - blast/2.2.22
+  - ea-utils/27a4809
 parameters:
-  rep_set_picking_method: {default: false, mandatory: false, option: --rep_set_picking_method,
-    p_index: 0, value: first}
-  sort_by: {default: false, mandatory: false, option: --sort_by, p_index: 0, value: otu}
+  rep_set_picking_method:
+    default: false
+    mandatory: false
+    option: --rep_set_picking_method
+    p_index: 0
+    value: first
+  sort_by:
+    default: false
+    mandatory: false
+    option: --sort_by
+    p_index: 0
+    value: otu
 tool_command: pick_rep_set.py

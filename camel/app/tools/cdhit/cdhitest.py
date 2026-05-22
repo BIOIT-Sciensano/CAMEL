@@ -1,7 +1,6 @@
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
-
-import re
 
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
@@ -77,7 +76,7 @@ class CDHitEst(Tool):
         :param line: Input line
         :return: Sequence name
         """
-        match = re.match('\\d.+, >(seq_\\d+)\\.{3}.*', line)
+        match = re.match(r'\d.+, >(.+?)\.{3}.*', line)
         if not match:
             raise ValueError(f'Invalid cluster line: {line}')
         return match.group(1)

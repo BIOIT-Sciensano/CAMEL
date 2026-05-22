@@ -20,8 +20,18 @@ class PharokkaMultiplotter(Tool):
     def __init__(self) -> None:
         """
         Initializes this tool.
+        :return: None
         """
-        super().__init__('Pharokka', '1.7.3')
+        super().__init__('Pharokka', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.strip()
 
     def _execute_tool(self) -> None:
         """

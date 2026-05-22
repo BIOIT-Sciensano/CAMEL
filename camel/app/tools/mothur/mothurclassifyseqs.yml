@@ -1,16 +1,86 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  cutoff: {default: false, mandatory: false, option: cutoff, p_index: 0, value: '60'}
-  gapextend: {default: false, mandatory: false, option: gapextend, p_index: 0, value: '-1'}
-  gapopen: {default: false, mandatory: false, option: gapopen, p_index: 0, value: '-2'}
-  iters: {default: false, mandatory: false, option: iters, p_index: 0, value: '100'}
-  ksize: {default: false, mandatory: false, option: ksize, p_index: 0, value: '8'}
-  match: {default: false, mandatory: false, option: match, p_index: 0, value: '1'}
-  method: {default: false, mandatory: false, option: method, p_index: 0, value: wang}
-  mismatch: {default: false, mandatory: false, option: mismatch, p_index: 0, value: '-1'}
-  numwanted: {default: false, mandatory: false, option: numwanted, p_index: 0, value: '1'}
-  probs: {default: false, mandatory: false, option: probs, p_index: 0, value: 'true'}
-  processors: {default: true, mandatory: false, option: processors, p_index: 0, value: '1'}
-  relabund: {default: false, mandatory: false, option: relabund, p_index: 0, value: 'false'}
-  search: {default: false, mandatory: false, option: search, p_index: 0, value: kmer}
+  cutoff:
+    default: false
+    mandatory: false
+    option: cutoff
+    p_index: 0
+    value: '60'
+  gapextend:
+    default: false
+    mandatory: false
+    option: gapextend
+    p_index: 0
+    value: '-1'
+  gapopen:
+    default: false
+    mandatory: false
+    option: gapopen
+    p_index: 0
+    value: '-2'
+  iters:
+    default: false
+    mandatory: false
+    option: iters
+    p_index: 0
+    value: '100'
+  ksize:
+    default: false
+    mandatory: false
+    option: ksize
+    p_index: 0
+    value: '8'
+  match:
+    default: false
+    mandatory: false
+    option: match
+    p_index: 0
+    value: '1'
+  method:
+    default: false
+    mandatory: false
+    option: method
+    p_index: 0
+    value: wang
+  mismatch:
+    default: false
+    mandatory: false
+    option: mismatch
+    p_index: 0
+    value: '-1'
+  numwanted:
+    default: false
+    mandatory: false
+    option: numwanted
+    p_index: 0
+    value: '1'
+  probs:
+    default: false
+    mandatory: false
+    option: probs
+    p_index: 0
+    value: 'true'
+  processors:
+    default: true
+    mandatory: false
+    option: processors
+    p_index: 0
+    value: '1'
+  relabund:
+    default: false
+    mandatory: false
+    option: relabund
+    p_index: 0
+    value: 'false'
+  search:
+    default: false
+    mandatory: false
+    option: search
+    p_index: 0
+    value: kmer
 tool_command: mothur "#classify.seqs({0}{1})"

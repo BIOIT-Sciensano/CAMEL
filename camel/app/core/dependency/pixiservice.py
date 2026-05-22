@@ -15,6 +15,26 @@ class PixiService(BaseDependencyService):
     Service for handling dependencies using Pixi.
     """
 
+    @staticmethod
+    def _conda_not_needed(tool_data: dict[str, Any]) -> bool:
+        """
+        Returns True when the conda key is explicitly set to null, meaning the tool
+        needs no pixi environment (e.g. pure-Python reporter tools).
+        :param tool_data: Tool data
+        :return: True if conda is explicitly null
+        """
+        return 'conda' in tool_data and tool_data['conda'] is None
+
+    @staticmethod
+    def _conda_not_configured(tool_data: dict[str, Any]) -> bool:
+        """
+        Returns True when the conda key is absent, meaning the tool has not yet
+        been configured for pixi (e.g. LMOD-only tools).
+        :param tool_data: Tool data
+        :return: True if conda key is missing
+        """
+        return 'conda' not in tool_data
+
     def _get_dir_env(self, tool_data: dict[str, Any]) -> Path:
         """
         Returns the base directory for storing environments.
@@ -23,7 +43,7 @@ class PixiService(BaseDependencyService):
         """
         if config.dir_envs_pixi is None:
             raise ValueError("'dir_envs_pixi' is not set in the config")
-        if 'conda' not in tool_data:
+        if self._conda_not_configured(tool_data) or self._conda_not_needed(tool_data):
             raise ValueError("No 'conda' section found in tool data file")
         hash_str = hashlib.sha1(','.join(tool_data['conda']['packages']).encode()).hexdigest()[:8]
         return Path(config.dir_envs_pixi, f"env_{tool_data['conda']['name']}-{hash_str}")
@@ -34,6 +54,11 @@ class PixiService(BaseDependencyService):
         :param tool_data: Tool data
         :return: None
         """
+        if self._conda_not_needed(tool_data):
+            return  # no pixi environment needed
+        if self._conda_not_configured(tool_data):
+            raise ValueError("Tool has no 'conda' section and has not been configured for pixi")
+
         # Create the directory
         dir_env = self._get_dir_env(tool_data)
         dir_env.mkdir(parents=True, exist_ok=True)
@@ -61,10 +86,13 @@ class PixiService(BaseDependencyService):
         :param tool_data: Tool data
         :return: Command with environment loaded
         """
+        if self._conda_not_needed(tool_data):
+            return command.command  # no pixi environment needed, run command directly
+
         logger.info('Loading environment using Pixi')
         dir_env = self._get_dir_env(tool_data)
-        if '|' in command.command:
-            command_sanitized = command.command.replace('"', r'\"')
+        if '|' in command.command or "'" in command.command:
+            command_sanitized = command.command.replace('"', r'\"').replace("'", r'\"')
             return f'pixi run --manifest-path {dir_env} bash -c "{command_sanitized}"'
         return f'pixi run --manifest-path {dir_env} {command.command}'
 
@@ -74,6 +102,12 @@ class PixiService(BaseDependencyService):
         :param tool_data: Tool data
         :return: True if available, False otherwise
         """
+        if self._conda_not_needed(tool_data):
+            # no pixi environment needed
+            return True
+        if self._conda_not_configured(tool_data):
+            # not yet configured for pixi
+            return False
         try:
             dir_env = self._get_dir_env(tool_data)
         except ValueError:

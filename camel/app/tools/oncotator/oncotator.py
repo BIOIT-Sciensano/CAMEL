@@ -1,8 +1,8 @@
 from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
-from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.utils import toolutils
 
 
 class Oncotator(Tool):
@@ -36,7 +36,7 @@ class Oncotator(Tool):
     def __init__(self) -> None:
         """
         Initialize Mutect1 tool.
-                :return: None
+        :return: None
         """
         super().__init__('Oncotator', '1.9.9.0')
         self._required_inputs = ['IN_FILE']
@@ -55,34 +55,32 @@ class Oncotator(Tool):
         Checks that parameters are valid.
         :return: None
         """
-        super(Oncotator, self)._check_parameters()
+        super()._check_parameters()
 
     def _check_input(self) -> None:
         """
         Check that input is valid (super method) and that required parameters are present.
         :return: None
         """
-        super(Oncotator, self)._check_input()
+        super()._check_input()
 
         for input_key in self._required_inputs:
             if input_key not in self._tool_inputs:
-                raise InvalidToolInputError(
-                    'Oncotator required {} input is missing in tool inputs!'.format(input_key))
+                raise InvalidToolInputError(f'Oncotator required {input_key} input is missing in tool inputs!')
 
     def __build_command(self) -> None:
         """
         Build the command to run the tool.
         :return:
         """
-        input_string = " {}".format(self._tool_inputs['IN_FILE'][0].path)
-        output_string = " {}".format(self._parameters['output_file_name'].value)
+        input_string = f" {self._tool_inputs['IN_FILE'][0].path}"
+        output_string = f" {self._parameters['output_file_name'].value}"
         options_string = " ".join(self._build_options(excluded_parameters=["output_file_name"]))
-
-        self._command.command = "{command} {options_string} {input_string} {output_string} hg19".format(command=self._tool_command, options_string=options_string, input_string=input_string, output_string=output_string)
+        self._command.command = f"{self._tool_command} {options_string} {input_string} {output_string} hg19"
 
     def __set_output(self) -> None:
         """
-        Set the output specifications in the Camel ouptut list:
+        Set the output specifications in the Camel output list.
         - output file
         :return: None
         """

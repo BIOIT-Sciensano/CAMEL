@@ -1,5 +1,21 @@
-dependencies: [CheckV/1.0.1 hmmer/3.4 prodigal-gv/2.11.0 diamond/2.0.4]
+conda:
+  name: checkv
+  packages:
+    - checkv=1.0.1
+dependencies:
+  - CheckV/1.0.1
+  - hmmer/3.4
+  - prodigal-gv/2.11.0
+  - diamond/2.0.4
 parameters:
-  checkvdb: {default: true, mandatory: true, option: -d, value: /db/checkv/1.5/}
-  threads: {default: true, mandatory: false, option: -t, value: 4}
+  checkvdb:
+    default: true
+    mandatory: true
+    option: '-d'
+    value: /db/checkv/1.5/
+  threads:
+    default: true
+    mandatory: false
+    option: '-t'
+    value: 4
 tool_command: checkv

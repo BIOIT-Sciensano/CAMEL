@@ -23,7 +23,7 @@ class MarkDuplicates(Picard):
     def __init__(self):
         """
         Initialize a picard tool
-                :return: None
+        :return: None
         """
         super().__init__('Picard MarkDuplicates', '2.23.3')
 

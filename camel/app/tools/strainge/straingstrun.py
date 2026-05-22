@@ -16,7 +16,7 @@ class StrainGSTRun(Tool):
     def __init__(self) -> None:
         """
         Initializes straingst run.
-                :return: None
+        :return: None
         """
         super().__init__('StrainGST run', '1.3.9')
 

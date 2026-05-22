@@ -13,7 +13,7 @@ class CreateSequenceDictionary(Picard):
     def __init__(self):
         """
         Initialize a picard tool
-                :return: None
+        :return: None
         """
         super().__init__('Picard CreateSequenceDictionary', '2.23.3')
         self._required_inputs = ['FASTA_REF']

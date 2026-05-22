@@ -31,5 +31,5 @@ class Lofreq(Tool, metaclass=abc.ABCMeta):
         Validates if the program ran correctly by checking the standard error.
         :return: None
         """
-        if 'FATAL' in self._command.stderr:
-            raise ToolExecutionError(self.name, f"{self.name} failed: '{self._command.stderr}'")
+        if 'FATAL' in command.stderr:
+            raise ToolExecutionError(self.name, f"{self.name} failed: '{command.stderr}'")

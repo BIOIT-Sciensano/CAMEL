@@ -1,14 +1,51 @@
-dependencies: [java/1.8.0, gatk/3.7]
+conda:
+  name: gatk
+  packages:
+    - gatk=3.7
+dependencies:
+  - java/1.8.0
+  - gatk/3.7
 parameters:
-  intervals: {default: false, mandatory: false, option: -L, p_index: 0, value: null}
-  maxInterval: {default: false, mandatory: false, option: -maxInterval, p_index: 20,
-    value: '500'}
-  minReadsAtLocus: {default: false, mandatory: false, option: --minReadsAtLocus, p_index: 0,
-    value: '4'}
-  mismatchFraction: {default: false, mandatory: false, option: --mismatchFraction,
-    p_index: 0, value: '0.0'}
-  output: {default: true, mandatory: false, option: -o, p_index: 0, value: indel_realigner.intervals}
-  window: {default: false, mandatory: false, option: -window, p_index: 10, value: '10'}
-  windowSize: {default: false, mandatory: false, option: --windowSize, p_index: 0,
-    value: '10'}
+  intervals:
+    default: false
+    mandatory: false
+    option: -L
+    p_index: 0
+    value: null
+  maxInterval:
+    default: false
+    mandatory: false
+    option: -maxInterval
+    p_index: 20
+    value: "500"
+  minReadsAtLocus:
+    default: false
+    mandatory: false
+    option: --minReadsAtLocus
+    p_index: 0
+    value: "4"
+  mismatchFraction:
+    default: false
+    mandatory: false
+    option: --mismatchFraction
+    p_index: 0
+    value: "0.0"
+  output:
+    default: true
+    mandatory: false
+    option: -o
+    p_index: 0
+    value: indel_realigner.intervals
+  window:
+    default: false
+    mandatory: false
+    option: -window
+    p_index: 10
+    value: "10"
+  windowSize:
+    default: false
+    mandatory: false
+    option: --windowSize
+    p_index: 0
+    value: "10"
 tool_command: run_gatk.sh -T RealignerTargetCreator

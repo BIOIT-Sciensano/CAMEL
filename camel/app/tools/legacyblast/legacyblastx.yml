@@ -1,7 +1,29 @@
-dependencies: [blast/2.2.22]
+conda: null
+dependencies:
+  - blast/2.2.22
 parameters:
-  F: {default: true, mandatory: false, option: -F, p_index: 0, value: '"m S"'}
-  a: {default: true, mandatory: false, option: -a, p_index: 0, value: '8'}
-  e: {default: true, mandatory: false, option: -e, p_index: 0, value: '10'}
-  w: {default: true, mandatory: false, option: -w, p_index: 0, value: '15'}
+  F:
+    default: true
+    mandatory: false
+    option: -F
+    p_index: 0
+    value: '"m S"'
+  a:
+    default: true
+    mandatory: false
+    option: -a
+    p_index: 0
+    value: "8"
+  e:
+    default: true
+    mandatory: false
+    option: -e
+    p_index: 0
+    value: "10"
+  w:
+    default: true
+    mandatory: false
+    option: -w
+    p_index: 0
+    value: "15"
 tool_command: blastall

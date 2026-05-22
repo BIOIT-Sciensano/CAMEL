@@ -1,5 +1,15 @@
-dependencies: [LRE-Finder/20200812 kma/1.4.12a]
+dependencies:
+  - LRE-Finder/20200812
+  - kma/1.4.12a
 parameters:
-  min_identity: {default: false, mandatory: false, option: '-ID', value: 80}
-  cge: {default: false, mandatory: false, option: '-cge', value: null}
+  min_identity:
+    default: false
+    mandatory: false
+    option: -ID
+    value: 80
+  cge:
+    default: false
+    mandatory: false
+    option: -cge
+    value: null
 tool_command: LRE-Finder.py

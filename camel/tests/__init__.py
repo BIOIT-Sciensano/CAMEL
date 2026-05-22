@@ -1,8 +1,9 @@
 import logging
-import unittest
-from typing import Callable, Optional, Union
-
 import os
+import unittest
+from collections.abc import Callable
+
+from camel.app.config import config
 
 
 # noinspection PyPep8Naming
@@ -18,7 +19,7 @@ def longRunningTest() -> Callable:
 
 
 # noinspection PyPep8Naming
-def resourceIntensiveTest(reason: Optional[str] = None) -> Callable:
+def resourceIntensiveTest(reason: str | None = None) -> Callable:
     """
     Custom decorator for resource intensive tests, used to limit resource allocation for RAM / CPU intensive tests.
     :param reason: (Optional) clarification for resource allocation
@@ -30,7 +31,7 @@ def resourceIntensiveTest(reason: Optional[str] = None) -> Callable:
     return lambda func: func
 
 
-def get_ubuntu_release_codename() -> Union[str, None]:
+def get_ubuntu_release_codename() -> str | None:
     """
     Retrieves the codename of the Ubuntu release version.
     :return: Ubuntu release version (if available)
@@ -41,7 +42,9 @@ def get_ubuntu_release_codename() -> Union[str, None]:
                 if line.startswith("VERSION_CODENAME="):
                     return line.strip().split('=')[1].strip('"')
     except FileNotFoundError:
-        logging.warning("Cannot determine release code name, '/etc/os-release' not found")
+        logging.warning(
+            "Cannot determine release code name, '/etc/os-release' not found"
+        )
     return None
 
 
@@ -57,5 +60,19 @@ def minOSVersion(codename_min: str) -> Callable:
     """
     codename_os = get_ubuntu_release_codename()
     if codename_os < codename_min:
-        return unittest.skip(f"Skipping test because of OS version (min={codename_min}, current={codename_os})")
+        return unittest.skip(
+            f"Skipping test because of OS version (min={codename_min}, current={codename_os})"
+        )
     return lambda func: func
+
+
+def requires_dependency_service(*services: str):
+    """
+    Decorator to skip a test when the configured dependency service is not in the given services.
+    :param services: One or more accepted dependency services ('lmod', 'pixi')
+    :return: Test decorator
+    """
+    return unittest.skipUnless(
+        config.dependency_service in services,
+        f"Requires dependency service: {', '.join(services)} (current: {config.dependency_service})",
+    )

@@ -1,3 +1,7 @@
+conda:
+  name: prodigal
+  packages:
+    - prodigal=2.6.3
 dependencies:
   - prodigal/2.6.3
 parameters: {}

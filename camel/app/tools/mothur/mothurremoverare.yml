@@ -1,6 +1,26 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  groups: {default: false, mandatory: false, option: groups, p_index: 0, value: all}
-  label: {default: false, mandatory: false, option: label, p_index: 0, value: all}
-  nseqs: {default: false, mandatory: false, option: nseqs, p_index: 0, value: '1'}
+  groups:
+    default: false
+    mandatory: false
+    option: groups
+    p_index: 0
+    value: all
+  label:
+    default: false
+    mandatory: false
+    option: label
+    p_index: 0
+    value: all
+  nseqs:
+    default: false
+    mandatory: false
+    option: nseqs
+    p_index: 0
+    value: '1'
 tool_command: mothur "#remove.rare({0}{1})"

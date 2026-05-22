@@ -1,12 +1,61 @@
-dependencies: [cutadapt/3.5]
+conda:
+  name: cutadapt
+  packages:
+    - cutadapt=3.5
+dependencies:
+  - cutadapt/3.5
 parameters:
-  output_basename: {default: true, mandatory: false, option: -o, p_index: 10, value: 'output'}
-  report_json: {default: true, mandatory: true, option: --json, p_index: 0, value: 'report.cutadapt.json'}
-  cores: {default: false, mandatory: false, option: --cores, p_index: 0, value: 6}
-  adapter: {default: false, mandatory: false, option: -a, p_index: 0, value: 'AACCGGTT'}
-  adapter_file: {default: false, mandatory: false, option: -a, p_index: 0, value: 'file:adapters.fasta'}
-  interleaved: {default: false, mandatory: false, option: --interleaved, p_index: 0, value: ''}
-  minimum_length: {default: false, mandatory: true, option: -m, p_index: 0, value: 40}
-  nextseq_trim: {default: false, mandatory: false, option: --nextseq-trim, value: 20}
-  quality: {default: false, mandatory: false, option: -q, p_index: 0, value: 10}
+  output_basename:
+    default: true
+    mandatory: false
+    option: '-o'
+    p_index: 10
+    value: output
+  report_json:
+    default: true
+    mandatory: true
+    option: '--json'
+    p_index: 0
+    value: report.cutadapt.json
+  cores:
+    default: false
+    mandatory: false
+    option: '--cores'
+    p_index: 0
+    value: 6
+  adapter:
+    default: false
+    mandatory: false
+    option: '-a'
+    p_index: 0
+    value: AACCGGTT
+  adapter_file:
+    default: false
+    mandatory: false
+    option: '-a'
+    p_index: 0
+    value: 'file:adapters.fasta'
+  interleaved:
+    default: false
+    mandatory: false
+    option: '--interleaved'
+    p_index: 0
+    value: ''
+  minimum_length:
+    default: false
+    mandatory: true
+    option: '-m'
+    p_index: 0
+    value: 40
+  nextseq_trim:
+    default: false
+    mandatory: false
+    option: '--nextseq-trim'
+    value: 20
+  quality:
+    default: false
+    mandatory: false
+    option: '-q'
+    p_index: 0
+    value: 10
 tool_command: cutadapt

@@ -1,9 +1,45 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  output: {default: true, mandatory: false, option: O, p_index: 0, value: intervallists}
-  scatter_count: {default: false, mandatory: false, option: SCATTER_COUNT, p_index: 10, value: 1}
-  subdivision_mode: {default: false, mandatory: false, option: SUBDIVISION_MODE, p_index: 10, value: INTERVAL_SUBDIVISION}
-  unique: {default: false, mandatory: false, option: UNIQUE, p_index: 10, value: "false"}
-  sort: {default: false, mandatory: false, option: SORT, p_index: 10, value: "true"}
-  break_bands_at_multiples_of: {default: false, mandatory: false, option: BRK, p_index: 10, value: "0"}
+  output:
+    default: true
+    mandatory: false
+    option: O
+    p_index: 0
+    value: intervallists
+  scatter_count:
+    default: false
+    mandatory: false
+    option: SCATTER_COUNT
+    p_index: 10
+    value: 1
+  subdivision_mode:
+    default: false
+    mandatory: false
+    option: SUBDIVISION_MODE
+    p_index: 10
+    value: INTERVAL_SUBDIVISION
+  unique:
+    default: false
+    mandatory: false
+    option: UNIQUE
+    p_index: 10
+    value: 'false'
+  sort:
+    default: false
+    mandatory: false
+    option: SORT
+    p_index: 10
+    value: 'true'
+  break_bands_at_multiples_of:
+    default: false
+    mandatory: false
+    option: BRK
+    p_index: 10
+    value: '0'
 tool_command: IntervalListTools

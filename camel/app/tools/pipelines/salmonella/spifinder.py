@@ -2,8 +2,7 @@ import json
 from pathlib import Path
 
 from camel.app.core.command import Command
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.errors import ToolExecutionError
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 
@@ -16,7 +15,7 @@ class SPIFinder(Tool):
     def __init__(self) -> None:
         """
         Initialize tool.
-                :return: None
+        :return: None
         """
         super().__init__('SPIFinder', '0.1')
         self._input_key = None
@@ -37,7 +36,7 @@ class SPIFinder(Tool):
         Checks if the provided input is valid.
         :return: None
         """
-        super(SPIFinder, self)._check_input()
+        super()._check_input()
         # check if exactly one of the three possible inputs is provided
         input_keys = [key for key in ('FASTQ', 'FASTQ_PE', 'FASTA') if key in self._tool_inputs]
         if len(input_keys) > 1:

@@ -1,13 +1,38 @@
-dependencies: [samtools/1.9]
+conda:
+  name: samtools
+  packages:
+    - samtools=1.9
+dependencies:
+  - samtools/1.9
 parameters:
-  max_depth: {default: false, mandatory: false, option: --maximum-depth, p_index: 0,
-    value: '100000000'}
-  max_roi_length: {default: false, mandatory: false, option: --maximum-roi-length,
-    p_index: 0, value: '10000000'}
-  min_depth: {default: false, mandatory: false, option: --min-depth-filter, p_index: 0,
-    value: '1'}
-  min_mapping_quality: {default: false, mandatory: false, option: --min-mapping-quality,
-    p_index: 0, value: '0'}
-  window_size: {default: false, mandatory: false, option: --window_size, p_index: 0,
-    value: '10000000'}
+  max_depth:
+    default: false
+    mandatory: false
+    option: '--maximum-depth'
+    p_index: 0
+    value: '100000000'
+  max_roi_length:
+    default: false
+    mandatory: false
+    option: '--maximum-roi-length'
+    p_index: 0
+    value: '10000000'
+  min_depth:
+    default: false
+    mandatory: false
+    option: '--min-depth-filter'
+    p_index: 0
+    value: '1'
+  min_mapping_quality:
+    default: false
+    mandatory: false
+    option: '--min-mapping-quality'
+    p_index: 0
+    value: '0'
+  window_size:
+    default: false
+    mandatory: false
+    option: '--window_size'
+    p_index: 0
+    value: '10000000'
 tool_command: gmt ref-cov standard

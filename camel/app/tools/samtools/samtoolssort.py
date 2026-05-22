@@ -14,7 +14,7 @@ class SamtoolsSort(SamtoolsBasePipeable):
         Initializes this tool.
         :return: None
         """
-        super().__init__('samtools sort', '1.17')
+        super().__init__('samtools sort', version=None)
 
     def _check_input(self) -> None:
         """
@@ -32,7 +32,7 @@ class SamtoolsSort(SamtoolsBasePipeable):
         """
         if self._parameters['output_format'].value.upper() not in ('SAM', 'BAM'):
             raise InvalidParameterError("Invalid output format (BAM/SAM supported)")
-        super(SamtoolsSort, self)._check_parameters()
+        super()._check_parameters()
 
     def _execute_tool(self) -> None:
         """
@@ -42,7 +42,7 @@ class SamtoolsSort(SamtoolsBasePipeable):
         self.__build_command()
         self._execute_command()
         self.__set_output()
-        self._check_stderr()
+        self._check_stderr(self._command)
 
     def __build_command(self, pipe_in: bool = False, pipe_out: bool = False) -> None:
         """
@@ -72,7 +72,7 @@ class SamtoolsSort(SamtoolsBasePipeable):
         """
         output_path = self.folder / self._parameters['output_filename'].value
         if not output_path.is_file():
-            raise ToolExecutionError(f"Expected {self._name} output not generated")
+            raise ToolExecutionError(self.name, f"Expected {self.name} output not generated")
         output_key = self._parameters['output_format'].value.upper()
         self._tool_outputs[output_key] = [ToolIOFile(output_path)]
 
@@ -81,8 +81,8 @@ class SamtoolsSort(SamtoolsBasePipeable):
         Checks if the command was executed successfully. Supersedes that of Tool class as samtools prints warnings to stderr.
         :return: None
         """
-        if self._command.exit_code != 0:
-            raise ToolExecutionError(f'Command execution failed (Exit code: {self._command.returncode})')
+        if command.exit_code != 0:
+            raise ToolExecutionError(self.name, f'Command execution failed (Exit code: {command.exit_code})')
 
     def _before_pipe(self, dir_, pipe_in: bool, pipe_out: bool) -> None:
         """

@@ -2,7 +2,7 @@ conda:
   name: confindr
   packages:
     - confindr=0.8.2
-    - setuptools
+    - setuptools<81
 dependencies:
   - confindr/0.8.2
   - kma/1.4.12a

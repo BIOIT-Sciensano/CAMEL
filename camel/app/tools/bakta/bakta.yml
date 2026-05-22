@@ -1,34 +1,163 @@
-dependencies: [bakta/1.9.4]
+conda:
+  name: bakta
+  packages:
+    - bakta=1.9.4
+dependencies:
+  - bakta/1.9.4
 parameters:
-  complete: {default: false, mandatory: false, option: --complete, value: null}
-  compliant: {default: false, mandatory: false, option: --compliant, value: null}
-  database: {default: true, mandatory: true, option: --db, value: '/db/bakta/latest'}
-  translation_table: {default: true, mandatory: false, option: --translation-table, value: '11'}
-  genus: {default: false, mandatory: false, option: --genus, value: null}
-  gram: {default: false, mandatory: false, option: --gram, value: null}
-  keep_contig_headers: {default: false, mandatory: false, option: --keep-contig-headers, value: null}
-  locus_tag: {default: false, mandatory: false, option: --locus-tag, value: null}
-  meta: {default: false, mandatory: false, option: --meta, value: null}
-  min_contig_length: {default: true, mandatory: false, option: --min-contig-length, value: '1'}
-  output_dir: {default: true, mandatory: true, option: --output, value: 'outdir'}
-  plasmid: {default: false, mandatory: false, option: --plasmid, value: null}
-  prodigal_tf: {default: false, mandatory: false, option: --prodigal-tf, value: null}
-  proteins: {default: false, mandatory: false, option: --proteins, value: null}
-  regions: {default: false, mandatory: false, option: --regions, value: null}
-  replicons: {default: false, mandatory: false, option: --replicons, value: null}
-  skip_cds: {default: false, mandatory: false, option: --skip-cds, value: null}
-  skip_crispr: {default: false, mandatory: false, option: --skip-crispr, value: null}
-  skip_gap: {default: false, mandatory: false, option: --skip-gap, value: null}
-  skip_ncrna: {default: false, mandatory: false, option: --skip-ncrna, value: null}
-  skip_ncrna_region: {default: false, mandatory: false, option: --skip-ncrna-region, value: null}
-  skip_ori: {default: false, mandatory: false, option: --skip-ori, value: null}
-  skip_plot: {default: false, mandatory: false, option: --skip-plot, value: null}
-  skip_pseudo: {default: false, mandatory: false, option: --skip-pseudo, value: null}
-  skip_rrna: {default: false, mandatory: false, option: --skip-rrna, value: null}
-  skip_sorf: {default: false, mandatory: false, option: --skip-sorf, value: null}
-  skip_tmrna: {default: false, mandatory: false, option: --skip-tmrna, value: null}
-  skip_trna: {default: false, mandatory: false, option: --skip-trna, value: null}
-  species: {default: false, mandatory: false, option: --species, value: null}
-  strain: {default: false, mandatory: false, option: --strain, value: null}
-  threads: {default: true, mandatory: false, option: --threads, value: 8}
+  complete:
+    default: false
+    mandatory: false
+    option: '--complete'
+    value: null
+  compliant:
+    default: false
+    mandatory: false
+    option: '--compliant'
+    value: null
+  database:
+    default: true
+    mandatory: true
+    option: '--db'
+    value: /db/bakta/latest
+  translation_table:
+    default: true
+    mandatory: false
+    option: '--translation-table'
+    value: '11'
+  genus:
+    default: false
+    mandatory: false
+    option: '--genus'
+    value: null
+  gram:
+    default: false
+    mandatory: false
+    option: '--gram'
+    value: null
+  keep_contig_headers:
+    default: false
+    mandatory: false
+    option: '--keep-contig-headers'
+    value: null
+  locus_tag:
+    default: false
+    mandatory: false
+    option: '--locus-tag'
+    value: null
+  meta:
+    default: false
+    mandatory: false
+    option: '--meta'
+    value: null
+  min_contig_length:
+    default: true
+    mandatory: false
+    option: '--min-contig-length'
+    value: '1'
+  output_dir:
+    default: true
+    mandatory: true
+    option: '--output'
+    value: outdir
+  plasmid:
+    default: false
+    mandatory: false
+    option: '--plasmid'
+    value: null
+  prodigal_tf:
+    default: false
+    mandatory: false
+    option: '--prodigal-tf'
+    value: null
+  proteins:
+    default: false
+    mandatory: false
+    option: '--proteins'
+    value: null
+  regions:
+    default: false
+    mandatory: false
+    option: '--regions'
+    value: null
+  replicons:
+    default: false
+    mandatory: false
+    option: '--replicons'
+    value: null
+  skip_cds:
+    default: false
+    mandatory: false
+    option: '--skip-cds'
+    value: null
+  skip_crispr:
+    default: false
+    mandatory: false
+    option: '--skip-crispr'
+    value: null
+  skip_gap:
+    default: false
+    mandatory: false
+    option: '--skip-gap'
+    value: null
+  skip_ncrna:
+    default: false
+    mandatory: false
+    option: '--skip-ncrna'
+    value: null
+  skip_ncrna_region:
+    default: false
+    mandatory: false
+    option: '--skip-ncrna-region'
+    value: null
+  skip_ori:
+    default: false
+    mandatory: false
+    option: '--skip-ori'
+    value: null
+  skip_plot:
+    default: false
+    mandatory: false
+    option: '--skip-plot'
+    value: null
+  skip_pseudo:
+    default: false
+    mandatory: false
+    option: '--skip-pseudo'
+    value: null
+  skip_rrna:
+    default: false
+    mandatory: false
+    option: '--skip-rrna'
+    value: null
+  skip_sorf:
+    default: false
+    mandatory: false
+    option: '--skip-sorf'
+    value: null
+  skip_tmrna:
+    default: false
+    mandatory: false
+    option: '--skip-tmrna'
+    value: null
+  skip_trna:
+    default: false
+    mandatory: false
+    option: '--skip-trna'
+    value: null
+  species:
+    default: false
+    mandatory: false
+    option: '--species'
+    value: null
+  strain:
+    default: false
+    mandatory: false
+    option: '--strain'
+    value: null
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: 8
 tool_command: bakta

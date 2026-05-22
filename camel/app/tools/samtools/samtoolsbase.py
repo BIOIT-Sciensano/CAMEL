@@ -1,5 +1,6 @@
 import abc
 
+from camel.app.core.command import Command
 from camel.app.core.errors import ToolExecutionError
 from camel.app.core.tool import Tool
 
@@ -9,7 +10,7 @@ class SamtoolsBase(Tool, metaclass=abc.ABCMeta):
     Super class for samtools.
     """
 
-    def __init__(self, tool_name: str, version: str) -> None:
+    def __init__(self, tool_name: str, version: str = None) -> None:
         """
         Initialize a samtools tool.
         :param tool_name: Tool name
@@ -18,17 +19,20 @@ class SamtoolsBase(Tool, metaclass=abc.ABCMeta):
         """
         super().__init__(tool_name, version)
 
-    def _execute_tool(self) -> None:
+    def get_version(self) -> str:
         """
-        Executes this tool.
-        :return: None
+        Retrieves the tool version.
+        :return: Tool version
         """
-        super(SamtoolsBase, self)._execute_tool()
+        command = Command(f'{self._tool_command.split()[0]} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split('\n')[0].split(' ')[-1].strip()
 
-    def _check_stderr(self) -> None:
+    def _check_stderr(self, command: Command) -> None:
         """
         Validate if the program ran correctly by checking the standard error.
+        :param command: Command to check
         :return: None
         """
-        if any(keyword in self._command.stderr.lower() for keyword in ('aborted', 'error')):
-            raise ToolExecutionError(self.name, self._command.stderr)
+        if any(keyword in command.stderr.lower() for keyword in ('aborted', 'error')):
+            raise ToolExecutionError(self.name, command.stderr)

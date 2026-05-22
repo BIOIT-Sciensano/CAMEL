@@ -18,7 +18,7 @@ class TrimFastaEdges(Tool):
     def __init__(self) -> None:
         """
         Initializes this tool.
-                :return: None
+        :return: None
         """
         super().__init__('Trim FASTA edges', '0.1')
 

@@ -1,9 +1,45 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  output: { default: true, mandatory: true, option: O, p_index: 0, value: output_wgs_metrics.txt }
-  validation_stringency: {default: false, mandatory: false, option: VALIDATION_STRINGENCY, p_index: 10, value: "STRICT"}
-  include_bq_histogram: {default: false, mandatory: false, option: INCLUDE_BQ_HISTOGRAM, p_index: 10, value: "false"}
-  use_fast_algorithm: {default: false, mandatory: false, option: USE_FAST_ALGORITHM, p_index: 10, value: "false"}
-  read_length: {default: false, mandatory: false, option: READ_LENGTH, p_index: 10, value: "150"}
-  sample_size: {default: false, mandatory: false, option: SAMPLE_SIZE, p_index: 10, value: "10000"}
+  output:
+    default: true
+    mandatory: true
+    option: O
+    p_index: 0
+    value: output_wgs_metrics.txt
+  validation_stringency:
+    default: false
+    mandatory: false
+    option: VALIDATION_STRINGENCY
+    p_index: 10
+    value: STRICT
+  include_bq_histogram:
+    default: false
+    mandatory: false
+    option: INCLUDE_BQ_HISTOGRAM
+    p_index: 10
+    value: 'false'
+  use_fast_algorithm:
+    default: false
+    mandatory: false
+    option: USE_FAST_ALGORITHM
+    p_index: 10
+    value: 'false'
+  read_length:
+    default: false
+    mandatory: false
+    option: READ_LENGTH
+    p_index: 10
+    value: '150'
+  sample_size:
+    default: false
+    mandatory: false
+    option: SAMPLE_SIZE
+    p_index: 10
+    value: '10000'
 tool_command: CollectWgsMetrics

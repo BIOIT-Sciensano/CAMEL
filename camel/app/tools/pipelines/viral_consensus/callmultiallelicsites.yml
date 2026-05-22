@@ -1,5 +1,18 @@
-dependencies: [bedtools/2.25.0]
+conda:
+  name: bedtools
+  packages:
+    - bedtools=2.25.0
+dependencies:
+  - bedtools/2.25.0
 parameters:
-  min_dp: {default: true, mandatory: true, option: null, value: 10}
-  min_freq_minor_allele: {default: true, mandatory: true, option: null, value: 0.45}
+  min_dp:
+    default: true
+    mandatory: true
+    option: null
+    value: 10
+  min_freq_minor_allele:
+    default: true
+    mandatory: true
+    option: null
+    value: 0.45
 tool_command: null

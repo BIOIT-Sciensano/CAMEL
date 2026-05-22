@@ -1,3 +1,8 @@
+conda:
+  name: medaka
+  packages:
+    - medaka=2.0.0
+    - setuptools<81
 dependencies:
   - bcftools/1.17
   - samtools/1.21
@@ -42,4 +47,3 @@ parameters:
     option: '--threads'
     value: '4'
 tool_command: medaka sequence
-

@@ -18,7 +18,7 @@ class SPIFinderReporter(Tool):
     def __init__(self) -> None:
         """
         Initializes this tool.
-                :return: None
+        :return: None
         """
         super().__init__('SPIFinder Reporter', '0.1')
         self._section = None

@@ -1,3 +1,7 @@
+conda:
+  name: spotyping
+  packages:
+    - spotyping3=3.0
 dependencies:
   - SpoTyping/2.1
 parameters: {}

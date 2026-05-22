@@ -72,7 +72,7 @@ class DepthFilter(BaseFilter):
         """
         self._command.command = ' '.join([
             self._tool_command,
-            f"--exclude '{self.__create_exclude_string()}'",
+            f'--exclude "{self.__create_exclude_string()}"',
             str(self._tool_inputs['VCF_GZ'][0].path),
             '--output-type z',
             f'--output {self.output_path}'

@@ -2,6 +2,7 @@ conda:
   name: mykrobe
   packages:
     - mykrobe=0.13.0
+    - setuptools<81
 dependencies:
   - mykrobe/0.13.0
 parameters:

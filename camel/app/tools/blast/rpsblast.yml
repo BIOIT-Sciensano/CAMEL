@@ -1,16 +1,62 @@
-dependencies: [blast/2.14.0]
+conda:
+  name: blast
+  packages:
+    - blast=2.14.0
+dependencies:
+  - blast/2.14.0
 parameters:
-  evalue: {default: false, mandatory: false, option: -evalue, p_index: 0, value: '10'}
-  output_filename: {default: false, mandatory: false, option: -out, p_index: 0, value: rpsblast_out.asn}
-  output_format: {default: true, mandatory: true, option: -outfmt, p_index: 0, value: '11'}
-  seg: {default: false, mandatory: false, option: -seg, p_index: 0, value: 12 2.2
-      2.5}
-  threads: {default: true, mandatory: false, option: -num_threads, p_index: 0, value: '8'}
-  window_size: {default: false, mandatory: false, option: -window_size, p_index: 0,
-    value: '40'}
-  xdrop_gap: {default: false, mandatory: false, option: -xdrop_gap, p_index: 0, value: '25'}
-  xdrop_gap_final: {default: false, mandatory: false, option: -xdrop_gap_final, p_index: 0,
-    value: '40'}
-  xdrop_ungap: {default: false, mandatory: false, option: -xdrop_ungap, p_index: 0,
-    value: '15'}
+  evalue:
+    default: false
+    mandatory: false
+    option: '-evalue'
+    p_index: 0
+    value: '10'
+  output_filename:
+    default: false
+    mandatory: false
+    option: '-out'
+    p_index: 0
+    value: rpsblast_out.asn
+  output_format:
+    default: true
+    mandatory: true
+    option: '-outfmt'
+    p_index: 0
+    value: '11'
+  seg:
+    default: false
+    mandatory: false
+    option: '-seg'
+    p_index: 0
+    value: 12 2.2 2.5
+  threads:
+    default: true
+    mandatory: false
+    option: '-num_threads'
+    p_index: 0
+    value: '8'
+  window_size:
+    default: false
+    mandatory: false
+    option: '-window_size'
+    p_index: 0
+    value: '40'
+  xdrop_gap:
+    default: false
+    mandatory: false
+    option: '-xdrop_gap'
+    p_index: 0
+    value: '25'
+  xdrop_gap_final:
+    default: false
+    mandatory: false
+    option: '-xdrop_gap_final'
+    p_index: 0
+    value: '40'
+  xdrop_ungap:
+    default: false
+    mandatory: false
+    option: '-xdrop_ungap'
+    p_index: 0
+    value: '15'
 tool_command: rpsblast

@@ -14,7 +14,7 @@ class MothurGetOturep(Mothur):
         Initialize tool
         :return: None
         """
-        super().__init__('mothur_get_oturep', '1.39.1')
+        super().__init__('mothur_get_oturep', version=None)
 
     def _check_input(self):
         """

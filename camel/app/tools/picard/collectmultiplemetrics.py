@@ -69,7 +69,7 @@ class CollectMultipleMetrics(Picard):
     def __init__(self):
         """
         Initialize a picard tool
-                :return: None
+        :return: None
         """
         super().__init__('Picard CollectMultipleMetrics', '2.23.3')
 
@@ -94,7 +94,7 @@ class CollectMultipleMetrics(Picard):
                 except KeyError:
                     logger.warning(f'Picard CollectMultipleMetrics unsupported metrics {key}, its results will not be analyzed or returned.')
 
-    def _set_informs(self, stderr: Optional[str] = None) -> None:
+    def _set_informs(self, stderr: str | None = None) -> None:
         """
         Analyse the result of picard run and update tool.informs
         :return: None
@@ -136,7 +136,7 @@ class CollectMultipleMetrics(Picard):
         option_string = " ".join(build_options)
 
         self._command.command = " ".join([
-            "java", self._java_options, "-jar $PICARD_JAR", self._tool_command, self._java_options_temp_dir,
+            *self._get_base_command(), self._java_options_temp_dir,
             self._input_string, self._output_string, option_string
         ])
 

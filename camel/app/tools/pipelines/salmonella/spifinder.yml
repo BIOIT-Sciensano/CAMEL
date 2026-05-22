@@ -1,3 +1,6 @@
-dependencies: [spifinder/2020.11.19, kma/1.4.12a, blast/2.14.0]
+dependencies:
+  - spifinder/2020.11.19
+  - kma/1.4.12a
+  - blast/2.14.0
 parameters: {}
 tool_command: spifinder.py

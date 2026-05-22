@@ -1,17 +1,63 @@
-dependencies: [java/1.8.0, gatk/3.7]
+conda:
+  name: gatk
+  packages:
+    - gatk=3.7
+dependencies:
+  - java/1.8.0
+  - gatk/3.7
 parameters:
-  consensusModel: {default: false, mandatory: false, option: --consensusDeterminationModel,
-    p_index: 10, value: USE_READS}
-  entropyThreshold: {default: false, mandatory: false, option: --entropyThreshold,
-    p_index: 20, value: '0.15'}
-  greedy: {default: false, mandatory: false, option: -greedy, p_index: 50, value: '120'}
-  intervals: {default: false, mandatory: false, option: -L, p_index: 0, value: null}
-  maxConsensuses: {default: false, mandatory: false, option: --maxConsensuses, p_index: 40,
-    value: '30'}
-  maxIsizeForMovement: {default: false, mandatory: false, option: -maxIsize, p_index: 60,
-    value: '3000'}
-  maxPositionalMoveAllowed: {default: false, mandatory: false, option: -maxPosMove,
-    p_index: 70, value: '200'}
-  output: {default: true, mandatory: false, option: -o, p_index: 0, value: indel_realigned.bam}
-  significance: {default: false, mandatory: false, option: -LOD, p_index: 30, value: '5.0'}
+  consensusModel:
+    default: false
+    mandatory: false
+    option: --consensusDeterminationModel
+    p_index: 10
+    value: USE_READS
+  entropyThreshold:
+    default: false
+    mandatory: false
+    option: --entropyThreshold
+    p_index: 20
+    value: "0.15"
+  greedy:
+    default: false
+    mandatory: false
+    option: -greedy
+    p_index: 50
+    value: "120"
+  intervals:
+    default: false
+    mandatory: false
+    option: -L
+    p_index: 0
+    value: null
+  maxConsensuses:
+    default: false
+    mandatory: false
+    option: --maxConsensuses
+    p_index: 40
+    value: "30"
+  maxIsizeForMovement:
+    default: false
+    mandatory: false
+    option: -maxIsize
+    p_index: 60
+    value: "3000"
+  maxPositionalMoveAllowed:
+    default: false
+    mandatory: false
+    option: -maxPosMove
+    p_index: 70
+    value: "200"
+  output:
+    default: true
+    mandatory: false
+    option: -o
+    p_index: 0
+    value: indel_realigned.bam
+  significance:
+    default: false
+    mandatory: false
+    option: -LOD
+    p_index: 30
+    value: "5.0"
 tool_command: run_gatk.sh -T IndelRealigner

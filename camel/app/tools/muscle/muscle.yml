@@ -1,3 +1,7 @@
+conda:
+  name: muscle
+  packages:
+    - muscle=3.8.31
 dependencies:
   - muscle/3.8.31
 parameters:

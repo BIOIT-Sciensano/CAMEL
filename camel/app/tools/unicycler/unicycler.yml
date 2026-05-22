@@ -1,3 +1,9 @@
+conda:
+  name: unicycler
+  packages:
+    - unicycler=0.5.0
+    - spades>3.13.1
+    - setuptools
 dependencies:
   - unicycler/0.5.0
   - SPAdes/3.15.5

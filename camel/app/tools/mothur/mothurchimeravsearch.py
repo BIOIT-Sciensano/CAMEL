@@ -15,7 +15,7 @@ class MothurChimeraVsearch(Mothur):
         Initialize tool
         :return: None
         """
-        super().__init__('mothur_chimera_vsearch', '1.39.1')
+        super().__init__('mothur_chimera_vsearch', version=None)
 
     def _check_input(self):
         """

@@ -1,8 +1,33 @@
-dependencies: [polypolish/0.6.0]
+conda:
+  name: polypolish
+  packages:
+    - polypolish=0.6.0
+dependencies:
+  - polypolish/0.6.0
 parameters:
-  min_depth: {default: true, mandatory: false, option: --min_depth, value: '5'}
-  fraction_invalid: {default: false, mandatory: false, option: --fraction_invalid, value: '0.2'}
-  max_errors: {default: false, mandatory: false, option: --max_errors, value: '10'}
-  fraction_valid: {default: false, mandatory: false, option: --fraction_valid, value: '0.5'}
-  careful : {default: false, mandatory: false, option: --careful, value: None}
+  min_depth:
+    default: true
+    mandatory: false
+    option: '--min_depth'
+    value: '5'
+  fraction_invalid:
+    default: false
+    mandatory: false
+    option: '--fraction_invalid'
+    value: '0.2'
+  max_errors:
+    default: false
+    mandatory: false
+    option: '--max_errors'
+    value: '10'
+  fraction_valid:
+    default: false
+    mandatory: false
+    option: '--fraction_valid'
+    value: '0.5'
+  careful:
+    default: false
+    mandatory: false
+    option: '--careful'
+    value: None
 tool_command: polypolish polish

@@ -1,4 +1,14 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  processors: {default: true, mandatory: false, option: processors, p_index: 0, value: '1'}
+  processors:
+    default: true
+    mandatory: false
+    option: processors
+    p_index: 0
+    value: '1'
 tool_command: mothur "#summary.seqs({0}{1})"

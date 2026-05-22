@@ -1,6 +1,26 @@
-dependencies: [fraggenescan/1.30]
+conda:
+  name: fraggenescan
+  packages:
+    - fraggenescan=1.30
+dependencies:
+  - fraggenescan/1.30
 parameters:
-  complete: {default: false, mandatory: false, option: -complete, p_index: 0, value: '1'}
-  thread: {default: false, mandatory: false, option: -thread, p_index: 0, value: '1'}
-  train: {default: false, mandatory: false, option: -train, p_index: 0, value: complete}
+  complete:
+    default: false
+    mandatory: false
+    option: '-complete'
+    p_index: 0
+    value: '1'
+  thread:
+    default: false
+    mandatory: false
+    option: '-thread'
+    p_index: 0
+    value: '1'
+  train:
+    default: false
+    mandatory: false
+    option: '-train'
+    p_index: 0
+    value: complete
 tool_command: run_FragGeneScan.pl

@@ -23,7 +23,16 @@ class PolypolishInsertFilter(Tool):
         Initializes PolypolishInsertFilter.
         :return: None
         """
-        super().__init__('PolypolishInsertFilter', '0.6.0')
+        super().__init__('PolypolishInsertFilter', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command.split()[0]} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _execute_tool(self) -> None:
         """

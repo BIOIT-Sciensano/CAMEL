@@ -1,12 +1,56 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+  - mothur=1.39.1
+dependencies:
+- mothur/1.39.1
 parameters:
-  abskew: {default: false, mandatory: false, option: abskew, p_index: 0, value: '1.9'}
-  dereplicate: {default: false, mandatory: false, option: dereplicate, p_index: 0,
-    value: 'false'}
-  dn: {default: false, mandatory: false, option: dn, p_index: 0, value: '1.4'}
-  mindiffs: {default: false, mandatory: false, option: mindiffs, p_index: 0, value: '3'}
-  mindiv: {default: false, mandatory: false, option: mindiv, p_index: 0, value: '0.5'}
-  minh: {default: false, mandatory: false, option: minh, p_index: 0, value: '0.3'}
-  processors: {default: true, mandatory: false, option: processors, p_index: 0, value: '1'}
-  xn: {default: false, mandatory: false, option: xn, p_index: 0, value: '8.0'}
+  abskew:
+    default: false
+    mandatory: false
+    option: abskew
+    p_index: 0
+    value: '1.9'
+  dereplicate:
+    default: false
+    mandatory: false
+    option: dereplicate
+    p_index: 0
+    value: 'false'
+  dn:
+    default: false
+    mandatory: false
+    option: dn
+    p_index: 0
+    value: '1.4'
+  mindiffs:
+    default: false
+    mandatory: false
+    option: mindiffs
+    p_index: 0
+    value: '3'
+  mindiv:
+    default: false
+    mandatory: false
+    option: mindiv
+    p_index: 0
+    value: '0.5'
+  minh:
+    default: false
+    mandatory: false
+    option: minh
+    p_index: 0
+    value: '0.3'
+  processors:
+    default: true
+    mandatory: false
+    option: processors
+    p_index: 0
+    value: '1'
+  xn:
+    default: false
+    mandatory: false
+    option: xn
+    p_index: 0
+    value: '8.0'
 tool_command: mothur "#chimera.vsearch({0}{1})"

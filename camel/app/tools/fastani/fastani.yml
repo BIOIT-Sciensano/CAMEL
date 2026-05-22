@@ -1,3 +1,7 @@
+conda:
+  name: fastani
+  packages:
+    - fastani=1.33
 dependencies:
   - fastani/1.33
 parameters:

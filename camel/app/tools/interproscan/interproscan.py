@@ -5,8 +5,8 @@ from pathlib import Path
 from camel.app.core.command import Command
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class Interproscan(Tool):
@@ -19,7 +19,7 @@ class Interproscan(Tool):
     def __init__(self):
         """
         Initialize tool
-                :return: None
+        :return: None
         """
         super().__init__('interproscan', '5.20-59.0')
         self.__input_key = None

@@ -1,15 +1,13 @@
 import abc
 import re
 from pathlib import Path
-from typing import Optional
 
-from camel.app.core.command import Command
 from camel.app.config import config
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.errors import ToolExecutionError
+from camel.app.core.command import Command
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.piping.toolpipeable import ToolPipeable
+from camel.app.loggers import logger
 
 
 class Picard(ToolPipeable, metaclass=abc.ABCMeta):
@@ -101,6 +99,16 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
             ToolIOFile(Path(self._folder) / self._parameters['output'].value)
         ]
 
+    def _get_base_command(self) -> list[str]:
+        """
+        Returns the base command.
+        :return: Base command
+        """
+        # Init base command
+        if config.dependency_service == 'lmod':
+            return ["java", self._java_options, "-jar $PICARD_JAR", self._tool_command, self._java_options_temp_dir]
+        return ['picard', self._tool_command]
+
     def _build_command(self, pipe_in: bool = False, pipe_out: bool = False) -> None:
         """
         Build the command to run tool
@@ -108,8 +116,7 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
         :param pipe_out: Tool outputs to pipe
         :return: None
         """
-        #Init base command
-        command_parts = ["java", self._java_options, "-jar $PICARD_JAR", self._tool_command, self._java_options_temp_dir]
+        command_parts = self._get_base_command()
 
         #Set input cmd line option
         if pipe_in:
@@ -129,7 +136,7 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
 
         self._command.command = " ".join(command_parts)
 
-    def _set_informs(self, stderr: Optional[str] = None) -> None:
+    def _set_informs(self, stderr: str | None = None) -> None:
         """
         Analyse the result of picard run and update tool.informs, implement when necessary
         :return: None
