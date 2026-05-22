@@ -86,22 +86,24 @@ class ExtractVariantsAndEffectFromVCF(Tool):
     @staticmethod
     def __parse_effect(vcf_record: Variant) -> tuple[str | None, str | None]:
         """
-        Parses the mutation effect from the CSQ annotation.
-        Note: only extracts it for protein coding regions
+        Parses the mutation effect from the BCSQ annotation added by bcftools csq.
+        Note: only extracts it for protein coding regions.
         :param vcf_record: Input record
-        :return: Mutation effect and Gene
+        :return: Mutation effect and Gene (both None when annotation is absent or non-coding)
         """
-        # Check if BCSQ annotation is present
-        if 'BCSQ' not in vcf_record.INFO:
-            logger.warning(
-                f'BCSQ info missing for: {vcf_record.CHROM}:{vcf_record.POS}'
-            )
+        # cyvcf2 returns None from .get() when the INFO key is absent
+        bcsq_raw = vcf_record.INFO.get('BCSQ')
+        if bcsq_raw is None:
+            logger.warning(f'BCSQ info missing for: {vcf_record.CHROM}:{vcf_record.POS}')
             return None, None
 
-        # Parse annotation
-        parts = vcf_record.INFO['BCSQ'][0].split('|')
+        first_entry = bcsq_raw if isinstance(bcsq_raw, str) else bcsq_raw[0]
+        parts = first_entry.split('|')
+
+        # '&' prefix: consequence carried over from a compound variant — skip
         if parts[0].startswith('&'):
             return None, None
+        # '@' prefix: consequence is a reference to another position
         if parts[0].startswith('@'):
             return parts[0], '-'
         return parts[0], parts[1]
@@ -118,9 +120,8 @@ class ExtractVariantsAndEffectFromVCF(Tool):
         for var in var_list:
             effect, gene = self.__parse_effect(var)
             variant = f'{var.REF}->{var.ALT[0]}'
-            type_of_var = (
-                'Indel' if var.INFO.get('INDEL', False) is True else var.var_type
-            )
+            # cyvcf2 exposes is_indel directly; avoids relying on the LoFreq INDEL flag
+            type_of_var = 'Indel' if var.is_indel else var.var_type
             if effect is None:
                 effect, gene = 'Unknown', 'Unknown'
             output_dictionary[var.POS] = VariantWithEffect(
