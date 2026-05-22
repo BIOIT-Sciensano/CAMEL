@@ -1,74 +1,63 @@
 conda:
   name: mothur
   packages:
-  - mothur=1.39.5
+    - mothur=1.48.0
 dependencies:
-- mothur/1.39.1
+  - mothur/1.48.0
 parameters:
   align:
     default: false
     mandatory: false
     option: align
-    p_index: 0
     value: needleman
   exclude:
     default: false
     mandatory: false
     option: -x
-    p_index: 0
     value: null
   flip:
     default: false
     mandatory: false
     option: flip
-    p_index: 0
-    value: 'false'
+    value: 'true'
   gapextend:
     default: false
     mandatory: false
     option: gapextend
-    p_index: 0
     value: '-1'
   gapopen:
     default: false
     mandatory: false
     option: gapopen
-    p_index: 0
     value: '-2'
   ksize:
     default: false
     mandatory: false
     option: ksize
-    p_index: 0
     value: '8'
   match:
     default: false
     mandatory: false
     option: match
-    p_index: 0
     value: '1'
   mismatch:
     default: false
     mandatory: false
     option: mismatch
-    p_index: 0
     value: '-1'
   processors:
     default: true
     mandatory: false
     option: processors
-    p_index: 0
     value: '1'
   search:
     default: false
     mandatory: false
     option: search
-    p_index: 0
     value: kmer
   threshold:
     default: false
     mandatory: false
-    option: threshold
-    p_index: 0
+    option: threshold,
     value: '0.50'
 tool_command: mothur "#align.seqs({0}{1})"

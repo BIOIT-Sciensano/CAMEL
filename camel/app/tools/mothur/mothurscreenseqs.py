@@ -1,6 +1,5 @@
 from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -11,34 +10,25 @@ class MothurScreenSeqs(Mothur):
     summary file.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize tool
+        Initializes this tool.
         :return: None
         """
-        super().__init__('mothur_screen_seqs', version=None)
+        super().__init__('mothur_screen_seqs')
+        self._required_input = ['FASTA']
+        self._optional_input = [
+            'TSV_Summary',
+            'TSV_Groups',
+            'TSV_AlignReport',
+            'TSV_ContigReport',
+            'TSV_Names',
+            'TSV_Counts',
+            'TSV_Qfile',
+            'TSV_Taxonomy',
+        ]
 
-    def _check_input(self):
-        """
-        Checks whether the given inputs are valid:
-        - FASTA key is required
-        - Only 'FASTA', 'TSV_Summary', 'TSV_Groups', 'TSV_AlignReport', 'TSV_ContigReport',
-          'TSV_Names', 'TSV_Counts', 'TSV_Qfile', and 'TSV_Taxonomy' are allowed
-        - Only one input file per key is allowed
-        :return: None
-        """
-        super()._check_input()
-        if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError(f'No input file given for Mothur screen.seqs: {self._tool_inputs!r}')
-        for key, input_files in self._tool_inputs.items():
-            if key not in ['FASTA', 'TSV_Summary', 'TSV_Groups', 'TSV_AlignReport', 'TSV_ContigReport',
-                           'TSV_Names', 'TSV_Counts', 'TSV_Qfile', 'TSV_Taxonomy']:
-                raise InvalidToolInputError(f'Invalid input key given for Mothur screen.seqs: {self._tool_inputs!r}')
-            if len(input_files) != 1:
-                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
-                                                     screen.seqs: {self._tool_inputs!r}')
-
-    def _build_input_string(self):
+    def _build_input_string(self) -> str:
         """
         Creates the string with the input files and input/output directories
         Example: ffastq=FileR1.fastq, rfastq=FileR2.fastq, inputdir=/test/data/input/,
@@ -58,7 +48,7 @@ class MothurScreenSeqs(Mothur):
                 items.append(f'name={input_files[0]}')
             elif key == 'TSV_AlignReport':
                 items.append(f'alignreport={input_files[0]}')
-            elif key == 'TSV_ContigsReport':
+            elif key == 'TSV_ContigReport':
                 items.append(f'contigreport={input_files[0]}')
             elif key == 'TSV_Taxonomy':
                 items.append(f'taxonomy={input_files[0]}')
@@ -67,32 +57,54 @@ class MothurScreenSeqs(Mothur):
         items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
         Sets the name of the output files, and fills the common stream object with them
         :return: None
         """
         # Screen.seqs re-appends the original extension (e.g. .fasta or .align) after first adding .good
-        path = self._tool_inputs['FASTA'][0].path
-        fasta_extension = path[self._tool_inputs['FASTA'][0].path.rfind('.'):]
-        self._tool_outputs['FASTA'] = [ToolIOFile(super()._get_basename('FASTA') + '.good' + fasta_extension)]
-        self._tool_outputs['TSV_Bad'] = [ToolIOFile(super()._get_basename('FASTA') + '.bad.accnos')]
+        fasta_extension = self._get_basename().suffix
+        self._tool_outputs['FASTA'] = [
+            ToolIOFile(self._get_basename().with_suffix(f'.good{fasta_extension}'))
+        ]
+        if self._get_basename().with_suffix('.bad.accnos').exists():
+            self._tool_outputs['TSV_Bad'] = [
+                ToolIOFile(self._get_basename().with_suffix('.bad.accnos'))
+            ]
         # Depending on the input keys more files will be created
         if 'TSV_Groups' in self._tool_inputs:
-            self._tool_outputs['TSV_Groups'] = [ToolIOFile(super()._get_basename('TSV_Groups', '.groups') +
-                                                '.good.groups')]
+            self._tool_outputs['TSV_Groups'] = [
+                ToolIOFile(self._get_basename('TSV_Groups').with_suffix('.good.groups'))
+            ]
         if 'TSV_Summary' in self._tool_inputs:
-            self._tool_outputs['TSV_Summary'] = [ToolIOFile(super()._get_basename('TSV_Summary', '.summary') +
-                                                 '.good.summary')]
+            self._tool_outputs['TSV_Summary'] = [
+                ToolIOFile(
+                    self._get_basename('TSV_Summary').with_suffix('.good.summary')
+                )
+            ]
         if 'TSV_Names' in self._tool_inputs:
-            self._tool_outputs['TSV_Names'] = [ToolIOFile(super()._get_basename('TSV_Names', '.names') +
-                                               '.good.names')]
+            self._tool_outputs['TSV_Names'] = [
+                ToolIOFile(self._get_basename('TSV_Names').with_suffix('.good.names'))
+            ]
         if 'TSV_AlignReport' in self._tool_inputs:
-            self._tool_outputs['TSV_AlignReport'] = [ToolIOFile(super()._get_basename('TSV_AlignReport', '.align.report') +
-                                                     '.good.align.report')]
-        if 'TSV_ContigsReport' in self._tool_inputs:
-            self._tool_outputs['TSV_ContigsReport'] = [ToolIOFile(super()._get_basename('TSV_ContigReport', '.contig.report') +
-                                                       '.good.contigs.report')]
+            self._tool_outputs['TSV_AlignReport'] = [
+                ToolIOFile(
+                    self._get_basename('TSV_AlignReport', {'.report'}).with_suffix(
+                        '.good.align.report'
+                    )
+                )
+            ]
+        if 'TSV_ContigReport' in self._tool_inputs:
+            self._tool_outputs['TSV_ContigReport'] = [
+                ToolIOFile(
+                    self._get_basename('TSV_ContigReport', {'.report'}).with_suffix(
+                        '.good.contigs.report'
+                    )
+                )
+            ]
         if 'TSV_Counts' in self._tool_inputs:
-            self._tool_outputs['TSV_Counts'] = [ToolIOFile(super()._get_basename('TSV_Counts', '.count_table') +
-                                                '.good.count_table')]
+            self._tool_outputs['TSV_Counts'] = [
+                ToolIOFile(
+                    self._get_basename('TSV_Counts').with_suffix('.good.count_table')
+                )
+            ]

@@ -10,14 +10,16 @@ class MothurMakeShared(Mothur):
     file for each group.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize tool
+        Initializes this tool.
         :return: None
         """
-        super().__init__('mothur_make_shared', version=None)
+        super().__init__('mothur_make_shared')
+        self._required_input = []
+        self._optional_input = ['TSV_Groups', 'TSV_Counts']
 
-    def _check_input(self):
+    def _check_input(self) -> None:
         """
         Checks whether the given inputs are valid:
         - Either TSV_List or BIOM is required (not both)
@@ -25,44 +27,38 @@ class MothurMakeShared(Mothur):
         - Only one input file per key allowed
         :return: None
         """
+        if 'TSV_List' in self._tool_inputs:
+            self._required_input = ['TSV_List']
+        elif 'BIOM' in self._tool_inputs:
+            self._required_input = ['BIOM']
+        else:
+            raise InvalidToolInputError('Invalid input files given. Please provide either TSV_List or BIOM.')
         super()._check_input()
-        if not (('TSV_List' in self._tool_inputs) != ('BIOM' in self._tool_inputs)):
-            raise InvalidToolInputError('Invalid input files (keys) given for Mothur make.shared, only '
-                                                 f'TSV_List or BIOM allowed: {self._tool_inputs!r}')
-        for key, input_files in self._tool_inputs.items():
-            if key not in ['TSV_List', 'BIOM', 'TSV_Groups', 'TSV_Counts']:
-                raise InvalidToolInputError(f'Invalid input key given for Mothur make.shared: {self._tool_inputs!r}')
-            if len(input_files) != 1:
-                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
-                                                     make.shared: {self._tool_inputs!r}')
 
-    def _build_input_string(self):
+    def _build_input_string(self) -> str:
         """
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
         items = []
         if 'TSV_List' in self._tool_inputs:
-            items.append('list={}'.format(self._tool_inputs['TSV_List'][0]))
+            items.append(f"list={self._tool_inputs['TSV_List'][0]}")
         elif 'BIOM' in self._tool_inputs:
-            items.append('biom={}'.format(self._tool_inputs['BIOM'][0]))
+            items.append(f"biom={self._tool_inputs['BIOM'][0]}")
         if 'TSV_Counts' in self._tool_inputs:
-            items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
+            items.append(f"count={self._tool_inputs['TSV_Counts'][0]}")
         if 'TSV_Groups' in self._tool_inputs:
-            items.append('group={}'.format(self._tool_inputs['TSV_Groups'][0]))
+            items.append(f"group={self._tool_inputs['TSV_Groups'][0]}")
         items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
         Sets the name of the output files, and fills the common stream object with them.
         REMARK: According to the documentation more output files will be created when
         a group file is given but it is not documented which ones.
         :return: None
         """
-        if 'TSV_List' in self._tool_inputs:
-            basename = super()._get_basename('TSV_List')
         # Either TSV_List or BIOM is given
-        else:
-            basename = super()._get_basename('BIOM')
-        self._tool_outputs['TSV_Shared'] = [ToolIOFile(basename + '.shared')]
+        basename = self._get_basename('TSV_List') if 'TSV_List' in self._tool_inputs else self._get_basename('BIOM')
+        self._tool_outputs['TSV_Shared'] = [ToolIOFile(basename.with_suffix('.shared'))]

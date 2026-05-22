@@ -1,10 +1,8 @@
 import os
 from pathlib import Path
 
-from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.tool import Tool
 
@@ -17,14 +15,14 @@ class Itsx(Tool):
     severely misleading results, ITSx identifies and extracts only the ITS regions themselves.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize tool
         :return: None
         """
-        super().__init__('itsx', '1.0.11')
+        super().__init__('itsx', '1.1.3')
 
-    def _execute_tool(self):
+    def _execute_tool(self) -> None:
         """
         Runs ITSx
         :return: None
@@ -33,7 +31,7 @@ class Itsx(Tool):
         self._execute_command()
         self.__set_output()
 
-    def _check_input(self):
+    def _check_input(self) -> None:
         """
         Checks whether the given inputs are valid:
         - FASTA key is required
@@ -49,7 +47,7 @@ class Itsx(Tool):
         if len(self._tool_inputs.keys()) > 2:
             raise InvalidToolInputError(f'Too many input keys given for ITSx (only FASTA allowed): {self._tool_inputs!r}')
 
-    def __get_basename(self):
+    def __get_basename(self) -> str:
         """
         Returns the prefix that will be used in the output.
         :return: String with the prefix used in the output
@@ -57,7 +55,7 @@ class Itsx(Tool):
         infile = self._tool_inputs['FASTA'][0].basename
         return f'{os.path.join(self._folder, os.path.splitext(infile)[0])}_ITSx'
 
-    def __set_output(self):
+    def __set_output(self) -> None:
         """
         Sets the name of the output files
         :return: None
@@ -75,7 +73,7 @@ class Itsx(Tool):
         if os.path.isfile(basename + '.chimeric.fasta'):
             self._tool_outputs['FASTA_Chimeric'] = [ToolIOFile(Path(basename + '.chimeric.fasta'))]
 
-    def __build_input_string(self):
+    def __build_input_string(self) -> str:
         """
         Creates the string with the input files and output directories
         :return: String with the input parameters
@@ -85,7 +83,7 @@ class Itsx(Tool):
             f'-o {self.__get_basename()}'
         ])
 
-    def __build_command(self):
+    def __build_command(self) -> None:
         """
         Concatenates required parameters and options to build the command to run 'make.contigs'
         :return: None
@@ -93,11 +91,3 @@ class Itsx(Tool):
         input_string = self.__build_input_string()
         options_string = ' '.join(self._build_options())
         self._command.command = ' '.join([self._tool_command, input_string, options_string])
-
-    def _check_command_output(self, command: Command) -> None:
-        """
-        Checks if the tool was executed successfully.
-        :param command: Command to check
-        :return: None
-        """
-        toolutils.check_tool_execution(self, command, exit_code=0)

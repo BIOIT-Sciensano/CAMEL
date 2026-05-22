@@ -1,20 +1,18 @@
 conda:
   name: mothur
   packages:
-  - mothur=1.39.1
+    - mothur=1.48.0
 dependencies:
-- mothur/1.39.1
+  - mothur/1.48.0
 parameters:
   dups:
     default: false
     mandatory: false
     option: dups
-    p_index: 0
     value: 'true'
   taxon:
     default: false
     mandatory: false
     option: taxon
-    p_index: 0
     value: taxon1-taxon2
 tool_command: mothur "#remove.lineage({0}{1})"

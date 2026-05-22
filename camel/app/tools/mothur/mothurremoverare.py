@@ -1,8 +1,5 @@
-from pathlib import Path
-
 from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -12,46 +9,27 @@ class MothurRemoveRare(Mothur):
     new file.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize tool
+        Initializes this tool.
         :return: None
         """
-        super().__init__('mothur_remove_rare', version=None)
+        super().__init__('mothur_remove_rare')
+        self._required_input = ['TSV_List']
+        self._optional_input = ['TSV_Counts']
 
-    def _check_input(self):
-        """
-        Checks whether the given inputs are valid:
-        - TSV_List key is required
-        - Only one file for TSV_List is allowed
-        - TSV_Counts is the only extra input key that is allowed
-        - Rabund and sabund not yet implemented
-        :return: None
-        """
-        super()._check_input()
-        if 'TSV_List' not in self._tool_inputs:
-            raise InvalidToolInputError(f'No valid input file given for Mothur remove.rare: {self._tool_inputs!r}')
-        if len(self._tool_inputs['TSV_List']) != 1:
-            raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
-                                                 remove.rare: {self._tool_inputs!r}')
-        if len(self._tool_inputs.keys()) > 2:
-            raise InvalidToolInputError(f'Too many input keys given for Mothur remove.rare: {self._tool_inputs!r}')
-        for key in self._tool_inputs.keys():
-            if key not in {'TSV_List', 'TSV_Counts'}:
-                raise InvalidToolInputError(f'Invalid input key given for Mothur remove.rare: {self._tool_inputs!r}')
-
-    def _build_input_string(self):
+    def _build_input_string(self) -> str:
         """
         Creates the string with the input files and input/output directories
         Example: fasta=File1.trim.contig.fasta, outputdir=/test/data/outputdir
         :return: String with the input parameters
         """
-        items = ['list={}'.format(self._tool_inputs['TSV_List'][0]), f'outputdir={self._folder}']
+        items = [f"list={self._tool_inputs['TSV_List'][0]}", f"outputdir={self._folder}"]
         if 'TSV_Counts' in self._tool_inputs:
-            items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
+            items.append(f"count={self._tool_inputs['TSV_Counts'][0]}")
         return ', '.join(items)
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
         Sets the name of the output files, and fills the common stream object with them
         :return: None
@@ -60,6 +38,6 @@ class MothurRemoveRare(Mothur):
         basename = self._get_basename('TSV_List')
         self._tool_outputs['TSV_List'] = []
         # Only the first label in the file is used in case a list file is given as input
-        self._tool_outputs['TSV_List'].append(ToolIOFile(Path(f'{basename}.{labels[0]}.pick.list')))
+        self._tool_outputs['TSV_List'].append(ToolIOFile(basename.with_suffix(f'.{labels[0]}.pick.list')))
         if 'TSV_Counts' in self._tool_inputs:
-            self._tool_outputs['TSV_Counts'] = [ToolIOFile(Path(f'{self._get_basename("TSV_Counts")}.pick.count_table'))]
+            self._tool_outputs['TSV_Counts'] = [ToolIOFile(self._get_basename('TSV_Counts').with_suffix('.pick.count_table'))]

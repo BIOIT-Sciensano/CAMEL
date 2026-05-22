@@ -1,6 +1,5 @@
 from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -9,60 +8,53 @@ class MothurClassifyOtu(Mothur):
     The classify.otu command is used to get a consensus taxonomy for an otu.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize tool
+        Initializes this tool.
         :return: None
         """
-        super().__init__('mothur_classify_otu', version=None)
+        super().__init__('mothur_classify_otu')
+        self._required_input = ['TSV_List', 'TSV_Taxonomy']
+        self._optional_input = [
+            'TSV_Groups',
+            'TSV_Counts',
+            'TSV_Names',
+            'TSV_RefTaxonomy',
+        ]
 
-    def _check_input(self):
-        """
-        Checks whether the given inputs are valid:
-        - TSV_List and TSV_Taxonomy keys are required
-        - Additional allowed keys: 'TSV_Groups', 'TSV_Counts', 'TSV_Names', 'TSV_RefTaxonomy'
-        - Only one input file per key allowed
-        :return: None
-        """
-        super()._check_input()
-        if 'TSV_List' not in self._tool_inputs or 'TSV_Taxonomy' not in self._tool_inputs:
-            raise InvalidToolInputError('Invalid input files (keys) given for Mothur '
-                                                 f'classify.otu: {self._tool_inputs!r}')
-        for key, input_files in self._tool_inputs.items():
-            if key not in ['TSV_List', 'TSV_Taxonomy', 'TSV_Groups', 'TSV_Counts', 'TSV_Names', 'TSV_RefTaxonomy']:
-                raise InvalidToolInputError('Invalid input key given for Mothur '
-                                                     f'classify.otu: {self._tool_inputs!r}')
-            if len(input_files) != 1:
-                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
-                                                     classify.otu: {self._tool_inputs!r}')
-
-    def _build_input_string(self):
+    def _build_input_string(self) -> str:
         """
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        items = ['list={}'.format(self._tool_inputs['TSV_List'][0]),
-                 'taxonomy={}'.format(self._tool_inputs['TSV_Taxonomy'][0])]
+        items = [
+            f"list={self._tool_inputs['TSV_List'][0]}",
+            f"taxonomy={self._tool_inputs['TSV_Taxonomy'][0]}",
+        ]
         if 'TSV_Counts' in self._tool_inputs:
-            items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
+            items.append(f"count={self._tool_inputs['TSV_Counts'][0]}")
         if 'TSV_Groups' in self._tool_inputs:
-            items.append('group={}'.format(self._tool_inputs['TSV_Groups'][0]))
+            items.append(f"group={self._tool_inputs['TSV_Groups'][0]}")
         if 'TSV_Names' in self._tool_inputs:
-            items.append('name={}'.format(self._tool_inputs['TSV_Names'][0]))
+            items.append(f"name={self._tool_inputs['TSV_Names'][0]}")
         if 'TSV_RefTaxonomy' in self._tool_inputs:
-            items.append('reftaxonomy={}'.format(self._tool_inputs['TSV_RefTaxonomy'][0]))
+            items.append(f"reftaxonomy={self._tool_inputs['TSV_RefTaxonomy'][0]}")
         items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
         Sets the name of the output files, and fills the common stream object with them.
         :return: None
         """
-        labels = super()._get_labels()
+        labels = self._get_labels()
         self._tool_outputs.update({'TSV_Taxonomy': [], 'TSV_Summary': []})
-        basename = super()._get_basename('TSV_List')
+        basename = self._get_basename('TSV_List')
         # Each label creates a seperate output
         for label in labels:
-            self._tool_outputs['TSV_Taxonomy'] += [ToolIOFile(basename + '.' + label + '.cons.taxonomy')]
-            self._tool_outputs['TSV_Summary'] += [ToolIOFile(basename + '.' + label + '.cons.tax.summary')]
+            self._tool_outputs['TSV_Taxonomy'] += [
+                ToolIOFile(basename.with_suffix(f'.{label}.cons.taxonomy'))
+            ]
+            self._tool_outputs['TSV_Summary'] += [
+                ToolIOFile(basename.with_suffix(f'.{label}.cons.tax.summary'))
+            ]

@@ -1,14 +1,13 @@
 conda:
   name: mothur
   packages:
-  - mothur=1.39.1
+    - mothur=1.48.0
 dependencies:
-- mothur/1.39.1
+  - mothur/1.48.0
 parameters:
   dups:
     default: false
     mandatory: false
     option: dups
-    p_index: 0
     value: 'true'
 tool_command: mothur "#remove.seqs({0}{1})"

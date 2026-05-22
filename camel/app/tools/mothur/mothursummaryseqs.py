@@ -1,6 +1,5 @@
 from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -10,90 +9,73 @@ class MothurSummarySeqs(Mothur):
     an unaligned or aligned fasta-formatted sequence file.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize tool
+        Initializes this tool.
         :return: None
         """
-        super().__init__('mothur_summary_seqs', version=None)
+        super().__init__('mothur_summary_seqs')
+        self._required_input = ['FASTA']
+        self._optional_input = ['TSV_Counts']
 
-    def _check_input(self):
-        """
-        Checks whether the given inputs are valid:
-        - FASTA key is required
-        - Allowed keys are 'FASTA', 'TSV_Counts'
-        - Only one input file allowed per key
-        :return: None
-        """
-        super()._check_input()
-        if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError(f'No input file given for Mothur summary.seqs: {self._tool_inputs!r}')
-        for key, input_files in self._tool_inputs.items():
-            if key not in ['FASTA', 'TSV_Counts']:
-                raise InvalidToolInputError(f'Invalid input key given for Mothur summary.seqs: {self._tool_inputs!r}')
-            if len(input_files) != 1:
-                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
-                                                     summary.seqs: {self._tool_inputs!r}')
-
-    def _build_input_string(self):
+    def _build_input_string(self) -> str:
         """
         Creates the string with the input files and input/output directories
-        Example: fasta=File1.trim.contig.fasta, inputdir=/test/data/input/,
-        outputdir=/test/data/outputdir
+        Example: fasta=File1.trim.contig.fasta, inputdir=/test/data/input/, outputdir=/test/data/outputdir
         :return: String with the input parameters
         """
-        items = ['fasta={}'.format(self._tool_inputs['FASTA'][0])]
+        items = [f"fasta={self._tool_inputs['FASTA'][0]}"]
         if 'TSV_Counts' in self._tool_inputs:
-            items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
+            items.append(f"count={self._tool_inputs['TSV_Counts'][0]}")
         items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
         Sets the name of the output files, and fills the output file object with them
         :return: None
         """
-        basename = super()._get_basename()
-        self._tool_outputs['TSV_Summary'] = [ToolIOFile(basename + '.summary')]
-        self._tool_outputs['TSV_Stats'] = [ToolIOFile(basename + '.stats')]
+        output_base = self._folder / self._tool_inputs['FASTA'][0].basename
+        self._tool_outputs['TSV_Summary'] = [ToolIOFile(output_base.with_suffix('.summary'))]
+        self._tool_outputs['TSV_Stats'] = [ToolIOFile(output_base.with_suffix('.stats'))]
 
-    def _execute_tool(self):
+    def _execute_tool(self) -> None:
         """
         Runs Mothur summary.seqs
         :return: None
         """
-        self._create_symlinks()
+        self._create_symlinks(self._temp_dir)
         self._build_command()
         self._execute_command()
         self.__write_stats_to_file()
-        self._symlink_cleanup()
         self._set_output()
         self.__set_informs()
 
-    def __write_stats_to_file(self):
+    def __write_stats_to_file(self) -> None:
         """
         Writes the statistics that were output to stdout to a file
         :return: None
         """
-        output_file = open(self._get_basename() + '.stats', 'w', encoding='utf-8')
-        write_to_output = False
-        for line in self._command.stdout.splitlines():
-            # The first line of the stats starts with two tabs (i.e. \t\tStart\tEnd...)
-            if line.startswith('\t'):
-                write_to_output = True
-            if write_to_output is True:
-                output_file.write(line + '\n')
-            # The last line of the stats starts with a '#' (i.e. # of Seqs...)
-            if line.strip() == '' and write_to_output is True:
-                break
+        stats_file = self._get_basename().with_suffix('.stats')
+        with open(stats_file, 'w', encoding='utf-8') as outhandle:
+            write_to_output = False
+            for line in self._command.stdout.splitlines():
+                # The first line of the stats starts with two tabs (i.e. \t\tStart\tEnd...)
+                if line.startswith('\t'):
+                    write_to_output = True
+                if write_to_output is True:
+                    outhandle.write(line + '\n')
+                # The last line of the stats starts with a '#' (i.e. # of Seqs...)
+                if line.strip() == '' and write_to_output is True:
+                    break
 
-    def __set_informs(self):
+    def __set_informs(self) -> None:
         """
         Adds the summary statistics to the informs.
         :return: None
         """
         columns = ['Description', 'Start', 'End', 'NBases', 'Ambigs', 'Polymer', 'NumSeqs']
-        with open(self._get_basename() + '.stats', encoding='utf-8') as statsfile:
+        with open(self._tool_outputs['TSV_Stats'][0].path, encoding='utf-8') as statsfile:
             for line in statsfile:
                 if not line.startswith('\t\t'):
                     line_informs = line.strip().split('\t')

@@ -1,32 +1,28 @@
 conda:
   name: mothur
   packages:
-  - mothur=1.39.1
+    - mothur=1.48.0
 dependencies:
-- mothur/1.39.1
+  - mothur/1.48.0
 parameters:
   freq:
     default: false
     mandatory: false
     option: freq
-    p_index: 0
     value: '100'
   iters:
     default: false
     mandatory: false
     option: iters
-    p_index: 0
     value: '1000'
   label:
     default: false
     mandatory: false
     option: label
-    p_index: 0
     value: '0.03'
   processors:
     default: false
     mandatory: false
     option: processors
-    p_index: 0
     value: '1'
 tool_command: mothur "#rarefaction.single({0}{1})"

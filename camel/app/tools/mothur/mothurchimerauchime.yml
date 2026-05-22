@@ -1,104 +1,88 @@
 conda:
   name: mothur
   packages:
-  - mothur=1.39.1
+    - mothur=1.48.0
 dependencies:
-- mothur/1.39.1
+  - mothur/1.48.0
 parameters:
   chunks:
     default: false
     mandatory: false
     option: chunks
-    p_index: 0
     value: '4'
   dereplicate:
     default: false
     mandatory: false
     option: dereplicate
-    p_index: 0
     value: 'false'
   dn:
     default: false
     mandatory: false
     option: dn
-    p_index: 0
     value: '1.4'
   idsmoothwindow:
     default: false
     mandatory: false
     option: idsmoothwindow
-    p_index: 0
     value: '32'
   maxlen:
     default: false
     mandatory: false
     option: maxlen
-    p_index: 0
     value: '10000'
   maxp:
     default: false
     mandatory: false
     option: maxp
-    p_index: 0
     value: '2'
   minchunk:
     default: false
     mandatory: false
     option: minchunk
-    p_index: 0
     value: '64'
   mindiv:
     default: false
     mandatory: false
     option: mindiv
-    p_index: 0
     value: '0.5'
   minh:
     default: false
     mandatory: false
     option: minh
-    p_index: 0
     value: '0.3'
   minlen:
     default: false
     mandatory: false
     option: minlen
-    p_index: 0
     value: '10'
   minsmoothid:
     default: false
     mandatory: false
     option: minsmoothid
-    p_index: 0
     value: '0.95'
   processors:
     default: true
     mandatory: false
     option: processors
-    p_index: 0
     value: '1'
   skipgaps:
     default: false
     mandatory: false
     option: skipgaps
-    p_index: 0
     value: 'true'
   skipgaps2:
     default: false
     mandatory: false
     option: skipgaps2
-    p_index: 0
     value: 'true'
   xa:
     default: false
     mandatory: false
     option: xa
-    p_index: 0
     value: '1'
   xn:
     default: false
     mandatory: false
     option: xn
-    p_index: 0
     value: '8.0'
 tool_command: mothur "#chimera.uchime({0}{1})"

@@ -1,38 +1,33 @@
 conda:
   name: mothur
   packages:
-  - mothur=1.39.1
+    - mothur=1.48.0
 dependencies:
-- mothur/1.39.1
+  - mothur/1.48.0
 parameters:
   calc:
     default: false
     mandatory: false
     option: calc
-    p_index: 0
     value: onegap
   countends:
     default: false
     mandatory: false
     option: countends
-    p_index: 0
     value: 'true'
   cutoff:
     default: false
     mandatory: false
     option: cutoff
-    p_index: 0
     value: '0.10'
   output:
     default: false
     mandatory: false
     option: output
-    p_index: 0
     value: lt
   processors:
     default: true
     mandatory: false
     option: processors
-    p_index: 0
     value: '1'
 tool_command: mothur "#dist.seqs({0}{1})"

@@ -1,6 +1,5 @@
 from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -10,43 +9,25 @@ class MothurRarefactionSingle(Mothur):
     replacement approach.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize tool
+        Initializes this tool.
         :return: None
         """
-        super().__init__('mothur_rarefaction_single', version=None)
+        super().__init__('mothur_rarefaction_single')
+        self._required_input = ['TSV_List']
 
-    def _check_input(self):
-        """
-        Checks whether the given inputs are valid:
-        - TSV_List key is required
-        - Only one file for TSV_List is allowed
-        - Use of .shared file not yet implemented
-        :return: None
-        """
-        super()._check_input()
-        if 'TSV_List' not in self._tool_inputs:
-            raise InvalidToolInputError(f'No valid input file given for Mothur rarefaction.single: {self._tool_inputs!r}')
-        if len(self._tool_inputs['TSV_List']) != 1:
-            raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
-                                                 rarefaction.single: {self._tool_inputs!r}')
-        if len(self._tool_inputs.keys()) > 1:
-            raise InvalidToolInputError(f'Too many input keys given for Mothur rarefaction.single: {self._tool_inputs!r}')
-
-    def _build_input_string(self):
+    def _build_input_string(self) -> str:
         """
         Creates the string with the input files and input/output directories
         Example: fasta=File1.trim.contig.fasta, outputdir=/test/data/outputdir
         :return: String with the input parameters
         """
-        items = ['list={}'.format(self._tool_inputs['TSV_List'][0]), f'outputdir={self._folder}']
-        return ', '.join(items)
+        return f"list={self._tool_inputs['TSV_List'][0]}, outputdir={self._folder}"
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
         Sets the name of the output files, and fills the common stream object with them
         :return: None
         """
-        basename = self._get_basename('TSV_List')
-        self._tool_outputs['TSV'] = [ToolIOFile(f'{basename}.rarefaction')]
+        self._tool_outputs['TSV'] = [ToolIOFile(self._get_basename('TSV_List').with_suffix('.rarefaction'))]
