@@ -1,10 +1,10 @@
 from Bio import SeqIO
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.command import Command
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
-from camel.app.core.utils import toolutils
 
 
 class IdbaUd(Tool):
@@ -17,7 +17,7 @@ class IdbaUd(Tool):
     def __init__(self):
         """
         Initialize tool
-        :return: None
+                :return: None
         """
         super().__init__('idba_ud', '1.1.1')
 
@@ -39,11 +39,11 @@ class IdbaUd(Tool):
         """
         super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError('Invalid input key given for IDBA_UD, FASTA is required: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input key given for IDBA_UD, FASTA is required: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidToolInputError('Invalid number of input keys given for IDBA_UD, only FASTA is allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number of input keys given for IDBA_UD, only FASTA is allowed: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) > 5:
-            raise InvalidToolInputError('Invalid number of files given for IDBA_UD, maximum is 5: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number of files given for IDBA_UD, maximum is 5: {self._tool_inputs!r}')
 
     def __set_output(self):
         """

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union, Optional, Any
 
 from camel.app import loggers
-from camel.app.core.utils import toolutils
+from camel.app.core import toolutils
 from camel.app.loggers import logger
 from camel.app.core.tool import Tool
 

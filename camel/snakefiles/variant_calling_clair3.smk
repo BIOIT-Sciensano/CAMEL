@@ -15,7 +15,7 @@ rule clair3_variant_calling_prep_reference:
     params:
         reference = config['variant_calling'].get('reference')
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         snakemakeutils.dump_object([ToolIOFile(Path(params.reference['path']))], Path(output.FASTA))
         snakemakeutils.dump_object(params.reference, Path(output.INFORMS))
 
@@ -168,7 +168,7 @@ rule clair3_variant_calling_unzip_vcf:
         running_dir = 'variant_calling/unzip_vcf',
         sample_name = config['input']['sample_name']
     run:
-        from camel.app.core.utils import fileutils
+        from camelcore.app.utils import fileutils
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
         bcftools_view = BcftoolsView()
         snakemakeutils.add_io_inputs(bcftools_view, input)

@@ -4,9 +4,9 @@ from pathlib import Path
 
 from Bio.Phylo import NewickIO
 from Bio.Phylo.Newick import Tree
+from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.config import config
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.figtree.figtree import FigTree
 

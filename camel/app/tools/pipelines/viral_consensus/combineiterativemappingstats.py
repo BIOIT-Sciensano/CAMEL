@@ -3,11 +3,11 @@ import json
 import logging
 from pathlib import Path
 
-import vcf
 from Bio import SeqIO
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
 
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 
 
@@ -108,8 +108,7 @@ class CollectIterativeMappingStats(Tool):
         :return: None
         """
         # Parse VCF input
-        with path_vcf.open() as handle:
-            variants = list(vcf.Reader(handle))
+        variants = vcfutils.parse_all_variants(path_vcf)
 
         # Group variants by seq id
         variants_by_seq_id = {seq_id: [] for seq_id in seq_ids}

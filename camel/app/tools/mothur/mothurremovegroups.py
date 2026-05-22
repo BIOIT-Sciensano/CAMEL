@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -26,14 +27,14 @@ class MothurRemoveGroups(Mothur):
         super()._check_input()
         if 'TSV_Groups' not in self._tool_inputs and 'TSV_Counts' not in self._tool_inputs:
             raise InvalidToolInputError('Not enough valid input files given for Mothur '
-                                                 'remove.groups: {!r}'.format(self._tool_inputs))
+                                                 f'remove.groups: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'TSV_Names', 'TSV_Counts', 'TSV_Groups',
                            'TSV_Accnos', 'TSV_List', 'TSV_Taxonomy']:
-                raise InvalidToolInputError('Invalid input key given for Mothur remove.groups: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur remove.groups: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     remove.groups: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     remove.groups: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -50,8 +51,8 @@ class MothurRemoveGroups(Mothur):
                             'TSV_Taxonomy': 'taxonomy='}
         # Based on the key the correct option flag is added to the input string
         for key, input_files in self._tool_inputs.items():
-            items.append('{}{}'.format(input_parameters[key], input_files[0].path))
-        items.append('outputdir={}'.format(self._folder))
+            items.append(f'{input_parameters[key]}{input_files[0].path}')
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

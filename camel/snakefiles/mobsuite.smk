@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from pandas.errors import EmptyDataError
+from camelcore.app.io.tooliodirectory import ToolIODirectory
 
-from camel.app.core.io.tooliodirectory import ToolIODirectory
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.snakefiles import mobsuite
@@ -80,6 +79,8 @@ rule mobsuite_create_summary:
     run:
         import re
         import pandas as pd
+        from pandas.errors import EmptyDataError
+
         from camel.app.tools.mobsuite.mobreconreporter import MOBReconReporter
 
         # Parse TSV output

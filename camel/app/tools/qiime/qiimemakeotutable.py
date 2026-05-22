@@ -1,7 +1,8 @@
 import os.path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
 
@@ -27,13 +28,13 @@ class QiimeMakeOtuTable(Qiime):
         :return: None
         """
         if 'TSV_Otu' not in self._tool_inputs:
-            raise InvalidToolInputError('Invalid input files (keys) given for make_otu_table: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input files (keys) given for make_otu_table: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_Taxonomy', 'TSV_Otu']:
-                raise InvalidToolInputError('Invalid input key given for make_otu_table: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for make_otu_table: {self._tool_inputs!r}')
             if len(self._tool_inputs[key]) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files in each key given for \
-                                                     make_otu_table: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files in each key given for \
+                                                     make_otu_table: {self._tool_inputs!r}')
 
     def _set_output(self):
         """

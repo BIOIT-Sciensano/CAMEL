@@ -1,7 +1,7 @@
 import unittest
 
-from camel.app.toolkits.phylogeny.newickutils import NewickUtils
 from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.toolkits.phylogeny.newickutils import NewickUtils
 
 
 class TestNewickUtils(CamelTestSuite):

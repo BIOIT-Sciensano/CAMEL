@@ -2,13 +2,12 @@ from pathlib import Path
 
 import pandas as pd
 from Bio import SeqIO
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.command import Command
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.errors import ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class CollectLowDepthRegions(Tool):
@@ -57,7 +56,7 @@ class CollectLowDepthRegions(Tool):
         self._command.command = ' '.join([
             self._build_dependencies(), 'bedtools genomecov', f"-ibam {path_bam}", '-bga', f'> {path_bed_gcov}'])
         self._execute_command()
-        if not self._command.returncode == 0:
+        if not self._command.exit_code == 0:
             raise ToolExecutionError(f'Error running bedtools genome cov: {self._command.stderr}')
         logger.info(f'bedtools genome cov output file generated: {path_bed_gcov}')
         return path_bed_gcov
@@ -90,7 +89,7 @@ class CollectLowDepthRegions(Tool):
         command = Command(' '.join([
             self._build_dependencies(), f'bedtools merge -i {path_bed} > {path_bed_merged}']))
         command.run(self.folder)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise ToolExecutionError(f'Error executing bedtools: {command.stderr}')
         logger.info(f'BED file with merged regions created: {path_bed_merged}')
         return path_bed_merged

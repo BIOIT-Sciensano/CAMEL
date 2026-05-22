@@ -1,10 +1,11 @@
 import unittest
 from pathlib import Path
 
-from camel.app.core.piping import pipeutils
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliovalue import ToolIOValue
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core.piping import pipeutils
 from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
 from camel.app.tools.bowtie2.bowtie2map import Bowtie2Map
 from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat

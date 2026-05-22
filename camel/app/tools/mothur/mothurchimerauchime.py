@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -50,7 +51,7 @@ class MothurChimeraUchime(Mothur):
             items.append('group={}'.format(self._tool_inputs['TSV_Groups'][0]))
         if 'FASTA_Ref' in self._tool_inputs:
             items.append('reference={}'.format(self._tool_inputs['FASTA_Ref'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

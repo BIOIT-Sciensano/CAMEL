@@ -3,12 +3,13 @@ import re
 import shutil
 import tempfile
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.config import config
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class GATK4(Tool, metaclass=abc.ABCMeta):

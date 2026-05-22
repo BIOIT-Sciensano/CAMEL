@@ -18,7 +18,7 @@ rule snp_lineage_detection:
         dir_ = 'snp_lineage/tool',
         lineage_snp_positions = config['snp_lineage']['bed']
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.mycobacterium.snplineagedetector import SNPLineageDetector
         detector = SNPLineageDetector()
         snakemakeutils.add_io_inputs(detector, input)

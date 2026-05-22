@@ -6,21 +6,21 @@ from typing import Optional
 
 import click
 import yaml
+from camelcore.app.reports.htmlreport import HtmlReport
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import inputhelper, model
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
+from camel.app.scriptutils.inputhelper import helper_by_input_type
 from camel.app.scriptutils.inputhelper.inputhelperbase import InputHelperBase
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.wrappers.genedetectionwrapper import GeneDetectionWrapper
-from camel.app.scriptutils.inputhelper import helper_by_input_type
 
 
 @dataclasses.dataclass(frozen=True)

@@ -1,7 +1,8 @@
 import unittest
 
+from camelcore.app.utils import fileutils
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.utils import fileutils
 
 
 class TestFileSystemHelper(CamelTestSuite):

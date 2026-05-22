@@ -22,7 +22,7 @@ rule contamination_check_kraken2_run:
     threads: 8
     priority: 1
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.kraken.kraken2 import Kraken2
 
@@ -82,7 +82,7 @@ rule contamination_check_krona:
     params:
         dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/krona'
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.krona.krona import Krona
         krona = Krona()
         snakemakeutils.add_io_input(krona,'TSV', Path(input.TSV))
@@ -135,7 +135,7 @@ rule contamination_check_report_empty:
         input_format = lambda wildcards: wildcards.input_format,
         input_type = config['input']['type']
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.quality_checks.htmlreportercontamination import HtmlReporterContamination
 
         # Suffix for hybrid data

@@ -1,6 +1,6 @@
 import re
 
-from camel.app.core.errors import InvalidToolInputError, InvalidParameterError
+from camel.app.core.errors import InvalidParameterError, InvalidToolInputError
 from camel.app.loggers import logger
 from camel.app.tools.gatk4.gatk4 import GATK4
 

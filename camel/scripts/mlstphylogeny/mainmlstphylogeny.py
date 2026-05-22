@@ -8,21 +8,22 @@ from pathlib import Path
 import click
 import numpy as np
 import pandas as pd
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlreport import HtmlReport
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import reportutils
 from scipy.spatial.distance import pdist, squareform
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlelement import HtmlElement
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils.basescript.basescript import BaseScript
-from camel.app.scriptutils.model import BaseOptions, BaseOutput, BaseInput
+from camel.app.scriptutils.model import BaseInput, BaseOptions, BaseOutput
 from camel.app.toolkits.phylogeny import mlstphyloutils
 from camel.app.toolkits.phylogeny.newickutils import NewickUtils
 from camel.app.tools.figtree.figtree import FigTree
 from camel.app.tools.grapetree.grapetree import GrapeTree
+from camel.resources import DIR_CITATIONS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -358,7 +359,8 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
         # Add commands and citations
         report.add_html_object(reportutils.create_commands_section(
             [grapetree.informs, figtree.informs], self._script_opts.dir_working))
-        report.add_html_object(reportutils.create_citations_section(['Zhou_2018-grapetree']))
+        report.add_html_object(reportutils.create_citations_section(
+            dir_=DIR_CITATIONS, keys_other=['Zhou_2018-grapetree']))
         report.save()
 
     def __report_add_section_phylogeny_empty(self, report: HtmlReport) -> None:

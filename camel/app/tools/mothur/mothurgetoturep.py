@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -30,19 +31,19 @@ class MothurGetOturep(Mothur):
         if not (('PHY' in self._tool_inputs) != ('DIST' in self._tool_inputs)) \
                 or 'TSV_List' not in self._tool_inputs:
             raise InvalidToolInputError('Missing input files (keys) for Mothur '
-                                                 'get.oturep: {!r}'.format(self._tool_inputs))
+                                                 f'get.oturep: {self._tool_inputs!r}')
         if 'TSV_Counts' in self._tool_inputs and 'TSV_Names' in self._tool_inputs:
             raise InvalidToolInputError('Both Count and Names file is not allowed for Mothur '
-                                                 'get.oturep: {!r}'.format(self._tool_inputs))
+                                                 f'get.oturep: {self._tool_inputs!r}')
         if 'DIST' in self._tool_inputs and ('TSV_Counts' not in self._tool_inputs and 'TSV_Names' not in self._tool_inputs):
             raise InvalidToolInputError('TSV_Counts or TSV_Names required of column distance matrix is given '
-                                                 'for Mothur get.oturep: {!r}'.format(self._tool_inputs))
+                                                 f'for Mothur get.oturep: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['PHY', 'DIST', 'FASTA', 'TSV_Counts', 'TSV_Names', 'TSV_Groups', 'TSV_List']:
-                raise InvalidToolInputError('Invalid input key given for Mothur get.oturep: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur get.oturep: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     get.oturep: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     get.oturep: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -63,7 +64,7 @@ class MothurGetOturep(Mothur):
             items.append('fasta={}'.format(self._tool_inputs['FASTA'][0]))
         if 'TSV_Groups' in self._tool_inputs:
             items.append('group={}'.format(self._tool_inputs['TSV_Groups'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

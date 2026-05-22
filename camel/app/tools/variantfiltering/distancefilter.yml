@@ -9,7 +9,7 @@ parameters:
     default: true
     mandatory: false
     option: null
-    value: null
+    flag: true
   min_distance:
     default: true
     mandatory: true

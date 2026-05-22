@@ -1,8 +1,6 @@
 from pathlib import Path
 
-import pandas as pd
-
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.bacilluspipeline.snakefile import ani
@@ -73,6 +71,7 @@ rule fastani_dump_summary_info:
     output:
         TSV = 'ani/summary/summary_out.{ext}'
     run:
+        import pandas as pd
         tsv_fastani = snakemakeutils.load_object(Path(input.TSV))[0].path
         fastani_table = pd.read_table(tsv_fastani, header=None)
         with open(output.TSV, 'w') as handle:

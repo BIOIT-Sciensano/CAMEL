@@ -1,12 +1,13 @@
 import json
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 from camel.app.toolkits.mycobacterium import amrutils
 from camel.app.toolkits.mycobacterium.amrutils import ConfidenceLevel
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
-from camel.app.core.tool import Tool
 from camel.scripts.mycobacteriumpipeline import AMR_CIRCOS_TEMPLATE
 
 #############
@@ -301,7 +302,7 @@ class AMRCircosTemplateGeneration(Tool):
         """
         coverage_values = []
         buffer = []
-        with open(tsv_file, 'r') as handle:
+        with open(tsv_file) as handle:
             for line in handle.readlines():
                 buffer.append(int(line.strip().split('\t')[-1]))
                 if len(buffer) > window_size:

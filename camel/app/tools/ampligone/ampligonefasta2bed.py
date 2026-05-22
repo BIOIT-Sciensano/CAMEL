@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pandas as pd
 from Bio import SeqIO
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 
 
@@ -43,21 +43,27 @@ class AmpliGoneFasta2Bed(Tool):
         path_bed_out = self.folder / 'primer_locations.bed'
 
         # Create & execute command
-        self._command.command = ' '.join([
-            self._tool_command,
-            f"--reference {self._tool_inputs['FASTA_ref'][0].path}",
-            f"--primers {self._tool_inputs['FASTA_primers'][0].path}",
-            f"--output {path_bed_out}",
-            *self._build_options()
-        ])
+        self._command.command = ' '.join(
+            [
+                self._tool_command,
+                f"--reference {self._tool_inputs['FASTA_ref'][0].path}",
+                f"--primers {self._tool_inputs['FASTA_primers'][0].path}",
+                f"--output {path_bed_out}",
+                *self._build_options(),
+            ]
+        )
         self._execute_command()
 
         # Collect output
         self._tool_outputs['BED'] = [ToolIOFile(path_bed_out)]
 
         # Informs
-        self._collect_primer_stats(self._tool_inputs['FASTA_primers'][0].path, path_bed_out)
-        self._informs['primer_mismatch_rate'] = float(self._parameters['primer_mismatch_rate'].value)
+        self._collect_primer_stats(
+            self._tool_inputs['FASTA_primers'][0].path, path_bed_out
+        )
+        self._informs['primer_mismatch_rate'] = float(
+            self._parameters['primer_mismatch_rate'].value
+        )
         self._informs['fasta_primers'] = self._tool_inputs['FASTA_primers'][0].path.name
 
     def _check_command_output(self, command: Command) -> None:
@@ -68,7 +74,9 @@ class AmpliGoneFasta2Bed(Tool):
         """
         toolutils.check_tool_execution(self, command, exit_code=0)
 
-    def _collect_primer_stats(self, path_fasta_primers: Path, path_bed_out: Path) -> None:
+    def _collect_primer_stats(
+        self, path_fasta_primers: Path, path_bed_out: Path
+    ) -> None:
         """
         Collects the informs from the stdout.
         :param path_fasta_primers: FASTA file with primer sequences
@@ -79,4 +87,6 @@ class AmpliGoneFasta2Bed(Tool):
             self._informs['primers_in'] = [s.id for s in SeqIO.parse(handle, 'fasta')]
         data_primers = pd.read_table(path_bed_out, usecols=[3], names=['primer'])
         count_by_primer = data_primers['primer'].value_counts().to_dict()
-        self._informs['primers_out'] = {p: count_by_primer.get(p, 0) for p in self._informs['primers_in']}
+        self._informs['primers_out'] = {
+            p: count_by_primer.get(p, 0) for p in self._informs['primers_in']
+        }

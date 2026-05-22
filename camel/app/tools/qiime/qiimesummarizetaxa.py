@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
 
@@ -25,10 +26,10 @@ class QiimeSummarizeTaxa(Qiime):
         :return: None
         """
         if 'BIOM' not in self._tool_inputs:
-            raise InvalidToolInputError('Invalid input files (keys) given for summarize_taxa: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input files (keys) given for summarize_taxa: {self._tool_inputs!r}')
         if len(self._tool_inputs['BIOM']) != 1:
-            raise InvalidToolInputError('Invalid number (!= 1) of files in each key given for \
-                                                 summarize_taxa: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (!= 1) of files in each key given for \
+                                                 summarize_taxa: {self._tool_inputs!r}')
 
     def _set_output(self):
         """
@@ -58,5 +59,5 @@ class QiimeSummarizeTaxa(Qiime):
         :return: String with the input parameters
         """
         input_string = '-i {}'.format(self._tool_inputs['BIOM'][0])
-        input_string += ' -o {}'.format(self._folder)
+        input_string += f' -o {self._folder}'
         return input_string

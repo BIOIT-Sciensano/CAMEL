@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.core.snakemake.step import Step
@@ -443,7 +443,7 @@ rule qc_hybrid_add_vcf_info_to_informs:
     params:
         dir_ = lambda wildcards: f'qc_hybrid/{wildcards.name}/{wildcards.method}'
     run:
-        from camel.app.core.utils import vcfutils
+        from camelcore.app.utils import vcfutils
         informs = snakemakeutils.load_object(Path(input.INFORMS))
         if wildcards.method == 'sniffles':
             informs['nb_of_variants'] = sum(informs['variants'].values())

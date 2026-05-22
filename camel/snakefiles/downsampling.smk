@@ -40,7 +40,7 @@ rule downsampling_calculate:
         is_disabled = config['downsampling'].get('disabled', False),
         is_paired = lambda wildcards: wildcards.read_key == 'fastq_pe'
     run:
-        from camel.app.core.utils import fastautils
+        from camelcore.app.utils import fastautils
         from camel.app.tools.pipelines.downsampling.downsamplecalculation import DownsampleCalculation
         ds_calc = DownsampleCalculation()
         step = Step(rule_name=str(rule), tool=ds_calc, dir_=Path(str(params.dir_)))

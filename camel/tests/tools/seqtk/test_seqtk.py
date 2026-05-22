@@ -1,13 +1,14 @@
 import unittest
 
-from camel.app.core.utils import fastqutils
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastqutils
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
+from camel.app.tools.seqtk.seqtkconvert import SeqtkConvert
 from camel.app.tools.seqtk.seqtkmergepe import SeqtkMergePE
 from camel.app.tools.seqtk.seqtkseq import SeqtkSeq
 from camel.app.tools.seqtk.seqtksize import SeqtkSize
-from camel.app.tools.seqtk.seqtkconvert import SeqtkConvert
 
 
 class TestSeqtk(CamelTestSuite):

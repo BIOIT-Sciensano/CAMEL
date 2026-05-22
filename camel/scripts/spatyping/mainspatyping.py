@@ -4,12 +4,12 @@ import json
 from pathlib import Path
 
 import click
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.reports.htmlreport import HtmlReport
+from camelcore.app.utils import reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import inputhelper, model
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript

@@ -179,7 +179,7 @@ rule assembly_quast:
         FASTA = rules.assembly_filter_contig_length.output.FASTA
     output:
         TSV = 'assembly/quast/tsv.io',
-        INFORMS = 'assembly/quast/informs.io',
+        INFORMS = 'assembly/quast/informs.io'
     params:
         dir_ = 'assembly/quast'
     run:
@@ -225,7 +225,7 @@ rule assembly_quast_report:
         sample_name = config['input']['sample_name']
     run:
         from camel.app.tools.pipelines.assembly.htmlreporterassembly import HtmlReporterAssembly
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         reporter = HtmlReporterAssembly()
         reporter.add_input_files({'SAMPLE_NAME': [ToolIOValue(params.sample_name)]})
         assembler_name = ', '.join(snakemakeutils.load_object(Path(x))['_name'] for x in input.INFORMS_assembler) \

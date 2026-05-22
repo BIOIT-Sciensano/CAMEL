@@ -18,7 +18,7 @@ rule gmats_run:
         dir_ = 'gmats/tool',
         db = config.get('gmats', {}).get('db')
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.neisseria.gmats import GMats
 
         gmats_ = GMats()

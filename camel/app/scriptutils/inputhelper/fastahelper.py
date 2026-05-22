@@ -1,12 +1,16 @@
 from pathlib import Path
 from typing import Any
 
-from camel.app.core.reports.htmlreport import HtmlReport
+from camelcore.app.reports.htmlreport import HtmlReport
+
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
-
-from camel.app.scriptutils.inputhelper.inputhelperbase import InputHelperBase, TAssemblyOpts, TTrimmingOpts
+from camel.app.scriptutils.inputhelper.inputhelperbase import (
+    InputHelperBase,
+    TAssemblyOpts,
+    TTrimmingOpts,
+)
 
 
 class FastaHelper(InputHelperBase):

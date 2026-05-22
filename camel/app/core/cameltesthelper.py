@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 import yaml
+from camelcore.app.utils import reportutils
 
 from camel.app.config import config
-from camel.app.core.reports import reportutils
 from camel.app.loggers import logger
 
 

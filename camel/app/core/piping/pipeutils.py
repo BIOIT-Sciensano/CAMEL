@@ -1,9 +1,9 @@
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-import tempfile
+from camelcore.app.command import Command
 
-from camel.app.core.command import Command
 from camel.app.config import config
 from camel.app.core.piping.toolpipeable import ToolPipeable
 
@@ -65,7 +65,7 @@ def run_as_pipe(tools: list[ToolPipeable], dir_: Path) -> list[PipedTool]:
     piped_command = ' | '.join([piped_tool.command for piped_tool in piped_tools])
     full_command = Command(f'set -eo pipefail; {lmod_command}; {piped_command}')
     full_command.run(dir_)
-    if not full_command.returncode == 0:
+    if not full_command.exit_code == 0:
         raise ValueError("error executing pipe")
 
     # Run after pipe steps

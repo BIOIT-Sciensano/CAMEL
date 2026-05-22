@@ -5,10 +5,10 @@ import tempfile
 from pathlib import Path
 
 import yaml
+from camelcore.app.utils import fileutils
 from pydantic import BaseModel, ValidationError
 
 from camel.app.config import config
-from camel.app.core.utils import fileutils
 from camel.app.loggers import logger
 from camel.app.tools.mist.mistdownload import MiSTDownload
 from camel.app.tools.mist.mistindex import MiSTIndex

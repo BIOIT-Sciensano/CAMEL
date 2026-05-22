@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.errors import InvalidParameterError
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidParameterError, InvalidToolInputError
 from camel.app.loggers import logger
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
 

@@ -1,7 +1,8 @@
 import re
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -27,18 +28,17 @@ class MothurMakeContigs(Mothur):
         """
         super()._check_input()
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidToolInputError('Too many input keys given for Mothur make.contigs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for Mothur make.contigs: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTQ_PE', 'FASTA_PE', 'TSV_File', 'TSV_Oligos']:
-                raise InvalidToolInputError('Invalid input key given for Mothur make.contigs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur make.contigs: {self._tool_inputs!r}')
             if key in ['FASTQ_PE', 'FASTA_PE']:
                 if len(input_files) != 2:
-                    raise InvalidToolInputError('Invalid number of files given for Mothur \
-                                                         make.contigs: {!r}'.format(self._tool_inputs))
-            else:
-                if len(input_files) != 1:
-                    raise InvalidToolInputError('Invalid number of files given for Mothur \
-                                                         make.contigs: {!r}'.format(self._tool_inputs))
+                    raise InvalidToolInputError(f'Invalid number of files given for Mothur \
+                                                         make.contigs: {self._tool_inputs!r}')
+            elif len(input_files) != 1:
+                raise InvalidToolInputError(f'Invalid number of files given for Mothur \
+                                                     make.contigs: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -50,14 +50,14 @@ class MothurMakeContigs(Mothur):
         items = []
         for key, input_files in self._tool_inputs.items():
             if key == 'FASTQ_PE':
-                items.append('ffastq={}, rfastq={}'.format(input_files[0], input_files[1]))
+                items.append(f'ffastq={input_files[0]}, rfastq={input_files[1]}')
             elif key == 'FASTA_PE':
-                items.append('ffasta={}, rfasta={}'.format(input_files[0], input_files[1]))
+                items.append(f'ffasta={input_files[0]}, rfasta={input_files[1]}')
             elif key == 'TSV_File':
-                items.append('file={}'.format(input_files[0]))
+                items.append(f'file={input_files[0]}')
         if 'TSV_Oligos' in self._tool_inputs:
             items.append('oligos={}'.format(self._tool_inputs['TSV_Oligos'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

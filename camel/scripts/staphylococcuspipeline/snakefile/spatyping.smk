@@ -19,7 +19,7 @@ rule spa_typing_blastn:
     run:
         from camel.app.tools.blast.blastn import Blastn
         from camel.app.tools.spatyping.spatyping import SpaTyping
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         blastn = Blastn()
         snakemakeutils.add_io_input(blastn,'FASTA', Path(input.FASTA))
         blastn.add_input_files({'DB_BLAST': [ToolIOFile(Path(input.DB_BLAST))]})
@@ -45,7 +45,7 @@ rule spa_typing_run:
     params:
         dir_ = 'spa_typing/detection'
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.spatyping.spatyping import SpaTyping
         spatyping = SpaTyping()
         snakemakeutils.add_io_input(spatyping,'TSV', Path(input.TSV))

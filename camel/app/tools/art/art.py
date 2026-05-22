@@ -1,11 +1,13 @@
 from pathlib import Path
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils, fileutils
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class ART(Tool):
@@ -29,8 +31,12 @@ class ART(Tool):
         self.__build_command()
         self._execute_command()
         # Compress the two output files
-        fileutils.gzip_compress(self.__get_output_path('1'), Path(f"{self.__get_output_path('_1')}.gz"))
-        fileutils.gzip_compress(self.__get_output_path('2'), Path(f"{self.__get_output_path('_2')}.gz"))
+        fileutils.gzip_compress(
+            self.__get_output_path('1'), Path(f"{self.__get_output_path('_1')}.gz")
+        )
+        fileutils.gzip_compress(
+            self.__get_output_path('2'), Path(f"{self.__get_output_path('_2')}.gz")
+        )
         # Remove the uncompressed FASTQ files
         self.__remove_file(self.__get_output_path('1'))
         self.__remove_file(self.__get_output_path('2'))
@@ -54,10 +60,12 @@ class ART(Tool):
         Builds the command.
         :return: None
         """
-        self._command.command = ' '.join([
-            self._tool_command,
-            f"-i {self._tool_inputs['FASTA'][0].path}",
-            *self._build_options()]
+        self._command.command = ' '.join(
+            [
+                self._tool_command,
+                f"-i {self._tool_inputs['FASTA'][0].path}",
+                *self._build_options(),
+            ]
         )
 
     def _check_command_output(self, command: Command) -> None:
@@ -67,7 +75,9 @@ class ART(Tool):
         :return: None
         """
         if 'error' in command.stderr.lower():
-            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+            raise ToolExecutionError(
+                self.name, f"Command execution failed (stderr: {command.stderr})."
+            )
         toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __get_output_path(self, suffix: str) -> Path:
@@ -85,7 +95,9 @@ class ART(Tool):
         :return: None
         """
         self._tool_outputs['FASTQ_PE'] = [
-            ToolIOFile(Path(f"{self.__get_output_path('_1')}.gz")), ToolIOFile(Path(f"{self.__get_output_path('_2')}.gz"))]
+            ToolIOFile(Path(f"{self.__get_output_path('_1')}.gz")),
+            ToolIOFile(Path(f"{self.__get_output_path('_2')}.gz")),
+        ]
 
     @staticmethod
     def __remove_file(input_file: Path) -> None:

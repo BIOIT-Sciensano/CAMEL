@@ -36,7 +36,7 @@ rule hps65_report_empty:
     params:
         dir_ = 'hsp65/report'
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.hsp65reporter import Hsp65Reporter
         section = Hsp65Reporter.generate_empty_section()
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))

@@ -4,12 +4,12 @@ from datetime import datetime
 from pathlib import Path
 
 import click
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basescript import basescriptutils
@@ -19,6 +19,7 @@ from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.resfinder.resfinder import ResFinder
 from camel.app.tools.resfinder.resfinderreporter import ResFinderReporter
+from camel.resources import DIR_CITATIONS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -94,7 +95,7 @@ class MainResFinder(BaseScript[ScriptInput, ScriptOutput, Options]):
         # Save report
         all_informs = [resfinder.informs]
         report.add_html_object(reportutils.create_commands_section(all_informs, self._script_opts.working_dir))
-        report.add_html_object(reportutils.create_citations_section(['Bortolaia_2020-resfinder_4.0']))
+        report.add_html_object(reportutils.create_citations_section(DIR_CITATIONS, ['Bortolaia_2020-resfinder_4.0']))
         report.save()
 
     def __run_resfinder(self) -> ResFinder:

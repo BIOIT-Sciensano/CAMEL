@@ -23,7 +23,7 @@ rule preprocess_ampligone_to_bed:
         dir_ = 'preprocess/ampligone/tool',
         primer_mismatch_rate = '0.01' if config['input']['type'] == 'illumina' else '0.1'
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.ampligone.ampligonefasta2bed import AmpliGoneFasta2Bed
         ampligone = AmpliGoneFasta2Bed()
         snakemakeutils.add_io_input(ampligone,'FASTA_ref', Path(input.FASTA_ref))
@@ -87,7 +87,7 @@ rule preprocess_map_reads_pre:
     threads: 8
     run:
         from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
         # Run the workflow
@@ -149,7 +149,7 @@ rule preprocess_map_reads_post:
     threads: 8
     run:
         from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
 
         # Run the workflow
@@ -210,7 +210,7 @@ rule preprocess_report:
         max_depth = config['downsampling'].get('coverage_max_by_segment', 250),
         gap_depth_cutoff = config['low_depth'].get('gap_depth_cutoff', 5)
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.viral_consensus.reportersegmentdownsampling import ReporterSegmentDownsampling
         reporter = ReporterSegmentDownsampling()
         reporter.add_input_files({'TSV': [ToolIOFile(Path(input.TSV))]})

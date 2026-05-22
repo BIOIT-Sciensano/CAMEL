@@ -1,27 +1,28 @@
 import abc
 import inspect
-from pathlib import Path
-from typing import Optional, Union, Any
 from collections import OrderedDict
+from pathlib import Path
+from typing import Any, Optional, Union
 
 import pydantic
 import yaml
+from camelcore.app.command import Command
+from camelcore.app.io.toolio import ToolIO
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliovalue import ToolIOValue
 
 from camel.app.config import config
-from camel.app.core import errors
-from camel.app.core.command import Command
+from camel.app.core import errors, toolutils
 from camel.app.core.dependency import service_by_key
 from camel.app.core.dependency.basedependencyservice import BaseDependencyService
-from camel.app.core.utils import toolutils
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.errors import InvalidParameterError
-from camel.app.core.errors import ToolExecutionError
-from camel.app.core.io.toolio import ToolIO
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.loggers import logger
+from camel.app.core.errors import (
+    InvalidParameterError,
+    InvalidToolInputError,
+    ToolExecutionError,
+)
 from camel.app.core.parameter import Parameter
+from camel.app.loggers import logger
 
 
 class Tool(metaclass=abc.ABCMeta):
@@ -40,12 +41,12 @@ class Tool(metaclass=abc.ABCMeta):
 
         # Read YAML data
         tool_data = self._read_tool_yml()
-        self._tool_command = tool_data['tool_command']
-        self._dependencies = tool_data['dependencies']
-        self._tool_data = tool_data
+        self._tool_command: str = tool_data['tool_command']
+        self._dependencies: list[str] = tool_data['dependencies']
+        self._tool_data: dict = tool_data
 
         # Command & directory
-        self._command = Command()
+        self._command: Command = Command()
         self._folder: Optional[Path] = None
 
         # Get the tool version

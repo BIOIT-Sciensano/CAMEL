@@ -1,9 +1,10 @@
 from pathlib import Path
 
+from camelcore.app.io.tooliovalue import ToolIOValue
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 from camel.app.toolkits.genedetection.genedetectionkmahit import GeneDetectionKMAHit
 
 

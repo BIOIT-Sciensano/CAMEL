@@ -1,7 +1,8 @@
 import unittest
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.ale.ale import ALE
 from camel.app.tools.ale.ale2wiggle import ALE2Wiggle
 from camel.tests import requires_dependency_service

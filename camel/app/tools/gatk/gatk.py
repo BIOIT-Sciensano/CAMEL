@@ -1,11 +1,12 @@
-import re
 import abc
+import re
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class GATK(Tool, metaclass=abc.ABCMeta):
@@ -47,8 +48,7 @@ class GATK(Tool, metaclass=abc.ABCMeta):
         """
         for input_file in self._required_inputs:
             if input_file not in self._tool_inputs:
-                raise InvalidToolInputError('GATK {!r} required {!r} input is missing in _tool_inputs!'.format(
-                    self._name, input_file))
+                raise InvalidToolInputError(f'GATK {self._name!r} required {input_file!r} input is missing in _tool_inputs!')
 
         super(GATK, self)._check_input()
 
@@ -109,7 +109,7 @@ class GATK(Tool, metaclass=abc.ABCMeta):
         # log WARNINGS in info.log
         for l in self._command.stdout.split('\n'):
             if re.match(r'WARNING', l):
-                logger.info(" GATK - {}".format(l))
+                logger.info(f" GATK - {l}")
 
             # E.g., The Genome Analysis Toolkit (GATK) v3.4-0-g7e26428
             match = re.search('The Genome Analysis Toolkit (GATK) (.+),', l)
@@ -123,9 +123,9 @@ class GATK(Tool, metaclass=abc.ABCMeta):
             if match is not None:
                 self.informs['reads_total'] = match.group(2)
                 if match.group(1) != '0':
-                    self.informs['filtered_reads'] = "{}({})".format(match.group(1), match.group(3))
+                    self.informs['filtered_reads'] = f"{match.group(1)}({match.group(3)})"
             # per Filter statistics:
             #    0 reads (0.00% of total) failing BadCigarFilter
             match = re.search(r'(\d+) reads \((.+%) of total\) failing (.+)', l)
             if match is not None and match.group(1) != '0':
-                self.informs[match.group(3)] = "{}({})".format(match.group(1), match.group(2))
+                self.informs[match.group(3)] = f"{match.group(1)}({match.group(2)})"

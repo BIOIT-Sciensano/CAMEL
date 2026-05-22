@@ -1,8 +1,9 @@
 import unittest
 
+from camelcore.app.utils import fastqutils
+
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.utils import fastqutils
 from camel.scripts.ncbihumanreadscrubber.mainncbihumanreadscrubber import main
 
 

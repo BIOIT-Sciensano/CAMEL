@@ -1,8 +1,9 @@
 import unittest
 
-from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.utils import vcfutils
+from camelcore.app.utils import vcfutils
+
 from camel.app.cli import cliutils
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.variantcalling.mainfilteringsamtools import main
 
 

@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+
 from camel.app.core.errors import SnakemakeExecutionError
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
@@ -59,7 +60,7 @@ rule checksum_cram:
 
         cmd_checksum = Command(f"md5sum {cram_file} > {output.CRAM_checksum}")
         cmd_checksum.run(params.working_dir)
-        if cmd_checksum.returncode != 0:
+        if cmd_checksum.exit_code != 0:
             raise SnakemakeExecutionError(cmd_checksum.stdout, cmd_checksum.stderr)
 
 rule samtools_index_cram:

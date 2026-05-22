@@ -1,8 +1,8 @@
 
 from enum import Enum
 
-from camel.app.toolkits.sequencetyping.typingblasthit import TypingBlastHit
 from camel.app.core.tool import Tool
+from camel.app.toolkits.sequencetyping.typingblasthit import TypingBlastHit
 
 
 class DetectionCategory(Enum):

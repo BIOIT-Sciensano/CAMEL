@@ -18,7 +18,7 @@ rule mendevar_run:
         dir_ = 'mendevar',
         db = config.get('mendevar', {}).get('db')
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.neisseria.mendevar import MenDeVAR
 
         mendevar_ = MenDeVAR()

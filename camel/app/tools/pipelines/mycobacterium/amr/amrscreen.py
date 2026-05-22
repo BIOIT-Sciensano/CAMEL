@@ -5,13 +5,12 @@ from pathlib import Path
 from typing import Union
 
 import pandas as pd
-import vcf
 from Bio.SeqUtils import seq3
-# noinspection PyProtectedMember
-from vcf.model import _Record as VcfRecord
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
+from cyvcf2 import VCF, Variant
 
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 from camel.app.loggers import logger
 
@@ -26,9 +25,11 @@ class AMRScreen(Tool):
         Initializes this tool.
         """
         super().__init__('AMR mutation screen', '0.1')
-        self._variant_by_key = None
-        self._data_regions = None
-        self._ab_short_by_name = None
+        self._variant_by_key: dict[tuple[int, str, str], str] | None = None
+        self._data_regions: pd.DataFrame | None = None
+        self._ab_short_by_name: dict[str, str] | None = None
+        self._association_by_variant = None
+        self._data_antibiotics: pd.DataFrame | None = None
 
     def _check_input(self) -> None:
         """
@@ -69,17 +70,14 @@ class AMRScreen(Tool):
         :param full: Full name (including region name)
         :return: Mutation name
         """
-        # Set up the prefix and the suffix
-        prefix = f"{row['region']['locus']}_" if full is True else ''
-        suffix = '*' if row['passes_filt'] is False else ''
+        prefix = f"{row['region']['locus']}_" if full else ''
+        suffix = '*' if not row['passes_filt'] else ''
 
-        # No entry in the database
         if len(row['associations']) == 0:
-            effect = row['effect'] if row['effect'] is not None else f'unknown{suffix}'
-            return f"{prefix}{effect}{suffix}" if row['effect'] is not None else f'unknown{suffix}'
+            effect = row['effect'] if row['effect'] is not None else 'unknown'
+            return f"{prefix}{effect}{suffix}"
 
-        # Present in the database
-        unique_muts = set([x['mutation'] for x in row['associations']])
+        unique_muts = set(x['mutation'] for x in row['associations'])
         return ';'.join(f'{prefix}{m}{suffix}' for m in unique_muts)
 
     def __parse_db_files(self, path_to_db: Path) -> None:
@@ -121,7 +119,7 @@ class AMRScreen(Tool):
             self._informs['version'] = 'n/a'
 
     @staticmethod
-    def __parse_effect(vcf_record: VcfRecord) -> Union[str, None]:
+    def __parse_effect(vcf_record: Variant) -> Union[str, None]:
         """
         Parses the mutation effect from the CSQ annotation.
         Note: only extracts it for protein coding regions
@@ -129,38 +127,48 @@ class AMRScreen(Tool):
         :return: Mutation effect
         """
         # Check if BCSQ annotation is present
-        if 'BCSQ' not in vcf_record.INFO:
+        bcsq = vcf_record.INFO.get('BCSQ')
+        if bcsq is None:
             logger.warning(f'BCSQ info missing for: {vcf_record.CHROM}:{vcf_record.POS}')
             return None
 
         # Parse annotation
-        parts = vcf_record.INFO['BCSQ'][0].split('|')
+        parts = bcsq.split('|')
         if parts[0].startswith('&'):
             return None
 
         # Frameshift -> change into WHO format
         parts[0] = parts[0].lstrip('*')
         if parts[0] == 'frameshift':
-            m = re.search('^(\d+)([A-Z])', parts[5])
+            m = re.search(r'^(\d+)([A-Z])', parts[5])
             return f'p.{seq3(m.group(2))}{m.group(1)}fs' if m else 'frameshift'
 
         # AA change -> change into WHO format
         if parts[0] == 'missense':
-            m = re.search('^(\d+)([A-Z])>\d+([A-Z])', parts[5])
+            m = re.search(r'^(\d+)([A-Z])>\d+([A-Z])', parts[5])
             return f'p.{seq3(m.group(2))}{m.group(1)}{seq3(m.group(3))}' if m else 'missense'
         return parts[0]
 
     @staticmethod
-    def __extract_af(vcf_record: VcfRecord) -> float | None:
+    def __extract_af(vcf_record: Variant) -> float | None:
         """
         Extracts the allele frequency from the VCF record.
         :param vcf_record: Input VCF record
         :return: Allele frequency
         """
-        if 'AF' in vcf_record.INFO:
-            return vcf_record.INFO['AF']
-        if 'DP4' in vcf_record.INFO:
-            return (vcf_record.INFO['DP4'][2] + vcf_record.INFO['DP4'][3]) / sum(vcf_record.INFO['DP4'])
+        af = vcf_record.INFO.get('AF')
+        if af is not None:
+            return af[0] if isinstance(af, (tuple, list)) else af
+
+        # Check for DP4 (Ref-forward, Ref-reverse, Alt-forward, Alt-reverse)
+        dp4 = vcf_record.INFO.get('DP4')
+        if dp4 is not None:
+            alt_reads = dp4[2] + dp4[3]
+            total_reads = sum(dp4)
+            if total_reads == 0:
+                return 0.0
+            return alt_reads / total_reads
+        logger.info(f"Unable to extract AF from: {vcf_record}")
         return None
 
     def __cross_check_muts_to_db(self, vcf_input: Path, is_lofreq: bool = False) -> list[dict]:
@@ -171,54 +179,53 @@ class AMRScreen(Tool):
         :return: List of detected AMR associations
         """
         mutations_out = []
-        with vcf_input.open() as handle:
-            variants = list(vcf.Reader(handle))
-            logger.info(f"{len(variants):,} variants parsed from '{self._tool_inputs['VCF'][0].path.name}'")
+        variants = vcfutils.parse_all_variants(vcf_input)
+        logger.info(f'Parsed {len(variants):,} variants from {vcf_input}')
 
-            for vcf_record in variants:
-                effect = AMRScreen.__parse_effect(vcf_record)
+        for vcf_record in variants:
+            effect = AMRScreen.__parse_effect(vcf_record)
 
-                # Retrieve the corresponding region
-                try:
-                    region = AMRScreen.__get_matching_region(vcf_record.POS, self._data_regions)
-                except ValueError:
-                    logger.info(f'No matching region for mutation at position {vcf_record.POS}, retrying affected end')
-                    region = AMRScreen.__get_matching_region(vcf_record.affected_end, self._data_regions)
+            # Retrieve the corresponding region
+            try:
+                region = AMRScreen.__get_matching_region(vcf_record.POS, self._data_regions)
+            except ValueError:
+                logger.info(f'No matching region for mutation at position {vcf_record.POS}, retrying affected end')
+                region = AMRScreen.__get_matching_region(vcf_record.end, self._data_regions)
 
-                # Create output record
-                record = {
-                    'af': AMRScreen.__extract_af(vcf_record),
-                    'alt': ';'.join(str(x) for x in vcf_record.ALT),
-                    'effect': effect,
-                    'associations': [],
-                    'position': vcf_record.POS,
-                    'ref': vcf_record.REF,
-                    'region': region,
-                    'variant_type': vcf_record.var_type,
-                    'lofreq': is_lofreq,
-                    'passes_filt': False,
-                }
+            # Create the output record
+            record = {
+                'af': AMRScreen.__extract_af(vcf_record),
+                'alt': ';'.join(str(x) for x in vcf_record.ALT),
+                'effect': effect,
+                'associations': [],
+                'position': vcf_record.POS,
+                'ref': vcf_record.REF,
+                'region': region,
+                'variant_type': vcf_record.var_type,
+                'lofreq': is_lofreq,
+                'passes_filt': False,
+            }
 
-                # Add AMR association
-                for alt in vcf_record.ALT:
-                    # Query the database
-                    key = (vcf_record.POS, str(vcf_record.REF), str(alt))
-                    variant = self._variant_by_key.get(key)
-                    if variant is None:
-                        continue
+            # Add AMR association
+            for alt in vcf_record.ALT:
+                # Query the database
+                key = (vcf_record.POS, str(vcf_record.REF), str(alt))
+                variant = self._variant_by_key.get(key)
+                if variant is None:
+                    continue
 
-                    # Add associations
-                    for association in self._association_by_variant[variant]:
-                        record['associations'].append({
-                            'antibiotic': association['drug'],
-                            'antibiotic_short': self._ab_short_by_name[association['drug']],
-                            'comment': association['comment'] if not pd.isna(association['comment']) else None,
-                            'confidence': association['confidence'],
-                            'effect': association['effect'],
-                            'locus': association['gene'],
-                            'mutation': association['mutation'],
-                        })
-                mutations_out.append(record)
+                # Add associations
+                for association in self._association_by_variant[variant]:
+                    record['associations'].append({
+                        'antibiotic': association['drug'],
+                        'antibiotic_short': self._ab_short_by_name[association['drug']],
+                        'comment': association['comment'] if not pd.isna(association['comment']) else None,
+                        'confidence': association['confidence'],
+                        'effect': association['effect'],
+                        'locus': association['gene'],
+                        'mutation': association['mutation'],
+                    })
+            mutations_out.append(record)
         return mutations_out
 
     @staticmethod
@@ -245,8 +252,8 @@ class AMRScreen(Tool):
         logger.info(f"{sum(len(m['associations']) for m in mutations_out):,} AMR associations found")
 
         # Check if mutations passed filtering and if they were synonymous
-        with open(self._tool_inputs['VCF_filt'][0].path) as handle:
-            positions_passing_filt = [record.POS for record in vcf.Reader(handle)]
+        with VCF(str(self._tool_inputs['VCF_filt'][0].path)) as vcf_reader:
+            positions_passing_filt = [v.POS for v in vcf_reader]
         mutations_out = [{
             **mut,
             'passes_filt': mut['position'] in positions_passing_filt,
@@ -278,7 +285,7 @@ class AMRScreen(Tool):
             'name_full': AMRScreen.__extracts_mutation_name(row, full=True),
         } for row in mutations_out]
 
-        # Create JSON output file
+        # Create the JSON output file
         path_json = self.folder / 'amr_screen.json'
         with path_json.open('w') as handle:
             json.dump(mutations_out, handle, indent=2)

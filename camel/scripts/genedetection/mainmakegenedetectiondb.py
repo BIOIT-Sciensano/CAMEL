@@ -4,12 +4,10 @@ import shutil
 from pathlib import Path
 
 import click
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import fileutils, reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.utils import fileutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
@@ -19,7 +17,6 @@ from camel.app.scriptutils.model import BaseOptions
 from camel.app.toolkits.genedetection.dbhelper import DBHelper
 from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
 from camel.app.tools.cdhit.cdhitest import Cluster
-from camel.resources import CSS_STYLE
 
 
 @dataclasses.dataclass(frozen=True)
@@ -27,9 +24,17 @@ class Options(BaseOptions):
     """
     Options for the make DB script.
     """
-    working_dir: Path = dataclasses.field(default=Path.cwd(), metadata={'help': 'Working directory'})
-    threads: int = dataclasses.field(default=4, metadata={'help': 'Number of threads to use', 'show_default': True})
-    identity_cutoff: int = dataclasses.field(default=80, metadata={'help': 'Identity cutoff for clustering'})
+
+    working_dir: Path = dataclasses.field(
+        default=Path.cwd(), metadata={'help': 'Working directory'}
+    )
+    threads: int = dataclasses.field(
+        default=4, metadata={'help': 'Number of threads to use', 'show_default': True}
+    )
+    identity_cutoff: int = dataclasses.field(
+        default=80, metadata={'help': 'Identity cutoff for clustering'}
+    )
+
 
 class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
     """
@@ -49,7 +54,7 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
             version='1.0.0',
             script_in=in_,
             script_out=out,
-            script_opts=opts
+            script_opts=opts,
         )
         self._db_name = fileutils.make_valid(self._script_in.name)
         self._helper = DBHelper(self._db_name, self._script_opts.working_dir)
@@ -77,9 +82,14 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         """
         dir_clustering = self._helper.get_working_subdir('clustering')
         fasta_seq_headers = dir_clustering / 'seq_headers.fasta'
-        self._new_name_by_header = self._helper.convert_fasta_headers_to_seq(input_fasta, fasta_seq_headers)
+        self._new_name_by_header = self._helper.convert_fasta_headers_to_seq(
+            input_fasta, fasta_seq_headers
+        )
         return self._helper.get_clusters_form_fasta(
-            fasta_seq_headers, self._script_opts.identity_cutoff, self._script_opts.threads)
+            fasta_seq_headers,
+            self._script_opts.identity_cutoff,
+            self._script_opts.threads,
+        )
 
     def __export_blast_db(self, input_fasta: Path, output_dir: Path) -> None:
         """
@@ -106,12 +116,19 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         Creates a report with some info on the database.
         :return: None
         """
-        self._report = HtmlReport(self._script_out.html, self._script_out.dir)
-        self._report.initialize('Gene detection database', CSS_STYLE)
+        self._report = reportutils.init_report(
+            self._script_out.html,
+            'gene_detection',
+            'Gene detection database',
+            self._script_out.dir,
+        )
         self._report.add_html_object(self.__create_db_info_section())
         self._report.add_html_object(self.__create_clusters_section())
-        self._report.add_html_object(reportutils.create_commands_section(
-            self._helper.informs, self._script_opts.working_dir))
+        self._report.add_html_object(
+            reportutils.create_commands_section(
+                self._helper.informs, self._script_opts.working_dir
+            )
+        )
         self._report.save()
 
     def __create_db_info_section(self) -> HtmlReportSection:
@@ -120,12 +137,15 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         :return: HTML report section
         """
         section_db_info = HtmlReportSection('Database info')
-        section_db_info.add_table([
-            ['Name:', self._db_name],
-            ['Size:', sum(len(c.seq_ids) for c in self._clusters)],
-            ['Nb. clusters:', len(self._clusters)],
-            ['Clustering cutoff: ', f'{self._script_opts.identity_cutoff}%']
-        ], table_attributes=[('class', 'information')])
+        section_db_info.add_table(
+            [
+                ['Name:', self._db_name],
+                ['Size:', sum(len(c.seq_ids) for c in self._clusters)],
+                ['Nb. clusters:', len(self._clusters)],
+                ['Clustering cutoff: ', f'{self._script_opts.identity_cutoff}%'],
+            ],
+            table_attributes=[('class', 'information')],
+        )
         return section_db_info
 
     def __create_clusters_section(self) -> HtmlReportSection:
@@ -135,17 +155,27 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         """
         section_clusters = HtmlReportSection('Clusters')
         allele_by_seq_id = {
-            s: GeneDetectionUtils.parse_header(h)[1]['allele'] for s, h in self._new_name_by_header.items()}
-        table_data = [[
-            cluster.name,
-            len(cluster.seq_ids),
-            ', '.join([allele_by_seq_id[s] for s in cluster.seq_ids])
-        ] for cluster in self._clusters]
-        section_clusters.add_table(table_data, ['Cluster', 'Size', 'Sequence ids'], [('class', 'data')])
+            s: GeneDetectionUtils.parse_header(h)[1]['allele']
+            for s, h in self._new_name_by_header.items()
+        }
+        table_data = [
+            [
+                cluster.name,
+                len(cluster.seq_ids),
+                ', '.join([allele_by_seq_id[s] for s in cluster.seq_ids]),
+            ]
+            for cluster in self._clusters
+        ]
+        section_clusters.add_table(
+            table_data, ['Cluster', 'Size', 'Sequence ids'], [('class', 'data')]
+        )
         return section_clusters
 
 
-@click.command(name='gene_detection_create_db', short_help='Creates DBs for the gene detection script')
+@click.command(
+    name='gene_detection_create_db',
+    short_help='Creates DBs for the gene detection script',
+)
 @cliutils.add_click_options_from_dataclass(FastaInput)
 @basescriptutils.add_output_opts
 @cliutils.add_click_options_from_dataclass(Options)
@@ -156,7 +186,7 @@ def main(**kwargs) -> None:
     script = MainMakeGeneDetectionDB(
         in_=FastaInput(**cliutils.from_kwargs(FastaInput, kwargs)),
         out=basescriptutils.parse_script_output(kwargs),
-        opts=Options(**cliutils.from_kwargs(Options, kwargs))
+        opts=Options(**cliutils.from_kwargs(Options, kwargs)),
     )
     script.run()
 

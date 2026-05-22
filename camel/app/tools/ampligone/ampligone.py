@@ -1,10 +1,11 @@
 import re
 from pathlib import Path
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 
 
@@ -39,7 +40,11 @@ class AmpliGone(Tool):
         """
         # Output file paths
         path_bed_out = self.folder / 'primer_locations.bed'
-        fq_name_out = re.sub(r'\.fastq(\.gz)?|\.fq(\.gz)?', '_clipped.fastq', self._tool_inputs['FASTQ'][0].path.name)
+        fq_name_out = re.sub(
+            r'\.fastq(\.gz)?|\.fq(\.gz)?',
+            '_clipped.fastq',
+            self._tool_inputs['FASTQ'][0].path.name,
+        )
         path_fq_out = self.folder / fq_name_out
 
         # Create & execute command
@@ -62,15 +67,17 @@ class AmpliGone(Tool):
         :param path_bed_out: Path for BED file with primer locations
         :return: None
         """
-        self._command.command = ' '.join([
-            self._tool_command,
-            f"--reference {self._tool_inputs['FASTA_ref'][0].path}",
-            f"--primers {self._tool_inputs['FASTA_primers'][0].path}",
-            f"--input {self._tool_inputs['FASTQ'][0].path}",
-            f"--output {path_fq_out}",
-            f'--export-primers {path_bed_out}',
-            *self._build_options()
-        ])
+        self._command.command = ' '.join(
+            [
+                self._tool_command,
+                f"--reference {self._tool_inputs['FASTA_ref'][0].path}",
+                f"--primers {self._tool_inputs['FASTA_primers'][0].path}",
+                f"--input {self._tool_inputs['FASTQ'][0].path}",
+                f"--output {path_fq_out}",
+                f'--export-primers {path_bed_out}',
+                *self._build_options(),
+            ]
+        )
 
     def _check_command_output(self, command: Command) -> None:
         """

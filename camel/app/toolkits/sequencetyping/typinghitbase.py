@@ -1,10 +1,9 @@
 import abc
 import hashlib
-from typing import Optional, Any, Union
+from typing import Any, Optional, Union
 
 from Bio.Seq import Seq
-
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
 
 
 class TypingHitBase(metaclass=abc.ABCMeta):

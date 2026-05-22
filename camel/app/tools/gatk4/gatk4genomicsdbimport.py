@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 

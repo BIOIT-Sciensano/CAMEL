@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -26,12 +27,12 @@ class MothurRarefactionSingle(Mothur):
         """
         super()._check_input()
         if 'TSV_List' not in self._tool_inputs:
-            raise InvalidToolInputError('No valid input file given for Mothur rarefaction.single: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'No valid input file given for Mothur rarefaction.single: {self._tool_inputs!r}')
         if len(self._tool_inputs['TSV_List']) != 1:
-            raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                 rarefaction.single: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                 rarefaction.single: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 1:
-            raise InvalidToolInputError('Too many input keys given for Mothur rarefaction.single: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for Mothur rarefaction.single: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -39,7 +40,7 @@ class MothurRarefactionSingle(Mothur):
         Example: fasta=File1.trim.contig.fasta, outputdir=/test/data/outputdir
         :return: String with the input parameters
         """
-        items = ['list={}'.format(self._tool_inputs['TSV_List'][0]), 'outputdir={}'.format(self._folder)]
+        items = ['list={}'.format(self._tool_inputs['TSV_List'][0]), f'outputdir={self._folder}']
         return ', '.join(items)
 
     def _set_output(self):
@@ -48,4 +49,4 @@ class MothurRarefactionSingle(Mothur):
         :return: None
         """
         basename = self._get_basename('TSV_List')
-        self._tool_outputs['TSV'] = [ToolIOFile('{}.rarefaction'.format(basename))]
+        self._tool_outputs['TSV'] = [ToolIOFile(f'{basename}.rarefaction')]

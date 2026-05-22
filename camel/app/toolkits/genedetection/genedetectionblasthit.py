@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Optional, Union
 
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+
 from camel.app.toolkits.blast.blasthitstatistics import BlastHitStatistics
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 
 
 class GeneDetectionBlastHit(GeneDetectionHitBase):

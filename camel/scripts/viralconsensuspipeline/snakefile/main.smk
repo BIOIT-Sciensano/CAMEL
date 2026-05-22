@@ -49,7 +49,7 @@ rule link_fasta_to_iterative_mapping:
         input_type = config['input']['type'],
         fasta_ref = config['fasta_ref']
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         if params.fasta_ref is not None:
             snakemakeutils.dump_object([ToolIOFile(Path(params.fasta_ref))], Path(output.FASTA))
         else:

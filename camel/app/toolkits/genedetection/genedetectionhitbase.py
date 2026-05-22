@@ -1,11 +1,11 @@
-from pathlib import Path
-from typing import Optional, Union, Any
-
 import abc
+from pathlib import Path
+from typing import Any, Optional, Union
+
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
 from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 
 
 class GeneDetectionHitBase(metaclass=abc.ABCMeta):

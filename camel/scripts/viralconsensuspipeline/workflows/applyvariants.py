@@ -4,9 +4,9 @@ import tempfile
 from pathlib import Path
 
 from Bio import SeqIO
+from camelcore.app.command import Command
 
 from camel.app.config import config
-from camel.app.core.command import Command
 
 
 @dataclasses.dataclass
@@ -82,7 +82,7 @@ class ApplyVariants:
             f'bcftools consensus --fasta-ref {fasta_in} {vcf_in} > {fasta_out};'
         ]))
         command.run(self._dir)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error applying variants: {command.stderr}')
         self._informs.append({
             '_name': 'bcftools consensus',

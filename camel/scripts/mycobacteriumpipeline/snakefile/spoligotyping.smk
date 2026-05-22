@@ -111,7 +111,7 @@ rule spoligotyping_report_empty:
     output:
         VAL_HTML = 'spoligotyping/report/html-empty.iob' # spoligotyping.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.spotyping.spotypingreporter import SpoTypingReporter
         section = SpoTypingReporter.generate_empty_section()
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))

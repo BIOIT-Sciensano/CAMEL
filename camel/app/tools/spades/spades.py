@@ -1,8 +1,9 @@
 import re
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 from camel.app.loggers import logger
 
@@ -142,14 +143,13 @@ class SPAdes(Tool):
                         hqmp_count += 1
                     else:
                         key_informs[1] = 'HQMP-S'
-                else:
-                    # SE, PE, MP reads
-                    if key_informs[1] == 'SE':
-                        se_count += 1
-                    elif key_informs[1] == 'PE':
-                        pe_count += 1
-                    elif key_informs[1] == 'MP':
-                        mp_count += 1
+                # SE, PE, MP reads
+                elif key_informs[1] == 'SE':
+                    se_count += 1
+                elif key_informs[1] == 'PE':
+                    pe_count += 1
+                elif key_informs[1] == 'MP':
+                    mp_count += 1
 
                 if key_informs[1].lower() in ('pe', 'mp', 'hqmp'):
                     if len(files) != 2:

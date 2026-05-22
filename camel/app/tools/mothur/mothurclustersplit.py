@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -29,10 +30,10 @@ class MothurClusterSplit(Mothur):
         for key, input_files in self._tool_inputs.items():
             if key not in ['PHY', 'DIST', 'TSV_Names', 'TSV_Taxonomy', 'FASTA', 'TSV_File', 'TSV_Counts']:
                 raise InvalidToolInputError('Invalid input key given for Mothur '
-                                                     'cluster.split: {!r}'.format(self._tool_inputs))
+                                                     f'cluster.split: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     cluster.split: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     cluster.split: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -56,7 +57,7 @@ class MothurClusterSplit(Mothur):
             items.append('name={}'.format(self._tool_inputs['TSV_Names'][0]))
         if 'TSV_Taxonomy' in self._tool_inputs:
             items.append('taxonomy={}'.format(self._tool_inputs['TSV_Taxonomy'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

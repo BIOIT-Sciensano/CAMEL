@@ -4,8 +4,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.utils import fileutils
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
 from camel.app.loggers import logger, initialize_logging
 from camel.app.tools.medaka.medakainference import MedakaInference
 from camel.app.tools.medaka.medakavcf import MedakaVcf

@@ -1,10 +1,11 @@
 import unittest
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.seqkit.seqkitseq import SeqkitSeq
-from camel.app.tools.seqkit.seqkitstats import SeqkitStats
 from camel.app.tools.seqkit.seqkitsplit2 import SeqkitSplit2
+from camel.app.tools.seqkit.seqkitstats import SeqkitStats
 
 
 class TestSeqkit(CamelTestSuite):

@@ -1,9 +1,10 @@
 from pathlib import Path
 
-from camel.app.core.utils import toolutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class FastQCDataFileParser(Tool):
@@ -135,8 +136,7 @@ class FastQCDataFileParser(Tool):
         max_percentage = 0.0
         for row in data[1:]:
             base, n_percentage = row.split('\t')
-            if float(n_percentage) > max_percentage:
-                max_percentage = float(n_percentage)
+            max_percentage = max(float(n_percentage), max_percentage)
         return max_percentage / 100
 
     @staticmethod

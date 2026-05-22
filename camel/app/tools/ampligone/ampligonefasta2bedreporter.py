@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 
 
@@ -34,7 +35,9 @@ class AmpliGoneFasta2BedReporter(Tool):
         :return: None
         """
         # Create report section
-        section = HtmlReportSection('Primer localization', 3, subtitle=self._input_informs['ampligone']['_name'])
+        section = HtmlReportSection(
+            'Primer localization', 3, subtitle=self._input_informs['ampligone']['_name_full']
+        )
 
         # Information table
         section.add_table([

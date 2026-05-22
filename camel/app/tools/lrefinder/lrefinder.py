@@ -2,9 +2,9 @@ import re
 from typing import Any
 
 import bs4
+from camelcore.app.command import Command
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.tool import Tool
 
@@ -73,7 +73,7 @@ class LREFinder(Tool):
         :param html_table: HTML table
         :return: Parsed information
         """
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences,PyCallingNonCallable
         rows = html_table.find_all('tr')
         header = [th.text.replace('_', ' ') for th in rows[0].find_all('th')]
         header = [re.sub(r'\[(.*)]', r'(\g<1>)', value) for value in header]

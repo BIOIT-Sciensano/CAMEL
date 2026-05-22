@@ -1,9 +1,9 @@
 conda:
   name: flye
   packages:
-    - flye=2.9.4
+    - flye=2.9.5
 dependencies:
-  - flye/2.9.4
+  - flye/2.9.5
 parameters:
   genome_size:
     default: false

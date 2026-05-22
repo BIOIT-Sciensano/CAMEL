@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.snakemake import snakemakeutils
 
 

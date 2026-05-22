@@ -1,11 +1,11 @@
 from pathlib import Path
 
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltableformatter import FormatEntry, HtmlTableFormatter
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltableformatter import HtmlTableFormatter, FormatEntry
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 
 
@@ -49,7 +49,7 @@ class IntegronFinderReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('IntegronFinder', subtitle=self._input_informs['integron_finder']['_name'])
+        section = HtmlReportSection('IntegronFinder', subtitle=self._input_informs['integron_finder']['_name_full'])
 
         # Parse input data
         try:

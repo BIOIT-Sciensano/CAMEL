@@ -1,8 +1,9 @@
 import dataclasses
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
-from camel.app.core.utils import fastautils, fastqutils, fileutils
+from camelcore.app.utils import fastautils, fastqutils, fileutils
+
 from camel.app.loggers import logger
 from camel.app.scriptutils import model
 
@@ -17,8 +18,8 @@ class ScriptInput(model.BaseInput):
     sample_name: str | None = None
     fastq_se: Path | None = None
     fastq_se_name: str | None = None
-    fastq_pe: tuple[Path, Path] | None = None
-    fastq_pe_names: tuple[str, str] | None = None
+    fastq_pe: Optional[tuple[Path, Path]] = None
+    fastq_pe_names: Optional[tuple[str, str]] = None
     fasta: Path | None = None
     fasta_name: str | None = None
     vcf_unfiltered: Path | None = None
@@ -148,14 +149,17 @@ class ScriptInput(model.BaseInput):
             logger.info(f'SE FASTQ input is valid: {nb_reads:,} reads')
             logger.info(f'SE FASTQ hash: {fileutils.hash_file(self.fastq_se)}')
         elif self.type_ == model.InputType.ILLUMINA:
-            nb_reads_fwd = fastqutils.count_reads(self.fastq_pe[0])
-            nb_reads_rev = fastqutils.count_reads(self.fastq_pe[1])
+            if self.fastq_pe is None:
+                raise ValueError('PE reads should be set')
+            pe_files = self.fastq_pe
+            nb_reads_fwd = fastqutils.count_reads(pe_files[0])
+            nb_reads_rev = fastqutils.count_reads(pe_files[1])
             if not nb_reads_fwd == nb_reads_rev:
                 raise ValueError(
                     f'The number of forward ({nb_reads_fwd:,}) and reverse ({nb_reads_rev:,}) reads should be equal.')
             logger.info('FASTQ input is valid')
-            logger.info(f'PE forward FASTQ hash: {fileutils.hash_file(self.fastq_pe[0])}')
-            logger.info(f'PE reverse FASTQ hash: {fileutils.hash_file(self.fastq_pe[1])}')
+            logger.info(f'PE forward FASTQ hash: {fileutils.hash_file(pe_files[0])}')
+            logger.info(f'PE reverse FASTQ hash: {fileutils.hash_file(pe_files[1])}')
         else:
             logger.info(f"Input validation not implemented for {self.type_.value}")
 
@@ -175,11 +179,15 @@ class ScriptInput(model.BaseInput):
             links.append(('vcf_unfiltered', self.vcf_unfiltered, fileutils.make_valid(raw_name)))
 
         if self.type_ in {model.InputType.ILLUMINA, model.InputType.HYBRID}:
-            name_r1 = self.fastq_pe_names[0] if self.fastq_pe_names else self.fastq_pe[0].name
-            name_r2 = self.fastq_pe_names[1] if self.fastq_pe_names else self.fastq_pe[1].name
+            if self.fastq_pe is None:
+                raise ValueError('PE reads should be set')
+            pe_files = self.fastq_pe
+            pe_names = self.fastq_pe_names
+            name_r1 = pe_names[0] if pe_names else pe_files[0].name
+            name_r2 = pe_names[1] if pe_names else pe_files[1].name
             links.extend([
-                ('fastq_pe', self.fastq_pe[0], fileutils.make_valid(name_r1)),
-                ('fastq_pe', self.fastq_pe[1], fileutils.make_valid(name_r2))
+                ('fastq_pe', pe_files[0], fileutils.make_valid(name_r1)),
+                ('fastq_pe', pe_files[1], fileutils.make_valid(name_r2))
             ])
 
         if self.type_ in {model.InputType.ONT, model.InputType.HYBRID}:

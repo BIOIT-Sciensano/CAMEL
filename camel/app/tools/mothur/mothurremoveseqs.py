@@ -1,7 +1,8 @@
 import os
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.mothur.mothur import Mothur
 
@@ -32,16 +33,16 @@ class MothurRemoveSeqs(Mothur):
         super()._check_input()
         if 'TSV_Accnos' not in self._tool_inputs:
             raise InvalidToolInputError('Not enough valid input files given for Mothur '
-                                                 'remove.seqs: {!r}'.format(self._tool_inputs))
+                                                 f'remove.seqs: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 3:
-            raise InvalidToolInputError('Too many input keys given for Mothur remove.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for Mothur remove.seqs: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_Accnos', 'FASTA', 'TSV_Names', 'TSV_Counts', 'TSV_Groups',
                            'TSV_AlignReport', 'TSV_List', 'TSV_Taxonomy', 'TSV_Qfile', 'FASTQ']:
-                raise InvalidToolInputError('Invalid input key given for Mothur remove.seqs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur remove.seqs: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     remove.seqs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     remove.seqs: {self._tool_inputs!r}')
         self.__check_empty_input()
 
     def _build_input_string(self):
@@ -64,8 +65,8 @@ class MothurRemoveSeqs(Mothur):
             # Only two keys are possible so the one that is not TSV_Accnos
             # will define the option flag that is needed
             if key != 'TSV_Accnos':
-                items.append('{}{}'.format(input_parameters[key], input_files[0].path))
-        items.append('outputdir={}'.format(self._folder))
+                items.append(f'{input_parameters[key]}{input_files[0].path}')
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):
@@ -92,6 +93,6 @@ class MothurRemoveSeqs(Mothur):
 
     def __check_empty_input(self):
         if os.path.getsize(self._tool_inputs['TSV_Accnos'][0].path) == 0:
-            with open(self._tool_inputs['TSV_Accnos'][0].path, 'wt', encoding='utf-8') as outf:
+            with open(self._tool_inputs['TSV_Accnos'][0].path, 'w', encoding='utf-8') as outf:
                 outf.write('adding_dummy_entry_as_original_file_is_empty\n')
                 logger.warning('WARNING: ACCNOS file was empty, added a dummy record!')

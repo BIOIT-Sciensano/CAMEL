@@ -40,7 +40,7 @@ rule rd_csb_report_empty:
     params:
         dir_ = 'csb_rd/report'
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.rdcsbreporter import RdCsbReporter
         section = RdCsbReporter.generate_empty_section()
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))

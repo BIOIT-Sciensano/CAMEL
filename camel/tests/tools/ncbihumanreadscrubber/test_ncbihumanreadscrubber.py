@@ -1,10 +1,15 @@
 import unittest
 
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastqutils
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.utils import fastqutils
-from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import NcbiHumanReadScrubber
-from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubberreporter import NcbiHumanReadScrubberReporter
+from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import (
+    NcbiHumanReadScrubber,
+)
+from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubberreporter import (
+    NcbiHumanReadScrubberReporter,
+)
 
 
 class TestNcbiHumanReadScrubber(CamelTestSuite):

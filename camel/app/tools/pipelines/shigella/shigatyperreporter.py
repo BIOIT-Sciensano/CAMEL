@@ -1,10 +1,10 @@
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.reports.htmltableformatter import FormatEntry, HtmlTableFormatter
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
-from camel.app.core.reports.htmltableformatter import HtmlTableFormatter, FormatEntry
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 
 
@@ -47,7 +47,8 @@ class ShigaTyperReporter(Tool):
         :return: None
         """
         # Parse the input files
-        main_output = pd.read_table(self._tool_inputs['TSV'][0].path)
+        main_output = pd.read_table(self._tool_inputs['TSV'][0].path, dtype={'notes': str})
+        print(main_output)
 
         # Remove the sample ID column
         main_output.pop('sample')

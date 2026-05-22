@@ -1,6 +1,7 @@
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidParameterError, ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.samtools.samtoolsbasepipeable import SamtoolsBasePipeable
 
 
@@ -72,7 +73,7 @@ class SamtoolsSort(SamtoolsBasePipeable):
         """
         output_path = self.folder / self._parameters['output_filename'].value
         if not output_path.is_file():
-            raise ToolExecutionError(self.name, f"Expected {self.name} output not generated")
+            raise ToolExecutionError(self.name, "Expected output not generated")
         output_key = self._parameters['output_format'].value.upper()
         self._tool_outputs[output_key] = [ToolIOFile(output_path)]
 

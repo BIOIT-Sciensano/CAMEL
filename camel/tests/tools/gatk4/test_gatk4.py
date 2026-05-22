@@ -1,14 +1,17 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.gatk4.gatk4applybqsr import GATK4ApplyBQSR
 from camel.app.tools.gatk4.gatk4applyvqsr import GATK4ApplyVQSR
 from camel.app.tools.gatk4.gatk4baserecalibrator import GATK4BaseRecalibrator
 from camel.app.tools.gatk4.gatk4combinegvcfs import GATK4CombineGVCFs
-from camel.app.tools.gatk4.gatk4fastaalternatereferencemaker import GATK4FastaAlternateReferenceMaker
+from camel.app.tools.gatk4.gatk4fastaalternatereferencemaker import (
+    GATK4FastaAlternateReferenceMaker,
+)
 from camel.app.tools.gatk4.gatk4gatherbqsrreports import GATK4GatherBQSRReports
 from camel.app.tools.gatk4.gatk4genotypegvcfs import GATK4GenotypeGVCFs
 from camel.app.tools.gatk4.gatk4haplotypecaller import GATK4HaplotypeCaller

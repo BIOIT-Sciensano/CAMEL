@@ -1,6 +1,7 @@
 import abc
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.tool import Tool
 

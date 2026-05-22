@@ -24,8 +24,8 @@ rule quast_quast:
         fasta = config.get('reference', {}).get('fasta'),
         gff = config.get('reference', {}).get('gff3')
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.quast.quast import Quast
 
         # Create output directory
@@ -77,7 +77,7 @@ rule quast_busco:
         lineage_dataset = 'bacteria_odb10'
     threads: 8
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.busco.busco import Busco
         busco = Busco()
         snakemakeutils.add_io_input(busco, 'FASTA', Path(input.FASTA))

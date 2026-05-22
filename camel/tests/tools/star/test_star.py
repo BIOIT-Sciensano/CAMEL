@@ -1,9 +1,10 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.star.staralign import StarAlign
 from camel.app.tools.star.starindex import StarIndex
 

@@ -4,16 +4,18 @@ import sys
 from pathlib import Path
 
 import click
+from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core.errors import ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.toolkits.phylogeny import snpphylogenyutils
 from camel.app.toolkits.phylogeny.snpphylogenyutils import (
     MappingInput,
-    Sample, PhyloInput, PhyloOutput,
+    PhyloInput,
+    PhyloOutput,
+    Sample,
 )
 from camel.app.tools.mega.modelselection import ModelSelection
 

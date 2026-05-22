@@ -1,8 +1,9 @@
 from typing import Any
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 
 
@@ -70,7 +71,7 @@ class ReporterDownsampling(Tool):
         else:
             header = ['Reads in', 'Reads out']
             table_data = [[f"{stats['nb_reads_in']:,}", f"{self._input_informs['seqtk']['reads_count']:,}"]]
-        section.add_header_with_subtitle('Downsampling', 3, self._input_informs['seqtk']['_name'])
+        section.add_header_with_subtitle('Downsampling', 3, self._input_informs['seqtk']['_name_full'])
         section.add_table(table_data, header, [('class', 'data')])
 
     def _execute_tool(self) -> None:

@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
 
@@ -25,13 +26,13 @@ class QiimeSplitLibrariesFastq(Qiime):
         """
         if 'FASTA' in self._tool_inputs == 'FASTQ' in self._tool_inputs:
             raise InvalidToolInputError('Invalid input files (keys) given for '
-                                                 'split_libraries_fastq: {!r}'.format(self._tool_inputs))
+                                                 f'split_libraries_fastq: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'FASTQ', 'TSV_Map']:
-                raise InvalidToolInputError('Invalid input key given for split_libaries_fastq: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for split_libaries_fastq: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files in each key given for \
-                                                     split_libraries_fastq: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files in each key given for \
+                                                     split_libraries_fastq: {self._tool_inputs!r}')
 
     def _set_output(self):
         """
@@ -51,5 +52,5 @@ class QiimeSplitLibrariesFastq(Qiime):
             input_string = '-i {}'.format(self._tool_inputs['FASTA'][0])
         else:
             input_string = '-i {}'.format(self._tool_inputs['FASTQ'][0])
-        input_string += ' -o {}'.format(self._folder)
+        input_string += f' -o {self._folder}'
         return input_string

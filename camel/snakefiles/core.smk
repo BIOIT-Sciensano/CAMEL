@@ -17,7 +17,7 @@ rule core_link_fastq_scrubbing_input:
     params:
         input_dict = config['input']
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
 
         # FASTQ PE
         if 'fastq_pe' in params.input_dict:
@@ -108,7 +108,7 @@ rule core_link_fasta_scrubbing_input:
     output:
         FASTA = human_read_scrubbing.INPUT_FASTA.format(input_format='fasta')
     run:
-         from camel.app.core.io.tooliofile import ToolIOFile
+         from camelcore.app.io.tooliofile import ToolIOFile
          path_fasta_in = Path(params.fasta_in[0]['path'])
          snakemakeutils.dump_object([ToolIOFile(path_fasta_in)], Path(output.FASTA))
 
@@ -121,7 +121,7 @@ rule core_link_vcf_input:
     output:
         VCF = 'input/vcf.io'
     run:
-         from camel.app.core.io.tooliofile import ToolIOFile
+         from camelcore.app.io.tooliofile import ToolIOFile
          if params.vcf_in is None:
              raise ValueError("VCF is missing in input config")
          path_vcf_in = Path(params.vcf_in[0]['path'])
@@ -217,11 +217,14 @@ rule core_report_pickle_citations:
     params:
         citation_keys = config['citations']
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
+        from camelcore.app.utils import reportutils
         from camel.app.core.snakemake import snakemakeutils
-        from camel.app.core.reports import reportutils
+        from camel.resources import DIR_CITATIONS
         section = reportutils.create_citations_section(
-            params.citation_keys['other'], params.citation_keys['main'])
+            dir_=DIR_CITATIONS,
+            keys_other=params.citation_keys['other'],
+            key_main=params.citation_keys['main'])
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.HTML))
 
 rule core_link_fasta_to_polishing:

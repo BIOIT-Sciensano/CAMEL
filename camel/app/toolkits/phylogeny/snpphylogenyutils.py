@@ -4,30 +4,29 @@ import datetime
 from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional, Any, Union, Callable
+from typing import Any, Callable, Optional, Union
 
 import click
 import pandas as pd
 from Bio import SeqIO
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlreport import HtmlReport
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.utils import fastqutils, fileutils, reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlelement import HtmlElement
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.config import config
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
-from camel.app.core.utils import fastqutils, fileutils
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.loggers import logger
-from camel.app.scriptutils.model import BaseOptions, BaseInput, BaseOutput
+from camel.app.scriptutils.model import BaseInput, BaseOptions, BaseOutput
+from camel.app.toolkits.phylogeny.megautils import MEGAUtils
+from camel.app.toolkits.phylogeny.newickutils import NewickUtils
 from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 from camel.app.tools.mega.modelselection import ModelSelection
 from camel.app.tools.snpmatrix.snpmatrixconstructor import SnpMatrixConstructor
-from camel.app.toolkits.phylogeny.megautils import MEGAUtils
-from camel.app.toolkits.phylogeny.newickutils import NewickUtils
 from camel.app.wrappers.trimmingilluminawrapper import TrimmingIlluminaWrapper
 from camel.scripts.snpphylogeny import SNAKEFILE_TRIMMING_ALL
 from camel.scripts.snpphylogeny.snakefile.trimming_all import TRIMMING_ALL
@@ -208,8 +207,6 @@ def symlink_input_files(samples: list[Sample], dir_working: Path) -> dict[Sample
     :param dir_working: Working directory
     :return: Symlink locations by sample
     """
-    import pprint
-    pprint.pprint(samples)
     logger.info(f"Creating symlinks for input files for {len(samples)} samples")
     symlink_dir = dir_working / 'input'
     if not symlink_dir.exists():

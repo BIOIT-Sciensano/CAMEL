@@ -1,26 +1,29 @@
 import json
 import re
 from datetime import datetime
-from importlib.resources import files
 from pathlib import Path
 from typing import Any, Optional, Union
 
 import yaml
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlcitation import HtmlCitation
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlreport import HtmlReport
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import reportutils
 
-from camel.app.core.command import Command
-from camel.app.core.reports.htmlcitation import HtmlCitation
-from camel.app.core.reports.htmlelement import HtmlElement
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.config import config
 from camel.app.core.errors import SnakemakeExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.loggers import logger
+from camel.resources import DIR_CITATIONS
 
 
-def init_pipeline_report(output_path: Path, output_dir: Path, pipeline_info: dict[str, str]) -> HtmlReport:
+def init_pipeline_report(
+    output_path: Path, output_dir: Path, pipeline_info: dict[str, str]
+) -> HtmlReport:
     """
     Initializes an empty pipeline report.
     :param output_path: Output path
@@ -28,11 +31,12 @@ def init_pipeline_report(output_path: Path, output_dir: Path, pipeline_info: dic
     :param pipeline_info: Pipeline information
     :return: Report object
     """
-    path_css = Path(str(files('camel').joinpath('resources/reports/style.css')))
-    path_jquery = Path(str(files('camel').joinpath('resources/reports/jquery-3.2.1.min.js')))
-    report = HtmlReport(output_path, output_dir, [path_jquery])
-    report.initialize(pipeline_info['name'], path_css)
-    report.add_pipeline_header(pipeline_info['title'])
+    report = reportutils.init_report(
+        path_out=output_path,
+        dir_out=output_dir,
+        key=pipeline_info['name'],
+        title=pipeline_info['title'],
+    )
     return report
 
 
@@ -50,8 +54,14 @@ def __get_failed_rule(stderr: str) -> Union[str, None]:
 
 
 def run_snakemake(
-        snakefile: str | Path, config_path: str | Path, targets: list[Path], working_dir: Path, threads: int = 8,
-        resources: Optional[dict[str, Any]] = None, slurm_args: Optional[dict[str, int]] = None) -> Command:
+    snakefile: str | Path,
+    config_path: str | Path,
+    targets: list[Path],
+    working_dir: Path,
+    threads: int = 8,
+    resources: Optional[dict[str, Any]] = None,
+    slurm_args: Optional[dict[str, int]] = None,
+) -> Command:
     """
     Helper function to run snakemake workflows.
     :param snakefile: Workflow snakefile
@@ -70,9 +80,12 @@ def run_snakemake(
     command_parts = [
         'snakemake',
         *[str(x) for x in targets],
-        '--snakefile', str(snakefile),
-        '--configfile', str(config_path),
-        '--cores', str(threads)
+        '--snakefile',
+        str(snakefile),
+        '--configfile',
+        str(config_path),
+        '--cores',
+        str(threads),
     ]
 
     # Add resources if they are specified
@@ -91,15 +104,24 @@ def run_snakemake(
     # Create and run command
     command = Command(' '.join(command_parts))
     command.run(working_dir)
-    if command.returncode != 0:
+    if command.exit_code != 0:
         rule_failed = __get_failed_rule(command.stderr)
-        logger.error(f"Failed at rule: {rule_failed if rule_failed is not None else 'n/a'}")
+        logger.error(
+            f"Failed at rule: {rule_failed if rule_failed is not None else 'n/a'}"
+        )
         raise SnakemakeExecutionError(command.stdout, command.stderr, rule_failed)
     return command
 
+
 def create_input_section(
-        sample_name: str, date: datetime, pipeline_version: str, input_files: str, input_type: str,
-        extra_data: Optional[list[tuple[str, str]]] = None, key_citation: str = None) -> HtmlReportSection:
+    sample_name: str,
+    date: datetime,
+    pipeline_version: str,
+    input_files: str,
+    input_type: str,
+    extra_data: Optional[list[tuple[str, str]]] = None,
+    key_citation: str = None,
+) -> HtmlReportSection:
     """
     Creates the input section for the HTML report.
     :param sample_name: Sample name
@@ -116,7 +138,7 @@ def create_input_section(
         ['Analysis date:', date.strftime(config.date_fmt)],
         ['Pipeline version:', pipeline_version],
         ['Input files:', input_files],
-        ['Input type:', input_type]
+        ['Input type:', input_type],
     ]
     if extra_data is not None:
         for key, value in extra_data:
@@ -125,15 +147,22 @@ def create_input_section(
     section.add_table(table_data, table_attributes=[('class', 'information')])
     if key_citation is not None:
         section.add_header('Disclaimer', 2)
-        section.add_paragraph('If you use this pipeline for your scientific work, please cite:')
-        section.add_html_object(HtmlCitation.parse_from_json(key_citation))
+        section.add_paragraph(
+            'If you use this pipeline for your scientific work, please cite:'
+        )
+        path_json = reportutils.get_path_json_citation(DIR_CITATIONS, key_citation)
+        section.add_html_object(HtmlCitation.parse_from_json(path_json))
     if input_type == 'fasta':
         section.add_warning_message(
             'The input file is in FASTA format, which is not compatible with some of the QC checks. '
-            'Care should be taken when interpreting the results.')
+            'Care should be taken when interpreting the results.'
+        )
     return section
 
-def add_report_content(report: HtmlReport, report_structure: list[tuple[str, str, list[Path]]]) -> None:
+
+def add_report_content(
+    report: HtmlReport, report_structure: list[tuple[str, str, list[Path]]]
+) -> None:
     """
     Adds the content to the HTML report.
     :param report: Report
@@ -161,6 +190,7 @@ def add_report_content(report: HtmlReport, report_structure: list[tuple[str, str
             report.add_html_object(section)
             section.copy_files(report.output_dir)
     report.save()
+
 
 def combine_summary_data(snake_in: Any, path_out: Path, ext: str) -> None:
     """
@@ -190,9 +220,14 @@ def combine_summary_data(snake_in: Any, path_out: Path, ext: str) -> None:
         raise ValueError(f"Invalid 'ext' value: {ext}")
 
 
-def extract_fq_input(io_dict: Path, key_pe: Optional[str] = 'FASTQ_PE', key_se: Optional[str] = None,
-                      keys_se: Optional[list[str]] = None, drop_empty: bool = False, read_type: str = 'PE') -> \
-        dict[str, list[ToolIOFile]]:
+def extract_fq_input(
+    io_dict: Path,
+    key_pe: Optional[str] = 'FASTQ_PE',
+    key_se: Optional[str] = None,
+    keys_se: Optional[list[str]] = None,
+    drop_empty: bool = False,
+    read_type: str = 'PE',
+) -> dict[str, list[ToolIOFile]]:
     """
     Extracts a specific FASTQ input dictionary from the standardized FASTQ dictionary.
     :param io_dict: Path to input IO file
@@ -230,7 +265,11 @@ def extract_fq_input(io_dict: Path, key_pe: Optional[str] = 'FASTQ_PE', key_se: 
     # Remove keys that are empty
     if drop_empty:
         for key in list(output_dict.keys()):
-            if (output_dict[key] is not None) and (len(output_dict[key]) > 0) and not (len(output_dict[key]) == 1 and output_dict[key][0].size == 0):
+            if (
+                (output_dict[key] is not None)
+                and (len(output_dict[key]) > 0)
+                and not (len(output_dict[key]) == 1 and output_dict[key][0].size == 0)
+            ):
                 continue
             logger.debug(f'Removing empty input: {key}')
             output_dict.pop(key)
@@ -238,7 +277,10 @@ def extract_fq_input(io_dict: Path, key_pe: Optional[str] = 'FASTQ_PE', key_se: 
     # Return the reformatted dictionary
     return output_dict
 
-def create_empty_report_section(title: str, output_file: Path, header_level: int = 3) -> None:
+
+def create_empty_report_section(
+    title: str, output_file: Path, header_level: int = 3
+) -> None:
     """
     Creates an empty report section.
     :param title: Section title
@@ -250,7 +292,10 @@ def create_empty_report_section(title: str, output_file: Path, header_level: int
     section.add_paragraph('Analysis disabled.')
     snakemakeutils.dump_object([ToolIOValue(section)], output_file)
 
-def generate_config_file(config_data: dict[str, Any], output_dir: Path, output_basename: str = 'config.yml') -> str:
+
+def generate_config_file(
+    config_data: dict[str, Any], output_dir: Path, output_basename: str = 'config.yml'
+) -> str:
     """
     Generates a configuration file for Snakemake in YAML file format.
     :param config_data: Configuration data

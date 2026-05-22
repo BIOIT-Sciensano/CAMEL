@@ -1,10 +1,11 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.salmonella.sistr import Sistr
 from camel.app.tools.pipelines.salmonella.sistrreporter import SISTRReporter
 

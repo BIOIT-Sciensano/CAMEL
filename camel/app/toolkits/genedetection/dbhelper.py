@@ -5,9 +5,9 @@ from typing import Any
 
 import humanize
 from Bio import SeqIO
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.command import Command
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.tools.blast.makeblastdb import MakeBlastDb
 from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
@@ -117,7 +117,7 @@ class DBHelper:
         command = Command(
             f"ml {' '.join(kma.dependencies)}; kma index -i {fasta_file} -o {path_out}")
         command.run(working_dir)
-        if command.returncode != 0:
+        if command.exit_code != 0:
             raise RuntimeError(f"Error KMA indexing: {command.stderr}")
         self._informs.append({'_command': command.command, '_name': 'KMA', '_version': kma.version})
 

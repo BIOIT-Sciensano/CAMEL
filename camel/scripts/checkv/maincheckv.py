@@ -3,10 +3,10 @@ import dataclasses
 from pathlib import Path
 
 import click
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.reports import reportutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
@@ -15,6 +15,7 @@ from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.checkv.checkv import CheckV
 from camel.app.tools.checkv.checkvreporter import CheckVReporter
+from camel.resources import DIR_CITATIONS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -76,7 +77,8 @@ class MainCheckV(BaseScript[FastaInput, ScriptOutput, CheckVOpts]):
         # Add citation and command
         report.add_html_object(reportutils.create_commands_section(
             [checkv.informs], self._script_opts.working_dir))
-        report.add_html_object(reportutils.create_citations_section(['Nayfach_2021-checkv']))
+        report.add_html_object(reportutils.create_citations_section(
+            dir_=DIR_CITATIONS, keys_other=['Nayfach_2021-checkv']))
         report.save()
 
 

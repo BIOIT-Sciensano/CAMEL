@@ -1,5 +1,6 @@
 from camel.app.tools.gatk4.gatk4 import GATK4
 
+
 class GATK4GenotypeGVCFs(GATK4):
     """
     Class for GATK GenotypeGVCFs function

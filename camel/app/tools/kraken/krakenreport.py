@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
 
-from camel.app.core.command import Command
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.errors import ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.tool import Tool
 
 
@@ -39,14 +39,14 @@ class KrakenReport(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs or 'DB' not in self._tool_inputs:
-            raise InvalidToolInputError('TSV or DB input keys are missing for Kraken-report: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'TSV or DB input keys are missing for Kraken-report: {self._tool_inputs!r}')
         for value in self._tool_inputs.values():
             if len(value) > 1:
                 raise InvalidToolInputError('More than one file per key given '
-                                                     'for Kraken-report: {!r}'.format(self._tool_inputs))
+                                                     f'for Kraken-report: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
             raise InvalidToolInputError('Too many input keys given for Kraken-report '
-                                                 '(only TSV and DB allowed): {!r}'.format(self._tool_inputs))
+                                                 f'(only TSV and DB allowed): {self._tool_inputs!r}')
 
     def __get_basename(self) -> Path:
         """
@@ -80,7 +80,7 @@ class KrakenReport(Tool):
         :return: None
         """
         options_string = ' '.join(self._build_options())
-        self._command.command = '{} {} {}'.format(self._tool_command, self.__build_input_string(), options_string)
+        self._command.command = f'{self._tool_command} {self.__build_input_string()} {options_string}'
 
     def _check_command_output(self, command: Command):
         """

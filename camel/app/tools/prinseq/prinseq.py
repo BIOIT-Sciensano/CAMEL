@@ -1,8 +1,9 @@
 import os
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 
 
@@ -38,16 +39,16 @@ class Prinseq(Tool):
         """
         super(Prinseq, self)._check_input()
         if len(self._tool_inputs.keys()) != 1:
-            raise ValueError('Too many input keys given voor PRINSEQ: {!r}'.format(self._tool_inputs))
+            raise ValueError(f'Too many input keys given voor PRINSEQ: {self._tool_inputs!r}')
         if list(self._tool_inputs.keys())[0] not in ['FASTQ_PE', 'FASTA_PE', 'FASTQ_SE', 'FASTA_SE']:
-            raise ValueError('Invalid input key given for PRINSEQ: {!r}'.format(self._tool_inputs))
+            raise ValueError(f'Invalid input key given for PRINSEQ: {self._tool_inputs!r}')
         key, value = list(self._tool_inputs.items())[0]
         if key.endswith('PE') and len(self._tool_inputs[key]) != 2:
             raise ValueError('Invalid number (!= 2) of files given for PE key'
-                             'for PRINSEQ: {!r}'.format(self._tool_inputs))
+                             f'for PRINSEQ: {self._tool_inputs!r}')
         elif key.endswith('SE') and len(self._tool_inputs[key]) != 1:
             raise ValueError('Invalid number (!= 1) of files given for SE key'
-                             'for PRINSEQ: {!r}'.format(self._tool_inputs))
+                             f'for PRINSEQ: {self._tool_inputs!r}')
 
     def __build_command(self):
         """
@@ -67,9 +68,9 @@ class Prinseq(Tool):
         input_key = list(self._tool_inputs.keys())[0]
         basename = self.__get_basename()
         filetype = 'fastq' if input_key.startswith('FASTQ') else 'fasta'
-        input_string = '-{} {}'.format(filetype, self._tool_inputs[input_key][0].path)
+        input_string = f'-{filetype} {self._tool_inputs[input_key][0].path}'
         if input_key.endswith('PE'):
-            input_string += ' -{}2 {}'.format(filetype, self._tool_inputs[input_key][1].path)
+            input_string += f' -{filetype}2 {self._tool_inputs[input_key][1].path}'
         input_string += ' -out_good {}'.format(basename + '.prinseq')
         input_string += ' -out_bad null'
         return input_string

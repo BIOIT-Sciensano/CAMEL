@@ -5,16 +5,17 @@ from datetime import datetime
 from pathlib import Path
 
 import click
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.reports import reportutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.fastainput import FastaInput
-from camel.app.scriptutils.model import BaseOutput, BaseOptions
+from camel.app.scriptutils.model import BaseOptions, BaseOutput
 from camel.app.tools.checkm.checkm import CheckM
 from camel.app.tools.checkm.checkmreporter import CheckMReporter
+from camel.resources import DIR_CITATIONS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -103,7 +104,10 @@ class MainCheckM(BaseScript[FastaInput, Output, Options]):
         # Add citation and command
         report.add_html_object(reportutils.create_commands_section(
             [checkm.informs], self._script_opts.working_dir))
-        report.add_html_object(reportutils.create_citations_section(['Parks_2015-checkm']))
+        report.add_html_object(reportutils.create_citations_section(
+            dir_=DIR_CITATIONS,
+            keys_other=['Parks_2015-checkm']
+        ))
         report.save()
 
     def __prepare_input(self) -> dict[str, list[ToolIOFile]]:

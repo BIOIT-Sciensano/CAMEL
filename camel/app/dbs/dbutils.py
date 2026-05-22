@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from camel.app.config import config
 from camel.app.core import cameltesthelper
-from camel.app.core.utils import fileutils
+from camelcore.app.utils import fileutils
 from camel.app.dbs import typingdbdownload
 from camel.app.loggers import logger
 

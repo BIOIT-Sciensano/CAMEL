@@ -2,11 +2,12 @@ import os
 import os.path
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
-from camel.app.core.utils import toolutils
 
 
 class RefCov(Tool):
@@ -39,15 +40,15 @@ class RefCov(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(RefCov, self)._check_input()
         if 'BAM' not in self._tool_inputs:
-            raise InvalidToolInputError('BAM input key is required for RefCov: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'BAM input key is required for RefCov: {self._tool_inputs!r}')
         for key, value in self._tool_inputs.items():
             if key not in ['BAM', 'BED'] or len(value) > 1:
                 raise InvalidToolInputError('Invalid input given for RefCov '
-                                                     '(BAM/BED and 1 file per key): {!r}'.format(self._tool_inputs))
+                                                     f'(BAM/BED and 1 file per key): {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidToolInputError('Too many input keys given for RefCov (only BAM/BED allowed): {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for RefCov (only BAM/BED allowed): {self._tool_inputs!r}')
+        super()._check_input()
 
     def __build_basename(self, infiles):
         """
@@ -88,7 +89,7 @@ class RefCov(Tool):
         else:
             parts.append('--roi-file-path {}'.format(self._tool_inputs['BAM'][0]))
             parts.append('--roi-file-format bam')
-        parts.append('--output-directory {}'.format(self._folder))
+        parts.append(f'--output-directory {self._folder}')
         return ' '.join(parts)
 
     def __build_command(self):

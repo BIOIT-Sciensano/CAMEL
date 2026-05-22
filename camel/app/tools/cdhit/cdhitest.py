@@ -2,7 +2,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.tool import Tool
 
 

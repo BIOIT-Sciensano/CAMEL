@@ -1,11 +1,11 @@
 from io import StringIO
 
 import pandas as pd
+from camelcore.app.command import Command
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.io.tooliovalue import ToolIOValue
+from camel.app.core import toolutils
 from camel.app.core.tool import Tool
 
 
@@ -45,7 +45,7 @@ class Snpit(Tool):
         """
         self._command.command = ' '.join([
             self._tool_command,
-            '--input {}'.format(self._tool_inputs['VCF'][0].path)
+            f'--input {self._tool_inputs["VCF"][0].path}'
         ])
 
     def __set_informs(self) -> None:
@@ -68,9 +68,9 @@ class Snpit(Tool):
         """
         section = HtmlReportSection('Snpit', 3)
         table_data = [
-            ['Species:', '<i>{}</i>'.format(self._informs['species']) if self._informs['species'] != '' else 'NA'],
-            ['Lineage:', self._informs['lineage'] if self._informs['lineage'] != '' else 'NA'],
-            ['Sublineage:', self._informs['sublineage'] if self._informs['sublineage'] != '' else 'NA'],
+            ['Species:', '<i>{}</i>'.format(self._informs['species']) if self._informs['species'] != '' else 'n/a'],
+            ['Lineage:', self._informs['lineage'] if self._informs['lineage'] != '' else 'n/a'],
+            ['Sublineage:', self._informs['sublineage'] if self._informs['sublineage'] != '' else 'n/a'],
             ['Percent match:', '{:.2f}%'.format(self._informs['percent_matched'])]
         ]
         section.add_table(table_data, table_attributes=[('class', 'information')])

@@ -6,17 +6,18 @@ from pathlib import Path
 
 import click
 import pandas as pd
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.fastainput import FastaInput
-from camel.app.scriptutils.model import BaseOutput, BaseOptions
+from camel.app.scriptutils.model import BaseOptions, BaseOutput
 from camel.app.tools.btyper.btyper import BTyper
 from camel.app.tools.btyper.btyperreporter import BTyperReporter
+from camel.resources import DIR_CITATIONS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -100,8 +101,10 @@ class MainBTyper(BaseScript[FastaInput, Output, Options]):
         all_informs = [btyper.informs]
         report.add_html_object(reportutils.create_commands_section(
             all_informs, self._script_opts.working_dir))
-        report.add_html_object(reportutils.create_citations_section([
-            'Carroll_2020a-btyper3', 'Carroll_2020b-btyper3']))
+        report.add_html_object(reportutils.create_citations_section(
+            dir_=DIR_CITATIONS,
+            keys_other=['Carroll_2020a-btyper3', 'Carroll_2020b-btyper3']
+        ))
         report.save()
 
         # Copy the TSV output file when specified

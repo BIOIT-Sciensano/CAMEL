@@ -62,7 +62,7 @@ parameters:
     default: false
     mandatory: false
     option: '--point'
-    value: null
+    flag: true
   species:
     default: false
     mandatory: false

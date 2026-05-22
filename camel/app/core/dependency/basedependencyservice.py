@@ -1,7 +1,7 @@
 import abc
 from typing import Any
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
 
 
 class BaseDependencyService(metaclass=abc.ABCMeta):

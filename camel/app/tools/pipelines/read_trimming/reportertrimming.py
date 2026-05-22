@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 
 
@@ -101,10 +102,10 @@ class ReporterTrimming(Tool):
         """
         parts = input_str.split(' ')
         if len(parts) == 1:
-            return '{:,}'.format(int(parts[0]))
+            return f'{int(parts[0]):,}'
         elif len(parts) == 2:
-            return '{:,} {}'.format(int(parts[0]), parts[1])
-        raise ValueError("Cannot parse: {}".format(input_str))
+            return f'{int(parts[0]):,} {parts[1]}'
+        raise ValueError(f"Cannot parse: {input_str}")
 
     def __add_trimmed_read_files(self) -> None:
         """

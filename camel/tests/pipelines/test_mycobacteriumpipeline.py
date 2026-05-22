@@ -1,8 +1,9 @@
 import unittest
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.tools.pipelines.mycobacterium.bamaddcustomtag import BAMAddCustomTag
 from camel.scripts.mycobacteriumpipeline import CONFIG_DATA

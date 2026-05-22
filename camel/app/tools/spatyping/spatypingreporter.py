@@ -1,12 +1,13 @@
 import datetime
 from typing import Any
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.tools.spatyping.spatyping import SpaTypingHit
 from camel.app.core.tool import Tool
+from camel.app.tools.spatyping.spatyping import SpaTypingHit
 
 
 class SpaTypingReporter(Tool):

@@ -1,6 +1,6 @@
 import re
 
-from camel.app.core.errors import InvalidToolInputError, InvalidParameterError
+from camel.app.core.errors import InvalidParameterError, InvalidToolInputError
 from camel.app.loggers import logger
 from camel.app.tools.gatk.gatk import GATK
 
@@ -30,7 +30,7 @@ class GATKSelectVariants(GATK):
             if not select_exp:
                 raise InvalidParameterError(
                     "Selection criterion of 'select' option is required.")
-            if re.search('\s', select_exp):
+            if re.search(r'\s', select_exp):
                 raise InvalidParameterError(
                     f"No space in the 'select' option JEXL expression. e.g., 'DQ>100', not 'DQ > 100'. Expression specified {select_exp}.")
         else:

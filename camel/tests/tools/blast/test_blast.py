@@ -1,9 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.core.cameltestsuite import CamelTestSuite
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.config import config
-from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.loggers import initialize_logging
 from camel.app.tools.blast.blastformatter import BlastFormatter
 from camel.app.tools.blast.blastn import Blastn

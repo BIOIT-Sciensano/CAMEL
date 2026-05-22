@@ -1,9 +1,8 @@
 from pathlib import Path
-
-import pandas as pd
 import json
 
-from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.snakefiles import amrfinder
@@ -74,6 +73,7 @@ rule amrfinder_dump_summary_info:
     params:
         ext = lambda wildcards: wildcards.ext
     run:
+        import pandas as pd
         path_tsv = snakemakeutils.load_object(Path(input.TSV))[0].path
         data_amr = pd.read_table(path_tsv)
 

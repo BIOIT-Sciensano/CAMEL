@@ -33,8 +33,8 @@ rule serotype_detection_report:
     output:
         HTML = 'serotype_detection/report/html.iob' # serotype_detection.OUTPUT_REPORT
     run:
-        from camel.app.core.reports.htmlreportsection import HtmlReportSection
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.reports.htmlreportsection import HtmlReportSection
+        from camelcore.app.io.tooliovalue import ToolIOValue
         if len(input['VAL_serotype']) > 0:
             serotype = snakemakeutils.load_object(Path(input.VAL_serotype))[0].value
         else:

@@ -52,7 +52,7 @@ checkpoint typing_extract_schema_info:
         db = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]['path'],
         dir_ = lambda wildcards: f'typing/{wildcards.scheme}/scheme_info'
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
         db_loader = TypingDBLoader()
         path_db = Path(str(params.db))
@@ -88,7 +88,7 @@ rule typing_async:
     run:
         from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.pipelines.sequence_typing.typeasync import TypeAsync
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
 
         # Create the working directory
         dir_working = Path(str(params.dir_))
@@ -129,7 +129,7 @@ rule typing_mist:
         dir_ = lambda wildcards: f'typing/{wildcards.scheme}/mist/DNA'
     threads: 4
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.mist.mistcall import MiSTCall
         mist_call = MiSTCall()
         mist_call.add_input_files({
@@ -150,7 +150,7 @@ rule typing_mist_extract_hits:
     output:
         IO = 'typing/{scheme}/mist/DNA/hits.iob'
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.toolkits.sequencetyping.typingmisthit import TypingMiSTHit
         path_json = snakemakeutils.load_object(Path(input.JSON))[0].path
         hits = TypingMiSTHit.parse_mist_json(path_json)
@@ -187,7 +187,7 @@ rule typing_add_allele_page_url:
     output:
         IO = 'typing/{scheme}/hits/{locus_type}/hits-url.iob'
     run:
-        from camel.app.core.utils import fileutils
+        from camelcore.app.utils import fileutils
 
         # Load the informs
         metadata_by_locus_name = snakemakeutils.load_object(
@@ -320,7 +320,7 @@ rule typing_create_report:
         detection_method = lambda wildcards: sequence_typing.get_detection_method(config, wildcards.scheme, 'DNA'),
         config_data = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.sequence_typing.htmlreportertyping import HtmlReporterTyping
         reporter = HtmlReporterTyping()
 

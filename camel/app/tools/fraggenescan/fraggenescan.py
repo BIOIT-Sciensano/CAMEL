@@ -1,10 +1,11 @@
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
-from camel.app.core.utils import toolutils
 
 
 class FragGeneScan(Tool):
@@ -16,7 +17,7 @@ class FragGeneScan(Tool):
     def __init__(self):
         """
         Initialize tool
-        :return: None
+                :return: None
         """
         super().__init__('fraggenescan', '1.30')
 

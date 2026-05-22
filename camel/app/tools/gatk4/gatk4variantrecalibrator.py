@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.tools.gatk4.gatk4 import GATK4
-from camel.app.core.io.tooliofile import ToolIOFile
 
 
 class GATK4VariantRecalibrator(GATK4):

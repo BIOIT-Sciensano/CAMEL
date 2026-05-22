@@ -1,12 +1,13 @@
 from pathlib import Path
 
-from camel.app.core.utils import fileutils
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 from camel.app.toolkits.blast.alignmentextraction import AlignmentExtraction
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
-from camel.app.core.tool import Tool
 
 
 class AlignmentExtractor(Tool):
@@ -40,7 +41,7 @@ class AlignmentExtractor(Tool):
                 alignment = self.__save_alignment(hit, alignments[key])
                 self._tool_outputs['TXT'].append(ToolIOFile(alignment))
             else:
-                raise ValueError("No alignment found for: '{}'".format(key))
+                raise ValueError(f"No alignment found for: '{key}'")
 
     def _check_input(self) -> None:
         """

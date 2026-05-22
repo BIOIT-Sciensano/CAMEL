@@ -1,13 +1,14 @@
 from pathlib import Path
 
-from camel.app.core.utils import fileutils
-from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
-from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import fileutils
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
+from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
 
 
 class HtmlReporterGeneDetection(Tool):

@@ -3,12 +3,12 @@ import dataclasses
 from pathlib import Path
 
 import click
+from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils.basescript.basescript import BaseScript
-from camel.app.scriptutils.model import BaseInput, BaseOutput, BaseOptions
+from camel.app.scriptutils.model import BaseInput, BaseOptions, BaseOutput
 from camel.app.tools.freebayes.freebayes import Freebayes
 
 

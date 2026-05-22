@@ -1,10 +1,11 @@
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class BAMAddCustomTag(Tool):
@@ -25,7 +26,7 @@ class BAMAddCustomTag(Tool):
         :return: None
         """
         if 'BAM' not in self._tool_inputs:
-            raise InvalidToolInputError(f'BAM input is required')
+            raise InvalidToolInputError('BAM input is required')
         super()._check_input()
 
     def __extract_header(self, bam: Path) -> str:
@@ -36,7 +37,7 @@ class BAMAddCustomTag(Tool):
         """
         command = Command(f'{self._build_dependencies()} samtools view -H {bam}')
         command.run(self.folder)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error extracting header from BAM file: {bam}')
         return command.stdout
 
@@ -48,7 +49,7 @@ class BAMAddCustomTag(Tool):
         # Add custom tag and save header
         header = self.__extract_header(self._tool_inputs['BAM'][0].path)
         header += f"@CO\t{self._parameters['name'].value}:{self._parameters['value'].value}\n"
-        path_header_updated = self.folder / f'header_updated.txt'
+        path_header_updated = self.folder / 'header_updated.txt'
         with path_header_updated.open('w') as handle:
             handle.write(header)
         logger.info(f'Updated header file created:{path_header_updated}')

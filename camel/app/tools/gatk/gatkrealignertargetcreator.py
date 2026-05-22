@@ -28,7 +28,7 @@ class GATKRealignerTargetCreator(GATK):
         super(GATKRealignerTargetCreator, self)._set_input()
 
         bam_file = self._tool_inputs['BAM'][0].path
-        self._input_string += "-I {} ".format(bam_file)
+        self._input_string += f"-I {bam_file} "
 
         # to work with only known regions from VCF_KNOWN
         if 'VCF_KNOWN' in self._tool_inputs:

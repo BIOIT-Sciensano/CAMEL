@@ -3,11 +3,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.snakemake import snakemakeutils
-from camel.app.core.snakemake import snakepipelineutils
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
-from camel.snakefiles import variant_filtering, variant_calling
+from camel.snakefiles import variant_calling, variant_filtering
 
 
 @dataclass

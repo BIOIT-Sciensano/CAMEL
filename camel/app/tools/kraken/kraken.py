@@ -2,10 +2,10 @@ import os
 import re
 from pathlib import Path
 
-from camel.app.core.command import Command
-from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.errors import ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.tool import Tool
 
 
@@ -45,15 +45,14 @@ class Kraken(Tool):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('FASTA', 'FASTQ', 'FASTQ_PE')) or 'DB' not in self._tool_inputs:
-            raise InvalidToolInputError('FASTA/Q input or DB input missing for Kraken: {!r}'.format(
-                self._tool_inputs))
+            raise InvalidToolInputError(f'FASTA/Q input or DB input missing for Kraken: {self._tool_inputs!r}')
         for key, value in self._tool_inputs.items():
             if (key != 'FASTQ_PE' and len(value) > 1) or (key == 'FASTQ_PE' and len(value) != 2):
                 raise InvalidToolInputError('There is more than 1 FASTA/Q file or more/less than two FASTQ_PE '
-                                                     'files given for Kraken: {!r}'.format(self._tool_inputs))
+                                                     f'files given for Kraken: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
             raise InvalidToolInputError('Too many input keys given for Kraken ((FASTA or FASTQ or FASTQ_PE) '
-                                                 'and DB): {!r}'.format(self._tool_inputs))
+                                                 f'and DB): {self._tool_inputs!r}')
 
     def __get_basename(self):
         """

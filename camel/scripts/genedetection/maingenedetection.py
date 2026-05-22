@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any
 
 import click
+from camelcore.app.reports.htmlreport import HtmlReport
+from camelcore.app.utils import reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlreport import HtmlReport
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import inputhelper, model
 from camel.app.scriptutils.basepipe import basepipeutils
@@ -17,12 +17,12 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.app.scriptutils.inputhelper import helper_by_input_type, ONTHelper
+from camel.app.scriptutils.inputhelper import ONTHelper, helper_by_input_type
 from camel.app.scriptutils.inputhelper.inputhelperbase import InputHelperBase
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.wrappers.genedetectionwrapper import (
-    GeneDetectionWrapper,
     GeneDetectionOutput,
+    GeneDetectionWrapper,
 )
 
 

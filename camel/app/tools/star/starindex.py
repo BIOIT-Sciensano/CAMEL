@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+
 from camel.app.loggers import logger
 from camel.app.tools.star.star import Star
 

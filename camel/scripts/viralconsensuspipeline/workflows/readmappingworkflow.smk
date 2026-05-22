@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
@@ -76,7 +76,7 @@ rule bwa_map_reads_se:
         dir_ = lambda wildcards: f'bwa/map_se_{wildcards.key}',
         key = lambda wildcards: wildcards.key
     run:
-        from camel.app.core.utils import sambamutils
+        from camelcore.app.utils import sambamutils
         from camel.app.scriptutils.basepipe.fastqinput import FastqInput
         from camel.app.tools.bwa.bwamap import BWAMap
 
@@ -114,7 +114,7 @@ rule bwa_map_merge_sam:
     params:
         dir_ = 'bwa/map'
     run:
-        from camel.app.core.utils import sambamutils
+        from camelcore.app.utils import sambamutils
         from camel.app.tools.samtools.samtoolsmerge import SamtoolsMerge
         merge = SamtoolsMerge()
         merge.update_parameters(output_filename='bwa_merged.sam')

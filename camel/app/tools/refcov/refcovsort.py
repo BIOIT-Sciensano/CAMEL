@@ -2,11 +2,12 @@ import os
 import os.path
 from pathlib import Path
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
-from camel.app.core.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.tool import Tool
 
 
 class RefCovSort(Tool):
@@ -41,9 +42,9 @@ class RefCovSort(Tool):
         """
         super(RefCovSort, self)._check_input()
         if 'TSV' not in self._tool_inputs or len(self._tool_inputs['TSV']) > 1:
-                raise InvalidToolInputError('Invalid input given for RefCovSort (TSV and 1 file): {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input given for RefCovSort (TSV and 1 file): {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidToolInputError('Only TSV allowed as input for RefCovSort: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Only TSV allowed as input for RefCovSort: {self._tool_inputs!r}')
 
     def __get_basename(self):
         """

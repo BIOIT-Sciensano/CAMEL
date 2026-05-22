@@ -1,4 +1,5 @@
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.tool import Tool
 
 
@@ -14,11 +15,11 @@ class VCFtools(Tool):
 
     Required inputs:
     ----------------
-    'VCF'|'VCF_GZ':         ToolIOFile object. File in VCF|bg-zipped VCF format
+    'VCF'|'VCF_GZ': ToolIOFile object. File in VCF|bg-zipped VCF format
 
     Output:
     -------
-    'VCF_GZ':               ToolIOFile object. Processed file in bg-zipped VCF format
+    'VCF_GZ': ToolIOFile object. Processed file in bg-zipped VCF format
     """
 
     def _execute_tool(self) -> None:

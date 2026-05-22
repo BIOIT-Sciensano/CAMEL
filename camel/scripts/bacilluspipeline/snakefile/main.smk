@@ -83,7 +83,7 @@ rule main_update_gmm_report:
         running_dir = 'gene_detection/gmo'
     run:
         from camel.app.tools.pipelines.bacillus.updategmmreport import UpdateGMMReport
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.core.snakemake.step import Step
         gmmupdater = UpdateGMMReport()
         snakemakeutils.add_io_inputs(gmmupdater, input, excluded_keys=['TSV_STRAINS', 'TSV_GMM_VECTORS', 'TSV_GMM_JUNCTIONS', 'TSV_GMM_DB'])

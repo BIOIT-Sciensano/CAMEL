@@ -1,8 +1,9 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.minimap2.minimap2mapping import Minimap2Mapping
 
 

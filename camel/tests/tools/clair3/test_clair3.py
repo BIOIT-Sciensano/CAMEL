@@ -1,8 +1,11 @@
 import unittest
+from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
+
+from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.utils import vcfutils
 from camel.app.tools.clair3.clair3 import Clair3
 
 
@@ -36,8 +39,11 @@ class TestClair3(CamelTestSuite):
         clair3 = Clair3()
         clair3.add_input_files({'FASTA': [TestClair3.FILE_FASTA], 'BAM': [TestClair3.FILE_BAM_ONT]})
         clair3.update_parameters(
-            output_path=self.running_dir, platform='ont', haploid_precise=True, no_phasing=True, include_ctgs=True,
-            model_path='/db/clair3/models/ont/')
+            platform='ont',
+            model_path=str(Path(config.dir_db, 'clair3', 'models', 'ont')),
+            include_ctgs=True
+        )
+
         clair3.run(self.running_dir)
         self.verify_output_files(clair3, 'VCF')
         self.assertGreater(vcfutils.count_variants(clair3.tool_outputs['VCF'][0].path), 0)

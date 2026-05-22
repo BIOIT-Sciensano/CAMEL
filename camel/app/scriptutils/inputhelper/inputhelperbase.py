@@ -2,11 +2,12 @@ import abc
 import dataclasses
 import shutil
 from pathlib import Path
-from typing import Any, TypeVar, Generic
+from typing import Any, Generic, TypeVar
 
-from camel.app.core.reports import reportutils
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmlreport import HtmlReport
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import reportutils
+
 from camel.app.loggers import logger
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput

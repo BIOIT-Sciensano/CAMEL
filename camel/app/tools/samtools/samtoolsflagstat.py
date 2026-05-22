@@ -1,8 +1,9 @@
 import re
 from pathlib import Path
 
-from camel.app.core.utils import toolutils
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.tools.samtools.samtoolsbasepipeable import SamtoolsBasePipeable
 
 

@@ -1,10 +1,11 @@
 import abc
 from pathlib import Path
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 
 

@@ -1,14 +1,14 @@
 from pathlib import Path
 
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.reports.htmltableformatter import FormatEntry, HtmlTableFormatter
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
-from camel.app.core.reports.htmltableformatter import HtmlTableFormatter, FormatEntry
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class PharokkaReporter(Tool):
@@ -107,7 +107,7 @@ class PharokkaReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection(PharokkaReporter.TITLE, subtitle=self._input_informs['pharokka']['_name'])
+        section = HtmlReportSection(PharokkaReporter.TITLE, subtitle=self._input_informs['pharokka']['_name_full'])
 
         # Summary metrics
         section.add_header('Annotation and stats', 3)

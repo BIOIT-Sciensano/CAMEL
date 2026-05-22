@@ -23,7 +23,7 @@ rule ref_selection_mash_screen:
         input_type = config['input']['type'],
         segment = lambda wildcards: wildcards.segment
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
 
         # Load FASTQ data
         if params.input_type == 'ont':
@@ -57,7 +57,7 @@ rule ref_selection_create_fasta:
         dir_ = 'ref_selection/create_fasta'
     run:
         import itertools
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.viral_consensus.refselectioncreatefasta import RefSelection
         ref_selection = RefSelection()
         tsv_in = list(itertools.chain(*[snakemakeutils.load_object(Path(io)) for io in input.TSV]))
@@ -80,7 +80,7 @@ rule ref_selection_report:
     params:
         dir_ = 'ref_selection/report'
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.viral_consensus.reporterrefselection import ReporterRefSelection
         reporter = ReporterRefSelection()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))

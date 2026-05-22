@@ -2,15 +2,15 @@ from pathlib import Path
 from typing import Callable, Union
 
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.reports.htmltableformatter import FormatEntry, HtmlTableFormatter
 
-from camel.app.core.reports.htmlelement import HtmlElement
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.tool import Tool
-from camel.app.core.reports.htmltableformatter import HtmlTableFormatter, FormatEntry
 
 
 class ReporterIterativeMapping(Tool):

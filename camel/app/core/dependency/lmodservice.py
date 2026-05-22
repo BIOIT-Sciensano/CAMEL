@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Any
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+
 from camel.app.core.dependency.basedependencyservice import BaseDependencyService
 from camel.app.loggers import logger
 

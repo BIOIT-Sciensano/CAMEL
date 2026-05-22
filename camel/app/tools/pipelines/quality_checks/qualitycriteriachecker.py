@@ -1,6 +1,6 @@
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class QualityCriteriaChecker(Tool):
@@ -51,10 +51,9 @@ class QualityCriteriaChecker(Tool):
         for input_file, index in zip(informs['samples'], list(range(0, len(informs['samples'])))):
             for test_name, state in informs['tests'].items():
                 if state[index] == 'Warn':
-                    self.informs['warnings'].append("'{}' had a warning for the '{}' test".format(
-                        input_file, test_name))
+                    self.informs['warnings'].append(f"'{input_file}' had a warning for the '{test_name}' test")
                 if state[index] == 'Fail':
-                    self.informs['fails'].append("'{}' does not pass '{}' test".format(input_file, test_name))
+                    self.informs['fails'].append(f"'{input_file}' does not pass '{test_name}' test")
 
     def __check_assembly_mapping_rate(self):
         """
@@ -91,6 +90,6 @@ class QualityCriteriaChecker(Tool):
         fraction_of_genes_detected = 100.0 * float(cgmlst_stats['hits_found']) / cgmlst_stats['nb_of_loci']
         min_fail = self._parameters['minimal_cgmlst_percentage_genes_fail'].value
         if fraction_of_genes_detected < float(min_fail):
-            self.informs['fails'].append('Not enough cgMLST genes detected ({}% required)'.format(min_fail))
+            self.informs['fails'].append(f'Not enough cgMLST genes detected ({min_fail}% required)')
         elif fraction_of_genes_detected < float(self._parameters['minimal_cgmlst_percentage_genes_warn'].value):
             self.informs['warnings'].append('Low amount of cgMLST genes detected')

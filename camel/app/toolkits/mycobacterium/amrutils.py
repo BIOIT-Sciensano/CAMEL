@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.loggers import logger
 
 

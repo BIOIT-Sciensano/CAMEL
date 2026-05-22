@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -26,14 +27,14 @@ class MothurClassifyOtu(Mothur):
         super()._check_input()
         if 'TSV_List' not in self._tool_inputs or 'TSV_Taxonomy' not in self._tool_inputs:
             raise InvalidToolInputError('Invalid input files (keys) given for Mothur '
-                                                 'classify.otu: {!r}'.format(self._tool_inputs))
+                                                 f'classify.otu: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_List', 'TSV_Taxonomy', 'TSV_Groups', 'TSV_Counts', 'TSV_Names', 'TSV_RefTaxonomy']:
                 raise InvalidToolInputError('Invalid input key given for Mothur '
-                                                     'classify.otu: {!r}'.format(self._tool_inputs))
+                                                     f'classify.otu: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     classify.otu: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     classify.otu: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -50,7 +51,7 @@ class MothurClassifyOtu(Mothur):
             items.append('name={}'.format(self._tool_inputs['TSV_Names'][0]))
         if 'TSV_RefTaxonomy' in self._tool_inputs:
             items.append('reftaxonomy={}'.format(self._tool_inputs['TSV_RefTaxonomy'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

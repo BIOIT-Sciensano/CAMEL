@@ -1,9 +1,10 @@
 import unittest
 from pathlib import Path
 
-from camel.app.core.cameltestsuite import CamelTestSuite
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.config import config
-from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.wrappers.kraken2wrapper import Kraken2Wrapper
 

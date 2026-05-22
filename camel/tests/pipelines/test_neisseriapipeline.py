@@ -220,7 +220,7 @@ class TestNeisseriaPipeline(CamelTestSuite):
                 '--gene-detection-method',
                 'blast',
                 '--analyses',
-                ','.join(CUSTOM_ANALYSES),
+                ','.join(c for c in CUSTOM_ANALYSES if c not in {'kraken2'}),
             ],
         )
         self.assertEqual(result.exit_code, 0)

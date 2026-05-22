@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Union
 
-from camel.app.core.utils import fastautils
+from camelcore.app.utils import fastautils
+
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.snakefiles import quality_checks, contamination_check_kraken, trimming_ont, \

@@ -1,7 +1,8 @@
 import dataclasses
 from pathlib import Path
 
-from camel.app.core.utils import fastautils, fileutils
+from camelcore.app.utils import fastautils, fileutils
+
 from camel.app.loggers import logger
 from camel.app.scriptutils import model
 
@@ -54,7 +55,6 @@ class FastaInput(model.BaseInput):
         Checks if the input is valid.
         :return: True if valid, False otherwise
         """
-        logger.debug('Validating FASTA input')
         if fastautils.count_reads(self.fasta) == 0:
             raise ValueError(f'Input FASTA file {self.fasta} is empty.')
         if fastautils.has_duplicates(self.fasta):

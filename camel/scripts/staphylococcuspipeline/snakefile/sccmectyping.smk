@@ -18,7 +18,7 @@ rule sccmec_typing_run:
         dir_ = 'sccmec_typing/tool'
     run:
         from camel.app.tools.sccmectyping.sccmectyping import SCCmecTyping
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         sccmec_typing = SCCmecTyping()
         sccmec_typing.add_input_files({'YML': [ToolIOFile(Path(input.YAML))]})
         snakemakeutils.add_io_input(sccmec_typing,'VAL_HITS', Path(input.VAL_HITS))
@@ -35,8 +35,8 @@ rule sccmec_typing_report:
     output:
         HTML = 'sccmec_typing/report/html.iob' # sccmectyping.OUTPUT_REPORT
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
-        from camel.app.core.reports.htmlreportsection import HtmlReportSection
+        from camelcore.app.io.tooliovalue import ToolIOValue
+        from camelcore.app.reports.htmlreportsection import HtmlReportSection
         section = HtmlReportSection('SCC<i>mec</i> type', 3)
         informs = snakemakeutils.load_object(Path(input.INFORMS))
         section.add_table(

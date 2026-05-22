@@ -1,9 +1,9 @@
 import unittest
 
 import pandas as pd
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltableformatter import FormatEntry, HtmlTableFormatter
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltableformatter import HtmlTableFormatter, FormatEntry
 from camel.app.core.cameltestsuite import CamelTestSuite
 
 

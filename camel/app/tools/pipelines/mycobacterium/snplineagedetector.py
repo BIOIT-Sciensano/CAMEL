@@ -1,21 +1,22 @@
 import datetime
 import re
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Union, Any
+from typing import Any, Union
 
 import pandas as pd
-import vcf
-# noinspection PyProtectedMember
-from vcf.model import _Record as VcfRecord
+from camelcore.app.utils import vcfutils
+from cyvcf2 import Variant
 
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 @dataclass(frozen=True, unsafe_hash=True)
 class Lineage:
+    """
+    Represent a lineage.
+    """
     id_: str
     name: str
     main_spoligo: str
@@ -32,6 +33,9 @@ class Lineage:
 
 @dataclass
 class LineageSNP:
+    """
+    Represents a SNP that can be linked to a specific lineage.
+    """
     chrom: str
     start: int
     end: int
@@ -71,9 +75,9 @@ class SNPLineageDetector(Tool):
         :return: None
         """
         lineage_snps = self.__parse_lineage_snps()
-        variants = SNPLineageDetector.__parse_vcf(self._tool_inputs['VCF'][0].path)
-        variants_filtered = SNPLineageDetector.__parse_vcf(self._tool_inputs['VCF_filt'][0].path)
-        logger.info(f"{len(variants_filtered)}/{len(variants)} (filtered) variants parsed.")
+        variants = vcfutils.parse_all_variants(self._tool_inputs['VCF'][0].path)
+        variants_filtered = vcfutils.parse_all_variants(self._tool_inputs['VCF_filt'][0].path)
+        logger.info(f"{len(variants_filtered):,}/{len(variants):,} (filtered) variants parsed.")
 
         # Check if variants are present in the database
         self._informs['detected_snps'] = self.__get_detected_snps(lineage_snps, variants, variants_filtered)
@@ -112,18 +116,7 @@ class SNPLineageDetector(Tool):
         logger.info(f"{len(lineage_snps)} lineage SNPs parsed")
         return lineage_snps
 
-    @staticmethod
-    def __parse_vcf(file_path: Path) -> list[VcfRecord]:
-        """
-        Parses the keys of the variants.
-        :param file_path: VCF file path
-        :return: Mapping of variants per position
-        """
-        with open(file_path) as handle:
-            vcf_reader = vcf.Reader(handle)
-            return list(vcf_reader)
-
-    def __get_detected_snps(self, snps: list[LineageSNP], variants: list[VcfRecord], variants_filt: list[VcfRecord]) \
+    def __get_detected_snps(self, snps: list[LineageSNP], variants: list[Variant], variants_filt: list[Variant]) \
             -> list[LineageSNP]:
         """
         Returns the SNP positions detected in the sample.
@@ -140,11 +133,10 @@ class SNPLineageDetector(Tool):
                 # Position needs to match reference
                 if snp.start not in variants_by_pos:
                     detected_snps.append(snp)
-            else:
-                # Position needs to match DB snp
-                if (snp.start in variants_by_pos) and (str(variants_by_pos[snp.start].ALT[0]) == snp.alt):
-                    detected_snps.append(snp)
-                    snp.passes_filtering = snp.start in variants_filt_by_pos
+            # Position needs to match DB snp
+            elif (snp.start in variants_by_pos) and (str(variants_by_pos[snp.start].ALT[0]) == snp.alt):
+                detected_snps.append(snp)
+                snp.passes_filtering = snp.start in variants_filt_by_pos
         return detected_snps
 
     def __count_lineage_snps(self) -> dict[Lineage, int]:
@@ -179,7 +171,7 @@ class SNPLineageDetector(Tool):
         """
         m = re.match(r'.*-(\d{4})_(\d{2})_(\d{2})\.bed', self._tool_inputs['BED'][0].path.name)
         if not m:
-            logger.warning(f'Cannot determine database version')
+            logger.warning('Cannot determine database version')
             return 'n/a'
         date = datetime.date(year=int(m.group(1)), month=int(m.group(2)), day=int(m.group(3)))
         return date.strftime('%d/%m/%Y')

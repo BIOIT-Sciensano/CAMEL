@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -26,13 +27,13 @@ class MothurSummarySeqs(Mothur):
         """
         super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError('No input file given for Mothur summary.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'No input file given for Mothur summary.seqs: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'TSV_Counts']:
-                raise InvalidToolInputError('Invalid input key given for Mothur summary.seqs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur summary.seqs: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     summary.seqs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     summary.seqs: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -44,7 +45,7 @@ class MothurSummarySeqs(Mothur):
         items = ['fasta={}'.format(self._tool_inputs['FASTA'][0])]
         if 'TSV_Counts' in self._tool_inputs:
             items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):
@@ -74,7 +75,7 @@ class MothurSummarySeqs(Mothur):
         Writes the statistics that were output to stdout to a file
         :return: None
         """
-        output_file = open(self._get_basename() + '.stats', 'wt', encoding='utf-8')
+        output_file = open(self._get_basename() + '.stats', 'w', encoding='utf-8')
         write_to_output = False
         for line in self._command.stdout.splitlines():
             # The first line of the stats starts with two tabs (i.e. \t\tStart\tEnd...)
@@ -92,7 +93,7 @@ class MothurSummarySeqs(Mothur):
         :return: None
         """
         columns = ['Description', 'Start', 'End', 'NBases', 'Ambigs', 'Polymer', 'NumSeqs']
-        with open(self._get_basename() + '.stats', 'rt', encoding='utf-8') as statsfile:
+        with open(self._get_basename() + '.stats', encoding='utf-8') as statsfile:
             for line in statsfile:
                 if not line.startswith('\t\t'):
                     line_informs = line.strip().split('\t')

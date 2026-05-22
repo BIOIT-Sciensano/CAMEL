@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from camel.app.core.errors import PipelineExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.core.piping import pipeutils
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake.step import Step

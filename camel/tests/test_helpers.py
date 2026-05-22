@@ -4,21 +4,20 @@ from pathlib import Path
 from typing import Any
 
 import click
+from camelcore.app.utils import fastautils, fastqutils, reportutils
 
 from camel.app.cli import cliutils
 from camel.app.config import config
 from camel.app.core.cameltesthelper import running_dir
-from camel.app.core.reports import reportutils
 from camel.app.core.snakemake.snakemakeutils import IOEncoder, io_hook
-from camel.app.core.utils import fastqutils, fastautils
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.inputhelper import helper_by_input_type
 from camel.app.scriptutils.inputhelper.illuminahelper import (
-    IlluminaTrimmingOpts,
     IlluminaAssemblyOpts,
+    IlluminaTrimmingOpts,
 )
-from camel.app.scriptutils.inputhelper.inputhelperbase import TrimmingOpts, AssemblyOpts
-from camel.app.scriptutils.inputhelper.onthelper import ONTTrimmingOpts, ONTAssemblyOpts
+from camel.app.scriptutils.inputhelper.inputhelperbase import AssemblyOpts, TrimmingOpts
+from camel.app.scriptutils.inputhelper.onthelper import ONTAssemblyOpts, ONTTrimmingOpts
 
 
 @click.command()

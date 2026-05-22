@@ -1,10 +1,10 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.command import Command
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.checkm.checkm import CheckM
 from camel.tests import longRunningTest, resourceIntensiveTest
 
@@ -27,7 +27,7 @@ class TestCheckM(CamelTestSuite):
         for dependency in checkm.dependencies:
             command = Command(f'module load {dependency};')
             command.run(self.running_dir)
-            self.assertEqual(command.returncode, 0, f"Dependency '{dependency}' cannot be loaded")
+            self.assertEqual(command.exit_code, 0, f"Dependency '{dependency}' cannot be loaded")
 
     @longRunningTest()
     @resourceIntensiveTest(reason='RAM usage')

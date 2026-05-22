@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
@@ -68,10 +69,9 @@ class GATK4IndexFeatureFile(GATK4):
             self._tool_outputs[self._output_type] = [
                 ToolIOFile(self.folder / self._parameters['output'].value)
             ]
+        elif self._input_format[0] == 'VCF_gz':
+            self._tool_outputs[self._output_type] = [
+                ToolIOFile(self.folder / f"{self._tool_inputs[self._input_format[0]][0].path}.tbi")]
         else:
-            if self._input_format[0] == 'VCF_gz':
-                self._tool_outputs[self._output_type] = [
-                    ToolIOFile(self.folder / f"{self._tool_inputs[self._input_format[0]][0].path}.tbi")]
-            else:
-                self._tool_outputs[self._output_type] = [
-                    ToolIOFile(self.folder / f"{self._tool_inputs[self._input_format[0]][0].path}.idx")]
+            self._tool_outputs[self._output_type] = [
+                ToolIOFile(self.folder / f"{self._tool_inputs[self._input_format[0]][0].path}.idx")]

@@ -1,7 +1,8 @@
 import json
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 from camel.app.toolkits.sequencetyping.sequencetypingutils import LocusMetadataHolder
 

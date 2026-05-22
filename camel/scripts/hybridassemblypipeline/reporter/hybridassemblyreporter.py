@@ -3,16 +3,14 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.utils import reportutils
 
 from camel.app.config import config
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.reports import PATH_JQUERY
-from camel.app.core.reports.htmlelement import HtmlElement
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.tool import Tool
-from camel.resources import CSS_STYLE
 
 
 class HybridAssemblyReporter(Tool):
@@ -67,9 +65,13 @@ class HybridAssemblyReporter(Tool):
         path_out = Path(self._parameters['output_filename'].value)
         self._output_dir = Path(self._parameters['output_dir'].value)
 
-        # Initialize report
-        self.report = HtmlReport(path_out, self._output_dir, [PATH_JQUERY])
-        self.report.initialize('Hybrid assembly pipeline - 0.1', CSS_STYLE)
+        # Initialize the report
+        self.report = reportutils.init_report(
+            path_out=path_out,
+            key='hybrid_assembly',
+            title='Hybrid assembly pipeline',
+            dir_out=self._output_dir,
+        )
         self.report.add_pipeline_header(HybridAssemblyReporter.TITLE)
 
         # Add content sections

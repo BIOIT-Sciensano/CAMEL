@@ -1,7 +1,8 @@
 import unittest
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pipelines.klebsiella.kleborate import Kleborate
 from camel.app.tools.pipelines.klebsiella.kleboratereporter import KleborateReporter
 

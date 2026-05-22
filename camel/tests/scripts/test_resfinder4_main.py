@@ -1,10 +1,11 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.cli import cliutils
 from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.scripts.resfinder.mainresfinder import main
 
 

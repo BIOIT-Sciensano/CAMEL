@@ -1,6 +1,7 @@
+from camelcore.app.utils import fastqutils
+
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.tool import Tool
-from camel.app.core.utils import fastqutils
 
 
 class FastqStats(Tool):

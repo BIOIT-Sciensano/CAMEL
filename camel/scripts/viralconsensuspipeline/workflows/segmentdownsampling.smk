@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake import snakemakeutils
 
 
@@ -34,13 +35,13 @@ rule samtools_ampliconclip:
             f'samtools index {Path(output.BAM).absolute()};'
         ]))
         command.run(dir_)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error removing primers: {command.stderr}')
 
         # Collect amplicon clipping steps (if performed)
         stats_out = {}
         for line in command.stderr.splitlines():
-            m = re.match('^([A-Z ]+): (\d+)', line)
+            m = re.match(r'^([A-Z ]+): (\d+)', line)
             if not m:
                 continue
             stats_out[m.group(1)] = int(m.group(2))
@@ -79,7 +80,7 @@ rule create_bam_for_seq_id:
             f'samtools index {Path(output.BAM).absolute()};'
         ]))
         command.run(dir_)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error extracting BAM file: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
             json.dump({
@@ -109,7 +110,7 @@ rule downsample_bam:
                 f'samtools view -b -s {params.ratio} {Path(input.BAM).absolute()} > {Path(output.BAM).absolute()};'
             ]))
             command.run(dir_)
-            if not command.returncode == 0:
+            if not command.exit_code == 0:
                 raise RuntimeError(f'Error downsampling BAM file: {command.stderr}')
         else:
             Path(output.BAM).absolute().symlink_to(Path(input.BAM).absolute())
@@ -133,7 +134,7 @@ rule extract_fq_ont:
             f'samtools fastq -0 {Path(output.FASTQ).absolute()} {Path(input.BAM).absolute()};'
         ]))
         command.run(dir_)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error extracting FASTQ files: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
             json.dump({
@@ -159,8 +160,8 @@ rule extract_fq_ont_merge:
         fq_out = dir_ / 'merged.fastq.gz'
         command = Command(f"cat {' '.join(str(Path(x).absolute()) for x in input.FASTQ)} | gzip > {fq_out};")
         command.run(dir_)
-        if not command.returncode == 0:
-            raise RuntimeError(f'Error merged FASTQ files: {command.returncode}')
+        if not command.exit_code == 0:
+            raise RuntimeError(f'Error merged FASTQ files: {command.exit_code}')
         fq_dict = FastqInput('nanopore', se=[ToolIOFile(fq_out)], is_trimmed=True, is_pe=False)
         snakemakeutils.dump_object(fq_dict.to_fq_dict(), Path(output.FQ_dict))
 
@@ -198,7 +199,7 @@ rule extract_fq_illumina:
             {Path(input.BAM).absolute()};'
         ]))
         command.run(dir_)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error extracting FASTQ files: {command.stderr}')
         with open(output.INFORMS, 'w') as handle:
             json.dump({
@@ -214,7 +215,7 @@ rule extract_fq_illumina:
             f'demuxbyname.sh in={fq_single_out} out=reads_%U.fastq delimiter="/" prefixmode=f'
         ]))
         command.run(dir_)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error splitting singletons: {command.stderr}')
 
         fq_1u_out = dir_ / 'reads_1U.fastq'
@@ -229,8 +230,8 @@ rule extract_fq_illumina:
         fq_1u_out_merged = dir_ / 'reads-merged_1U.fastq'
         command = Command(f'cat {fq_1u_out} {fq_orphaned_out} > {fq_1u_out_merged}')
         command.run(dir_)
-        if not command.returncode == 0:
-            raise RuntimeError(f'Error merging FASTQ files: {command.returncode}')
+        if not command.exit_code == 0:
+            raise RuntimeError(f'Error merging FASTQ files: {command.exit_code}')
 
         # Save output dictionary
         fq_dict_out = FastqInput('illumina', [ToolIOFile(fq_1p_out), ToolIOFile(fq_2p_out)],
@@ -265,8 +266,8 @@ rule extract_fq_illumina_merge:
             command = Command(
                 f"cat {' '.join(str(io.path.absolute()) for io in io_objs)} | gzip > {dir_ / path_out};")
             command.run(dir_)
-            if not command.returncode == 0:
-                raise RuntimeError(f'Error merged FASTQ files: {command.returncode}')
+            if not command.exit_code == 0:
+                raise RuntimeError(f'Error merged FASTQ files: {command.exit_code}')
         fq_dict = FastqInput(
             'illumina',
             pe=[ToolIOFile(dir_ / 'reads_1P.fastq.gz'), ToolIOFile(dir_ / 'reads_2P.fastq.gz')],

@@ -18,8 +18,8 @@ rule variant_calling_prep_reference:
         ref_url = config['reference'].get('url'),
         ref_name = config['reference'].get('name')
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliofile import ToolIOFile
         snakemakeutils.dump_object([ToolIOValue(params.ref_fasta)], Path(output.INDEX_GENOME_PREFIX))
         snakemakeutils.dump_object([ToolIOFile(Path(params.ref_fasta))], Path(output.FASTA))
         snakemakeutils.dump_object({'name': params.ref_name, 'url': params.ref_url}, Path(output.INFORMS))
@@ -290,7 +290,7 @@ rule variant_calling_unzip_vcf:
         dir_ = 'variant_calling/unzip_vcf',
         sample_name = config['input']['sample_name']
     run:
-        from camel.app.core.utils import fileutils
+        from camelcore.app.utils import fileutils
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
         bcftools_view = BcftoolsView()
         snakemakeutils.add_io_inputs(bcftools_view, input)
@@ -365,7 +365,7 @@ rule variant_calling_report:
         sample_name = config['input']['sample_name'],
         input_type = config['input']['type']
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.variant_calling.variantcallingreporter import VariantCallingReporter
         reporter = VariantCallingReporter()
         step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))

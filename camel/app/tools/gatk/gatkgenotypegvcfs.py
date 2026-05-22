@@ -24,4 +24,4 @@ class GATKGenotypeGVCFs(GATK):
         super(GATKGenotypeGVCFs, self)._set_input()
 
         for f in self._tool_inputs['gVCF']:
-            self._input_string += "--variant {} ".format(f.path)
+            self._input_string += f"--variant {f.path} "

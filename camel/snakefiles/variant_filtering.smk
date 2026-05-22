@@ -147,7 +147,7 @@ rule variant_filtering_zscore_index:
         running_dir = 'variant_filtering/05-zscore'
     run:
         from camel.app.tools.bcftools.bcftoolsindex import BcftoolsIndex
-        bcftools_index  = BcftoolsIndex()
+        bcftools_index = BcftoolsIndex()
         step = Step(rule_name=str(rule), tool=bcftools_index, dir_=Path(str(params.running_dir)))
         snakemakeutils.add_io_inputs(bcftools_index, input)
         step.run()
@@ -201,9 +201,9 @@ rule variant_filtering_region:
         bed_file = variant_filtering.get_filtering_param(config, 'region', 'bed_file'),
         soft_filter = config['variant_filtering'].get('soft_filter', False)
     run:
-        from camel.app.core.utils import vcfutils
+        from camelcore.app.utils import vcfutils
         from camel.app.tools.bcftools.bcftoolsfilter import BcftoolsFilter
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
 
         # Initialize tools
         bcftools_filter = BcftoolsFilter()
@@ -247,7 +247,7 @@ rule variant_filtering_collect_stats:
     params:
         working_dir = 'variant_filtering/stats'
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         import json
 
         filtering_data = {}

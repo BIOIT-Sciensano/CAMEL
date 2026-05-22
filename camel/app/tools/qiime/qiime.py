@@ -1,11 +1,12 @@
 import abc
 import os
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class Qiime(Tool):
@@ -57,7 +58,7 @@ class Qiime(Tool):
         """
         # _build_options needs to be executed first as _build_input_string will use the parameter file
         options = self._build_options()
-        self._command.command = '{} {} {}'.format(self._tool_command, self._build_input_string(), options)
+        self._command.command = f'{self._tool_command} {self._build_input_string()} {options}'
 
     @abc.abstractmethod
     def _build_input_string(self):
@@ -105,7 +106,7 @@ class Qiime(Tool):
         log_files = [ToolIOFile(self._folder / f) for f in os.listdir(self._folder) if f.startswith('log_')]
         if len(log_files) > 0:
             self._tool_outputs['LOG'] = log_files
-            logger.debug('Added log file to outputs: {}'.format(self._tool_outputs))
+            logger.debug(f'Added log file to outputs: {self._tool_outputs}')
 
     def _check_command_output(self, command: Command):
         """

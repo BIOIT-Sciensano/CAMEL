@@ -1,4 +1,5 @@
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.tools.gatk.gatk import GATK
 
 

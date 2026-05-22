@@ -2,13 +2,12 @@ import logging
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.config import config
-from camel.app.core.reports.htmlreport import HtmlReport
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.tools.pipelines.neisseria.mendevarreporter import MenDeVARReporter
 from camel.app.tools.pipelines.neisseria.mendevar import MenDeVAR
-from camel.resources import CSS_STYLE
+from camel.app.tools.pipelines.neisseria.mendevarreporter import MenDeVARReporter
 
 
 class TestMendevar(CamelTestSuite):
@@ -72,11 +71,7 @@ class TestMendevar(CamelTestSuite):
 
             # Save the report
             html_out = output_dir / 'report.html'
-            report = HtmlReport(html_out)
-            report.initialize('MenDeVar', CSS_STYLE)
-            report.add_html_object(reporter.tool_outputs['HTML'][0].value)
-            report.save()
-            logging.info(f'Output report created: {html_out}')
+            CamelTestSuite.export_report_section(reporter.tool_outputs['HTML'][0].value, html_out)
 
 
 if __name__ == '__main__':

@@ -2,12 +2,12 @@ import os
 from pathlib import Path
 
 from Bio import SeqIO
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
 
-from camel.app.core.command import Command
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
-from camel.app.core.utils import fileutils
 
 
 class LegacyBlastx(Tool):
@@ -59,13 +59,13 @@ class LegacyBlastx(Tool):
         super()._check_input()
         if 'FASTA' not in self._tool_inputs or 'DB' not in self._tool_inputs:
             raise InvalidToolInputError('FASTA or DB input files missing from input for '
-                                                 'legacy blastx: {!r}'.format(self._tool_inputs))
+                                                 f'legacy blastx: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) != 1 or len(self._tool_inputs['DB']) != 1:
             raise InvalidToolInputError('Invalid number (max = 1) of files per key given '
-                                                 'for legacy blastx: {!r}'.format(self._tool_inputs))
+                                                 f'for legacy blastx: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
             raise InvalidToolInputError('Too many input keys given for legacy blastx '
-                                                 '(only FASTA and DB allowed): {!r}'.format(self._tool_inputs))
+                                                 f'(only FASTA and DB allowed): {self._tool_inputs!r}')
 
     def _check_command_output(self, command: Command) -> None:
         """
@@ -74,9 +74,9 @@ class LegacyBlastx(Tool):
         :return: None
         """
         if 'ERROR' in command.stderr:
-            raise ToolExecutionError(self.name, "Command execution failed (stderr: {}).".format(command.stderr))
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
         if self._command.exit_code != 0:
-            raise ToolExecutionError(self.name, "Command execution failed (Exit code: {})".format(command.exit_code))
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {command.exit_code})")
 
     def __get_basename(self):
         """
@@ -102,7 +102,7 @@ class LegacyBlastx(Tool):
         items = ['-p blastx',
                  '-d {}'.format(self._tool_inputs['DB'][0].path),
                  f'-i {infile.path}',
-                 '-o {}.blastx'.format(os.path.join(self._folder, os.path.splitext(os.path.basename(infile.path))[0]))]
+                 f'-o {os.path.join(self._folder, os.path.splitext(os.path.basename(infile.path))[0])}.blastx']
         return ' '.join(items)
 
     def __prepare_input_files(self):

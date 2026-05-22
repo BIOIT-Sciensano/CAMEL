@@ -3,9 +3,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import vcf
-
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from cyvcf2 import VCF, Variant
 
 
 @dataclasses.dataclass
@@ -79,7 +78,7 @@ class FilterVariants:
             f'--output {path_out};'
         ]))
         command.run(self._dir)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error applying filter ({filter_key}): {command.stderr}')
         self._informs.append({
             '_name': 'bcftools filter',
@@ -96,7 +95,8 @@ class FilterVariants:
         :param path_vcf: Input VCF file
         :return: Variant filtering statistics
         """
-        variants = list(vcf.Reader(filename=str(path_vcf)))
+        with VCF(str(path_vcf)) as vcf_reader:
+            variants: list[Variant] = list(vcf_reader)
         return {
             'nb_variants': len(variants),
             'nb_snps': sum(v.is_snp for v in variants),

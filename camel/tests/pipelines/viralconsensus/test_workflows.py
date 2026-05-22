@@ -2,16 +2,21 @@ import logging
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
+
 from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-from camel.app.core.utils import vcfutils
 from camel.app.wrappers.trimmingilluminawrapper import TrimmingIlluminaWrapper
 from camel.scripts.viralconsensuspipeline.workflows.callvariants import CallVariants
 from camel.scripts.viralconsensuspipeline.workflows.filtervariants import FilterVariants
-from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import ReadMappingWorkflow
-from camel.scripts.viralconsensuspipeline.workflows.segmentdownsampling import SegmentDownsamplingWorkflow
+from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import (
+    ReadMappingWorkflow,
+)
+from camel.scripts.viralconsensuspipeline.workflows.segmentdownsampling import (
+    SegmentDownsamplingWorkflow,
+)
 from camel.tests import longRunningTest
 
 

@@ -2,11 +2,11 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 
 
@@ -40,7 +40,9 @@ class AbriTAMRReporter(Tool):
         :rtype: None
         """
         self._section = HtmlReportSection(
-            AbriTAMRReporter.TITLE, subtitle=self._input_informs['abritamr_run']['_name_full'])
+            AbriTAMRReporter.TITLE,
+            subtitle=self._input_informs['abritamr_run']['_name_full'],
+        )
         self._species = self._input_informs['abritamr_run']['species']
         self.__add_summaries_tables()
         if self._species == 'Salmonella':
@@ -59,16 +61,24 @@ class AbriTAMRReporter(Tool):
         """
         self._section.add_header('Matches', 3)
         self._section.add_paragraph('>90% coverage & >90% identity')
-        self.___add_summary_file_table(self._tool_inputs['TXT_matches'][0].path, 'matches')
-        self._section.add_paragraph('Genes annotated with * indicate >90% coverage and identity between 90% and 100%. '
-                                    'No further annotation indicates that the gene recovered exhibits '
-                                    '100% coverage and 100% identity to a gene in the gene catalog.')
+        self.___add_summary_file_table(
+            self._tool_inputs['TXT_matches'][0].path, 'matches'
+        )
+        self._section.add_paragraph(
+            'Genes annotated with * indicate >90% coverage and identity between 90% and 100%. '
+            'No further annotation indicates that the gene recovered exhibits '
+            '100% coverage and 100% identity to a gene in the gene catalog.'
+        )
         self._section.add_header('Partial matches', 3)
         self._section.add_paragraph('50-90% coverage & >90% identity')
-        self.___add_summary_file_table(self._tool_inputs['TXT_partials'][0].path, 'partials')
+        self.___add_summary_file_table(
+            self._tool_inputs['TXT_partials'][0].path, 'partials'
+        )
         self._section.add_horizontal_line()
 
-    def ___add_summary_file_table(self, summary_file_path: Path, matching_type: str) -> None:
+    def ___add_summary_file_table(
+        self, summary_file_path: Path, matching_type: str
+    ) -> None:
         """
         Parses an AbriTAMR output summary file (TXT_partials or TXT_matches) and
         adds the table to the section.
@@ -92,22 +102,28 @@ class AbriTAMRReporter(Tool):
         self._section.add_table(sorted(data), header, [('class', 'data')])
         relative_path_file = Path('abritamr', f"summary_{matching_type}.txt")
         self._section.add_file(summary_file_path, relative_path_file)
-        self._section.add_link_to_file(f"Download {matching_type} (TSV)", relative_path_file)
+        self._section.add_link_to_file(
+            f"Download {matching_type} (TSV)", relative_path_file
+        )
 
     def __add_antibiogram(self) -> None:
         """
         Add the antibiogram to the report for Salmonella.
         :return: None
         """
-        # Create useable dictionary from REPORT_abritamr for html_table
+        # Create usable dictionary from REPORT_abritamr for html_table
         antibiogram_dict = {}
-        df_abritamr = pd.read_excel(self._tool_inputs['REPORT_abritamr'][0].path, engine='openpyxl')
+        df_abritamr = pd.read_excel(
+            self._tool_inputs['REPORT_abritamr'][0].path, engine='openpyxl', dtype=str
+        )
         df_abritamr.fillna('-', inplace=True)  # replace all missing values by dashes
         for column in df_abritamr.columns[2:]:
             key_parts = column.replace(" - ", "_").split('_')
             value = df_abritamr.iloc[0][column]
             if key_parts[-1] in {'ResMech', 'Interpretation'}:
-                antibiotic = '_'.join(key_parts[:-1])  # = join all except last value: counter intuitive
+                antibiotic = '_'.join(
+                    key_parts[:-1]
+                )  # = join all except last value: counter intuitive
                 antibiotic_property = key_parts[-1]
 
                 # Initialize or update the sub dictionary in one step instead of checking with .get()
@@ -117,11 +133,17 @@ class AbriTAMRReporter(Tool):
         header = ['Antibiotic', 'Resistance mechanisms detected', 'Interpretation']
         data = []
         for antibiotic, antibiotic_properties in antibiogram_dict.items():
-            antibiotic_properties: dict[str, str]  # add typing to silence PyCharm warnings
-            color = self.___get_interpretation_color(antibiotic_properties['Interpretation'])
-            row = [antibiotic,
-                   antibiotic_properties['ResMech'],
-                   antibiotic_properties['Interpretation']]
+            antibiotic_properties: dict[
+                str, str
+            ]  # add typing to silence PyCharm warnings
+            color = self.___get_interpretation_color(
+                antibiotic_properties['Interpretation']
+            )
+            row = [
+                antibiotic,
+                antibiotic_properties['ResMech'],
+                antibiotic_properties['Interpretation'],
+            ]
             row = [HtmlTableCell(x, color) for x in row]
             data.append(row)
         # start writing in the report the table and the headers
@@ -150,7 +172,9 @@ class AbriTAMRReporter(Tool):
         """
         if self._species == 'Salmonella':
             relative_path = Path('abritamr', 'summary_out.xlsx')
-            self._section.add_file(self._tool_inputs['REPORT_abritamr'][0].path, relative_path)
+            self._section.add_file(
+                self._tool_inputs['REPORT_abritamr'][0].path, relative_path
+            )
             self._section.add_link_to_file("Download (xlsx)", relative_path)
 
     def __add_database_information(self) -> None:
@@ -160,5 +184,6 @@ class AbriTAMRReporter(Tool):
         """
         self._section.add_horizontal_line()
         self._section.add_header('Database info', level=4)
-        self._section.add_paragraph('Last updated: {}'.format(self._input_informs['abritamr_run'].get(
-            'last_update_date', 'n/a')))
+        self._section.add_paragraph(
+            f'Last updated: {self._input_informs["abritamr_run"].get("last_update_date", "n/a")}'
+        )

@@ -2,11 +2,12 @@ import logging
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.tools.pipelines.neisseria.gmatsreporter import GMatsReporter
 from camel.app.tools.pipelines.neisseria.gmats import GMats
+from camel.app.tools.pipelines.neisseria.gmatsreporter import GMatsReporter
 
 
 class TestGMats(CamelTestSuite):

@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import click
+from camelcore.app.utils import fastautils
 
-from camel.app.core.utils import fastautils
 from camel.app.dbs.dbutils import DBEntry
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basescript import basescriptutils

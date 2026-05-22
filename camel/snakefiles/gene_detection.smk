@@ -24,7 +24,7 @@ rule gene_detection_db_manager:
         db_path = lambda wildcards: config['gene_detection']['dbs'][wildcards.db]['path'],
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}'
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.genedetection.dbmanager import DBManager
 
         if Path(str(params.db_path)).exists():
@@ -81,9 +81,9 @@ rule gene_detection_map_names:
         sample_name = config['input']['sample_name'],
         db_config = lambda wildcards: config['gene_detection']['dbs'][wildcards.db]
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
-        from camel.app.core.io.tooliovalue import ToolIOValue
-        from camel.app.core.utils import fileutils
+        from camelcore.app.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliovalue import ToolIOValue
+        from camelcore.app.utils import fileutils
         informs_db = snakemakeutils.load_object(Path(input.INFORMS_db))
         hits = snakemakeutils.load_object(Path(input.HITS))
 
@@ -198,8 +198,8 @@ rule gene_detection_create_empty_report:
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/report'
     run:
-        from camel.app.core.reports.htmlreportsection import HtmlReportSection
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.reports.htmlreportsection import HtmlReportSection
+        from camelcore.app.io.tooliovalue import ToolIOValue
         db_info = snakemakeutils.load_object(Path(input.INFORMS_db_info))
         section = HtmlReportSection(db_info['title'], 3)
         section.add_paragraph('Analysis disabled')

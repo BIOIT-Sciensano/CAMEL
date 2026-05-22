@@ -1,8 +1,8 @@
 import unittest
 
 from camel.app.cli import cliutils
-from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.confindr.mainconfindr import main
 
 

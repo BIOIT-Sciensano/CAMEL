@@ -4,18 +4,19 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import reportutils
+
 from camel.app.config import config
-from camel.app.core.reports.htmlreport import HtmlReport
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.resources import CSS_STYLE
 
 
 class CamelTestSuite(unittest.TestCase):
     """
     Base class for Camel test suites.
     """
+
     running_dir = None
 
     @staticmethod
@@ -56,7 +57,9 @@ class CamelTestSuite(unittest.TestCase):
         :return: None
         """
         if os.environ.get('CAMEL_KEEP_TEST_DIRS') == '1':
-            logger.debug(f"Keeping working directory (CAMEL_KEEP_TEST_DIRS): {self.running_dir}")
+            logger.debug(
+                f"Keeping working directory (CAMEL_KEEP_TEST_DIRS): {self.running_dir}"
+            )
             return
         if Path(self.running_dir).exists():
             logger.debug(f"Removing working directory: {self.running_dir}")
@@ -72,12 +75,21 @@ class CamelTestSuite(unittest.TestCase):
         """
         self.assertIn(key, tool.tool_outputs, f"Key '{key}' missing from tool outputs")
         self.assertEqual(
-            nb_files, len(tool.tool_outputs[key]),
-            f"Unexpected number of tools outputs found: {len(tool.tool_outputs[key])}, expected {nb_files}")
+            nb_files,
+            len(tool.tool_outputs[key]),
+            f"Unexpected number of tools outputs found: {len(tool.tool_outputs[key])}, expected {nb_files}",
+        )
         for i in range(0, nb_files):
             output_file_path = tool.tool_outputs[key][i].path
-            self.assertTrue(output_file_path.exists(), f"Output file '{key}' (index: {i}) does not exist")
-            self.assertGreater(output_file_path.stat().st_size, 0, f"Output file '{key}' (index: {i}) is empty")
+            self.assertTrue(
+                output_file_path.exists(),
+                f"Output file '{key}' (index: {i}) does not exist",
+            )
+            self.assertGreater(
+                output_file_path.stat().st_size,
+                0,
+                f"Output file '{key}' (index: {i}) is empty",
+            )
 
     @staticmethod
     def export_report_section(report_section: HtmlReportSection, dir_out: Path) -> Path:
@@ -90,8 +102,12 @@ class CamelTestSuite(unittest.TestCase):
         """
         path_out = dir_out / 'report_section.html'
         path_out.parent.mkdir(exist_ok=True, parents=True)
-        report = HtmlReport(path_out, path_out.parent)
-        report.initialize('Exported report section', CSS_STYLE)
+        report = reportutils.init_report(
+            path_out=path_out,
+            key='Test report',
+            title='Test report',
+            dir_out=path_out.parent
+        )
         report.add_html_object(report_section)
         report.save()
         logger.info(f'Report section exported to: {path_out}')

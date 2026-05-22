@@ -5,12 +5,11 @@ from pathlib import Path
 from typing import Any
 
 import click
+from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.snakemake import snakemakeutils
-from camel.app.core.snakemake import snakepipelineutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basescript.bamwithrefinput import BAMWithRefInput
 from camel.app.scriptutils.basescript.basescript import BaseScript

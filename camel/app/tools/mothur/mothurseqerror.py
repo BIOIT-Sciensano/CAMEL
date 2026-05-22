@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -26,16 +27,16 @@ class MothurSeqError(Mothur):
         super()._check_input()
         if 'FASTA' not in self._tool_inputs or 'FASTA_REF' not in self._tool_inputs:
             raise InvalidToolInputError('Invalid input files (keys) given for Mothur '
-                                                 'seq.error: {!r}'.format(self._tool_inputs))
+                                                 f'seq.error: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key in ['TSV_Names', 'TSV_Counts', 'TSV_Qfile']:
                 raise InvalidToolInputError('These input keys are not yet implemented as documentation for these keys'
-                                                     ' is not yet available: {!r}'.format(self._tool_inputs))
+                                                     f' is not yet available: {self._tool_inputs!r}')
             elif key not in ['FASTA', 'FASTA_REF']:
-                raise InvalidToolInputError('Invalid input key given for Mothur seq.error: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur seq.error: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files in each key given for Mothur \
-                                                     seq.error: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files in each key given for Mothur \
+                                                     seq.error: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -44,7 +45,7 @@ class MothurSeqError(Mothur):
         """
         items = ['fasta={}'.format(self._tool_inputs['FASTA'][0]),
                  'reference={}'.format(self._tool_inputs['FASTA_REF'][0]),
-                 'outputdir={}'.format(self._folder)]
+                 f'outputdir={self._folder}']
         return ', '.join(items)
 
     def _set_output(self):

@@ -7,7 +7,6 @@ from camel.scripts.stecpipeline import CONFIG_DATA
 from camel.scripts.stecpipeline.mainstecpipeline import main
 from camel.tests import longRunningTest
 
-
 CUSTOM_ANALYSES = basepipeutils.get_custom_analyses(CONFIG_DATA)
 
 

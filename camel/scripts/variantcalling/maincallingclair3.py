@@ -6,7 +6,7 @@ from pathlib import Path
 import click
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import logger, initialize_logging

@@ -1,7 +1,8 @@
 import dataclasses
 from pathlib import Path
 
-from camel.app.core.utils import sambamutils
+from camelcore.app.utils import sambamutils
+
 from camel.app.loggers import logger
 from camel.app.scriptutils import model
 

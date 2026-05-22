@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
@@ -181,10 +182,13 @@ rule report_pickle_citations:
     params:
         citation_keys = config['citations']
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
-        from camel.app.core.reports import reportutils
+        from camel.resources import DIR_CITATIONS
+        from camelcore.app.io.tooliovalue import ToolIOValue
+        from camelcore.app.utils import reportutils
         section = reportutils.create_citations_section(
-            params.citation_keys['other'], params.citation_keys['main'])
+            dir_=DIR_CITATIONS,
+            keys_other=params.citation_keys['other'],
+            key_main=params.citation_keys['main'])
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.HTML))
 
 rule report_command_section:

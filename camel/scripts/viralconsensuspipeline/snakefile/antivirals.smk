@@ -2,7 +2,8 @@ import itertools
 import json
 from pathlib import Path
 
-from camel.app.core.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.viralconsensuspipeline.snakefile import nextclade3

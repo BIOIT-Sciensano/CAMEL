@@ -2,11 +2,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
+
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-from camel.app.core.snakemake import snakemakeutils
-from camel.app.core.snakemake import snakepipelineutils
-from camel.app.core.utils import vcfutils
 from camel.snakefiles import variant_calling
 
 

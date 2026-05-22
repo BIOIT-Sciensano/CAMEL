@@ -3,10 +3,10 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import vcf
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from cyvcf2 import VCF, Variant
 
-from camel.app.core.command import Command
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.clair3.clair3 import Clair3
 
 
@@ -82,7 +82,7 @@ class CallVariants:
             f'bcftools call --output {path_vcf_out} --output-type v --ploidy 1 --consensus-caller --variants-only'
         ]))
         command.run(self._dir)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(command.stderr)
         self._informs.append({
             '_name': 'bcftools mpileup',
@@ -128,7 +128,8 @@ class CallVariants:
         :param path_vcf: Input VCF file
         :return: Variant calling statistics
         """
-        variants = list(vcf.Reader(filename=str(path_vcf)))
+        with VCF(str(path_vcf)) as vcf_reader:
+            variants: list[Variant] = list(vcf_reader)
         return {
             'nb_variants': len(variants),
             'nb_snps': sum(v.is_snp for v in variants),
@@ -151,7 +152,7 @@ class CallVariants:
         # Create FAI index
         command = Command(f'module load samtools/1.17; samtools faidx {path_symlink};')
         command.run(self._dir)
-        if not command.returncode == 0:
+        if not command.exit_code == 0:
             raise RuntimeError(f'Error creating FASTA index: {command.stderr}')
         logging.info(f'Reference FASTA file indexed: {path_symlink.name}')
         return path_symlink

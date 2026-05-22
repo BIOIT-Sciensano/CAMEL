@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 
 
@@ -34,23 +35,41 @@ class AmpliGoneReporter(Tool):
         :return: None
         """
         # Combine informs into a list
-        informs_combined = [self._input_informs['ampligone']] if isinstance(self._input_informs['ampligone'], dict) \
+        informs_combined = (
+            [self._input_informs['ampligone']]
+            if isinstance(self._input_informs['ampligone'], dict)
             else self._input_informs['ampligone']
+        )
 
         # Create report section
-        section = HtmlReportSection('Primer removal', subtitle=informs_combined[0]['_name'])
+        section = HtmlReportSection(
+            'Primer removal', subtitle=informs_combined[0]['_name']
+        )
 
         # Information table
-        section.add_table([
-            ['Primers file:', informs_combined[0]['fasta_primers']],
-            ['Error rate:', informs_combined[0]['error_rate']],
-        ])
+        section.add_table(
+            [
+                ['Primers file:', informs_combined[0]['fasta_primers']],
+                ['Error rate:', informs_combined[0]['error_rate']],
+            ]
+        )
 
         # Stats table
-        section.add_table([[
-            f"{inf['nucleotides_removed']:,}" if inf['nucleotides_removed'] is not None else '-',
-            f"{inf['percentage_removed']:.2f}" if inf['percentage_removed'] is not None else '-'
-        ] for inf in informs_combined], ['Nucleotides removed', '% removed'], [('class', 'data')])
+        section.add_table(
+            [
+                [
+                    f"{inf['nucleotides_removed']:,}"
+                    if inf['nucleotides_removed'] is not None
+                    else '-',
+                    f"{inf['percentage_removed']:.2f}"
+                    if inf['percentage_removed'] is not None
+                    else '-',
+                ]
+                for inf in informs_combined
+            ],
+            ['Nucleotides removed', '% removed'],
+            [('class', 'data')],
+        )
 
         # Output and info section
         relative_path = Path('preprocess', 'primer_locations.bed')

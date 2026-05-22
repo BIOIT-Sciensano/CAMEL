@@ -2,9 +2,10 @@ import os
 import shutil
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 from camel.app.loggers import logger
 
@@ -19,7 +20,7 @@ class Interproscan(Tool):
     def __init__(self):
         """
         Initialize tool
-        :return: None
+                :return: None
         """
         super().__init__('interproscan', '5.20-59.0')
         self.__input_key = None
@@ -45,14 +46,14 @@ class Interproscan(Tool):
         super(Interproscan, self)._check_input()
         if len(self._tool_inputs.keys()) != 1:
             raise InvalidToolInputError('Invalid number of input keys given for InterProScan, only FASTA_Nucl '
-                                                 'or FASTA_Prot allowed: {!r}'.format(self._tool_inputs))
+                                                 f'or FASTA_Prot allowed: {self._tool_inputs!r}')
         if 'FASTA_Nucl' not in self._tool_inputs and 'FASTA_Prot' not in self._tool_inputs:
             raise InvalidToolInputError('No valid input key given for InterProScan, FASTA_Nucl or FASTA_Prot '
-                                                 'needed: {!r}'.format(self._tool_inputs))
+                                                 f'needed: {self._tool_inputs!r}')
         for value in self._tool_inputs.values():
             if len(value) > 1:
                 raise InvalidToolInputError('Too many input files per key given for InterProScan '
-                                                     '(max = 1): {!r}'.format(self._tool_inputs))
+                                                     f'(max = 1): {self._tool_inputs!r}')
 
     def __set_input_key(self):
         """
@@ -87,7 +88,7 @@ class Interproscan(Tool):
         :return: String with the input parameters
         """
         seqtype = 'n' if self.__input_key == 'FASTA_Nucl' else 'p'
-        return '--input {} --seqtype {}'.format(self._tool_inputs[self.__input_key][0], seqtype)
+        return f'--input {self._tool_inputs[self.__input_key][0]} --seqtype {seqtype}'
 
     def __build_command(self):
         """
@@ -104,7 +105,7 @@ class Interproscan(Tool):
         :return: Path to temporary directory
         """
         if os.path.isfile(os.path.join(self._folder, 'temp_ips')):
-            raise IOError('A file with the name temp_ips already exists!')
+            raise OSError('A file with the name temp_ips already exists!')
         if not os.path.isdir(os.path.join(self._folder, 'temp_ips')):
             os.mkdir(os.path.join(self._folder, 'temp_ips'))
         return os.path.join(self._folder, 'temp_ips')
@@ -127,6 +128,6 @@ class Interproscan(Tool):
         :return: String with command parameters
         """
         option_list = super(Interproscan, self)._build_options()
-        option_list.append('--output-dir {}'.format(self._folder))
-        option_list.append('--tempdir {}'.format(self.__get_temp_dir()))
+        option_list.append(f'--output-dir {self._folder}')
+        option_list.append(f'--tempdir {self.__get_temp_dir()}')
         return ' '.join(option_list)

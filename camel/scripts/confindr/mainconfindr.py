@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Any
 
 import click
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.reports import reportutils
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger, initialize_logging
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
@@ -18,19 +18,37 @@ from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.confindr.confindr import ConFindr
 from camel.app.tools.confindr.confindrreporter import ConFindrReporter
+from camel.resources import DIR_CITATIONS
+
 
 @dataclasses.dataclass(frozen=True)
 class Options(BaseOptions):
     """
     Custom options for the ConFindr script.
     """
+
     db: Path = dataclasses.field(metadata={'help': 'Path to ConFindr database'})
-    working_dir: Path = dataclasses.field(default=Path.cwd(), metadata={'help': 'Working directory'})
-    rmlst: bool = dataclasses.field(default=False, metadata={'help': 'Prefer using rMLST databases over core-gene derived databases'})
-    quality_cutoff: int = dataclasses.field(default=20, metadata={'help': 'Base quality cutoff'})
-    base_cutoff: int = dataclasses.field(default=3, metadata={'help': 'Number of bases  cutoff'})
-    base_percentage_cutoff: int = dataclasses.field(default=5, metadata={'help': 'Base percentage cutoff'})
-    min_matching_hashes: int = dataclasses.field(default=150, metadata={'help': 'Minimum number of matching KMA hashes'})
+    working_dir: Path = dataclasses.field(
+        default=Path.cwd(), metadata={'help': 'Working directory'}
+    )
+    rmlst: bool = dataclasses.field(
+        default=False,
+        metadata={
+            'help': 'Prefer using rMLST databases over core-gene derived databases'
+        },
+    )
+    quality_cutoff: int = dataclasses.field(
+        default=20, metadata={'help': 'Base quality cutoff'}
+    )
+    base_cutoff: int = dataclasses.field(
+        default=3, metadata={'help': 'Number of bases  cutoff'}
+    )
+    base_percentage_cutoff: int = dataclasses.field(
+        default=5, metadata={'help': 'Base percentage cutoff'}
+    )
+    min_matching_hashes: int = dataclasses.field(
+        default=150, metadata={'help': 'Minimum number of matching KMA hashes'}
+    )
     threads: int = 1
 
 
@@ -39,7 +57,9 @@ class MainConFindr(BaseScript[ScriptInput, ScriptOutput, Options]):
     Main script for the ConFindr tool.
     """
 
-    def __init__(self, script_in: ScriptInput, script_out: ScriptOutput, script_opts: Options) -> None:
+    def __init__(
+        self, script_in: ScriptInput, script_out: ScriptOutput, script_opts: Options
+    ) -> None:
         """
         Initializes the main script.
         :param script_in: Script input
@@ -52,7 +72,7 @@ class MainConFindr(BaseScript[ScriptInput, ScriptOutput, Options]):
             version='1.0',
             script_in=script_in,
             script_out=script_out,
-            script_opts=script_opts
+            script_opts=script_opts,
         )
 
     def _execute(self) -> None:
@@ -65,13 +85,16 @@ class MainConFindr(BaseScript[ScriptInput, ScriptOutput, Options]):
             path_out=self._script_out.html,
             key=self._name,
             title='ConFindr',
-            dir_out=self._script_out.dir)
-        report.add_html_object(reportutils.create_overview_section(
-            version=self.version,
-            dataset_name=self._script_in.name,
-            input_file_str=self._script_in.input_str,
-            input_type=self._script_in.type_.value
-        ))
+            dir_out=self._script_out.dir,
+        )
+        report.add_html_object(
+            reportutils.create_overview_section(
+                version=self.version,
+                dataset_name=self._script_in.name,
+                input_file_str=self._script_in.input_str,
+                input_type=self._script_in.type_.value,
+            )
+        )
         report.save()
 
         # Check if the database exists
@@ -89,10 +112,10 @@ class MainConFindr(BaseScript[ScriptInput, ScriptOutput, Options]):
             min_matching_hashes=self._script_opts.min_matching_hashes,
             data_type={
                 model.InputType.ONT: 'Nanopore',
-                model.InputType.ILLUMINA: 'Illumina'
+                model.InputType.ILLUMINA: 'Illumina',
             }[self._script_in.type_],
             rmlst=self._script_opts.rmlst,
-            threads=self._script_opts.threads
+            threads=self._script_opts.threads,
         )
         if self._script_opts.rmlst:
             confindr.update_parameters(rmlst=True)
@@ -113,8 +136,17 @@ class MainConFindr(BaseScript[ScriptInput, ScriptOutput, Options]):
         report.add_html_object(confindr_reporter.tool_outputs['HTML'][0].value)
 
         # Add citation and command
-        report.add_html_object(reportutils.create_commands_section([confindr.informs], self._script_opts.working_dir))
-        report.add_html_object(reportutils.create_citations_section(['Low_2019-confindr', 'Jolley_2012-rmlst']))
+        report.add_html_object(
+            reportutils.create_commands_section(
+                [confindr.informs], self._script_opts.working_dir
+            )
+        )
+        report.add_html_object(
+            reportutils.create_citations_section(
+                dir_=DIR_CITATIONS,
+                keys_other=['Low_2019-confindr', 'Jolley_2012-rmlst'],
+            )
+        )
         report.save()
         logger.info(f'Report saved to: {self._script_out.html}')
 
@@ -130,7 +162,9 @@ class MainConFindr(BaseScript[ScriptInput, ScriptOutput, Options]):
 
 
 @click.command(name='confindr', short_help='Wrapper for ConFindr')
-@basescriptutils.add_input_opts(supported=[model.InputType.ILLUMINA, model.InputType.ONT])
+@basescriptutils.add_input_opts(
+    supported=[model.InputType.ILLUMINA, model.InputType.ONT]
+)
 @basescriptutils.add_output_opts
 @cliutils.add_click_options_from_dataclass(Options)
 def main(**kwargs) -> None:
@@ -142,10 +176,9 @@ def main(**kwargs) -> None:
     script = MainConFindr(
         script_in=basescriptutils.parse_script_input(kwargs),
         script_out=basescriptutils.parse_script_output(kwargs),
-        script_opts=Options(**cliutils.from_kwargs(Options, kwargs))
+        script_opts=Options(**cliutils.from_kwargs(Options, kwargs)),
     )
     script.run()
-
 
 
 if __name__ == '__main__':

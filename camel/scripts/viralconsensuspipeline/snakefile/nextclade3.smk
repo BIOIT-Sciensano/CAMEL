@@ -22,7 +22,7 @@ rule nextclade3_detect_subtype_mash:
         db = config['nextclade'].get('db_mash')
     run:
         from camel.app.core.errors import ToolExecutionError
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.mash.mashscreen import MashScreen
         from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 
@@ -61,7 +61,7 @@ checkpoint nextclade3_detect_subtype_report:
         dir_ = 'nextclade/subtype_determination/report',
         db = config['nextclade'].get('db_mash')
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.nextclade3.nextcladesubtypereporter import NextcladeSubTypeReporter
         from camel.app.core.snakemake import snakepipelineutils
 
@@ -102,7 +102,7 @@ rule nextclade3_extract_segment:
     run:
         from Bio import SeqIO
         from Bio.Seq import Seq
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
 
         # Retrieve the sequence of the corresponding segment
         fasta_in = snakemakeutils.load_object(Path(input.FASTA))[0].path
@@ -138,7 +138,7 @@ rule nextclade3_run:
     params:
         dir_ = lambda wildcards: f'nextclade/{wildcards.segment}'
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.nextclade3.nextclade3 import Nextclade3
 
         # Check if database input is valid

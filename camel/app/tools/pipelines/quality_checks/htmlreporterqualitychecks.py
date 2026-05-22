@@ -1,7 +1,8 @@
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.tool import Tool
 
 
@@ -62,7 +63,7 @@ class HtmlReporterQualityChecks(Tool):
         """
         if 'qc_checks' not in self._input_informs:
             raise InvalidToolInputError("No QC checks informs found")
-        super(HtmlReporterQualityChecks, self)._check_input()
+        super()._check_input()
 
     def __add_explanation_metrics(self, explanations: list[tuple[str, str]]) -> None:
         """

@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from camel.app.core.command import Command
-from camel.app.core.errors import ToolExecutionError, InvalidParameterError
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidParameterError, ToolExecutionError
 from camel.app.loggers import logger
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
 

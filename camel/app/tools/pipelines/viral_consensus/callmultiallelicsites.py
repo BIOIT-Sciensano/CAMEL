@@ -1,12 +1,12 @@
 from typing import Any
 
 import pandas as pd
-import vcf
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
 
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class CallMultiAllelicSites(Tool):
@@ -36,39 +36,45 @@ class CallMultiAllelicSites(Tool):
         """
         records_out = []
         logger.info(f"Calling multi-allelic sites from: {self._tool_inputs['VCF'][0].path}")
-        with self._tool_inputs['VCF'][0].path.open() as handle:
-            for variant in vcf.Reader(handle):
-                # Skip invariant & low depth sites
-                if len(variant.ALT) == 1 or variant.INFO['DP'] < int(self._parameters['min_dp'].value):
-                    continue
+        for variant in vcfutils.parse_all_variants(self._tool_inputs['VCF'][0].path):
+            # Skip invariant and low-depth sites
+            if len(variant.ALT) == 1 or variant.INFO['DP'] < int(self._parameters['min_dp'].value):
+                continue
 
-                # Calculate allele frequencies
-                allele_freq_nucleotide = [(str(allele), dp / sum(variant.samples[0].data.AD)) for allele, dp in zip(
-                    variant.alleles, variant.samples[0].data.AD)]
-                allele_freq_nucleotide.sort(key=lambda x: x[-1], reverse=True)
+            # Calculate allele frequencies
+            sample_ad = variant.format('AD')[0]
+            total_ad = sum(sample_ad)
+            if total_ad == 0:
+                continue
+            all_alleles = [variant.REF] + variant.ALT
+            allele_freq_nucleotide = [
+                (str(allele), dp / total_ad)
+                for allele, dp in zip(all_alleles, sample_ad)
+            ]
+            allele_freq_nucleotide.sort(key=lambda x: x[-1], reverse=True)
 
-                # Get the majority allele
-                allele_major, freq = allele_freq_nucleotide[0]
-                if allele_major not in 'ACTG':
-                    raise ValueError(f'Invalid majority allele: {allele_major}')
+            # Get the majority allele
+            allele_major, freq = allele_freq_nucleotide[0]
+            if allele_major not in 'ACTG':
+                raise ValueError(f'Invalid majority allele: {allele_major}')
 
-                # Check the frequency of the most common alternate allele
-                minor_allele_base, minor_allele_freq = allele_freq_nucleotide[1]
-                if minor_allele_freq < float(self._parameters['min_freq_minor_allele'].value):
-                    continue
+            # Check the frequency of the most common alternate allele
+            minor_allele_base, minor_allele_freq = allele_freq_nucleotide[1]
+            if minor_allele_freq < float(self._parameters['min_freq_minor_allele'].value):
+                continue
 
-                key = ''.join(sorted([allele_major, allele_freq_nucleotide[1][0]]))
-                records_out.append({
-                    'chrom': variant.CHROM,
-                    'pos': variant.POS,
-                    'major_allele': allele_major,
-                    'secondary_allele': allele_freq_nucleotide[1][0] if allele_freq_nucleotide[1][1] > 0.33 else 'N',
-                    'major_freq': freq,
-                    'dp': variant.INFO['DP'],
-                    'alleles': ','.join(str(x) for x in variant.alleles),
-                    'ad': ','.join(str(x) for x in variant.samples[0].data.AD),
-                    'iupac': CallMultiAllelicSites.AMBIGUITY_BASES[key]
-                })
+            key = ''.join(sorted([allele_major, allele_freq_nucleotide[1][0]]))
+            records_out.append({
+                'chrom': variant.CHROM,
+                'pos': variant.POS,
+                'major_allele': allele_major,
+                'secondary_allele': allele_freq_nucleotide[1][0] if allele_freq_nucleotide[1][1] > 0.33 else 'N',
+                'major_freq': freq,
+                'dp': variant.INFO['DP'],
+                'alleles': ','.join(str(x) for x in all_alleles),
+                'ad': ','.join(str(x) for x in variant.format('AD')[0]),
+                'iupac': CallMultiAllelicSites.AMBIGUITY_BASES[key]
+            })
         self._set_output(records_out)
 
     def _set_output(self, records_out: list[dict[str, Any]]) -> None:

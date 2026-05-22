@@ -1,9 +1,9 @@
 import pandas as pd
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 
 
@@ -44,7 +44,7 @@ class IntegronFinder(Tool):
         try:
             data_out = pd.read_table(path_tsv_out, comment='#')
             self._informs['nb_detected'] = len(data_out)
-        except pd.errors.EmptyDataError as err:
+        except pd.errors.EmptyDataError:
             self._informs['nb_detected'] = 0
         self._tool_outputs['TSV'] = [ToolIOFile(path_tsv_out)]
 

@@ -1,7 +1,8 @@
 import os.path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
 
@@ -27,13 +28,13 @@ class QiimePickOpenReferenceOtus(Qiime):
         """
         if 'FASTA' not in self._tool_inputs:
             raise InvalidToolInputError('Invalid input files (keys) given for '
-                                                 'pick_open_reference_otus: {!r}'.format(self._tool_inputs))
+                                                 f'pick_open_reference_otus: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'FASTA_REF', 'TSV_Taxonomy']:
-                raise InvalidToolInputError('Invalid input key given for pick_open_reference_otus: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for pick_open_reference_otus: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files in each key given for \
-                                                     pick_open_reference_otus: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files in each key given for \
+                                                     pick_open_reference_otus: {self._tool_inputs!r}')
 
     def _set_output(self):
         """
@@ -81,10 +82,10 @@ class QiimePickOpenReferenceOtus(Qiime):
         """
         input_string = '-i {}'.format(self._tool_inputs['FASTA'][0])
         if os.path.isfile(os.path.join(self._folder, 'parameters.txt')):
-            input_string += ' -p {}'.format(os.path.join(self._folder, self._parameter_file))
+            input_string += f' -p {os.path.join(self._folder, self._parameter_file)}'
         if 'FASTA_Ref' in self._tool_inputs:
             input_string += ' -r {}'.format(self._tool_inputs['FASTA_Ref'][0])
-        input_string += ' -o {}'.format(self._folder)
+        input_string += f' -o {self._folder}'
         return input_string
 
     def _build_command(self):
@@ -94,4 +95,4 @@ class QiimePickOpenReferenceOtus(Qiime):
         """
         options_string = self._build_options()
         options_string += ' --force'
-        self._command.command = '{} {} {}'.format(self._tool_command, self._build_input_string(), options_string)
+        self._command.command = f'{self._tool_command} {self._build_input_string()} {options_string}'

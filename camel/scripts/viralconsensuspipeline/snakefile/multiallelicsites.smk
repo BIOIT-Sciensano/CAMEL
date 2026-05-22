@@ -85,7 +85,7 @@ rule multi_allelic_sites_apply_to_consensus:
     run:
         from Bio import SeqIO
         from Bio.Seq import Seq
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
 
         # Parse the input FASTA file
         path_fasta = snakemakeutils.load_object(Path(input.FASTA))[0].path

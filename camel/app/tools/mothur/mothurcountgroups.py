@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -27,10 +28,10 @@ class MothurCountGroups(Mothur):
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_Groups', 'TSV_Counts', 'TSV_Shared', 'TSV_Accnos']:
                 raise InvalidToolInputError('Invalid input key given for Mothur '
-                                                     'count.groups: {!r}'.format(self._tool_inputs))
+                                                     f'count.groups: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     count.groups: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     count.groups: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -46,7 +47,7 @@ class MothurCountGroups(Mothur):
             items.append('shared={}'.format(self._tool_inputs['TSV_Shared'][0]))
         if 'TSV_Accnos' in self._tool_inputs:
             items.append('reftaxonomy={}'.format(self._tool_inputs['TSV_Accnos'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

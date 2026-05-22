@@ -1,12 +1,16 @@
 import logging
 import unittest
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake import snakemakeutils
-from camel.app.tools.pipelines.neisseria.characterizeneisseriacapsule import CharacterizeNeisseriaCapsule
-from camel.app.tools.pipelines.neisseria.characterizeneisseriacapsulereporter import \
-    CharacterizeNeisseriaCapsuleReporter
+from camel.app.tools.pipelines.neisseria.characterizeneisseriacapsule import (
+    CharacterizeNeisseriaCapsule,
+)
+from camel.app.tools.pipelines.neisseria.characterizeneisseriacapsulereporter import (
+    CharacterizeNeisseriaCapsuleReporter,
+)
 
 
 class TestCharacterizeNeisseriaCapsule(CamelTestSuite):

@@ -1,9 +1,9 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.fastp.fastp import Fastp
 from camel.app.tools.fastp.fastpreporter import FastpReporter
 

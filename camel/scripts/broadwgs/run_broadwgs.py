@@ -8,7 +8,7 @@ from typing import Optional
 import yaml
 
 from camel.app.error.snakemakeexecutionerror import SnakemakeExecutionError
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.pipeline.pipeline import Pipeline
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils

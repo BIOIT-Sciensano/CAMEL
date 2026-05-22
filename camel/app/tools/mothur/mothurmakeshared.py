@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -27,13 +28,13 @@ class MothurMakeShared(Mothur):
         super()._check_input()
         if not (('TSV_List' in self._tool_inputs) != ('BIOM' in self._tool_inputs)):
             raise InvalidToolInputError('Invalid input files (keys) given for Mothur make.shared, only '
-                                                 'TSV_List or BIOM allowed: {!r}'.format(self._tool_inputs))
+                                                 f'TSV_List or BIOM allowed: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['TSV_List', 'BIOM', 'TSV_Groups', 'TSV_Counts']:
-                raise InvalidToolInputError('Invalid input key given for Mothur make.shared: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur make.shared: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     make.shared: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     make.shared: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -49,7 +50,7 @@ class MothurMakeShared(Mothur):
             items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
         if 'TSV_Groups' in self._tool_inputs:
             items.append('group={}'.format(self._tool_inputs['TSV_Groups'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

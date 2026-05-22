@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
 
@@ -24,12 +25,12 @@ class QiimeJoinPairedEnds(Qiime):
         :return: None
         """
         if 'FASTQ_PE' not in self._tool_inputs:
-            raise InvalidToolInputError('Invalid input files (keys) given for join_paired_ends: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input files (keys) given for join_paired_ends: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidToolInputError('Too many input keys given for join_paired_ends: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for join_paired_ends: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTQ_PE']) != 2:
-            raise InvalidToolInputError('Invalid number (!= 2) of files in each key given for \
-                                                  join_paired_ends: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (!= 2) of files in each key given for \
+                                                  join_paired_ends: {self._tool_inputs!r}')
 
     def _set_output(self):
         """

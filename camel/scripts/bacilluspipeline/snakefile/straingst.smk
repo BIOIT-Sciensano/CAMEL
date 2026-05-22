@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 

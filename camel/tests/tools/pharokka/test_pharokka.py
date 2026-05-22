@@ -1,8 +1,9 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.pharokka.pharokka import Pharokka
 from camel.app.tools.pharokka.pharokkamultiplotter import PharokkaMultiplotter
 from camel.app.tools.pharokka.pharokkareporter import PharokkaReporter

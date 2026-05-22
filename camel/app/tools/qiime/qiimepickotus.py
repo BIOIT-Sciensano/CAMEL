@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.qiime.qiime import Qiime
 
 
@@ -27,13 +28,13 @@ class QiimePickOtus(Qiime):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError('Invalid input files (keys) given for pick_otus: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input files (keys) given for pick_otus: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'FASTA_Ref', 'BLAST_DB', 'SORTMERNA_DB']:
-                raise InvalidToolInputError('Invalid input key given for pick_otus: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for pick_otus: {self._tool_inputs!r}')
             if len(self._tool_inputs[key]) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files in each key given for \
-                                                     pick_otus: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files in each key given for \
+                                                     pick_otus: {self._tool_inputs!r}')
 
     def _set_output(self):
         """

@@ -3,9 +3,9 @@ from pathlib import Path
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastautils
 
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.utils import fastautils
 from camel.app.loggers import logger
 from camel.app.tools.gatk import MASK_NT
 from camel.app.tools.gatk4.gatk4 import GATK4

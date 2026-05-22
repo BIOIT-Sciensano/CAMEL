@@ -1,10 +1,12 @@
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastautils
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
-from camel.app.core.utils import fastautils, toolutils
 
 
 class Sniffles(Tool):
@@ -48,8 +50,14 @@ class Sniffles(Tool):
         Builds the command to run sniffles.
         :return: None
         """
-        self._command.command = ' '.join([
-            self._tool_command, f'--input {bam_input}', f'--reference {fasta_input}', *self._build_options()])
+        self._command.command = ' '.join(
+            [
+                self._tool_command,
+                f'--input {bam_input}',
+                f'--reference {fasta_input}',
+                *self._build_options(),
+            ]
+        )
 
     def _check_command_output(self, command: Command) -> None:
         """

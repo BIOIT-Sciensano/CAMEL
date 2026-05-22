@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from camel.app.core.io.tooliovalue import ToolIOValue
+from camelcore.app.io.tooliovalue import ToolIOValue
+
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
 from camel.snakefiles import abritamr, assembly, core
@@ -29,9 +30,13 @@ rule report_pickle_citations:
     params:
         citation_keys = config['citations']
     run:
-        from camel.app.core.reports import reportutils
+        from camel.resources import DIR_CITATIONS
+        from camelcore.app.utils import reportutils
         section = reportutils.create_citations_section(
-            params.citation_keys['other'], params.citation_keys['main'])
+            dir_=DIR_CITATIONS,
+            key_main=params.citation_keys['main'],
+            keys_other=params.citation_keys['other']
+        )
         snakemakeutils.dump_object([ToolIOValue(section)], Path(output.HTML))
 
 rule report_command_section:

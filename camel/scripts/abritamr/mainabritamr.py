@@ -5,17 +5,17 @@ from typing import Any
 
 import click
 import yaml
+from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.fastainput import FastaInput
 from camel.app.scriptutils.model import BaseOptions, BaseOutput
-from camel.snakefiles import assembly
 from camel.scripts.abritamr import CONFIG_DATA, SNAKEFILE_MAIN
+from camel.snakefiles import assembly
 
 SUPPORTED_SPECIES = [
     'Acinetobacter_baumannii',

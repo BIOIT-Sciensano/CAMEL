@@ -231,6 +231,6 @@ rule link_species:
         TSV = Path(config['species_determination']['tsv'])
     run:
         import shutil
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         shutil.copyfile(input.TSV, output.TSV_profile_matches)
         snakemakeutils.dump_object([ToolIOFile(params.TSV)], Path(output.TSV_taxonomic))

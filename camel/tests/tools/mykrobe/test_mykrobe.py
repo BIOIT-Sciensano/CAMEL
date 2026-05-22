@@ -2,11 +2,12 @@ import logging
 import unittest
 from pathlib import Path
 
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliovalue import ToolIOValue
+
 from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.tools.mykrobe.mykrobe import Mykrobe
 from camel.app.tools.mykrobe.mykrobereporter import MykrobeReporter
 
@@ -15,24 +16,33 @@ class TestMykrobe(CamelTestSuite):
     """
     Tests the Mykrobe tool.
     """
+
     # Input files
     test_file_dir = CamelTestSuite.get_test_file_dir('salmonella')
     testdata_dir = Path('/testdata/camel/pipelines')
     db_dir = Path(config.dir_db, 'mykrobe/latest')
 
-    typhi_pe_reads = [test_file_dir / "SRR493330_1.fastq.gz",
-                      test_file_dir / "SRR493330_2.fastq.gz"]
+    typhi_pe_reads = [
+        test_file_dir / "SRR493330_1.fastq.gz",
+        test_file_dir / "SRR493330_2.fastq.gz",
+    ]
     typhi_ont = [testdata_dir / 'Salmonella_ERR11177482.fastq.gz']
 
-    shigella_pe_reads = [testdata_dir / 'Shigella-S17BD07654_1.fastq.gz',
-                         testdata_dir / 'Shigella-S17BD07654_2.fastq.gz']
+    shigella_pe_reads = [
+        testdata_dir / 'Shigella-S17BD07654_1.fastq.gz',
+        testdata_dir / 'Shigella-S17BD07654_2.fastq.gz',
+    ]
     shigella_fasta = [testdata_dir / 'Shigella-S17BD07654.fasta']
 
-    staph_pe_reads = [testdata_dir / 'Saureus-SRR10393587-ds_1.fastq.gz',
-                      testdata_dir / 'Saureus-SRR10393587-ds_2.fastq.gz']
+    staph_pe_reads = [
+        testdata_dir / 'Saureus-SRR10393587-ds_1.fastq.gz',
+        testdata_dir / 'Saureus-SRR10393587-ds_2.fastq.gz',
+    ]
 
-    myco_pe_reads = [testdata_dir / 'Myco-DRR041783-ds_1.fastq.gz',
-                     testdata_dir / 'Myco-DRR041783-ds_2.fastq.gz']
+    myco_pe_reads = [
+        testdata_dir / 'Myco-DRR041783-ds_1.fastq.gz',
+        testdata_dir / 'Myco-DRR041783-ds_2.fastq.gz',
+    ]
     # Output file
     output_csv = test_file_dir / 'mykrobe.csv'
 
@@ -42,11 +52,13 @@ class TestMykrobe(CamelTestSuite):
         :return: None
         """
         tool = Mykrobe()
-        tool.add_input_files({
-            'FASTQ_PE': [ToolIOFile(x) for x in self.typhi_pe_reads],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('typhi')]
-        })
+        tool.add_input_files(
+            {
+                'FASTQ_PE': [ToolIOFile(x) for x in self.typhi_pe_reads],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('typhi')],
+            }
+        )
         tool.run(self.running_dir)
         self.verify_output_files(tool, 'CSV')
 
@@ -56,11 +68,13 @@ class TestMykrobe(CamelTestSuite):
         :return: None
         """
         tool = Mykrobe()
-        tool.add_input_files({
-            'FASTQ_SE': [ToolIOFile(x) for x in self.typhi_ont],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('typhi')]
-        })
+        tool.add_input_files(
+            {
+                'FASTQ_SE': [ToolIOFile(x) for x in self.typhi_ont],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('typhi')],
+            }
+        )
         tool.run(self.running_dir)
         self.verify_output_files(tool, 'CSV')
 
@@ -70,11 +84,13 @@ class TestMykrobe(CamelTestSuite):
         :return: None
         """
         tool = Mykrobe()
-        tool.add_input_files({
-            'FASTQ_PE': [ToolIOFile(x) for x in self.shigella_pe_reads],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('sonnei')]
-        })
+        tool.add_input_files(
+            {
+                'FASTQ_PE': [ToolIOFile(x) for x in self.shigella_pe_reads],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('sonnei')],
+            }
+        )
         tool.run(self.running_dir)
         self.verify_output_files(tool, 'CSV')
 
@@ -84,11 +100,13 @@ class TestMykrobe(CamelTestSuite):
         :return: None
         """
         tool = Mykrobe()
-        tool.add_input_files({
-            'FASTA': [ToolIOFile(x) for x in self.shigella_fasta],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('sonnei')]
-        })
+        tool.add_input_files(
+            {
+                'FASTA': [ToolIOFile(x) for x in self.shigella_fasta],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('sonnei')],
+            }
+        )
         tool.run(self.running_dir)
         self.verify_output_files(tool, 'CSV')
 
@@ -98,11 +116,13 @@ class TestMykrobe(CamelTestSuite):
         :return: None
         """
         tool = Mykrobe()
-        tool.add_input_files({
-            'FASTQ_PE': [ToolIOFile(x) for x in self.staph_pe_reads],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('staph')]
-        })
+        tool.add_input_files(
+            {
+                'FASTQ_PE': [ToolIOFile(x) for x in self.staph_pe_reads],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('staph')],
+            }
+        )
         tool.run(self.running_dir)
         self.verify_output_files(tool, 'CSV')
 
@@ -112,11 +132,13 @@ class TestMykrobe(CamelTestSuite):
         :return: None
         """
         tool = Mykrobe()
-        tool.add_input_files({
-            'FASTQ_PE': [ToolIOFile(x) for x in self.myco_pe_reads],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('tb')]
-        })
+        tool.add_input_files(
+            {
+                'FASTQ_PE': [ToolIOFile(x) for x in self.myco_pe_reads],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('tb')],
+            }
+        )
         tool.run(self.running_dir)
         self.verify_output_files(tool, 'CSV')
 
@@ -127,11 +149,13 @@ class TestMykrobe(CamelTestSuite):
         """
         # Run Mykrobe
         mykrobe = Mykrobe()
-        mykrobe.add_input_files({
-            'FASTQ_PE': [ToolIOFile(x) for x in self.typhi_pe_reads],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('typhi')]
-        })
+        mykrobe.add_input_files(
+            {
+                'FASTQ_PE': [ToolIOFile(x) for x in self.typhi_pe_reads],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('typhi')],
+            }
+        )
         mykrobe.run(self.running_dir)
         self.verify_output_files(mykrobe, 'CSV')
 
@@ -140,7 +164,9 @@ class TestMykrobe(CamelTestSuite):
         mykrobereporter.add_input_files({'CSV': mykrobe.tool_outputs['CSV']})
         mykrobereporter.add_input_informs({'mykrobe': mykrobe.informs})
         mykrobereporter.run(self.running_dir)
-        self.assertGreater(len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0)
+        self.assertGreater(
+            len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0
+        )
 
         # Save the report
         html_out = self.running_dir / 'report.html'
@@ -155,11 +181,13 @@ class TestMykrobe(CamelTestSuite):
         """
         # Run Mykrobe
         mykrobe = Mykrobe()
-        mykrobe.add_input_files({
-            'FASTQ_SE': [ToolIOFile(x) for x in self.typhi_ont],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('typhi')]
-        })
+        mykrobe.add_input_files(
+            {
+                'FASTQ_SE': [ToolIOFile(x) for x in self.typhi_ont],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('typhi')],
+            }
+        )
         mykrobe.run(self.running_dir)
         self.verify_output_files(mykrobe, 'CSV')
 
@@ -168,7 +196,9 @@ class TestMykrobe(CamelTestSuite):
         mykrobereporter.add_input_files({'CSV': mykrobe.tool_outputs['CSV']})
         mykrobereporter.add_input_informs({'mykrobe': mykrobe.informs})
         mykrobereporter.run(self.running_dir)
-        self.assertGreater(len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0)
+        self.assertGreater(
+            len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0
+        )
 
         # Save the report
         html_out = self.running_dir / 'report.html'
@@ -183,11 +213,13 @@ class TestMykrobe(CamelTestSuite):
         """
         # Run Mykrobe
         mykrobe = Mykrobe()
-        mykrobe.add_input_files({
-            'FASTQ_PE': [ToolIOFile(x) for x in self.shigella_pe_reads],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('sonnei')]
-        })
+        mykrobe.add_input_files(
+            {
+                'FASTQ_PE': [ToolIOFile(x) for x in self.shigella_pe_reads],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('sonnei')],
+            }
+        )
         mykrobe.run(self.running_dir)
         self.verify_output_files(mykrobe, 'CSV')
 
@@ -196,7 +228,9 @@ class TestMykrobe(CamelTestSuite):
         mykrobereporter.add_input_files({'CSV': mykrobe.tool_outputs['CSV']})
         mykrobereporter.add_input_informs({'mykrobe': mykrobe.informs})
         mykrobereporter.run(self.running_dir)
-        self.assertGreater(len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0)
+        self.assertGreater(
+            len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0
+        )
 
         # Save the report
         html_out = self.running_dir / 'report.html'
@@ -211,11 +245,13 @@ class TestMykrobe(CamelTestSuite):
         """
         # Run Mykrobe
         mykrobe = Mykrobe()
-        mykrobe.add_input_files({
-            'FASTA': [ToolIOFile(x) for x in self.shigella_fasta],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('sonnei')]
-        })
+        mykrobe.add_input_files(
+            {
+                'FASTA': [ToolIOFile(x) for x in self.shigella_fasta],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('sonnei')],
+            }
+        )
         mykrobe.run(self.running_dir)
         self.verify_output_files(mykrobe, 'CSV')
 
@@ -224,7 +260,9 @@ class TestMykrobe(CamelTestSuite):
         mykrobereporter.add_input_files({'CSV': mykrobe.tool_outputs['CSV']})
         mykrobereporter.add_input_informs({'mykrobe': mykrobe.informs})
         mykrobereporter.run(self.running_dir)
-        self.assertGreater(len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0)
+        self.assertGreater(
+            len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0
+        )
 
         # Save the report
         html_out = self.running_dir / 'report.html'
@@ -239,11 +277,13 @@ class TestMykrobe(CamelTestSuite):
         """
         # Run Mykrobe
         mykrobe = Mykrobe()
-        mykrobe.add_input_files({
-            'FASTQ_PE': [ToolIOFile(x) for x in self.staph_pe_reads],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('staph')]
-        })
+        mykrobe.add_input_files(
+            {
+                'FASTQ_PE': [ToolIOFile(x) for x in self.staph_pe_reads],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('staph')],
+            }
+        )
         mykrobe.run(self.running_dir)
         self.verify_output_files(mykrobe, 'CSV')
 
@@ -252,7 +292,9 @@ class TestMykrobe(CamelTestSuite):
         mykrobereporter.add_input_files({'CSV': mykrobe.tool_outputs['CSV']})
         mykrobereporter.add_input_informs({'mykrobe': mykrobe.informs})
         mykrobereporter.run(self.running_dir)
-        self.assertGreater(len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0)
+        self.assertGreater(
+            len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0
+        )
 
         # Save the report
         html_out = self.running_dir / 'report.html'
@@ -267,11 +309,13 @@ class TestMykrobe(CamelTestSuite):
         """
         # Run Mykrobe
         mykrobe = Mykrobe()
-        mykrobe.add_input_files({
-            'FASTQ_PE': [ToolIOFile(x) for x in self.myco_pe_reads],
-            'DIR': [ToolIODirectory(self.db_dir)],
-            'SPECIES': [ToolIOValue('tb')]
-        })
+        mykrobe.add_input_files(
+            {
+                'FASTQ_PE': [ToolIOFile(x) for x in self.myco_pe_reads],
+                'DIR': [ToolIODirectory(self.db_dir)],
+                'SPECIES': [ToolIOValue('tb')],
+            }
+        )
         mykrobe.run(self.running_dir)
         self.verify_output_files(mykrobe, 'CSV')
 
@@ -280,7 +324,9 @@ class TestMykrobe(CamelTestSuite):
         mykrobereporter.add_input_files({'CSV': mykrobe.tool_outputs['CSV']})
         mykrobereporter.add_input_informs({'mykrobe': mykrobe.informs})
         mykrobereporter.run(self.running_dir)
-        self.assertGreater(len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0)
+        self.assertGreater(
+            len(mykrobereporter.tool_outputs['HTML'][0].value.to_html()), 0
+        )
 
         # Save the report
         html_out = self.running_dir / 'report.html'

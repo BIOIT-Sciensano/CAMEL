@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.snakefiles import variant_calling, variant_filtering, gene_detection
@@ -90,7 +90,7 @@ rule amr_screen_mutations:
         db = config['amr']['db'],
         bed_regions = Path(config['amr']['db'], 'amr_regions.bed')
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.mycobacterium.amr.amrscreen import AMRScreen
 
         amr_screen = AMRScreen()
@@ -116,13 +116,12 @@ rule amr_export_positions:
     params:
         dir_ = 'amr/filtering'
     run:
-        import vcf
+        from camelcore.app.utils import vcfutils
         variants = []
         for vcf_file in input.keys():
-            input_vcf = snakemakeutils.load_object(Path(input[vcf_file]))[0].path
-            with open(input_vcf) as handle_in:
-                for variant in vcf.VCFReader(handle_in):
-                    variants.append([variant.CHROM, str(variant.POS)])
+            path_vcf = snakemakeutils.load_object(Path(input[vcf_file]))[0].path
+            for variant in vcfutils.parse_all_variants(path_vcf):
+                variants.append([variant.CHROM, str(variant.POS)])
         # Removing duplicates
         variants_to_write = [list(item) for item in set(tuple(row) for row in variants)]
         output_path = Path(params.dir_, 'amr_positions.txt')
@@ -183,7 +182,7 @@ rule amr_predict_phenotype:
         dir_ = 'amr/phenotype_prediction',
         dir_amr_db = config['amr']['db']
     run:
-        from camel.app.core.io.tooliodirectory import ToolIODirectory
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.mycobacterium.amr.amrphenotypepredictor import AMRPhenotypePredictor
         type_determination = AMRPhenotypePredictor()
         snakemakeutils.add_io_inputs(type_determination, input)
@@ -264,7 +263,7 @@ rule amr_visualization_add_text:
         dir_ = 'amr/visualization',
         sample_name = config['input']['sample_name']
     run:
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.amr.amraddtext import AMRAddText
         text_adder = AMRAddText()
         text_adder.add_input_files({'VAL_sample': [ToolIOValue(params.sample_name)]})

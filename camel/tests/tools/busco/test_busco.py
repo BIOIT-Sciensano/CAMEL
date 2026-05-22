@@ -1,11 +1,12 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.command import Command
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.config import config
-from camel.app.core.command import Command
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.busco.busco import Busco
 
 
@@ -30,7 +31,7 @@ class TestBusco(CamelTestSuite):
             command = Command(f'module load {dependency};')
             command.run(self.running_dir)
             self.assertEqual(
-                command.returncode, 0, f"Dependency '{dependency}' cannot be loaded"
+                command.exit_code, 0, f"Dependency '{dependency}' cannot be loaded"
             )
 
     def test_busco(self) -> None:

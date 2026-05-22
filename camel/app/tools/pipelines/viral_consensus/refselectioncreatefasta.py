@@ -3,15 +3,15 @@ import logging
 import math
 from io import StringIO
 from pathlib import Path
-from typing import Union, Any
+from typing import Any, Union
 
 import pandas as pd
 from Bio import SeqIO
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 from pysam.libcvcf import defaultdict
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
-from camel.app.core.io.tooliofile import ToolIOFile
+from camel.app.core import toolutils
 from camel.app.core.tool import Tool
 
 
@@ -190,7 +190,7 @@ class RefSelection(Tool):
             path_fasta = dir_db / 'fasta_by_segment' / f'{segment}.fasta'
             command = Command(f"module load samtools; samtools faidx {path_fasta} {ref_info['ref_id']}")
             command.run(self.folder, disable_logging=True)
-            if not command.returncode == 0:
+            if not command.exit_code == 0:
                 raise RuntimeError(f'Error extracting sequence: {command.stderr}')
             records_out.append(next(SeqIO.parse(StringIO(command.stdout), 'fasta')))
 

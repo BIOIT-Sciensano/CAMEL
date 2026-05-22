@@ -2,12 +2,13 @@ import os
 from importlib.resources import files
 from pathlib import Path
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
-from camel.app.core.errors import ToolExecutionError, InvalidParameterError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidParameterError, ToolExecutionError
 from camel.app.core.tool import Tool
+from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 
 
 class ModelSelection(Tool):

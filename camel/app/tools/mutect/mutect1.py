@@ -1,9 +1,10 @@
 import re
 
-from camel.app.core.command import Command
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.tool import Tool
 
 
 class Mutect1(Tool):
@@ -63,7 +64,7 @@ class Mutect1(Tool):
         for input_key in self._required_inputs:
             if input_key not in self._tool_inputs:
                 raise InvalidToolInputError(
-                    'Mutect1 required {} input is missing in tool inputs!'.format(input_key))
+                    f'Mutect1 required {input_key} input is missing in tool inputs!')
 
     def _check_parameters(self):
         """

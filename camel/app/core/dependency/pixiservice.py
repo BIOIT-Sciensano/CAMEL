@@ -3,8 +3,9 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from camelcore.app.command import Command
+
 from camel.app.config import config
-from camel.app.core.command import Command
 from camel.app.core.dependency.basedependencyservice import BaseDependencyService
 from camel.app.core.errors import DependencyError
 from camel.app.loggers import logger

@@ -1,7 +1,8 @@
 import unittest
 
-from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.core.reports.htmlreport import HtmlReport
+from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
+from camelcore.app.reports.htmlreport import HtmlReport
+
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.loggers import logger
 

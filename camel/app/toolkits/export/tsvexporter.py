@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.core.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlelement import HtmlElement
 
 
 class TsvExporter:

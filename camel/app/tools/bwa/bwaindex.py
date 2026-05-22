@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.core.utils import fileutils
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.utils import fileutils
+
 from camel.app.tools.bwa.bwa import BWA
 
 

@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any, Optional
+
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
 from camel.app.toolkits.blast.blasthitstatistics import BlastHitStatistics
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 
 

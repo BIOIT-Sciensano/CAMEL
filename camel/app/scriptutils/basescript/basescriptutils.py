@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import Callable, Any
 
 import click
+from camelcore.app.utils import fileutils, fastqutils
 
 from camel.app.cli import cliutils
-from camel.app.core.utils import fastqutils, fileutils
 from camel.app.dbs.dbutils import DBEntry
 from camel.app.loggers import logger
 from camel.app.scriptutils import model

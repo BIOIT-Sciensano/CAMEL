@@ -1,10 +1,11 @@
-import pandas as pd
 from pathlib import Path
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.core.tool import Tool
+import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
 from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class SpeciesDeterminationReporter(Tool):

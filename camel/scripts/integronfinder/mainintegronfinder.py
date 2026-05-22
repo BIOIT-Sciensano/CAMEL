@@ -5,11 +5,10 @@ from datetime import datetime
 from pathlib import Path
 
 import click
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils, reportutils
 
 from camel.app.cli import cliutils
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.reports import reportutils
-from camel.app.core.utils import fileutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
@@ -18,6 +17,7 @@ from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.integronfinder.integronfinder import IntegronFinder
 from camel.app.tools.integronfinder.integronfinderreporter import IntegronFinderReporter
+from camel.resources import DIR_CITATIONS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -92,7 +92,8 @@ class MainIntegronFinder(BaseScript[FastaInput, ScriptOutput, Options]):
         # Add commands and citations
         report.add_html_object(reportutils.create_commands_section(
             [integron_finder.informs], self._script_opts.working_dir))
-        report.add_html_object(reportutils.create_citations_section(['Neron_2022-integronfinder']))
+        report.add_html_object(reportutils.create_citations_section(
+            dir_=DIR_CITATIONS, keys_other=['Neron_2022-integronfinder']))
         report.save()
 
         # Copy the TSV output file when specified

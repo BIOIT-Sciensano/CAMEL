@@ -1,5 +1,6 @@
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
+from camelcore.app.command import Command
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.piping.toolpipeable import ToolPipeable
 

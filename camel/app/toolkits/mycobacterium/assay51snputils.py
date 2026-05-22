@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-# noinspection PyProtectedMember
-from vcf.model import _Record as Record
 
 GYRB_PROFILES = [
     {'group': 'TC1', 'SNP02': 'G', 'SNP03': 'G', 'SNP04': 'C', 'species':
@@ -19,7 +17,7 @@ GENETIC_GROUPS = [
 ]
 
 
-@dataclass
+@dataclass(frozen=True, unsafe_hash=True)
 class SNPPosition:
     """
     Holder class for SNP positions.
@@ -27,8 +25,11 @@ class SNPPosition:
     pos: int
     name: str
     ref: str
-    vcf_record: Record = None
-    vcf_filt_record: Record = None
+
+    alt_unfilt: str | None = None
+    alt_filt: str | None = None
+    is_unfilt_snp: bool = False
+    is_filt_snp: bool = False
 
     @property
     def nucl(self) -> str:
@@ -36,10 +37,10 @@ class SNPPosition:
         Returns the nucleotide at the given position.
         :return: Nucleotide at the given position
         """
-        if (self.vcf_filt_record is not None) and self.vcf_filt_record.is_snp:
-            return str(self.vcf_filt_record.ALT[0])
-        elif (self.vcf_record is not None) and self.vcf_record.is_snp:
-            return str(self.vcf_record.ALT[0])
+        if self.is_filt_snp and self.alt_filt:
+            return self.alt_filt
+        elif self.is_unfilt_snp and self.alt_unfilt:
+            return self.alt_unfilt
         else:
             return self.ref
 
@@ -54,9 +55,9 @@ class SNPPosition:
         """
         if self.nucl != ref:
             return 'red'
-        elif (self.vcf_filt_record is None) and (self.vcf_record is None):
+        if not self.is_filt_snp and not self.is_unfilt_snp:
             return 'green'
-        elif (self.vcf_filt_record is not None) and (self.vcf_record is not None):
+        elif self.is_filt_snp and self.is_unfilt_snp:
             return 'green'
         else:
             return 'lightgreen'
@@ -82,7 +83,7 @@ def parse_snp_positions(positions_path: Path) -> list[SNPPosition]:
     with open(positions_path) as handle:
         for line in handle.readlines():
             parts = line.strip().split('\t')
-            positions.append(SNPPosition(int(parts[2]), parts[3], parts[4]))
+            positions.append(SNPPosition(pos=int(parts[2]), name=parts[3], ref=parts[4]))
     return sorted(positions, key=lambda p: p.name)
 
 

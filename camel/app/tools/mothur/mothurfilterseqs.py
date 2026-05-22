@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -25,12 +26,12 @@ class MothurFilterSeqs(Mothur):
         """
         super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError('No valid input files given for Mothur filter.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'No valid input files given for Mothur filter.seqs: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                 filter.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                 filter.seqs: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidToolInputError('Too many input keys given for Mothur filter.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for Mothur filter.seqs: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -38,7 +39,7 @@ class MothurFilterSeqs(Mothur):
         :return: String with the input parameters
         """
         items = ['fasta={}'.format(self._tool_inputs['FASTA'][0]),
-                 'outputdir={}'.format(self._folder)]
+                 f'outputdir={self._folder}']
         return ', '.join(items)
 
     def _set_output(self):

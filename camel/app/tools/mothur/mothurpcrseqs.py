@@ -1,9 +1,10 @@
 import os.path
 from pathlib import Path
 
-from camel.app.core.command import Command
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -29,15 +30,15 @@ class MothurPcrSeqs(Mothur):
         """
         super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError('No input file given for Mothur pcr.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'No input file given for Mothur pcr.seqs: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                 pcr.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                 pcr.seqs: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidToolInputError('Too many input keys given for Mothur pcr.seqs: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for Mothur pcr.seqs: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'TSV_Oligos']:
-                raise InvalidToolInputError('Invalid input key given for Mothur pcr.seqs: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur pcr.seqs: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -47,7 +48,7 @@ class MothurPcrSeqs(Mothur):
         items = ['fasta={}'.format(self._tool_inputs['FASTA'][0])]
         if 'TSV_Oligos' in self._tool_inputs:
             items.append('oligos={}'.format(self._tool_inputs['TSV_Oligos'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):
@@ -58,7 +59,7 @@ class MothurPcrSeqs(Mothur):
         basename = super()._get_basename()
         extension = self._tool_inputs['FASTA'][0].file_extension
         self._tool_outputs['FASTA'] = [ToolIOFile(Path(f'{basename}.pcr{extension}'))]
-        if os.path.isfile('{}.bad.accnos'.format(basename)):
+        if os.path.isfile(f'{basename}.bad.accnos'):
             self._tool_outputs['TEXT'] = [ToolIOFile(Path(f'{basename}.bad.accnos'))]
 
     def _check_command_output(self, command: Command) -> None:

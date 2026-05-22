@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Any, Union
+from typing import Any, Optional, Union
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
 from camel.snakefiles import assembly
 
 

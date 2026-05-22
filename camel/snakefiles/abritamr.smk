@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from camel.app.core.io.tooliodirectory import ToolIODirectory
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.snakefiles import assembly
@@ -96,7 +97,7 @@ rule abritamr_create_summary:
         import pandas as pd
 
         df_abritamr = pd.read_excel(
-            snakemakeutils.load_object(Path(input.REPORT_abritamr))[0].path, engine='openpyxl')
+            snakemakeutils.load_object(Path(input.REPORT_abritamr))[0].path, engine='openpyxl', dtype=str)
         df_abritamr.fillna('-', inplace=True)  # replace all missing values by dashes
         data_summary = []
         with Path(output.TSV).open('w') as handle:
@@ -143,4 +144,3 @@ rule abritamr_report_empty:
         from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.abritamr.abritamrreporter import AbriTAMRReporter
         snakepipelineutils.create_empty_report_section(AbriTAMRReporter.TITLE, Path(output.VAL_HTML))
-

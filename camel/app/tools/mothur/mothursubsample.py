@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -25,14 +26,14 @@ class MothurSubSample(Mothur):
         allowed_primary_input = ['FASTA', 'TSV_List', 'TSV_Shared', 'TSV_Rabund', 'TSV_Sabund']
         for key, input_files in self._tool_inputs.items():
             if key not in allowed_primary_input and key not in ['TSV_Groups', 'TSV_Counts', 'TSV_Names']:
-                raise InvalidToolInputError('Invalid input key given for Mothur sub.sample: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur sub.sample: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     sub.sample: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     sub.sample: {self._tool_inputs!r}')
         # Check if more than one of the primary input keys is present
         if len(set(allowed_primary_input).intersection(self._tool_inputs.keys())) > 1:
             raise InvalidToolInputError('Too many primary input keys given for '
-                                                 'Mothur sub.sample: {!r}'.format(self._tool_inputs))
+                                                 f'Mothur sub.sample: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -56,7 +57,7 @@ class MothurSubSample(Mothur):
             items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
         if 'TSV_Groups' in self._tool_inputs:
             items.append('group={}'.format(self._tool_inputs['TSV_Groups'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):

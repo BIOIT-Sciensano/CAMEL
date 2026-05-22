@@ -9,12 +9,11 @@ from pathlib import Path
 import click
 import yaml
 from Bio import SeqIO
+from camelcore.app.utils import fastautils
 
 from camel.app.cli import cliutils
 from camel.app.config import config
-from camel.app.core import cameltesthelper
 from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
-from camel.app.core.utils import fastautils
 from camel.app.loggers import logger, initialize_logging
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
@@ -23,7 +22,7 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.scripts.viralconsensuspipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.viralconsensuspipeline import SNAKEFILE_MAIN
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
 
 

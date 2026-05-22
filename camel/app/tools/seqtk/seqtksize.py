@@ -1,4 +1,4 @@
-from camel.app.core.utils import toolutils
+from camel.app.core import toolutils
 from camel.app.core.tool import Tool
 
 

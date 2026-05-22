@@ -1,9 +1,10 @@
 import unittest
 
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
+
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.utils import vcfutils
 from camel.scripts.freebayes.mainfreebayes import main
 
 

@@ -2,10 +2,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.scriptutils.basepipe.fastqinput import FastqInput
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
 from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.snakefiles import gene_detection
 

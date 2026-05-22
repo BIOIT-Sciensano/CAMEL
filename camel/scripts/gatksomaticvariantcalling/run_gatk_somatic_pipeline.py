@@ -6,9 +6,9 @@ import subprocess
 import sys
 
 import yaml
+from camelcore.app.command import Command
 
-from camel.app.core.command import Command
-from camel.app.core.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.pipeline.pipeline import Pipeline
 
 
@@ -34,8 +34,6 @@ class GATKSomaticMain:
         self._ap = None
         self._config_data = dict()
         self._pipeline = None
-
-        self._camel = Camel(tool_parameter_loc=self.TOOL_PARAM_DIR)
 
         # galaxy dump directory in case of failure
         self._galaxy_dump_dir = os.path.join(self._camel.config["galaxy"]["dump_dir"], "GATK_somatic_calling")
@@ -94,7 +92,7 @@ class GATKSomaticMain:
         to_execute = 'snakemake --configfile {config} --snakefile {snakefile} --cores {cores} {snakemake_params}'.format(config=self.runtime_config_path, snakefile=self.SNAKEFILE, cores=self._args.threads, snakemake_params=snakemake_params)
         command = Command(to_execute)
         command.run_command(self._args.work_dir, subprocess.STDOUT)
-        if command.returncode != 0 and self._args.from_galaxy:
+        if command.exit_code != 0 and self._args.from_galaxy:
             with open(os.path.join(self._galaxy_dump_dir, "{}.out".format(self._args.job_id)), "w") as file_out:
                 file_out.write(command.stdout)
             with open(os.path.join(self._galaxy_dump_dir, "{}.err".format(self._args.job_id)), "w") as file_out:

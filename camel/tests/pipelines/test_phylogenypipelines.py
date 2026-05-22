@@ -2,8 +2,8 @@ from pathlib import Path
 
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.snpphylogeny.mainsamtoolsphylo import main as main_samtools
 from camel.scripts.snpphylogeny.maincfsanphylo import main as main_cfsan
+from camel.scripts.snpphylogeny.mainsamtoolsphylo import main as main_samtools
 from camel.tests import longRunningTest
 
 

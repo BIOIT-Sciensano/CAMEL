@@ -25,7 +25,7 @@ rule link_scrubbing_input:
         FASTQ = human_read_scrubbing.INPUT_FASTQ if not 'fasta' in config['input'] else [],
         FASTA = human_read_scrubbing.INPUT_FASTA if 'fasta' in config['input'] else []
     run:
-        from camel.app.core.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         if 'fasta' in config['input']:
             snakemakeutils.dump_object([ToolIOFile(Path(config['input']['fasta'][0]['path']))], Path(output.FASTA))
         elif 'fastq_pe' in config['input']:

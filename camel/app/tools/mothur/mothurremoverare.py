@@ -1,7 +1,8 @@
 from pathlib import Path
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -29,15 +30,15 @@ class MothurRemoveRare(Mothur):
         """
         super()._check_input()
         if 'TSV_List' not in self._tool_inputs:
-            raise InvalidToolInputError('No valid input file given for Mothur remove.rare: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'No valid input file given for Mothur remove.rare: {self._tool_inputs!r}')
         if len(self._tool_inputs['TSV_List']) != 1:
-            raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                 remove.rare: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                 remove.rare: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidToolInputError('Too many input keys given for Mothur remove.rare: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for Mothur remove.rare: {self._tool_inputs!r}')
         for key in self._tool_inputs.keys():
             if key not in {'TSV_List', 'TSV_Counts'}:
-                raise InvalidToolInputError('Invalid input key given for Mothur remove.rare: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for Mothur remove.rare: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -45,7 +46,7 @@ class MothurRemoveRare(Mothur):
         Example: fasta=File1.trim.contig.fasta, outputdir=/test/data/outputdir
         :return: String with the input parameters
         """
-        items = ['list={}'.format(self._tool_inputs['TSV_List'][0]), 'outputdir={}'.format(self._folder)]
+        items = ['list={}'.format(self._tool_inputs['TSV_List'][0]), f'outputdir={self._folder}']
         if 'TSV_Counts' in self._tool_inputs:
             items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
         return ', '.join(items)

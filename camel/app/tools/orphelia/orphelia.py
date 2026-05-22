@@ -1,12 +1,12 @@
-import shutil
-
 import os
 import re
+import shutil
 
-from camel.app.core.command import Command
-from camel.app.core.utils import toolutils
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.tool import Tool
 
 
@@ -45,11 +45,11 @@ class Orphelia(Tool):
         """
         super(Orphelia, self)._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidToolInputError('Invalid input key given for Orphelia, only FASTA allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input key given for Orphelia, only FASTA allowed: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidToolInputError('Invalid number of input keys given for Orphelia, only FASTA allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number of input keys given for Orphelia, only FASTA allowed: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) > 1:
-            raise ValueError('Invalid number (max = 1) of files per key given for Orphelia: {!r}'.format(self._tool_inputs))
+            raise ValueError(f'Invalid number (max = 1) of files per key given for Orphelia: {self._tool_inputs!r}')
 
     def __set_output(self):
         """

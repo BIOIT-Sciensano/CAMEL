@@ -14,7 +14,7 @@ rule gene_detection_kma_get_db:
         DB = 'gene_detection/{db}/kma/db.io'
     run:
         import json
-        from camel.app.core.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         fasta_path = Path(snakemakeutils.load_object(Path(input.FASTA))[0].path)
         with open(fasta_path.parent / 'db_metadata.txt') as handle:
             metadata = json.load(handle)

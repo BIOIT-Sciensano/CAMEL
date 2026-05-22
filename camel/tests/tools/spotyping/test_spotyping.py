@@ -1,8 +1,9 @@
 import unittest
 
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliovalue import ToolIOValue
+
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.tools.spotyping.spotyping import SpoTyping
 from camel.app.tools.spotyping.spotypingreporter import SpoTypingReporter
 

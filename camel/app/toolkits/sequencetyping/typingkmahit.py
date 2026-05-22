@@ -1,4 +1,5 @@
-from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+
 from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 
 

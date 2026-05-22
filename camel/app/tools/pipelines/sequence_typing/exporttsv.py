@@ -1,12 +1,12 @@
 from pathlib import Path
 
 import pandas as pd
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
+from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 
 
 class ExportTSV(Tool):

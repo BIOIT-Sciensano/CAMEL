@@ -1,11 +1,11 @@
 import unittest
 from pathlib import Path
 
+from camelcore.app.utils import fastautils
 
 from camel.app.cli import cliutils
-from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.config import config
-from camel.app.core.utils import fastautils
+from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.viralconsensuspipeline.mainviralconsensuspipeline import main
 from camel.tests import longRunningTest
 

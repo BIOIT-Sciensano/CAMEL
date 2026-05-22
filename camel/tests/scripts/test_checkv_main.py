@@ -3,7 +3,7 @@ import unittest
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.scripts.checkv.maincheckv import main
-from camel.tests import resourceIntensiveTest, longRunningTest
+from camel.tests import longRunningTest, resourceIntensiveTest
 
 
 class TestCheckVMain(CamelTestSuite):

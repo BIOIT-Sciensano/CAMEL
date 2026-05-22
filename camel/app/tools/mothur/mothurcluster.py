@@ -1,5 +1,6 @@
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -28,21 +29,21 @@ class MothurCluster(Mothur):
         super()._check_input()
         if len([x for x in self._tool_inputs if x in ['FASTA', 'DIST', 'PHY']]) != 1:
             raise InvalidToolInputError('Invalid input files (keys) given for Mothur cluster, only DIST or '
-                                                 'PHY or FASTA allowed: {!r}'.format(self._tool_inputs))
+                                                 f'PHY or FASTA allowed: {self._tool_inputs!r}')
         if 'TSV_Names' in self._tool_inputs and 'TSV_Counts' in self._tool_inputs:
             raise InvalidToolInputError('Invalid input files (keys) given for Mothur cluster, TSV_Names and '
-                                                 'TSV_Counts not allowed together: {!r}'.format(self._tool_inputs))
+                                                 f'TSV_Counts not allowed together: {self._tool_inputs!r}')
         if self._parameters['method'].value in ['acg', 'dcg']:
             if 'FASTA' not in self._tool_inputs or 'TSV_Counts' not in self._tool_inputs:
                 raise InvalidToolInputError('Fasta and count table required for Mothur cluster with Vsearch '
-                                                     'method: {!r}'.format(self._tool_inputs))
+                                                     f'method: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['DIST', 'TSV_Names', 'TSV_Counts', 'PHY', 'FASTA']:
                 raise InvalidToolInputError('Invalid input key given for Mothur '
-                                                     'cluster: {!r}'.format(self._tool_inputs))
+                                                     f'cluster: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidToolInputError('Invalid number (max = 1) of files given for Mothur \
-                                                     cluster: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files given for Mothur \
+                                                     cluster: {self._tool_inputs!r}')
 
     def _build_input_string(self):
         """
@@ -62,7 +63,7 @@ class MothurCluster(Mothur):
             items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
         elif 'TSV_Names' in self._tool_inputs:
             items.append('name={}'.format(self._tool_inputs['TSV_Names'][0]))
-        items.append('outputdir={}'.format(self._folder))
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
     def _set_output(self):
