@@ -79,7 +79,7 @@ Processed reads are assembled using `SPAdes 3.15.5` with the following options:
 
 ### ONT
 
-Filtered reads are assembled using `Flye 2.9.4` with default options providing the filtered reads using the 
+Filtered reads are assembled using `Flye 2.9.5` with default options providing the filtered reads using the 
 `--nano-corr` option.
 
 ### QUAST

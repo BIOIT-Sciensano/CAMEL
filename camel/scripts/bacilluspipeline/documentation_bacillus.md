@@ -77,12 +77,12 @@ Processed reads are assembled using `SPAdes 3.15.5` with the following options:
 
 ### ONT
 
-Filtered reads are assembled using `Flye 2.9.4` with default options providing the filtered reads using the 
+Filtered reads are assembled using `Flye 2.9.5` with default options providing the filtered reads using the 
 `--nano-corr` option.
 
 ### Hybrid
 
-Filtered ONT reads are assembled using `Flye 2.9.4` with default options providing the filtered reads using the 
+Filtered ONT reads are assembled using `Flye 2.9.5` with default options providing the filtered reads using the 
 `--nano-corr` option. `Medaka 1.12.0` polishes the resulting assembly with the filtered ONT reads and default options. Then, `Polypolish 0.6.0` and `Pypolca 0.4.0` are used sequentially to polish the ONT-polished assembly with the filtered Illumina reads and both with default options.
 
 ### QUAST
