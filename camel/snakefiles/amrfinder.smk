@@ -19,7 +19,6 @@ rule amrfinder_run:
         TSV = 'amrfinder/tool/tsv.io', # amrfinder.OUTPUT_TSV
         INFORMS = 'amrfinder/tool/informs.io' # amrfinder.OUTPUT_INFORMS
     params:
-        dir_ = 'amrfinder/tool',
         organism = config['amrfinder'].get('species')
     run:
         from camel.app.tools.amrfinder.amrfinder import AMRFinder
@@ -28,7 +27,7 @@ rule amrfinder_run:
         amrfinder.add_input_files({'DIR': [ToolIODirectory(Path(input.DIR))]})
         if params.organism is not None:
             amrfinder.update_parameters(organism=params.organism)
-        step = Step(rule_name=str(rule), tool=amrfinder, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=amrfinder, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(amrfinder, output)
 
@@ -41,13 +40,11 @@ rule amrfinder_reporter:
         INFORMS_amrfinder = rules.amrfinder_run.output.INFORMS
     output:
         HTML = 'amrfinder/report/html.iob' # amrfinder.OUTPUT_REPORT
-    params:
-        dir_ = 'amrfinder/report'
     run:
         from camel.app.tools.amrfinder.amrfinderreporter import AMRFinderReporter
         reporter = AMRFinderReporter()
         snakemakeutils.add_io_inputs(reporter, input)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

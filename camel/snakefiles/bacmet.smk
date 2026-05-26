@@ -27,13 +27,11 @@ rule bacmet_prodigal:
     output:
         FASTA = 'bacmet/prodigal/tool/fasta.io',
         INFORMS = 'bacmet/prodigal/tool/informs.io' # bacmet.OUTPUT_PRODIGAL_INFORMS
-    params:
-        dir_ = 'bacmet/prodigal/tool'
     run:
         from camel.app.tools.prodigal.prodigal import Prodigal
         prodigal = Prodigal()
         snakemakeutils.add_io_inputs(prodigal, input)
-        step = Step(rule_name=str(rule), tool=prodigal, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=prodigal, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(prodigal, output)
 
@@ -46,13 +44,11 @@ rule bacmet_prodigal_report:
         INFORMS_prodigal = rules.bacmet_prodigal.output.INFORMS
     output:
         HTML = 'bacmet/prodigal/report/html.iob' # bacmet.OUTPUT_PRODIGAL_REPORT
-    params:
-        dir_ = 'bacmet/prodigal/report'
     run:
         from camel.app.tools.prodigal.prodigalreporter import ProdigalReporter
         reporter = ProdigalReporter()
         snakemakeutils.add_io_inputs(reporter, input)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 
@@ -62,8 +58,6 @@ rule bacmet_prodigal_report_empty:
     """
     output:
         HTML = 'bacmet/prodigal/report/html-empty.iob' # bacmet.OUTPUT_PRODIGAL_REPORT_EMPTY
-    params:
-        dir_ = 'bacmet/prodigal/report'
     run:
         from camel.app.core.snakemake import snakepipelineutils
         snakepipelineutils.create_empty_report_section('Prodigal', Path(output.HTML))
@@ -79,7 +73,6 @@ rule bacmet_blastp:
         TSV = 'bacmet/blastp/tsv.io',
         INFORMS = 'bacmet/blastp/informs.io' # bacmet.OUTPUT_INFORMS
     params:
-        dir_ = 'bacmet/blastp',
         fmt = '6 pident sseqid sseq slen qseqid qstart qend'
     threads: 4
     run:
@@ -92,7 +85,7 @@ rule bacmet_blastp:
         snakemakeutils.add_io_input(blastp,'FASTA', Path(input.FASTA))
         path_db = next(snakemakeutils.load_object(Path(input.DB))[0].path.glob('*.fasta'))
         blastp.add_input_files({'DB_BLAST': [ToolIOFile(path_db)]})
-        step = Step(rule_name=str(rule), tool=blastp, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=blastp, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
 
         # Dump output
@@ -144,13 +137,11 @@ rule bacmet_report:
         DB = rules.bacmet_pickle_db.output.DB
     output:
         HTML = 'bacmet/report/html.iob' # bacmet.OUTPUT_REPORT
-    params:
-        dir_ = 'bacmet/report'
     run:
         from camel.app.tools.pipelines.klebsiella.bacmetreporter import BacMetReporter
         reporter = BacMetReporter()
         snakemakeutils.add_io_inputs(reporter, input)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

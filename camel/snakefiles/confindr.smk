@@ -14,7 +14,6 @@ rule confindr_run:
         CSV = 'confindr/tool/csv.io',
         INFORMS = 'confindr/tool/informs.io' # confindr.OUTPUT_INFORMS
     params:
-        dir_ = 'confindr/tool',
         db = config.get('confindr', {}).get('db'),
         input_type = config['input']['type']
     threads: 4
@@ -43,7 +42,7 @@ rule confindr_run:
             confindr_.update_parameters(data_type='Nanopore',quality_cutoff=12)
 
         # Run the tool
-        step = Step(rule_name=str(rule), tool=confindr_, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=confindr_, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(confindr_, output)
 
@@ -55,13 +54,11 @@ rule confindr_report:
         INFORMS_confindr = rules.confindr_run.output.INFORMS
     output:
         HTML = 'confindr/report/html.iob' # confindr.OUTPUT_REPORT
-    params:
-        dir_ = 'confindr/report'
     run:
         from camel.app.tools.confindr.confindrreporter import ConFindrReporter
         reporter = ConFindrReporter()
         reporter.update_parameters(input_type=config['input']['type'])
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(reporter, input)
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
 from camel.snakefiles import assembly
@@ -14,12 +12,10 @@ rule read_simulation_fastq_from_fasta:
     output:
         FASTQ_PE = 'read_simulation/art/fastq.io', # read_simulation.OUTPUT_FASTQ
         INFORMS = 'read_simulation/art/informs.io' # read_simulation.OUTPUT_INFORMS
-    params:
-        dir_ = 'read_simulation/art'
     run:
         from camel.app.tools.art.art import ART
         art = ART()
-        step = Step(rule_name=str(rule), tool=art, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=art, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(art, input)
         step.run()
         snakemakeutils.dump_io_outputs(art, output)

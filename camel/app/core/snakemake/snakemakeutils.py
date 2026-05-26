@@ -1,7 +1,8 @@
 import json
 import pickle
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -28,13 +29,13 @@ class IOEncoder(json.JSONEncoder):
             return {
                 'io_type': 'ToolIOFile',
                 'path': str(obj.path),
-                'logged': obj.is_logged
+                'logged': obj.is_logged,
             }
         elif isinstance(obj, ToolIODirectory):
             return {
                 'io_type': 'ToolIODirectory',
                 'path': str(obj.path),
-                'logged': obj.is_logged
+                'logged': obj.is_logged,
             }
         elif isinstance(obj, ToolIOValue):
             return {
@@ -107,15 +108,23 @@ def add_io_input(tool: Tool, key: str, path: Path, optional: bool = False) -> No
     :param optional: True for optional input, False otherwise
     :return: None
     """
-    logger.debug(f"Adding IO input with key '{key}' from file '{path}' to tool '{tool.name}'")
+    logger.debug(
+        f"Adding IO input with key '{key}' from file '{path}' to tool '{tool.name}'"
+    )
     value = load_object(path)
     if optional and len(value) == 0:
         logger.debug(f"Optional Input '{key}' empty, skipped")
     else:
         tool.add_input_files({key: value})
 
-def add_io_inputs(tool: Tool, snake_input: Any, keys: Optional[list[str]] = None,
-                  excluded_keys: Optional[list[str]] = None, optionals: Optional[list[str]] = None) -> None:
+
+def add_io_inputs(
+    tool: Tool,
+    snake_input: Any,
+    keys: list[str] | None = None,
+    excluded_keys: list[str] | None = None,
+    optionals: list[str] | None = None,
+) -> None:
     """
     Adds pickled inputs from the snakemake input. If 'optionals' is specified, any optional input in that
     list will be skipped if its value is empty (no input file).
@@ -156,6 +165,7 @@ def add_io_inputs(tool: Tool, snake_input: Any, keys: Optional[list[str]] = None
             tool.add_input_files({key: value})
             logger.debug(f"Input '{value}' added")
 
+
 def dump_io_output(tool: Tool, key: str, path: Path) -> None:
     """
     Dumps a tool output to an IO file.
@@ -164,13 +174,20 @@ def dump_io_output(tool: Tool, key: str, path: Path) -> None:
     :param path: IO path
     :return: None
     """
-    logger.debug(f"Dumping output with key '{key}' from tool '{tool}' to Camel IO pickle '{path}'")
+    logger.debug(
+        f"Dumping output with key '{key}' from tool '{tool}' to Camel IO pickle '{path}'"
+    )
     if key not in tool.tool_outputs:
         raise KeyError(f"Tool '{tool.name}' has no output '{key}'")
     dump_object(tool.tool_outputs[key], path)
 
-def dump_io_outputs(tool: Tool, snake_output: Any, keys: Optional[list[str]] = None,
-                    ignore_missing_output: bool = False) -> None:
+
+def dump_io_outputs(
+    tool: Tool,
+    snake_output: Any,
+    keys: list[str] | None = None,
+    ignore_missing_output: bool = False,
+) -> None:
     """
     Dumps the tool outputs in pickles.
     :param tool: Tool
@@ -194,7 +211,10 @@ def dump_io_outputs(tool: Tool, snake_output: Any, keys: Optional[list[str]] = N
             else:
                 raise ValueError(message)
 
-def update_param_if_not_none(tool: Tool, key: str, params: dict | Any, transform: Callable = None) -> None:
+
+def update_param_if_not_none(
+    tool: Tool, key: str, params: dict | Any, transform: Callable = None
+) -> None:
     """
     Updates tool parameters if the value is not None.
     :param tool: Tool instance
@@ -221,7 +241,11 @@ def export_to_tsv(data: list[tuple[str, str | int | float]], output: Path):
             handle.write('\n')
 
 
-def export_to_json(data: list[tuple[str, str | int | float]], output: Path, main_key: Optional[str] = None) -> None:
+def export_to_json(
+    data: list[tuple[str, str | int | float]],
+    output: Path,
+    main_key: str | None = None,
+) -> None:
     """
     Exports the data to a JSON file.
     :param data: A list of tuples, each representing a key-value pair to be included in the JSON output.
@@ -240,7 +264,12 @@ def export_to_json(data: list[tuple[str, str | int | float]], output: Path, main
         json.dump(json_content, handle, indent=2)
 
 
-def export_summary(data: list[tuple[str, str | int | float]], path_out: Path, ext: str, json_main_key: Optional[str] = None) -> None:
+def export_summary(
+    data: list[tuple[str, str | int | float]],
+    path_out: Path,
+    ext: str,
+    json_main_key: str | None = None,
+) -> None:
     """
     Exports the summary output in the given format.
     :param data: Data to export
@@ -257,7 +286,9 @@ def export_summary(data: list[tuple[str, str | int | float]], path_out: Path, ex
         raise ValueError(f'Invalid ext: {ext}')
 
 
-def convert_list_to_dict(data: list[list[str]], headers: list[str]) -> list[dict[str, str]]:
+def convert_list_to_dict(
+    data: list[list[str]], headers: list[str]
+) -> list[dict[str, str]]:
     """
     Converts the input list of lists to a list of dicts and adds headers.
     :param data: list of lists
@@ -298,3 +329,22 @@ def sanitize_numpy(obj: Any) -> Any:
 
     # Everything else stays the same
     return obj
+
+
+def get_rule_dir(output) -> Path:
+    """
+    Derives the working directory for a rule from its output paths.
+    All outputs must share the same parent directory.
+    :param output: Snakemake output Namedlist
+    :return: Parent directory of the output files
+    :raises ValueError: If output is empty or outputs span more than one directory
+    """
+    dirs = {Path(p).parent for p in output}
+    if not dirs:
+        raise ValueError('Cannot derive working directory from empty output.')
+    if len(dirs) > 1:
+        raise ValueError(
+            f'Rule outputs span multiple directories: {dirs}. '
+            f'All outputs must share a single working directory.'
+        )
+    return dirs.pop()

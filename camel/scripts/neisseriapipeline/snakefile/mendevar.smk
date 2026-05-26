@@ -15,14 +15,13 @@ rule mendevar_run:
         TSV = 'mendevar/tsv.io',
         INFORMS = 'mendevar/informs.io'
     params:
-        dir_ = 'mendevar',
         db = config.get('mendevar', {}).get('db')
     run:
         from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.neisseria.mendevar import MenDeVAR
 
         mendevar_ = MenDeVAR()
-        step = Step(rule_name=str(rule), tool=mendevar_, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=mendevar_, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(mendevar_, input)
 
         # Add database
@@ -51,7 +50,7 @@ rule mendevar_report:
     run:
         from camel.app.tools.pipelines.neisseria.mendevarreporter import MenDeVARReporter
         reporter = MenDeVARReporter()
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(reporter, input)
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)

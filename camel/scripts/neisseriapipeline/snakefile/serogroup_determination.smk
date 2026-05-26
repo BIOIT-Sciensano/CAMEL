@@ -36,13 +36,11 @@ rule serogroup_determination_report:
         INFORMS_analysis = rules.serogroup_determination_analysis.output.INFORMS
     output:
         VAL_HTML = 'serogroup_determination/legacy/report/html.iob' # serogroup_determination.OUTPUT_LEGACY_REPORT
-    params:
-        dir_ = 'serogroup_determination/legacy/report'
     run:
         from camel.app.tools.pipelines.neisseria.serogroupdeterminationreporter import SerogroupDeterminationReporter
         reporter = SerogroupDeterminationReporter()
         snakemakeutils.add_io_inputs(reporter, input)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 
@@ -66,13 +64,11 @@ rule serogroup_capsule_tool:
         TSV = 'serogroup_determination/capsule/tool/tsv.io',
         JSON = 'serogroup_determination/capsule/tool/json.io',
         INFORMS = 'serogroup_determination/capsule/tool/informs.io' # serogroup_determination.OUTPUT_INFORMS
-    params:
-        dir_ = 'serogroup_determination/capsule/tool'
     run:
         from camel.app.tools.pipelines.neisseria.characterizeneisseriacapsule import CharacterizeNeisseriaCapsule
         capsule_typer = CharacterizeNeisseriaCapsule()
         snakemakeutils.add_io_inputs(capsule_typer, input)
-        step = Step(rule_name=str(rule), tool=capsule_typer, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=capsule_typer, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(capsule_typer, output)
 
@@ -86,14 +82,12 @@ rule serogroup_capsule_tool_report:
         INFORMS_detector = rules.serogroup_capsule_tool.output.INFORMS
     output:
         HTML = 'serogroup_determination/capsule/report/html.iob' # serogroup_determination.OUTPUT_REPORT
-    params:
-        dir_ = 'serogroup_determination/capsule/report'
     run:
         from camel.app.tools.pipelines.neisseria.characterizeneisseriacapsulereporter import \
             CharacterizeNeisseriaCapsuleReporter
         reporter = CharacterizeNeisseriaCapsuleReporter()
         snakemakeutils.add_io_inputs(reporter, input)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

@@ -16,14 +16,12 @@ rule trimming_ont_nanoplot_pre:
         HTML = 'trimming_ont/nanoplot-pre/html.io', # trimming_ont.OUTPUT_NANOPLOT_HTML_PRE,
         TSV = 'trimming_ont/nanoplot-pre/txt.io', # trimming_ont.OUTPUT_NANOPLOT_TXT_PRE,
         INFORMS = 'trimming_ont/nanoplot-pre/informs.io' # trimming_ont.OUTPUT_NANOPLOT_INFORMS_PRE
-    params:
-        dir_ = 'trimming_ont/nanoplot-pre'
     threads: 4
     run:
         from camel.app.tools.nanoplot.nanoplot import NanoPlot
         nanoplot = NanoPlot()
         snakemakeutils.add_io_inputs(nanoplot, input)
-        step = Step(rule_name=str(rule), tool=nanoplot, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=nanoplot, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(nanoplot, output)
 
@@ -39,7 +37,6 @@ rule trimming_ont_seqkit:
     threads: 4
     priority: 1
     params:
-        dir_ = 'trimming_ont/seqkit',
         sample_name = config.get('sample_name', 'reads'),
         min_length = config.get('read_trimming', {}).get('ont', {}).get('min_length', 500),
         min_qual = config.get('read_trimming', {}).get('ont', {}).get('min_qual', 7)
@@ -53,7 +50,7 @@ rule trimming_ont_seqkit:
             threads=threads
         )
         snakemakeutils.add_io_inputs(seqkit, input)
-        step = Step(rule_name=str(rule), tool=seqkit, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=seqkit, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         if seqkit.informs['nb_seqs_out'] == 0:
             raise PipelineExecutionError('No reads left after filtering.')
@@ -69,14 +66,12 @@ rule trimming_ont_nanoplot_post:
         HTML = 'trimming_ont/nanoplot-post/html.io', # trimming_ont.OUTPUT_NANOPLOT_HTML_POST,
         TSV = 'trimming_ont/nanoplot-post/txt.io', # trimming_ont.OUTPUT_NANOPLOT_TXT_POST,
         INFORMS = 'trimming_ont/nanoplot-post/informs.io' # trimming_ont.OUTPUT_NANOPLOT_INFORMS_POST
-    params:
-        dir_ = 'trimming_ont/nanoplot-post'
     threads: 4
     run:
         from camel.app.tools.nanoplot.nanoplot import NanoPlot
         nanoplot = NanoPlot()
         snakemakeutils.add_io_inputs(nanoplot, input)
-        step = Step(rule_name=str(rule), tool=nanoplot, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=nanoplot, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(nanoplot, output)
 
@@ -94,13 +89,12 @@ rule trimming_ont_report:
     output:
         VAL_HTML = 'trimming_ont/report/html.iob' # trimming_ont.OUTPUT_REPORT
     params:
-        dir_ = 'trimming_ont/report',
         export_fastq = config['read_trimming'].get('export_fastq', 'false')
     run:
         from camel.app.tools.pipelines.read_trimming.reportertrimmingont import ReporterTrimmingONT
         reporter = ReporterTrimmingONT()
         snakemakeutils.add_io_inputs(reporter, input)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         reporter.update_parameters(export_fastq=str(params.export_fastq))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
@@ -115,7 +109,6 @@ rule trimming_ont_dump_summary_info:
     output:
         FILE = 'trimming_ont/summary/summary_out.{ext}' # trimming_ont.OUTPUT_SUMMARY
     params:
-        dir_ = 'trimming_ont/summary',
         ext = lambda wildcards: wildcards.ext
     run:
         informs_filtering = snakemakeutils.load_object(Path(input.INFORMS_trimming))

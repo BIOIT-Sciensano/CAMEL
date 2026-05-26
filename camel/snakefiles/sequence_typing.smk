@@ -49,8 +49,7 @@ checkpoint typing_extract_schema_info:
         INFORMS = 'typing/{scheme}/scheme_info/informs.iob', # sequence_typing.OUTPUT_DB_INFORMS
         TSV = 'typing/{scheme}/scheme_info/tsv-profiles.io'
     params:
-        db = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]['path'],
-        dir_ = lambda wildcards: f'typing/{wildcards.scheme}/scheme_info'
+        db = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]['path']
     run:
         from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.sequence_typing.typingdbloader import TypingDBLoader
@@ -60,7 +59,7 @@ checkpoint typing_extract_schema_info:
             db_loader.add_input_files({'DIR': [ToolIODirectory(Path(str(params.db)))]})
         else:
             db_loader.update_parameters(db_name=path_db.name)
-        step = Step(rule_name=str(rule), tool=db_loader, dir_=Path(str(params.dir_)), wildcards=wildcards)
+        step = Step(rule_name=str(rule), tool=db_loader, dir_=snakemakeutils.get_rule_dir(output), wildcards=wildcards)
         step.run()
         snakemakeutils.dump_object(db_loader.informs, Path(output.INFORMS))
         snakemakeutils.dump_object(
@@ -79,7 +78,6 @@ rule typing_async:
         IO = 'typing/{scheme}/type_async/{locus_type}/{detection_method}/hits.iob',
         INFORMS = 'typing/{scheme}/type_async/{locus_type}/{detection_method}/informs.io'
     params:
-        dir_ = lambda wildcards: f'typing/{wildcards.scheme}/type_async/{wildcards.locus_type}/{wildcards.detection_method}',
         detection_method = lambda wildcards: wildcards.detection_method,
         locus_type = lambda wildcards: wildcards.locus_type,
         blastn_task = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme].get('blastn_task', 'megablast'),
@@ -91,7 +89,7 @@ rule typing_async:
         from camelcore.app.io.tooliodirectory import ToolIODirectory
 
         # Create the working directory
-        dir_working = Path(str(params.dir_))
+        dir_working = snakemakeutils.get_rule_dir(output)
         dir_working.mkdir(parents=True, exist_ok=True)
 
         # Run the tool
@@ -125,8 +123,6 @@ rule typing_mist:
     output:
         JSON = 'typing/{scheme}/mist/DNA/json.io',
         INFORMS = 'typing/{scheme}/mist/DNA/informs.io'
-    params:
-        dir_ = lambda wildcards: f'typing/{wildcards.scheme}/mist/DNA'
     threads: 4
     run:
         from camelcore.app.io.tooliodirectory import ToolIODirectory
@@ -137,7 +133,7 @@ rule typing_mist:
             'DB': [ToolIODirectory(Path(str(input.DIR), 'mist'))]
         })
         mist_call.update_parameters(threads=threads)
-        step = Step(str(rule), mist_call, dir_=Path(str(params.dir_)))
+        step = Step(str(rule), mist_call, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(mist_call, output)
 
@@ -212,13 +208,12 @@ rule typing_export_tsv:
     output:
         TSV = 'typing/{scheme}/export_tsv/{locus_type}/tsv.io' # sequence_typing.OUTPUT_TSV
     params:
-        dir_ = lambda wildcards: f'typing/{wildcards.scheme}/export_tsv/{wildcards.locus_type}',
         output_filename = lambda wildcards: f"typing-{wildcards.scheme}-{wildcards.locus_type}-{config['input']['sample_name']}.tsv"
     run:
         from camel.app.tools.pipelines.sequence_typing.exporttsv import ExportTSV
         export_tsv = ExportTSV()
         snakemakeutils.add_io_inputs(export_tsv, input)
-        step = Step(str(rule), export_tsv, dir_=Path(str(params.dir_)))
+        step = Step(str(rule), export_tsv, dir_=snakemakeutils.get_rule_dir(output))
         export_tsv.update_parameters(output_filename=str(params.output_filename))
         step.run()
         snakemakeutils.dump_object(
@@ -259,7 +254,6 @@ rule typing_detect_sequence_type:
         TSV = 'typing/{scheme}/detect_st/tsv.io',
         INFORMS = 'typing/{scheme}/detect_st/informs-st.io'
     params:
-        dir_ = lambda wildcards: f'typing/{wildcards.scheme}/detect_st',
         write_all_matches = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme].get('write_all_matches', False)
     run:
         from camel.app.tools.pipelines.sequence_typing.sequencetypedetector import SequenceTypeDetector
@@ -270,7 +264,7 @@ rule typing_detect_sequence_type:
         else:
             sequence_type_detector = SequenceTypeDetector()
             snakemakeutils.add_io_inputs(sequence_type_detector, input)
-            step = Step(rule_name=str(rule), tool=sequence_type_detector, dir_=Path(str(params.dir_)), wildcards=wildcards)
+            step = Step(rule_name=str(rule), tool=sequence_type_detector, dir_=snakemakeutils.get_rule_dir(output), wildcards=wildcards)
             sequence_type_detector.update_parameters(allele_wildcards='N', allele_absent_symbol='0')
             if params.write_all_matches:
                  sequence_type_detector.update_parameters(write_tsv='True', output_filename='profile_matches.tsv')
@@ -315,7 +309,6 @@ rule typing_create_report:
     output:
         VAL_HTML = 'typing/{scheme}/report/html.iob' # sequence_typing.OUTPUT_REPORT
     params:
-        dir_ = lambda wildcards: f'typing/{wildcards.scheme}/report',
         sample_name = config['input']['sample_name'],
         detection_method = lambda wildcards: sequence_typing.get_detection_method(config, wildcards.scheme, 'DNA'),
         config_data = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]
@@ -345,7 +338,7 @@ rule typing_create_report:
             reporter.update_parameters(message_category=params.config_data['message']['category'])
 
         # Run the reporter
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)), wildcards=wildcards)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output), wildcards=wildcards)
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

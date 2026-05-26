@@ -35,7 +35,6 @@ rule variant_calling_map_reads_illumina:
         BAM = 'variant_calling/read_mapping/illumina/bam.io',
         INFORMS = 'variant_calling/read_mapping/illumina/informs.io'
     params:
-        dir_ = 'variant_calling/read_mapping/illumina',
         input_type = config['input']['type']
     threads: 4
     priority: 1
@@ -61,7 +60,7 @@ rule variant_calling_map_reads_illumina:
         samtools_view = SamtoolsView()
         samtools_sort = SamtoolsSort()
         samtools_sort.update_parameters(threads=threads)
-        pipeutils.run_as_pipe([bowtie2_map, samtools_view, samtools_sort], Path(params.dir_).absolute())
+        pipeutils.run_as_pipe([bowtie2_map, samtools_view, samtools_sort], snakemakeutils.get_rule_dir(output).absolute())
 
         # Save output
         snakemakeutils.dump_io_output(samtools_sort,'BAM', Path(output.BAM))
@@ -78,7 +77,6 @@ rule variant_calling_map_reads_ont:
         BAM = 'variant_calling/read_mapping/ont/bam.io',
         INFORMS = 'variant_calling/read_mapping/ont/informs.io'
     params:
-        dir_ = 'variant_calling/read_mapping/ont',
         input_type = config['input']['type']
     threads: 4
     priority: 1
@@ -99,7 +97,7 @@ rule variant_calling_map_reads_ont:
         samtools_view = SamtoolsView()
         samtools_sort = SamtoolsSort()
         samtools_sort.update_parameters(threads=threads)
-        pipeutils.run_as_pipe([minimap2_map, samtools_view, samtools_sort], Path(params.dir_).absolute())
+        pipeutils.run_as_pipe([minimap2_map, samtools_view, samtools_sort], snakemakeutils.get_rule_dir(output).absolute())
 
         # Save output
         snakemakeutils.dump_io_output(samtools_sort,'BAM', Path(output.BAM))
@@ -134,12 +132,10 @@ rule variant_calling_calculate_mapping_rate:
         BAM = variant_calling.get_bam(config)
     output:
         INFORMS = variant_calling.OUTPUT_MAPPING_RATE_INFORMS
-    params:
-        dir_ = 'variant_calling/rate'
     run:
         from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat
         samtools_flag = SamtoolsFlagstat()
-        step = Step(rule_name=str(rule), tool=samtools_flag, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=samtools_flag, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(samtools_flag, input)
         step.run()
         snakemakeutils.dump_io_outputs(samtools_flag, output)
@@ -153,12 +149,10 @@ rule variant_calling_calculate_depth:
     output:
         TSV = variant_calling.OUTPUT_DEPTH_TSV,
         INFORMS = variant_calling.OUTPUT_DEPTH_INFORMS
-    params:
-        dir_ = 'variant_calling/depth'
     run:
         from camel.app.tools.samtools.samtoolsdepth import SamtoolsDepth
         samtools_depth = SamtoolsDepth()
-        step = Step(rule_name=str(rule), tool=samtools_depth, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=samtools_depth, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(samtools_depth, input)
         samtools_depth.update_parameters(output_all_positions_absolutely=True)
         step.run()
@@ -176,7 +170,6 @@ rule variant_calling_mpileup:
         INFORMS = 'variant_calling/mpileup/informs.io'
     priority: 1
     params:
-        dir_ = 'variant_calling/mpileup',
         count_orphans = config['variant_calling'].get('count_orphans', True),
         min_mapping_quality = config['variant_calling'].get('minimal_mq'),
         min_base_quality = config['variant_calling'].get('minimal_bq'),
@@ -187,7 +180,7 @@ rule variant_calling_mpileup:
         from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
         bcftools_mpileup = BcftoolsMpileup()
         snakemakeutils.add_io_inputs(bcftools_mpileup, input)
-        step = Step(rule_name=str(rule), tool=bcftools_mpileup, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=bcftools_mpileup, dir_=snakemakeutils.get_rule_dir(output))
         bcftools_mpileup.update_parameters(output_type='z')
         if params.input_type == 'ont':
             bcftools_mpileup.update_parameters(config='ont')
@@ -212,7 +205,6 @@ rule variant_calling_bcftools_call:
         VCF_GZ = 'variant_calling/calling/vcf_gz.io',
         INFORMS = 'variant_calling/calling/informs.io'
     params:
-        dir_ = 'variant_calling/calling',
         ploidy = config['variant_calling'].get('ploidy', 1),
         calling_method = config['variant_calling'].get('calling_method'),
         skip_variants = config['variant_calling'].get('skip_variants'),
@@ -222,7 +214,7 @@ rule variant_calling_bcftools_call:
         from camel.app.tools.bcftools.bcftoolscall import BcftoolsCall
         variant_caller = BcftoolsCall()
         snakemakeutils.add_io_inputs(variant_caller, input)
-        step = Step(rule_name=str(rule), tool=variant_caller, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=variant_caller, dir_=snakemakeutils.get_rule_dir(output))
         variant_caller.update_parameters(
             output_type='z',
             output_filename='variants.vcf.gz',
@@ -249,13 +241,11 @@ rule variant_calling_normalize_indels:
         FASTA = rules.variant_calling_prep_reference.output.FASTA
     output:
         VCF_GZ = 'variant_calling/norm/vcf_gz.io'
-    params:
-        dir_ = 'variant_calling/norm'
     run:
         from camel.app.tools.bcftools.bcftoolsnorm import BcftoolsNorm
         bcftools_norm = BcftoolsNorm()
         snakemakeutils.add_io_inputs(bcftools_norm, input)
-        step = Step(rule_name=str(rule), tool=bcftools_norm, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=bcftools_norm, dir_=snakemakeutils.get_rule_dir(output))
         bcftools_norm.update_parameters(output_type='z')
         step.run()
         snakemakeutils.dump_io_outputs(bcftools_norm, output)
@@ -268,13 +258,11 @@ rule variant_calling_index_vcf_gz:
         VCF_GZ = rules.variant_calling_normalize_indels.output.VCF_GZ
     output:
         VCF_GZ = variant_calling.OUTPUT_UNFILTERED_VCF_GZ
-    params:
-        dir_ = 'variant_calling/norm'
     run:
         from camel.app.tools.bcftools.bcftoolsindex import BcftoolsIndex
         indexer = BcftoolsIndex()
         snakemakeutils.add_io_inputs(indexer, input)
-        step = Step(rule_name=str(rule), tool=indexer, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=indexer, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(indexer, output)
 
@@ -287,14 +275,13 @@ rule variant_calling_unzip_vcf:
     output:
         VCF = variant_calling.OUTPUT_UNFILTERED_VCF
     params:
-        dir_ = 'variant_calling/unzip_vcf',
         sample_name = config['input']['sample_name']
     run:
         from camelcore.app.utils import fileutils
         from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
         bcftools_view = BcftoolsView()
         snakemakeutils.add_io_inputs(bcftools_view, input)
-        step = Step(rule_name=str(rule), tool=bcftools_view, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=bcftools_view, dir_=snakemakeutils.get_rule_dir(output))
         output_filename = f'variants-{fileutils.make_valid(params.sample_name)}.vcf'
         bcftools_view.update_parameters(output_type='v', output_filename=output_filename)
         step.run()
@@ -329,14 +316,13 @@ rule variant_calling_create_consensus:
     output:
         FASTA = variant_calling.OUTPUT_CONSENSUS
     params:
-        dir_ = 'variant_calling/consensus',
         output_filename = 'bcftools_consensus.fasta'
     run:
         from camel.app.tools.bcftools.bcftoolsconsensus import BcftoolsConsensus
         bcftools_consensus = BcftoolsConsensus()
         snakemakeutils.add_io_inputs(bcftools_consensus, input)
         bcftools_consensus.update_parameters(output_filename=params.output_filename)
-        step = Step(rule_name=str(rule), tool=bcftools_consensus, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=bcftools_consensus, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(bcftools_consensus, output)
 
@@ -359,7 +345,6 @@ rule variant_calling_report:
         VAL_HTML = variant_calling.OUTPUT_REPORT,
         INFORMS = 'variant_calling/report/informs.io'
     params:
-        dir_ = 'variant_calling/report',
         regions_bed_file = variant_filtering.get_filtering_param(config, 'region', 'bed_file'),
         include_bam = config.get('variant_calling').get('report_include_bam', False),
         sample_name = config['input']['sample_name'],
@@ -368,7 +353,7 @@ rule variant_calling_report:
         from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.variant_calling.variantcallingreporter import VariantCallingReporter
         reporter = VariantCallingReporter()
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         # noinspection PyUnresolvedReferences
         keys = [k for k in input.keys() if k != 'VCF_filt_regions']
         snakemakeutils.add_io_inputs(reporter, input, keys=keys)

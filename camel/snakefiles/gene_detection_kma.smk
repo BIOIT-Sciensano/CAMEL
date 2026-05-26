@@ -36,7 +36,6 @@ rule gene_detection_kma:
         TSV = 'gene_detection/{db}/kma/tsv-kma.io',
         INFORMS = 'gene_detection/{db}/kma/informs_pre.io'
     params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/kma',
         input_type = config['input'].get('type'),
         ont = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('ont'),
         apm = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('apm'),
@@ -50,7 +49,7 @@ rule gene_detection_kma:
         fq_input_dict = snakepipelineutils.extract_fq_input(
             Path(input.IO), key_pe='FASTQ_PE', key_se='FASTQ_SE', read_type=key_reads)
         kma.add_input_files(fq_input_dict)
-        step = Step(rule_name=str(rule), tool=kma, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=kma, dir_=snakemakeutils.get_rule_dir(output))
         if params.input_type == 'ont':
             kma.update_parameters(bc_nano=None, basecalls='0.7')
         if params.ont:
@@ -88,14 +87,13 @@ rule gene_detection_kma_hit_extraction:
     output:
         VAL_hits = 'gene_detection/{db}/kma/hits.iob' # gene_detection.OUTPUT_HITS_METHOD
     params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/kma',
         min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('min_percent_identity', 90),
         min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('min_coverage', 60)
     run:
         from camel.app.tools.kma.kmagenedetectionhitextractor import KMAGeneDetectionHitExtractor
         extractor = KMAGeneDetectionHitExtractor()
         snakemakeutils.add_io_inputs(extractor, input)
-        step = Step(rule_name=str(rule), tool=extractor, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=extractor, dir_=snakemakeutils.get_rule_dir(output))
         extractor.update_parameters(
             min_percent_identity=float(str(params.min_identity)),
             min_percent_coverage=float(str(params.min_coverage))

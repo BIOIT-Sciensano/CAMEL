@@ -23,7 +23,6 @@ rule resfinder4_run:
         TSV_pheno_general = 'resfinder4/tsv-pheno-general.io',
         INFORMS = 'resfinder4/informs.io' # resfinder4.OUTPUT_INFORMS
     params:
-        dir_ = 'resfinder4',
         species = config['resfinder4'].get('species'),
         point = config['resfinder4'].get('point', True),
         min_id = config['resfinder4'].get('min_identity'),
@@ -40,7 +39,7 @@ rule resfinder4_run:
             resfinder.update_parameters(threshold=params.min_id)
         if params.min_cov is not None:
             resfinder.update_parameters(min_cov=params.min_cov)
-        step = Step(rule_name=str(rule), tool=resfinder, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=resfinder, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         if params.point:
             snakemakeutils.dump_io_outputs(resfinder, output)
@@ -63,13 +62,12 @@ rule resfinder4_reporter:
     output:
         VAL_HTML = 'resfinder4/html.iob' # resfinder4.OUTPUT_REPORT
     params:
-        dir_ = 'resfinder4',
         point= config['resfinder4'].get('point',True)
     run:
         from camel.app.tools.resfinder.resfinderreporter import ResFinderReporter
         reporter = ResFinderReporter()
         snakemakeutils.add_io_inputs(reporter, input, excluded_keys = None if params.point else ['TSV_point', 'TSV_pheno_species'])
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

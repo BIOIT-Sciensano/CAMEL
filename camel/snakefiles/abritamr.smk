@@ -19,7 +19,6 @@ rule abritamr_run:
         TXT_partials ='abritamr/run/txt_partials.io',
         INFORMS = 'abritamr/run/informs.io'
     params:
-        dir_ = 'abritamr/run',
         db_path_amrf = config['abritamr']['amrfinderplus']['path'],
         species = config['abritamr']['species']
     run:
@@ -28,7 +27,7 @@ rule abritamr_run:
         abritamr_run_tool = AbriTAMRRun()
         abritamr_run_tool.add_input_files({'DIR_AMRF': [ToolIODirectory(Path(str(params.db_path_amrf)))]})
         snakemakeutils.add_io_input(abritamr_run_tool,'FASTA', Path(input.FASTA))
-        step = Step(rule_name=str(rule),tool=abritamr_run_tool,dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=abritamr_run_tool, dir_=snakemakeutils.get_rule_dir(output))
         abritamr_run_tool.update_parameters(species=params.species)
         step.run()
         snakemakeutils.dump_io_outputs(abritamr_run_tool, output)
@@ -71,13 +70,11 @@ rule abritamr_report_run:
     output:
         REPORT_abritamr = 'abritamr/report/report.io',
         INFORMS = 'abritamr/report/informs.io'
-    params:
-        dir_ = 'abritamr/report'
     run:
         from camel.app.tools.abritamr.abritamrreport import AbriTAMRReport
         abritamr_report_tool = AbriTAMRReport()
         snakemakeutils.add_io_inputs(abritamr_report_tool, input)
-        step = Step(rule_name=str(rule), tool=abritamr_report_tool, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=abritamr_report_tool, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(abritamr_report_tool, output)
 
@@ -123,14 +120,12 @@ rule abritamr_report:
         TXT_partials = rules.abritamr_run.output.TXT_partials
     output:
         VAL_HTML = 'abritamr/output_report/html.iob' # abritamr.OUTPUT_REPORT
-    params:
-        dir_ = 'abritamr/output_report'
     run:
         from camel.app.tools.abritamr.abritamrreporter import AbriTAMRReporter
 
         reporter = AbriTAMRReporter()
         snakemakeutils.add_io_inputs(reporter, input)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

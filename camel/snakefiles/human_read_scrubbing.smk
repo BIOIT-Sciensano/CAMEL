@@ -58,8 +58,6 @@ rule scrubbing_interleave_fastq_pe:
         FASTQ = lambda wildcards: human_read_scrubbing.INPUT_FASTQ.format(input_format='fastq_pe')
     output:
         FASTQ = 'human_read_scrubbing/fastq_pe/interleave_pe/fastq.io'
-    params:
-        dir_ = 'human_read_scrubbing/fastq_pe/interleave_pe'
     threads: 8
     run:
         from camel.app.tools.seqtk.seqtkmergepe import SeqtkMergePE
@@ -67,7 +65,7 @@ rule scrubbing_interleave_fastq_pe:
         merge_pe.add_input_files({
             'FASTQ_PE': snakemakeutils.load_object(Path(str(input.FASTQ)))
         })
-        step = Step(rule_name=str(rule), tool=merge_pe, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=merge_pe, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(merge_pe, output)
 
@@ -105,7 +103,7 @@ rule scrubbing_run_scrubber:
         FASTQ_REMOVED = 'human_read_scrubbing/{input_format}/scrubbing/fastq_removed.io',
         INFORMS = 'human_read_scrubbing/{input_format}/scrubbing/informs.io'
     params:
-        running_dir = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/scrubbing',
+        dir_ = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/scrubbing',
         input_format = lambda wildcards: wildcards.input_format,
         export_removed_reads = config.get('read_scrubbing', {}).get('export_removed_reads'),
         is_interleaved = lambda wildcards: True if wildcards.input_format == 'fastq_pe' else False,
@@ -115,7 +113,7 @@ rule scrubbing_run_scrubber:
         from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import NcbiHumanReadScrubber
 
         scrubber = NcbiHumanReadScrubber()
-        step = Step(rule_name=str(rule), tool=scrubber, dir_=Path(str(params.running_dir)))
+        step = Step(rule_name=str(rule), tool=scrubber, dir_=snakemakeutils.get_rule_dir(params.dir_))
 
         # Parameters
         scrubber.update_parameters(
@@ -222,7 +220,6 @@ rule scrubbing_deinterleave_fastq_pe:
     output:
         FASTQ = 'human_read_scrubbing/fastq_pe/output/{group}/fastq.io'
     params:
-        dir_ = lambda wildcards: f'human_read_scrubbing/fastq_pe/output/{wildcards.group}',
         name = config['input']['sample_name']
     threads: 8
     run:
@@ -234,7 +231,7 @@ rule scrubbing_deinterleave_fastq_pe:
             split2 = SeqkitSplit2()
             snakemakeutils.add_io_inputs(split2, input)
             split2.update_parameters(by_part=2)
-            step = Step(rule_name=str(rule), tool=split2, dir_=Path(str(params.dir_)))
+            step = Step(rule_name=str(rule), tool=split2, dir_=snakemakeutils.get_rule_dir(output))
             step.run()
             snakemakeutils.dump_io_outputs(split2, output)
 
@@ -270,7 +267,7 @@ rule scrubbing_report:
     output:
         HTML = 'human_read_scrubbing/{input_format}/output/html.iob' # human_read_scrubbing.OUTPUT_REPORT
     params:
-        running_dir = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/output',
+        dir_ = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/output',
         input_format = lambda wildcards: wildcards.input_format,
         export_removed_reads = config.get('read_scrubbing', {}).get('export_removed_reads')
     run:
@@ -281,7 +278,7 @@ rule scrubbing_report:
             snakemakeutils.add_io_inputs(reporter, input, keys=['REMOVED'])
         snakemakeutils.add_io_inputs(reporter, input, keys=['INFORMS_SCRUBBER'])
         reporter.update_parameters(input_format=str(params.input_format))
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.running_dir)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

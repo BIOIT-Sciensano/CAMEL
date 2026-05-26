@@ -13,13 +13,11 @@ rule downsampling_read_stats:
         FASTQ = downsampling.INPUT_FASTQ
     output:
         INFORMS = 'downsampling/{read_key}/read_stats/informs.io'
-    params:
-        dir_ = lambda wildcards: f'downsampling/{wildcards.read_key}/read_stats'
     run:
         from camel.app.tools.seqtk.seqtksize import SeqtkSize
         seqtk_size = SeqtkSize()
         snakemakeutils.add_io_inputs(seqtk_size, input)
-        step = Step(rule_name=str(rule), tool=seqtk_size, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=seqtk_size, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_object(seqtk_size.informs, Path(output.INFORMS))
 
@@ -33,7 +31,6 @@ rule downsampling_calculate:
         JSON = 'downsampling/{read_key}/calculate_stats/json.io',
         INFORMS = 'downsampling/{read_key}/calculate_stats/informs.io'
     params:
-        dir_ = lambda wildcards: f'downsampling/{wildcards.read_key}/calculate_stats',
         fasta_ref = config['reference'].get('fasta'),
         expected_size = config['reference'].get('expected_size'),
         cov_target = config['downsampling'].get('coverage_max'),
@@ -43,7 +40,7 @@ rule downsampling_calculate:
         from camelcore.app.utils import fastautils
         from camel.app.tools.pipelines.downsampling.downsamplecalculation import DownsampleCalculation
         ds_calc = DownsampleCalculation()
-        step = Step(rule_name=str(rule), tool=ds_calc, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=ds_calc, dir_=snakemakeutils.get_rule_dir(output))
 
         # Determine the expected size
         if params.is_disabled is True:
@@ -74,15 +71,14 @@ rule downsampling_seqtk:
         FASTQ = 'downsampling/{read_key}/seqtk/fastq.io',
         INFORMS = 'downsampling/{read_key}/seqtk/informs.io'
     params:
-        dir_ = lambda wildcards: f"downsampling/{wildcards.read_key}/seqtk",
         is_paired = lambda wildcards: wildcards.read_key == 'fastq_pe'
     run:
         import logging
         import shutil
         from camel.app.tools.seqtk.seqtksubsample import SeqtkSubsample
 
-        # Create working directory
-        dir_ = Path(str(params.dir_)).absolute()
+        # Create the working directory
+        dir_ = snakemakeutils.get_rule_dir(output).absolute()
         dir_.mkdir(exist_ok=True, parents=True)
 
         # Parse statistics
@@ -113,7 +109,6 @@ rule downsampling_report:
     output:
         HTML = 'downsampling/{read_key}/report/html.iob' # downsampling.OUTPUT_REPORT
     params:
-        dir_ = lambda wildcards: f"downsampling/{wildcards.read_key}/report",
         is_paired = lambda wildcards: wildcards.read_key == 'fastq_pe'
     run:
         from camel.app.tools.pipelines.downsampling.reporterdownsampling import ReporterDownsampling
@@ -123,7 +118,7 @@ rule downsampling_report:
         informs_seqtk = snakemakeutils.load_object(Path(input.INFORMS_seqtk))
         if len(informs_seqtk) > 0:
             reporter.add_input_informs({'seqtk': informs_seqtk})
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_object(reporter.tool_outputs['HTML'], Path(output.HTML))
 

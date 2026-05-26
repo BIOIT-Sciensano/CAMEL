@@ -14,7 +14,6 @@ rule run_lrefinder:
     output:
         INFORMS = 'lrefinder/tool/informs.io' # lrefinder.OUTPUT_INFORMS
     params:
-        dir_ = 'lrefinder/tool',
         input_type = config['input']['type']
     run:
         from camel.app.core.snakemake import snakepipelineutils
@@ -27,7 +26,7 @@ rule run_lrefinder:
         else:
             # When the input type is FASTA the simulated reads are used as input
             snakemakeutils.add_io_input(lrefinder,'FASTQ_PE', Path(input.IO))
-        step = Step(rule_name=str(rule), tool=lrefinder, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=lrefinder, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(lrefinder, output)
 
@@ -40,7 +39,6 @@ rule lre_finder_report:
     output:
         HTML = 'lrefinder/report/html.iob' # lrefinder_workflow.OUTPUT_REPORT
     params:
-        dir_ = 'lrefinder/report',
         input_type = config['input']['type']
     run:
         from camel.app.tools.lrefinder.lrefinderreporter import LREFinderReporter
@@ -48,7 +46,7 @@ rule lre_finder_report:
         snakemakeutils.add_io_inputs(reporter, input)
         if params.input_type == 'fasta':
             reporter.update_parameters(pseudo_reads=True)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

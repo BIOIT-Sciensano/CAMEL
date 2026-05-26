@@ -15,7 +15,6 @@ rule variant_filtering_depth:
         VCF_GZ = 'variant_filtering/01-depth/vcf_gz.io',
         INFORMS = 'variant_filtering/01-depth/informs.io'
     params:
-        dir_ = 'variant_filtering/01-depth',
         min_total_depth = variant_filtering.get_filtering_param(config, 'depth', 'min_total_depth'),
         min_fwd_depth = variant_filtering.get_filtering_param(config, 'depth', 'min_fwd_depth'),
         min_rev_depth = variant_filtering.get_filtering_param(config, 'depth', 'min_rev_depth'),
@@ -23,7 +22,7 @@ rule variant_filtering_depth:
     run:
         from camel.app.tools.variantfiltering.depthfilter import DepthFilter
         depth_filter = DepthFilter()
-        step = Step(rule_name=str(rule), tool=depth_filter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=depth_filter, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(depth_filter, input)
         if params.min_total_depth is not None:
             depth_filter.update_parameters(min_depth=params.min_total_depth)
@@ -45,14 +44,13 @@ rule variant_filtering_snp_quality:
         VCF_GZ = 'variant_filtering/02-snp_qual/vcf_gz.io',
         INFORMS = 'variant_filtering/02-snp_qual/informs.io'
     params:
-        dir_ = 'variant_filtering/02-snp_qual',
         min_snp_quality = variant_filtering.get_filtering_param(config, 'snp_quality', 'min_snp_quality'),
         soft_filter = config['variant_filtering'].get('soft_filter', False)
     run:
         from camel.app.tools.variantfiltering.snpqualityfilter import SnpQualityFilter
         snp_qual_filter = SnpQualityFilter()
         snakemakeutils.add_io_inputs(snp_qual_filter, input)
-        step = Step(rule_name=str(rule), tool=snp_qual_filter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=snp_qual_filter, dir_=snakemakeutils.get_rule_dir(output))
         if params.min_snp_quality is not None:
             snp_qual_filter.update_parameters(min_snp_quality=params.min_snp_quality)
         snp_qual_filter.update_parameters(soft_filter=params.soft_filter)
@@ -69,14 +67,13 @@ rule variant_filtering_mapping_quality:
         VCF_GZ = 'variant_filtering/03-mapping_qual/vcf_gz.io',
         INFORMS = 'variant_filtering/03-mapping_qual/informs.io'
     params:
-        dir_ = 'variant_filtering/03-mapping_qual',
         min_mapping_quality = variant_filtering.get_filtering_param(config, 'mapping_quality', 'min_mapping_quality'),
         soft_filter = config['variant_filtering'].get('soft_filter', False)
     run:
         from camel.app.tools.variantfiltering.mappingqualityfilter import MappingQualityFilter
         mapping_quality_filter = MappingQualityFilter()
         snakemakeutils.add_io_inputs(mapping_quality_filter, input)
-        step = Step(rule_name=str(rule), tool=mapping_quality_filter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=mapping_quality_filter, dir_=snakemakeutils.get_rule_dir(output))
         if params.min_mapping_quality is not None:
             mapping_quality_filter.update_parameters(min_mapping_quality=params.min_mapping_quality)
         mapping_quality_filter.update_parameters(
@@ -164,7 +161,6 @@ rule variant_filtering_zscore:
         VCF_GZ = 'variant_filtering/05-zscore/vcf_gz.io',
         INFORMS = 'variant_filtering/05-zscore/informs.io'
     params:
-        dir_ = 'variant_filtering/05-zscore',
         min_zscore = variant_filtering.get_filtering_param(config, 'zscore', 'min_zscore'),
         y_multiplier = variant_filtering.get_filtering_param(config, 'zscore', 'y_multiplier'),
         soft_filter = config['variant_filtering'].get('soft_filter', False)
@@ -172,7 +168,7 @@ rule variant_filtering_zscore:
         import shutil
         from camel.app.tools.variantfiltering.zscorefilter import ZScoreFilter
         zscore_filter = ZScoreFilter()
-        step = Step(rule_name=str(rule), tool=zscore_filter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=zscore_filter, dir_=snakemakeutils.get_rule_dir(output))
         if params.min_zscore is not None:
             zscore_filter.update_parameters(min_zscore=params.min_zscore)
         if params.y_multiplier is not None:

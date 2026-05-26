@@ -14,7 +14,6 @@ rule assembly_spades_run:
         FASTA_Contig = 'assembly/spades/fasta.io', # assembly_spades.OUTPUT_FASTA
         INFORMS = 'assembly/spades/informs.io' # assembly_spades.OUTPUT_INFORMS
     params:
-        dir_ = 'assembly/spades',
         spades_options = config.get('assembly', {}).get('spades', {})
     threads: 8
     priority: 1
@@ -32,7 +31,7 @@ rule assembly_spades_run:
             drop_empty=True,
             read_type='PE')
         spades.add_input_files(fq_dict)
-        step = Step(rule_name=str(rule), tool=spades, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=spades, dir_=snakemakeutils.get_rule_dir(output))
         spades.update_parameters(**params.spades_options)
         spades.update_parameters(isolate=True, careful=False, threads=threads)
         step.run()

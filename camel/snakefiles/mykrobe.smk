@@ -17,7 +17,6 @@ rule mykrobe_run:
         CSV = 'mykrobe/tool/csv.io',
         INFORMS = 'mykrobe/tool/informs.io' # mykrobe.OUTPUT_INFORMS
     params:
-        dir_ = 'mykrobe/tool',
         species = Path(config['mykrobe']['species']),
         db_dir = Path(config['mykrobe']['db']),
         input_type = config['input']['type']
@@ -42,7 +41,7 @@ rule mykrobe_run:
         })
 
         # Run tool
-        step = Step(rule_name=str(rule), tool=typer, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=typer, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_output(typer,'CSV', Path(output.CSV))
         # Informs can contain numpy objects -> sanitize first
@@ -58,7 +57,6 @@ rule mykrobe_report:
     output:
         HTML = 'mykrobe/report/html.iob'# mykrobe.OUTPUT_REPORT
     params:
-        dir_ = 'mykrobe/report',
         show_amr = config['mykrobe'].get('show_amr', True),
         title = config['mykrobe'].get('title', 'Lineage information')
     run:
@@ -73,7 +71,7 @@ rule mykrobe_report:
         else:
             reporter.update_parameters(custom_header = params.title)
 
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(reporter, input)
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)

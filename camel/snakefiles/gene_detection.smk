@@ -157,7 +157,6 @@ rule gene_detection_report:
     output:
         VAL_HTML = 'gene_detection/{db}/report/html.iob' # gene_detection.OUTPUT_REPORT
     params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/report',
         config_data = lambda wildcards: config['gene_detection']['dbs'][wildcards.db],
         input_type = config['input']['type'],
         detection_method = lambda wildcards: GeneDetectionUtils.get_detection_method_key(config, wildcards.db)
@@ -166,7 +165,7 @@ rule gene_detection_report:
 
         # Create step
         reporter = HtmlReporterGeneDetection()
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)), wildcards=wildcards)
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output), wildcards=wildcards)
 
         # Parameters
         if 'force_detection_method' in params.config_data:
@@ -195,8 +194,6 @@ rule gene_detection_create_empty_report:
         INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS
     output:
         VAL_HTML = 'gene_detection/{db}/report/html-empty.iob' # gene_detection.OUTPUT_REPORT_EMPTY
-    params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/report'
     run:
         from camelcore.app.reports.htmlreportsection import HtmlReportSection
         from camelcore.app.io.tooliovalue import ToolIOValue

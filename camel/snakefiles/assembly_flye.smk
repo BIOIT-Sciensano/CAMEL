@@ -14,7 +14,6 @@ rule assembly_flye_run:
         FASTA = 'assembly/flye/fasta.io', # assembly_flye.OUTPUT_FASTA
         INFORMS = 'assembly/flye/informs.io' # assembly_flye.OUTPUT_INFORMS
     params:
-        dir_ = 'assembly/flye',
         flye_options = config.get('assembly', {}).get('flye', {})
     threads: 8
     priority: 1
@@ -26,7 +25,7 @@ rule assembly_flye_run:
         # Reformat FASTQ dictionary
         fq_dict = snakepipelineutils.extract_fq_input(Path(input.IO), key_se='FASTQ', read_type='SE')
         flye.add_input_files(fq_dict)
-        step = Step(rule_name=str(rule), tool=flye, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=flye, dir_=snakemakeutils.get_rule_dir(output))
         flye.update_parameters(**params.flye_options)
         flye.update_parameters(threads=threads)
         step.run()

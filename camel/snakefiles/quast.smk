@@ -73,7 +73,6 @@ rule quast_busco:
         TXT = 'quast/busco/txt.io',
         INFORMS = 'quast/busco/informs.io' # quast.OUTPUT_INFORMS_BUSCO
     params:
-        dir_ = 'quast/busco',
         lineage_dataset = 'bacteria_odb10'
     threads: 8
     run:
@@ -82,7 +81,7 @@ rule quast_busco:
         busco = Busco()
         snakemakeutils.add_io_input(busco, 'FASTA', Path(input.FASTA))
         busco.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
-        step = Step(rule_name=str(rule), tool=busco, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=busco, dir_=snakemakeutils.get_rule_dir(output))
         busco.update_parameters(lineage_dataset=params.lineage_dataset, threads=str(threads))
         step.run()
         snakemakeutils.dump_io_outputs(busco, output)
@@ -102,7 +101,6 @@ rule quast_report:
     output:
         HTML = 'quast/report/html.iob' # quast.OUTPUT_REPORT
     params:
-        dir_ = 'quast/report',
         name = config['input']['sample_name']
     run:
         from camel.app.tools.quast.quastreporter import QuastReporter
@@ -113,7 +111,7 @@ rule quast_report:
             'assembler': ', '.join(snakemakeutils.load_object(Path(x))['_name_full'] for x in input.INFORMS_assembler)
             if input.INFORMS_assembler else 'n/a'
         })
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

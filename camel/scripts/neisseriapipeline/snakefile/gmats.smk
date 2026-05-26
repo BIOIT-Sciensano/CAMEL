@@ -15,14 +15,13 @@ rule gmats_run:
         TSV = 'gmats/tool/tsv.io',
         INFORMS = 'gmats/tool/informs.io'
     params:
-        dir_ = 'gmats/tool',
         db = config.get('gmats', {}).get('db')
     run:
         from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.neisseria.gmats import GMats
 
         gmats_ = GMats()
-        step = Step(rule_name=str(rule), tool=gmats_, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=gmats_, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(gmats_, input)
 
         # Add database
@@ -46,12 +45,10 @@ rule gmats_report:
         INFORMS_gmats = rules.gmats_run.output.INFORMS
     output:
         HTML = 'gmats/report/html.iob' # gmats.OUTPUT_REPORT
-    params:
-        dir_ = 'gmats/report'
     run:
         from camel.app.tools.pipelines.neisseria.gmatsreporter import GMatsReporter
         reporter = GMatsReporter()
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(reporter, input)
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)

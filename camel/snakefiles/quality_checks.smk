@@ -70,7 +70,7 @@ rule quality_checks_typing_loci:
     output:
         JSON = 'quality_checks/typing_loci.json'
     params:
-        qc_check = quality_checks.QC_CHECKS_BY_KEY['typing_loci'],
+        qc_check = quality_checks.QC_CHECKS_BY_KEY['typing_loci']
     run:
         import json
         import dataclasses
@@ -223,12 +223,10 @@ rule quality_checks_parse_fastqc:
         TXT_RAW = trimming_illumina.OUTPUT_FASTQC_TXT_PRE
     output:
         INFORMS = 'quality_checks/parse_fastqc/informs.io'
-    params:
-        dir_ = 'quality_checks/parse_fastqc'
     run:
         from camel.app.tools.fastqc.fastqcdatafileparser import FastQCDataFileParser
         fastqc_checks = FastQCDataFileParser()
-        step = Step(rule_name=str(rule), tool=fastqc_checks, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=fastqc_checks, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(fastqc_checks, input)
         step.run()
         snakemakeutils.dump_io_outputs(fastqc_checks, output)
@@ -417,13 +415,11 @@ rule quality_checks_seqkit_stats:
         FASTQ = trimming_ont.OUTPUT_READS
     output:
         INFORMS = 'quality_checks/seqkit/informs.io'
-    params:
-        dir_ = 'quality_checks/seqkit'
     run:
         from camel.app.tools.seqkit.seqkitstats import SeqkitStats
         seqkit_stats = SeqkitStats()
         snakemakeutils.add_io_inputs(seqkit_stats, input)
-        step = Step(rule_name=str(rule), tool=seqkit_stats, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=seqkit_stats, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(seqkit_stats, output)
 

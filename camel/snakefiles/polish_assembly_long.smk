@@ -14,8 +14,6 @@ rule medaka_polishing_map_ont_reads:
         FASTA = lambda wildcards: polish_assembly_long.INPUT_ASSEMBLY_FASTA.format(assembly_type=wildcards.assembly_type)
     output:
         BAM = 'polish/long_reads/{assembly_type}/minimap2/bam.io'
-    params:
-        dir_ = lambda wildcards: f'polish/long_reads/{wildcards.assembly_type}/minimap2'
     threads: 8
     run:
         from camel.app.core.piping import pipeutils
@@ -33,7 +31,7 @@ rule medaka_polishing_map_ont_reads:
         samtools_view = SamtoolsView()
         samtools_sort = SamtoolsSort()
         samtools_sort.update_parameters(threads=threads)
-        pipeutils.run_as_pipe([minimap2, samtools_view, samtools_sort], Path(str(params.dir_)))
+        pipeutils.run_as_pipe([minimap2, samtools_view, samtools_sort], snakemakeutils.get_rule_dir(output))
 
         # Export output
         snakemakeutils.dump_io_output(samtools_sort,'BAM', Path(output.BAM))
@@ -43,14 +41,12 @@ rule medaka_polishing_index_bam_file:
         BAM = rules.medaka_polishing_map_ont_reads.output.BAM
     output:
         BAM = 'polish/long_reads/{assembly_type}/minimap2/bam-index.io'
-    params:
-        dir_ = lambda wildcards: f'polish/long_reads/{wildcards.assembly_type}/minimap2'
     run:
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
         samtools_index = SamtoolsIndex()
         snakemakeutils.add_io_input(samtools_index,'BAM', Path(input.BAM))
         samtools_index.update_parameters(generate_bai_index=True)
-        step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=samtools_index, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(samtools_index, output)
 
@@ -64,7 +60,6 @@ rule medaka_polishing_medaka_inference:
         HDF = 'polish/long_reads/{assembly_type}/inference/raw_hdf.io',
         INFORMS = 'polish/long_reads/{assembly_type}/inference/commands-inference.io'
     params:
-        dir_ =  lambda wildcards: f'polish/long_reads/{wildcards.assembly_type}/inference',
         medaka_options = config.get('polishing', {}).get('medaka', {}).get('inference', {})
     threads: 8
     run:
@@ -73,7 +68,7 @@ rule medaka_polishing_medaka_inference:
         snakemakeutils.add_io_input(medaka,'BAM', Path(input.BAM))
         medaka.update_parameters(**params.medaka_options)
         medaka.update_parameters(threads=threads)
-        step = Step(rule_name=str(rule), tool=medaka, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=medaka, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(medaka, output)
 
@@ -88,7 +83,6 @@ rule medaka_polishing_medaka_sequence:
         FASTA = 'polish/long_reads/{assembly_type}/sequence/fasta.io',
         INFORMS = 'polish/long_reads/{assembly_type}/sequence/commands-sequence.io'
     params:
-        dir_ = lambda wildcards: f'polish/long_reads/{wildcards.assembly_type}/sequence',
         medaka_options = config.get('polishing', {}).get('medaka', {}).get('sequence', {})
     threads: 8
     run:
@@ -96,7 +90,7 @@ rule medaka_polishing_medaka_sequence:
         medaka = MedakaSequence()
         snakemakeutils.add_io_inputs(medaka, input)
         medaka.update_parameters(**params.medaka_options, threads=threads)
-        step = Step(rule_name=str(rule), tool=medaka, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=medaka, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(medaka, output)
 

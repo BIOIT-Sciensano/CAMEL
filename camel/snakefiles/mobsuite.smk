@@ -19,8 +19,6 @@ rule mobsuite_mob_recon:
         TSV_contigs = 'mob_suite/tool/tsv-contigs.io',
         FASTA = 'mob_suite/tool/fasta.io',
         INFORMS = 'mob_suite/tool/informs.io' # mobsuite.OUTPUT_INFORMS
-    params:
-        dir_ = 'mob_suite/tool'
     threads: 4
     run:
         from camel.app.tools.mobsuite.mobrecon import MOBRecon
@@ -28,7 +26,7 @@ rule mobsuite_mob_recon:
         snakemakeutils.add_io_input(mob_recon,'FASTA', Path(input.FASTA))
         mob_recon.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
         mob_recon.update_parameters(num_threads=threads)
-        step = Step(rule_name=str(rule), tool=mob_recon, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=mob_recon, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(mob_recon, output)
 
@@ -44,14 +42,13 @@ rule mobsuite_mob_recon_reporter:
     output:
         HTML = 'mob_suite/report/html.iob' # mobsuite.OUTPUT_REPORT
     params:
-        dir_ = 'mob_suite/report',
         contig_report = config.get('mob_suite', {}).get('contig_report', False)
     run:
         from camel.app.tools.mobsuite.mobreconreporter import MOBReconReporter
         reporter = MOBReconReporter()
         snakemakeutils.add_io_inputs(reporter, input)
         reporter.update_parameters(contig_report=params.contig_report)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 
@@ -121,7 +118,6 @@ rule mobsuite_report_genomic_context:
     output:
         HTML = 'mob_suite/genomic_context/html.iob' # mobsuite.OUTPUT_CONTEXT_REPORT
     params:
-        dir_ = 'mob_suite/genomic_context',
         detection_method = config['gene_detection']['options']['method'],
         input_type = config.get('input_type', 'illumina')
     run:
@@ -135,7 +131,7 @@ rule mobsuite_report_genomic_context:
         })
         genomic_context.update_parameters(
             detection_method=str(params.detection_method), input_type=str(params.input_type))
-        step = Step(rule_name=str(rule), tool=genomic_context, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=genomic_context, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(genomic_context, output)
 

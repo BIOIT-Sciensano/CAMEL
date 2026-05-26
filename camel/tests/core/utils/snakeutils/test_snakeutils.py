@@ -1,4 +1,3 @@
-import unittest
 from importlib.resources import files
 from pathlib import Path
 
@@ -41,7 +40,6 @@ class TestSnakeUtils(CamelTestSuite):
         self.assertIn('RAM', command.command, 'Resource not added')
         self.assertIn('GPU', command.command, 'Resource not added')
 
-
     def test_dump_and_load_tooliofile(self) -> None:
         """
         Tests dumping and loading a ToolIOFile object and checks for content/hash preservation.
@@ -62,7 +60,3 @@ class TestSnakeUtils(CamelTestSuite):
         self.assertIsInstance(loaded_io_file, ToolIOFile)
         self.assertEqual(loaded_io_file.path.name, original_io_file.path.name)
         self.assertEqual(original_io_file.hash, loaded_io_file.hash)
-
-
-if __name__ == '__main__':
-    unittest.main()

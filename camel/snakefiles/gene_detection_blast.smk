@@ -16,14 +16,13 @@ rule gene_detection_blast_blastn:
         ASN = 'gene_detection/{db}/blastn/asn.io',
         INFORMS = 'gene_detection/{db}/blastn/informs.io'
     params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/blastn',
         task = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('task', 'megablast'),
         blast_reads = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('blast_reads', False)
     run:
         from camel.app.tools.blast.blastn import Blastn
         blastn = Blastn()
         snakemakeutils.add_io_inputs(blastn, input)
-        step = Step(rule_name=str(rule), tool=blastn, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=blastn, dir_=snakemakeutils.get_rule_dir(output))
         blastn.update_parameters(threads=1, task=str(params.task), max_target_seqs=1 if params.blast_reads else 20_000)
         step.run()
         blastn.informs['Task'] = params.task
@@ -37,13 +36,11 @@ rule gene_detection_blast_tsv_generation:
         ASN = rules.gene_detection_blast_blastn.output.ASN
     output:
         TSV = 'gene_detection/{db}/tsv_generation/tsv.io'
-    params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/tsv_generation'
     run:
         from camel.app.tools.blast.blastformatter import BlastFormatter
         blast_formatter = BlastFormatter()
         snakemakeutils.add_io_inputs(blast_formatter, input)
-        step = Step(rule_name=str(rule), tool=blast_formatter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=blast_formatter, dir_=snakemakeutils.get_rule_dir(output))
         blast_formatter.update_parameters(output_format='"7 pident sseqid sseq slen qseqid qstart qend score"')
         step.run()
         snakemakeutils.dump_io_outputs(blast_formatter, output)
@@ -98,13 +95,11 @@ rule gene_detection_blast_text_alignment_generation:
         ASN = rules.gene_detection_blast_blastn.output.ASN
     output:
         TXT = 'gene_detection/{db}/alignment_generation/txt.io'
-    params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/alignment_generation'
     run:
         from camel.app.tools.blast.blastformatter import BlastFormatter
         blast_formatter = BlastFormatter()
         snakemakeutils.add_io_inputs(blast_formatter, input)
-        step = Step(rule_name=str(rule), tool=blast_formatter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=blast_formatter, dir_=snakemakeutils.get_rule_dir(output))
         blast_formatter.update_parameters(output_format='0', num_alignments=20000)
         step.run()
         snakemakeutils.dump_io_outputs(blast_formatter, output)

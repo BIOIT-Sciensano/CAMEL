@@ -17,7 +17,6 @@ rule contamination_check_kraken2_run:
         TSV_report = 'contamination_check/{input_format}/kraken2/tsv-report.io',
         INFORMS = 'contamination_check/{input_format}/kraken2/informs.io'
     params:
-        dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/kraken2',
         input_format = lambda wildcards: wildcards.input_format
     threads: 8
     priority: 1
@@ -34,7 +33,7 @@ rule contamination_check_kraken2_run:
         else:
             snakemakeutils.add_io_input(kraken2,'FASTA', Path(input.IO))
         kraken2.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
-        step = Step(rule_name=str(rule), tool=kraken2, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=kraken2, dir_=snakemakeutils.get_rule_dir(output))
         kraken2.update_parameters(threads=threads)
         step.run()
         snakemakeutils.dump_io_outputs(kraken2, output)
@@ -50,7 +49,6 @@ rule contamination_check_kraken_report_parser:
         TSV = 'contamination_check/{input_format}/kraken2/tsv-normalized.io',
         INFORMS = 'contamination_check/{input_format}/kraken2/informs-contamination.io'
     params:
-        dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/kraken2',
         expected_species = config['contamination_check']['expected_species'],
         allowed_species = config['contamination_check'].get('allowed_species', None),
         level_of_depth = config['contamination_check'].get('level_of_depth', 'S'),
@@ -59,7 +57,7 @@ rule contamination_check_kraken_report_parser:
         from camel.app.tools.kraken.krakenreportparser import KrakenReportParser
         report_parser = KrakenReportParser()
         snakemakeutils.add_io_inputs(report_parser, input)
-        step = Step(rule_name=str(rule), tool=report_parser, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=report_parser, dir_=snakemakeutils.get_rule_dir(output))
         report_parser.update_parameters(
             expected_species=params.expected_species if params.expected_species is not None else 'n/a')
         snakemakeutils.update_param_if_not_none(report_parser, 'level_of_depth', params)
@@ -79,8 +77,6 @@ rule contamination_check_krona:
         DB = config['contamination_check'].get('db', [])
     output:
         HTML = 'contamination_check/{input_format}/krona/html.iob'
-    params:
-        dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/krona'
     run:
         from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.krona.krona import Krona
@@ -88,7 +84,7 @@ rule contamination_check_krona:
         snakemakeutils.add_io_input(krona,'TSV', Path(input.TSV))
         if len(input.DB) > 0:
             krona.add_input_files({'DB': [ToolIODirectory(Path(input.DB, 'krona'))]})
-        step = Step(rule_name=str(rule), tool=krona, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=krona, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(krona, output)
 
@@ -104,7 +100,6 @@ rule contamination_check_report:
     output:
         VAL_HTML = 'contamination_check/{input_format}/report/html.iob'
     params:
-        dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/report',
         input_format = lambda wildcards: wildcards.input_format,
         input_type = config['input']['type']
     run:
@@ -120,7 +115,7 @@ rule contamination_check_report:
             )
 
         # Run the tool
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 
@@ -131,7 +126,6 @@ rule contamination_check_report_empty:
     output:
         VAL_HTML = 'contamination_check/{input_format}/report/html-empty.iob'
     params:
-        dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/report',
         input_format = lambda wildcards: wildcards.input_format,
         input_type = config['input']['type']
     run:
@@ -156,7 +150,6 @@ rule contamination_check_dump_summary_info:
     output:
         FILE = 'contamination_check/{input_format}/summary/summary_out.{ext}'
     params:
-        dir_ = lambda wildcards: f'contamination_check/{wildcards.input_format}/summary',
         input_type = config['input']['type'],
         input_format = lambda wildcards: wildcards.input_format,
         allowed_species = config['contamination_check'].get('allowed_species', None),
