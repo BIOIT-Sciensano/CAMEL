@@ -103,7 +103,6 @@ rule scrubbing_run_scrubber:
         FASTQ_REMOVED = 'human_read_scrubbing/{input_format}/scrubbing/fastq_removed.io',
         INFORMS = 'human_read_scrubbing/{input_format}/scrubbing/informs.io'
     params:
-        dir_ = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/scrubbing',
         input_format = lambda wildcards: wildcards.input_format,
         export_removed_reads = config.get('read_scrubbing', {}).get('export_removed_reads'),
         is_interleaved = lambda wildcards: True if wildcards.input_format == 'fastq_pe' else False,
@@ -113,7 +112,7 @@ rule scrubbing_run_scrubber:
         from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import NcbiHumanReadScrubber
 
         scrubber = NcbiHumanReadScrubber()
-        step = Step(rule_name=str(rule), tool=scrubber, dir_=snakemakeutils.get_rule_dir(params.dir_))
+        step = Step(rule_name=str(rule), tool=scrubber, dir_=snakemakeutils.get_rule_dir(output))
 
         # Parameters
         scrubber.update_parameters(
