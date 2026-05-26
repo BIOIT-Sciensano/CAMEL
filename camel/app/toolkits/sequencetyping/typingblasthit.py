@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
 
 from camel.app.toolkits.blast.blasthitstatistics import BlastHitStatistics
+from camel.app.toolkits.sequencetyping.sequencetypingutils import SYMBOL_ALLELE_MISSING
 from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 
 
@@ -15,7 +16,7 @@ class TypingBlastHit(TypingHitBase):
 
     SYMBOL_MULTI_HIT = '?'
 
-    def __init__(self, locus: str, allele_id: str, type_, blast_stats: Optional[BlastHitStatistics]) -> None:
+    def __init__(self, locus: str, allele_id: str, type_, blast_stats: BlastHitStatistics | None) -> None:
         """
         Initializes the hit.
         :param locus: Locus
@@ -121,7 +122,7 @@ class TypingBlastHit(TypingHitBase):
         :param type_: Locus type
         :return: None
         """
-        return TypingBlastHit(locus, TypingHitBase.SYMBOL_NO_HIT, type_, None)
+        return TypingBlastHit(locus, SYMBOL_ALLELE_MISSING, type_, None)
 
     @staticmethod
     def create_multi_hit(locus: str, type_: str, blast_stats: BlastHitStatistics) -> 'TypingBlastHit':
@@ -171,7 +172,7 @@ class TypingBlastHit(TypingHitBase):
         """
         if self.allele_id == TypingBlastHit.SYMBOL_MULTI_HIT:
             return 'yellow'
-        elif self.allele_id == TypingBlastHit.SYMBOL_NO_HIT:
+        elif self.allele_id == SYMBOL_ALLELE_MISSING:
             return 'red'
         elif self.is_perfect_hit():
             return 'green'
@@ -194,15 +195,6 @@ class TypingBlastHit(TypingHitBase):
         if self._blast_stats is None:
             return False
         return self._blast_stats.is_perfect_hit()
-
-    def is_new_allele(self) -> bool:
-        """
-        Checks if this hit is potentially a novel allele of the locus in the database.
-        :return: True if the allele is new, False otherwise
-        """
-        if self._blast_stats is None:
-            return False
-        return self._blast_stats.is_new_allele()
 
     def is_full_length(self) -> bool:
         """

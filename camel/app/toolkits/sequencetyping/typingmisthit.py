@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from Bio.Seq import Seq
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
 
@@ -22,7 +23,8 @@ class TypingMiSTHit(TypingHitBase):
         :param novel_seq: Novel allele sequence
         :return: None
         """
-        super().__init__(locus, allele_id, novel_seq)
+        seq = Seq(novel_seq) if novel_seq is not None else None
+        super().__init__(locus, allele_id, new_allele_sequence=seq)
         self._tags = tags
         self._allele_results = allele_results
 
@@ -41,7 +43,7 @@ class TypingMiSTHit(TypingHitBase):
                 locus=locus,
                 allele_id=row['allele_str'],
                 tags=row['tags'],
-                novel_seq=None, # TODO,
+                novel_seq=row['allele_results'][0]['sequence'] if len(row['allele_results']) > 0 else None,
                 allele_results=row['allele_results']
             ))
         return hits
@@ -69,21 +71,6 @@ class TypingMiSTHit(TypingHitBase):
             ' '.join(r['alignment']['strand'] for r in self._allele_results)  if len(self._allele_results) > 0 else '-',
         ]
 
-    def to_dict(self, include_hashing: bool = False) -> dict[str, Any]:
-        """
-        Returns the hit as a dictionary.
-        :param include_hashing: Whether to include the hashing info if a new allele is found
-        :return: Hit dictionary
-        """
-        result = super().to_dict()
-        # if include_hashing and self.is_new_allele():
-        #     result.update({
-        #         'New allele': True,
-        #         'Allele (hash)': self.new_allele_hash(full_length=True),
-        #         'Allele sequence': str(self.new_allele_sequence)
-        #     })
-        return result
-
     @staticmethod
     def html_column_names() -> list[str]:
         """
@@ -92,7 +79,7 @@ class TypingMiSTHit(TypingHitBase):
         """
         return TypingMiSTHit.table_column_names()
 
-    def to_html_row(self, report_section: HtmlReportSection, sub_dir: Path = None) -> list[Any]:
+    def to_html_row(self, report_section: HtmlReportSection, sub_dir: Path | None = None) -> list[Any]:
         """
         Returns the hit as a row in a table.
         :param report_section: Section is passed to save the alignments
@@ -134,20 +121,12 @@ class TypingMiSTHit(TypingHitBase):
         Function to check if this is a perfect hit.
         :return: True if perfect hit, False otherwise
         """
-        return self._allele_id != TypingHitBase.SYMBOL_NO_HIT
-
-    def is_new_allele(self) -> bool:
-        """
-        Checks if this hit is potentially a novel allele of the locus in the database.
-        :return: True if the allele is new, False otherwise
-        """
-        return self._new_allele_sequence is not None
+        return 'EXACT' in self._tags
 
     def is_full_length(self) -> bool:
         """
         Function to check if this is a full length hit.
+        For MiST, full-length coverage is only confirmed for EXACT matches.
         :return: True if full length, False otherwise
         """
-        if self.is_perfect_hit():
-            return True
-        return False
+        return self.is_perfect_hit()

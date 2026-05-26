@@ -6,6 +6,7 @@ from camelcore.app.utils import fileutils
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.tool import Tool
 from camel.app.toolkits.blast.alignmentextraction import AlignmentExtraction
+from camel.app.toolkits.sequencetyping.sequencetypingutils import SYMBOL_ALLELE_MISSING
 from camel.app.toolkits.sequencetyping.typingblasthit import TypingBlastHit
 
 
@@ -33,7 +34,7 @@ class AlignmentExtractor(Tool):
         :return: None
         """
         hit = self._tool_inputs['VAL_Hits'][0].value
-        if hit.allele_id in (TypingBlastHit.SYMBOL_MULTI_HIT, TypingBlastHit.SYMBOL_NO_HIT):
+        if hit.allele_id in {SYMBOL_ALLELE_MISSING, TypingBlastHit.SYMBOL_MULTI_HIT}:
             self._tool_outputs['TXT'] = []
             return
         alignments_file = self._tool_inputs['TXT'][0].path

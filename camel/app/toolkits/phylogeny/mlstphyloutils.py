@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
 from camel.app.loggers import logger
+from camel.app.toolkits.sequencetyping.sequencetypingutils import SYMBOL_ALLELE_MISSING
 
 
 def is_perfect(record: pd.Series, detection_method: str) -> bool:
@@ -15,7 +15,7 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
     :return: True if perfect, False otherwise
     """
     if detection_method == 'blast':
-        if str(record['Allele']) in ('-', '?'):
+        if str(record['Allele']) in (SYMBOL_ALLELE_MISSING, '?'):
             return False
         try:
             identity = float(record['% Identity'])
@@ -28,7 +28,7 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
             return False
         return True
     elif detection_method == 'kma':
-        if str(record['Allele']) == '-':
+        if str(record['Allele']) == SYMBOL_ALLELE_MISSING:
             return False
         if float(record['% Identity']) != 100.0:
             return False
@@ -43,7 +43,26 @@ def is_perfect(record: pd.Series, detection_method: str) -> bool:
         raise ValueError(f"Invalid detection method: {detection_method}")
 
 
-def parse_tsv_typing(tsv_path: Path, method: str, use_temp: bool = True) -> dict[str, str]:
+def is_novel(record: pd.Series, detection_method: str) -> bool:
+    """
+    Determines if the given hit is a novel allele.
+    :param record: Input record
+    :param detection_method: Allele detection method.
+    :return: True if perfect, False otherwise
+    """
+    if detection_method == 'blast':
+        return '*' in record['Allele']
+    elif detection_method == 'mist':
+        return record['Allele'].startswith('*')
+    elif detection_method == 'kma':
+        return False
+    else:
+        raise ValueError(f'Invalid detection method: {detection_method}')
+
+
+def parse_tsv_typing(
+    tsv_path: Path, method: str, use_temp: bool = True
+) -> dict[str, str]:
     """
     Parses a tabular output file for the sequence typing assay.
     :param tsv_path: Typing output file
@@ -51,18 +70,24 @@ def parse_tsv_typing(tsv_path: Path, method: str, use_temp: bool = True) -> dict
     :param use_temp: If enabled, temporary allele ids are used
     :return: Parsed alleles (key: locus, value: allele as a string)
     """
-    allele_data = pd.read_table(tsv_path)
-    allele_data['is_perfect_hit'] = allele_data.apply(lambda x: is_perfect(x, method), axis=1)
-    # When the hashed TSV file is provided -> check for allele id length
-    if use_temp is True:
-        if method != 'mist':
-            allele_data['is_perfect_hit'] = allele_data.apply(
-                lambda x: x['is_perfect_hit'] or len(str(x['Allele'])) == 6, axis=1)
-    return {r['Locus']: r['Allele'] if r['is_perfect_hit'] else '-' for _, r in allele_data.iterrows()}
+    allele_data = pd.read_table(tsv_path, dtype={'Allele': str})
+    allele_data['is_perfect'] = allele_data.apply(
+        lambda x: is_perfect(x, method), axis=1
+    )
+    allele_data['is_novel'] = allele_data.apply(lambda x: is_novel(x, method), axis=1)
+    if use_temp:
+        allele_data['is_perfect'] = allele_data['is_novel'] | allele_data['is_perfect']
+    return {
+        r['Locus']: r['Allele'] if r['is_perfect'] else SYMBOL_ALLELE_MISSING
+        for _, r in allele_data.iterrows()
+    }
 
 
-def parse_tsv_typing_list(tsv_in: list[tuple[Path, str]], detection_method: Optional[str] = 'blast',
-                          use_temp: bool = True) -> pd.DataFrame:
+def parse_tsv_typing_list(
+    tsv_in: list[tuple[Path, str]],
+    detection_method: str | None = 'blast',
+    use_temp: bool = True,
+) -> pd.DataFrame:
     """
     Parses a list of tabular input files.
     :param tsv_in: List of input files + file name
@@ -80,7 +105,9 @@ def parse_tsv_typing_list(tsv_in: list[tuple[Path, str]], detection_method: Opti
         except IndexError:
             raise ValueError(f'Cannot determine sample name from: {file_name}')
         alleles_parsed = parse_tsv_typing(tabular_file, detection_method, use_temp)
-        logger.debug(f"{sum(v != '-' for _, v in alleles_parsed.items()):,}/{len(alleles_parsed):,} perfect hits")
+        logger.debug(
+            f"{sum(v != SYMBOL_ALLELE_MISSING for _, v in alleles_parsed.items()):,}/{len(alleles_parsed):,} perfect hits"
+        )
         allele_data.append(alleles_parsed)
         sample_names.append(isolate_name)
     return pd.DataFrame(allele_data, index=sample_names, dtype=str)
@@ -105,11 +132,16 @@ def __get_typing_output_dir(dir_report: Path, html_key: str) -> Path:
     except StopIteration:
         dir_names = [dir_.name for dir_ in dirs_typing]
         raise FileNotFoundError(
-            f"Scheme with key '{html_key}' not found in: {dir_report} (available schemes: {', '.join(dir_names)})")
+            f"Scheme with key '{html_key}' not found in: {dir_report} (available schemes: {', '.join(dir_names)})"
+        )
 
 
-def parse_html_typing_list(dirs_in: list[Path], html_key: str, detection_method: Optional[str] = 'blast',
-                           use_temp: bool = True) -> pd.DataFrame:
+def parse_html_typing_list(
+    dirs_in: list[Path],
+    html_key: str,
+    detection_method: str | None = 'blast',
+    use_temp: bool = True,
+) -> pd.DataFrame:
     """
     Parses a list of HTML output directories.
     :param dirs_in: List of input directories
@@ -122,7 +154,9 @@ def parse_html_typing_list(dirs_in: list[Path], html_key: str, detection_method:
     allele_data = []
     for dir_typing in dirs_in:
         # Retrieve metadata from JSON file
-        path_json_meta = __get_typing_output_dir(dir_typing, html_key) / 'sequence_typing.json'
+        path_json_meta = (
+            __get_typing_output_dir(dir_typing, html_key) / 'sequence_typing.json'
+        )
         with path_json_meta.open() as handle:
             typing_metadata = json.load(handle)
 
@@ -143,6 +177,8 @@ def parse_html_typing_list(dirs_in: list[Path], html_key: str, detection_method:
             tsv_typing = next(path_json_meta.parent.glob('typing-*.tsv'))
 
         alleles_parsed = parse_tsv_typing(tsv_typing, detection_method)
-        logger.debug(f"{sum(v != '-' for _, v in alleles_parsed.items()):,}/{len(alleles_parsed):,} perfect hits")
+        logger.debug(
+            f"{sum(v != '-' for _, v in alleles_parsed.items()):,}/{len(alleles_parsed):,} perfect hits"
+        )
         allele_data.append(alleles_parsed)
     return pd.DataFrame(allele_data, index=sample_names, dtype=str)

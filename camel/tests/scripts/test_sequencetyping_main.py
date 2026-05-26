@@ -26,7 +26,7 @@ class TestSequenceTyping(CamelTestSuite):
         'ont': [test_file_dir / 'Z1269_RPB-subset.fastq.gz']
     }
 
-    def test_typing_fasta_blast_nucl(self) -> None:
+    def test_fasta_blast_nucl(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
         :return: None
@@ -45,7 +45,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_fasta_blast_nucl_tsv_out(self) -> None:
+    def test_fasta_blast_nucl_tsv_out(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions) and the tabular output
         option.
@@ -68,7 +68,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertGreater(output_file_report.stat().st_size, 0)
         self.assertGreater(output_file_tsv.stat().st_size, 0)
 
-    def test_typing_fasta_blast_nucl_new_allele(self) -> None:
+    def test_fasta_blast_nucl_new_allele(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
         The input file was modified to include:
@@ -91,7 +91,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_fasta_blast_nucl_multi_perfect_hit(self) -> None:
+    def test_fasta_blast_nucl_multi_perfect_hit(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
         The input file was modified to include:
@@ -114,7 +114,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_fasta_blast_peptide(self) -> None:
+    def test_fasta_blast_peptide(self) -> None:
         """
         Tests sequence typing using BLAST with a peptide scheme.
         :return: None
@@ -133,7 +133,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_fasta_blast_mixed(self) -> None:
+    def test_fasta_blast_mixed(self) -> None:
         """
         Tests sequence typing using BLAST with a mixed scheme (DNA & peptide loci).
         :return: None
@@ -152,7 +152,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_illumina_kma_nucl(self) -> None:
+    def test_illumina_kma_nucl(self) -> None:
         """
         Tests sequence typing using KMA with a nucleotide scheme (including ST definitions).
         :return: None
@@ -171,7 +171,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_illumina_kma_mixed(self) -> None:
+    def test_illumina_kma_mixed(self) -> None:
         """
         Tests sequence typing using KMA with a mixed scheme (including ST definitions).
         :return: None
@@ -191,7 +191,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_ont_blast_nucl(self) -> None:
+    def test_ont_blast_nucl(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
         Includes de novo assembly
@@ -211,7 +211,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_ont_kma_nucl(self) -> None:
+    def test_ont_kma_nucl(self) -> None:
         """
         Tests sequence typing using KMA with a nucleotide scheme (including ST definitions).
         :return: None
@@ -230,7 +230,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_ont_kma_nucl_trim(self) -> None:
+    def test_ont_kma_nucl_trim(self) -> None:
         """
         Tests sequence typing using KMA with a nucleotide scheme (including ST definitions).
         :return: None
@@ -250,7 +250,7 @@ class TestSequenceTyping(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_report.stat().st_size, 0)
 
-    def test_typing_fasta_mist_nucl(self) -> None:
+    def test_fasta_mist_nucl(self) -> None:
         """
         Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
         :return: None
@@ -258,6 +258,25 @@ class TestSequenceTyping(CamelTestSuite):
         output_file_report = Path(self.running_dir) / 'report' / 'report.html'
         result = cliutils.invoke(main, [
             '--fasta', str(self.input_fasta),
+            '--input-type', 'fasta',
+            '--db', str(self.input_db_nucl),
+            '--output-html', str(output_file_report),
+            '--output-dir', str(output_file_report.parent),
+            '--working-dir', str(self.running_dir),
+            '--detection-method', 'mist',
+            '--threads', '8'
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(output_file_report.stat().st_size, 0)
+
+    def test_fasta_mist_nucl_novel_alleles(self) -> None:
+        """
+        Tests sequence typing using BLAST with a nucleotide scheme (including ST definitions).
+        :return: None
+        """
+        output_file_report = Path(self.running_dir) / 'report' / 'report.html'
+        result = cliutils.invoke(main, [
+            '--fasta', str(self.input_fasta_new_allele),
             '--input-type', 'fasta',
             '--db', str(self.input_db_nucl),
             '--output-html', str(output_file_report),

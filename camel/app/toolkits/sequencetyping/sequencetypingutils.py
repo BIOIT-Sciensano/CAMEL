@@ -7,6 +7,7 @@ from Bio import SeqIO
 
 from camel.app.loggers import logger
 
+SYMBOL_ALLELE_MISSING = '-'
 
 class LocusMetadataHolder:
     """

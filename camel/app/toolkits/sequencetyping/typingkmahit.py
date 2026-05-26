@@ -1,5 +1,10 @@
+from pathlib import Path
+from typing import Any
+
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
 
+from camel.app.toolkits.sequencetyping.sequencetypingutils import SYMBOL_ALLELE_MISSING
 from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 
 
@@ -34,7 +39,7 @@ class TypingKMAHit(TypingHitBase):
         :param locus: Locus
         :return: KMA hit
         """
-        return TypingKMAHit(locus, '-', 0, 0, 0, 0, 0)
+        return TypingKMAHit(locus, SYMBOL_ALLELE_MISSING, 0, 0, 0, 0, 0)
 
     @staticmethod
     def table_column_names() -> list[str]:
@@ -67,10 +72,10 @@ class TypingKMAHit(TypingHitBase):
         """
         return TypingKMAHit.table_column_names()
 
-    def to_html_row(self, base_dir=None, sub_dir=None):
+    def to_html_row(self, report_section: HtmlReportSection, sub_dir: Path | None = None) -> list[Any]:
         """
         Returns the hit as a HTML row.
-        :param base_dir: Base directory to store report
+        :param report_section: Report section (unused, KMA hits have no alignment files)
         :param sub_dir: Specific subdirectory of the base directory to store report files
         :return: Table row
         """
@@ -89,7 +94,7 @@ class TypingKMAHit(TypingHitBase):
         Returns the color for this hit.
         :return: Color
         """
-        if self.allele_id == '-':
+        if self.allele_id == SYMBOL_ALLELE_MISSING:
             return 'red'
         elif self.is_perfect_hit():
             return 'green'

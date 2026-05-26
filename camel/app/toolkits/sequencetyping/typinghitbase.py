@@ -1,6 +1,7 @@
 import abc
 import hashlib
-from typing import Any, Optional, Union
+from pathlib import Path
+from typing import Any
 
 from Bio.Seq import Seq
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
@@ -13,9 +14,7 @@ class TypingHitBase(metaclass=abc.ABCMeta):
     can rely on these methods to provide the required functionality regardless of detection method.
     """
 
-    SYMBOL_NO_HIT = '-'
-
-    def __init__(self, locus: str, allele_id: str, new_allele_sequence: Optional[Seq] = None) -> None:
+    def __init__(self, locus: str, allele_id: str, new_allele_sequence: Seq | None = None) -> None:
         """
         Initializes the typing hit.
         :param locus: Locus
@@ -43,15 +42,21 @@ class TypingHitBase(metaclass=abc.ABCMeta):
         """
         return self._allele_id
 
-    @property
-    def new_allele_hash(self) -> Union[str, None]:
+    @abc.abstractmethod
+    def is_perfect_hit(self) -> bool:
         """
-        Returns the hash of the novel allele (if available).
-        :return: Hash (if available)
+        Function to check if this is a perfect hit.
+        :return: True if perfect hit, False otherwise
         """
-        if not self.is_new_allele():
-            return None
-        return hashlib.md5(str(self._new_allele_sequence).encode('ascii')).hexdigest()[:6]
+        pass
+
+    @abc.abstractmethod
+    def is_full_length(self) -> bool:
+        """
+        Function to check if this is a full length hit.
+        :return: True if full length, False otherwise
+        """
+        pass
 
     def is_new_allele(self) -> bool:
         """
@@ -59,6 +64,15 @@ class TypingHitBase(metaclass=abc.ABCMeta):
         :return: True if new allele, False otherwise
         """
         return self._new_allele_sequence is not None
+
+    @property
+    @abc.abstractmethod
+    def color(self) -> str:
+        """
+        Returns the color for this hit.
+        :return: Color
+        """
+        pass
 
     @property
     def new_allele_sequence(self) -> Seq:
@@ -69,6 +83,16 @@ class TypingHitBase(metaclass=abc.ABCMeta):
             raise ValueError('This hit is not a novel allele')
         return self._new_allele_sequence
 
+    @property
+    def new_allele_hash(self) -> str | None:
+        """
+        Returns the hash of the novel allele (if available).
+        :return: Hash (if available)
+        """
+        if not self.is_new_allele():
+            return None
+        return hashlib.md5(str(self._new_allele_sequence.lower()).encode('ascii')).hexdigest()[:6]
+
     def set_allele_page_url_template(self, url_template: str) -> None:
         """
         Sets the allele page URL template.
@@ -78,7 +102,7 @@ class TypingHitBase(metaclass=abc.ABCMeta):
         self._allele_page_url_template = url_template
 
     @property
-    def allele_page_url(self) -> Optional[str]:
+    def allele_page_url(self) -> str | None:
         """
         Returns the allele info page URL if there is one.
         :return: Allele page URL
@@ -122,10 +146,10 @@ class TypingHitBase(metaclass=abc.ABCMeta):
         Returns the HTML column names.
         :return: HTML column names
         """
-        raise NotImplementedError()
+        pass
 
     @abc.abstractmethod
-    def to_html_row(self, report_section: HtmlReportSection, sub_dir: str = None) -> list[Any]:
+    def to_html_row(self, report_section: HtmlReportSection, sub_dir: Path | None = None) -> list[Any]:
         """
         Returns the hit as a row in a table.
         :param report_section: Section is passed to save the alignments
@@ -133,28 +157,3 @@ class TypingHitBase(metaclass=abc.ABCMeta):
         :return: Table row
         """
         pass
-
-    @abc.abstractmethod
-    def is_perfect_hit(self) -> bool:
-        """
-        Function to check if this is a perfect hit.
-        :return: True if perfect hit, False otherwise
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def is_full_length(self) -> bool:
-        """
-        Function to check if this is a full length hit.
-        :return: True if full length, False otherwise
-        """
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def color(self) -> str:
-        """
-        Returns the color for this hit.
-        :return: Color
-        """
-        raise NotImplementedError()
