@@ -136,10 +136,7 @@ class LofreqReporter(Tool):
             )
             len_genome = len(self._coverage_table)
             for cov in LofreqReporter.COVERAGE_THRESHOLDS_FOR_BREADTH:
-                cov_fraction_above_thresh = (
-                    len(self._coverage_table[self._coverage_table["depth"] >= cov])
-                    / len_genome
-                )
+                cov_fraction_above_thresh = len(self._coverage_table[self._coverage_table["depth"] >= cov])/ len_genome
                 res[f'{cov}X'] = f'{cov_fraction_above_thresh * 100:.2f}'
             self._section.add_paragraph('Breadth of coverage at different thresholds.')
             self._section.add_table(
