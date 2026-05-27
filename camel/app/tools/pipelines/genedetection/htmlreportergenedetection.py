@@ -1,15 +1,13 @@
 from pathlib import Path
 
-import pandas as pd
-
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.reports.htmlexpandablediv import HtmlExpandableDiv
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.tool import Tool
 from camel.app.core.utils import fileutils
 from camel.app.loggers import logger
+from camel.app.toolkits.export.tsvexporter import TsvExporter
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
 
 
@@ -38,7 +36,8 @@ class HtmlReporterGeneDetection(Tool):
             self._report_section.add_paragraph('No hits found.')
         else:
             self.__add_output_table([h.value for h in self._tool_inputs['VAL_Hits']])
-            self.__add_aggregated_table()
+            if self._tool_inputs['VAL_agg_hits']:
+                self.__add_aggregated_table([h.value for h in self._tool_inputs['VAL_agg_hits']])
         self.__add_database_information()
 
         # Add a warning when the detection method is different from the general detection
@@ -97,10 +96,6 @@ class HtmlReporterGeneDetection(Tool):
         :param hits: Detected hits
         :return: None
         """
-        print(hits)
-        print(hits[0])
-        print(hits[0].locus)
-        print([hit.locus for hit in sorted(hits, key=lambda x: x.locus)])
         table_data = [hit.to_html_row(self._report_section, self._sub_folder) for hit in sorted(
             hits, key=lambda x: x.locus)]
         if 'hidden' in self._parameters:
@@ -114,27 +109,23 @@ class HtmlReporterGeneDetection(Tool):
         self._report_section.add_file(self._tool_inputs['TSV'][0].path, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
 
-    def __add_aggregated_table(self) -> None:
+    def __add_aggregated_table(self, hits: list) -> None:
         """
         Adds the aggregated table to the report.
         This table is added only if the "mixed" gene detection approach is selected
         and includes all genes detected by either method.
+        :param hits: Detected aggregated hits
         :return: None
         """
-        if self._tool_inputs['TSV_aggregated']:
-            table_data = pd.read_csv(self._tool_inputs['TSV_aggregated'][0].path, sep='\t')
-            all_values = list(table_data.values)
-            self._report_section.add_horizontal_line()
-            table_cells = []
-            for row in all_values:
-                table_cells.append([HtmlTableCell(cell, row[-1]) for cell in row[:-3]])
-            self._report_section.add_table(table_cells,
-                                           column_names=list(table_data.columns[:-3]),
-                                           table_attributes=[('class', 'data')])
-            self._report_section.add_paragraph('This table shows the details about the genes detected.')
-            relative_path = self._sub_folder / Path(self._tool_inputs['TSV_aggregated'][0].path).name
-            self._report_section.add_file(self._tool_inputs['TSV_aggregated'][0].path, relative_path)
-            self._report_section.add_link_to_file("Download (TSV)", relative_path)
+        all_hits = [hit.to_html_list() for hit in sorted(hits, key=lambda x: x.locus)]
+        self._report_section.add_horizontal_line()
+        self._report_section.add_paragraph('This table shows the details about the genes detected.')
+        self._report_section.add_table(all_hits,
+                                       column_names=hits[0].header()[:-2],
+                                       table_attributes=[('class', 'data')])
+        relative_path = self._sub_folder / Path(self._tool_inputs['TSV_agg_hits'][0].path).name
+        self._report_section.add_file(self._tool_inputs['TSV_agg_hits'][0].path, relative_path)
+        self._report_section.add_link_to_file("Download (TSV)", relative_path)
 
     def __add_database_information(self) -> None:
         """

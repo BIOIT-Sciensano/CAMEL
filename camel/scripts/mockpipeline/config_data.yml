@@ -70,7 +70,7 @@ gene_detection:
         name: Antibiotic(s)
         key: subclass
   options:
-    method: mixed
+    method: kma
 
 read_trimming: {{}}
 read_scrubbing:
