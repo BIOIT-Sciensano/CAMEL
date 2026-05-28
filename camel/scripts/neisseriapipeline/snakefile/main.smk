@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.snakefiles import trimming, trimming_illumina, quality_checks, variant_calling, variant_filtering, \
     contamination_check_kraken, sequence_typing, downsampling, confindr, quast, core, trimming_ont, \
     assembly, human_read_scrubbing, amrfinder, resfinder4, read_simulation
@@ -99,6 +98,7 @@ rule neisseria_additional_resistance_gene_metadata:
         dir_ = 'typing/resistance_genes/metadata',
         loci='penA, rpoB'
     run:
+        from camel.app.core.snakemake import snakemakeutils
         from camel.app.core.snakemake.step import Step
         from camel.app.tools.pipelines.neisseria.resistancemetadataextractor import ResistanceMetadataExtractor
         extractor = ResistanceMetadataExtractor()
@@ -155,6 +155,7 @@ rule combine_reports:
         import datetime
         from camel.app.scriptutils.basepipe import basepipeutils
         from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+        from camel.app.core.snakemake import snakepipelineutils
 
         # Add the header section
         script_input = ScriptInput.from_dict(params.input_dict)

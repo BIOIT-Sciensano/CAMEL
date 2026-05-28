@@ -1,10 +1,12 @@
-import shutil
 from pathlib import Path
 
 from camel.app.core.snakemake import snakemakeutils
+from camel.app.loggers import initialize_logging
 from camel.snakefiles import trimming_illumina, trimming_ont, assembly, gene_detection, downsampling, core, \
     sequence_typing, amrfinder, mobsuite, assembly_flye, polish_assembly_short, polish_assembly_long, \
     human_read_scrubbing
+
+initialize_logging()
 
 
 rule core_link_fastq_scrubbing_input:
@@ -40,9 +42,7 @@ rule core_link_fastq_pe_downsampling_input:
     output:
         FASTQ = downsampling.INPUT_FASTQ.format(read_key='fastq_pe')
     shell:
-        """
-        cp {input.FASTQ} {output.FASTQ};
-        """
+        "cp {input.FASTQ} {output.FASTQ}"
 
 rule core_link_fastq_se_downsampling_input:
     """
@@ -54,9 +54,7 @@ rule core_link_fastq_se_downsampling_input:
     output:
         FASTQ = downsampling.INPUT_FASTQ.format(read_key='fastq_se')
     shell:
-        """
-        cp {input.FASTQ} {output.FASTQ};
-        """
+        "cp {input.FASTQ} {output.FASTQ}"
 
 rule core_link_trimmomatic_input:
     """
@@ -67,9 +65,7 @@ rule core_link_trimmomatic_input:
     output:
         FASTQ = trimming_illumina.INPUT_FASTQ
     shell:
-        """
-        cp {input.FASTQ} {output.FASTQ};
-        """
+        "cp {input.FASTQ} {output.FASTQ}"
 
 rule core_link_ont_input:
     """
@@ -80,9 +76,7 @@ rule core_link_ont_input:
     output:
         FASTQ = trimming_ont.INPUT_ONT_FASTQ
     shell:
-        """
-        cp {input.FASTQ} {output.FASTQ};
-        """
+        "cp {input.FASTQ} {output.FASTQ}"
 
 rule core_collect_trimmed_fastq_data:
     """
@@ -136,7 +130,7 @@ rule core_select_fasta:
     output:
         FASTA = gene_detection.INPUT_FASTA
     shell:
-        "cp {input.FASTA} {output.FASTA};"
+        "cp {input.FASTA} {output.FASTA}"
 
 rule core_link_fasta_to_typing:
     """
@@ -147,9 +141,7 @@ rule core_link_fasta_to_typing:
     output:
         FASTA_typing = sequence_typing.INPUT_FASTA
     shell:
-        """
-        cp {input.FASTA} {output.FASTA_typing};
-        """
+        "cp {input.FASTA} {output.FASTA_typing}"
 
 rule core_link_fasta_to_amrfinder:
     """
@@ -160,9 +152,7 @@ rule core_link_fasta_to_amrfinder:
     output:
         FASTA = amrfinder.INPUT_FASTA
     shell:
-        """
-        cp {input.FASTA} {output.FASTA};
-        """
+        "cp {input.FASTA} {output.FASTA}"
 
 rule core_link_fasta_to_mob_suite:
     """
@@ -173,9 +163,7 @@ rule core_link_fasta_to_mob_suite:
     output:
         FASTA = mobsuite.INPUT_FASTA
     shell:
-        """
-        cp {input.FASTA} {output.FASTA};
-        """
+        "cp {input.FASTA} {output.FASTA}"
 
 rule core_init_summary:
     """
@@ -236,9 +224,7 @@ rule core_link_fasta_to_polishing:
     output:
         FASTA = polish_assembly_short.INPUT_ASSEMBLY_FASTA.format(assembly_type='flye')
     shell:
-        """
-        cp {input.FASTA} {output.FASTA};
-        """
+        "cp {input.FASTA} {output.FASTA}"
 
 rule core_link_flye_assembly_to_medaka_input:
     """
@@ -248,8 +234,8 @@ rule core_link_flye_assembly_to_medaka_input:
         FASTA_flye = assembly_flye.OUTPUT_FASTA
     output:
         FASTA_medaka_flye = polish_assembly_long.INPUT_ASSEMBLY_FASTA.format(assembly_type='flye')
-    run:
-        shutil.copyfile(input.FASTA_flye, output.FASTA_medaka_flye)
+    shell:
+        "cp {input.FASTA_flye} {output.FASTA_medaka_flye}"
 
 rule core_select_summary_json:
     """
@@ -261,9 +247,7 @@ rule core_select_summary_json:
     output:
         JSON = config['output']['json'] if config['output'].get('json') is not None else Path(config['working_dir'], 'summary', 'summary.json')
     shell:
-        """
-        cp {input.OUT} {output.JSON}
-        """
+        "cp {input.OUT} {output.JSON}"
 
 rule core_select_summary_tsv:
     """
@@ -274,6 +258,4 @@ rule core_select_summary_tsv:
     output:
         TSV = config['output']['tsv']
     shell:
-        """
-        cp {input.OUT} {output.TSV}
-        """
+        "cp {input.OUT} {output.TSV}"

@@ -5,14 +5,15 @@ from typing import Any
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.reports.htmlreport import HtmlReport
 from camelcore.app.utils import fileutils
+
 from camel.app.loggers import logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.inputhelper.inputhelperbase import (
+    AssemblyOpts,
     InputHelperBase,
     TrimmingOpts,
-    AssemblyOpts
 )
 from camel.app.tools.seqtk.seqtkconvert import SeqtkConvert
 from camel.app.wrappers.trimmingontwrapper import TrimmingONTWrapper

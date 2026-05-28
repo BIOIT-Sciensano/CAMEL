@@ -14,7 +14,7 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.scripts.yersiniapipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.yersiniapipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 @dataclasses.dataclass(frozen=True)

@@ -104,7 +104,7 @@ rule combine_reports:
         report_cgmlst_enterobase = sequence_typing.get_sequence_typing_report('cgmlst_enterobase', config),
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         # Species determination
-        report_species = species_determination.OUTPUT_REPORT if 'species' in config['analyses_selected'] else species_determination.OUTPUT_REPORT_EMPTY,
+        report_species = species_determination.OUTPUT_REPORT if 'species_determination' in config['analyses_selected'] else species_determination.OUTPUT_REPORT_EMPTY,
         # Report
         report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_create_command_section.output.HTML
@@ -193,7 +193,7 @@ rule combine_summary_files:
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_yp', ext=wildcards.ext) if 'cgmlst_yp' in config['analyses_selected'] else [],
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_enterobase', ext=wildcards.ext) if 'cgmlst_enterobase' in config['analyses_selected'] else [],
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
-        species_determination.OUTPUT_SUMMARY if 'species' in config['analyses_selected'] else []
+        species_determination.OUTPUT_SUMMARY if 'species_determination' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:
@@ -223,7 +223,7 @@ rule link_species:
     Links the cgST profile matches to the species determination tool.
     """
     input:
-        TSV = 'typing/cgmlst/detect_st/tsv.io'
+        TSV = 'typing/cgmlst_yersinia_spp/detect_st/tsv.io'
     output:
         TSV_profile_matches = 'species_determination/input/tsv_profile_matches.io',
         TSV_taxonomic = 'species_determination/input/tsv_taxonomic.io'

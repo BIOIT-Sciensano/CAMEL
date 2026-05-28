@@ -40,7 +40,7 @@ class ScriptOptions(BaseOptions):
             "type": click.IntRange(0, 40),
         },
     )
-    ont_min_length: int | None = dataclasses.field(
+    ont_min_len: int | None = dataclasses.field(
         default=1000,
         metadata={
             "help": "Minimum length of ONT reads",

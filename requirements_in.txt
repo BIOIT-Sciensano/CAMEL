@@ -17,5 +17,6 @@ pysam
 pytest
 scipy
 snakemake
+setuptools
 typing-extensions
 yattag

@@ -33,9 +33,9 @@ class TestYersiniaPipeline(CamelTestSuite):
     input_pseudotuberculosis_fasta = test_file_dir / 'Yersinia_pseudotuberculosis-S23BD09896_NG_A0586-ds.fasta'
 
     @longRunningTest()
-    def test_illumina_blast_with_downsampling(self) -> None:
+    def test_illumina_enterocolitica_blast_with_downsampling(self) -> None:
         """
-        Tests the Yersinia pipeline with all assays, except for cgMLST, with downsampling.
+        Tests the Yersinia pipeline with all assays except for cgMLST with downsampling.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -82,8 +82,7 @@ class TestYersiniaPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_enterocolitica_kma(self) -> None:
         """
-        Tests the Neisseria pipeline with all assays, except for cgMLST,
-        with the kma detection method and the TruSeq2 library.
+        Tests the Yersinia pipeline with all assays except for cgMLST using kma as the detection method.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -129,8 +128,7 @@ class TestYersiniaPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_pseudotuberculosis_kma(self) -> None:
         """
-        Tests the Yersinia pipeline with all assays, except for cgMLST,
-        with the kma detection method and the TruSeq2 library.
+        Tests the Yersinia pipeline with all assays except for cgMLST using kma as the detection method.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -195,6 +193,28 @@ class TestYersiniaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
+    def test_fasta_pseudotuberculosis_mist(self) -> None:
+        """
+        Tests the Yersinia pipeline with all assays using FASTA as input and mist as the detection method.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestYersiniaPipeline.input_pseudotuberculosis_fasta),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(CUSTOM_ANALYSES),
+            '--typing-method', 'mist',
+            '--threads', '4'
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    @longRunningTest()
     def test_ont_enterocolitica(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input.
@@ -237,7 +257,7 @@ class TestYersiniaPipeline(CamelTestSuite):
     @longRunningTest()
     def test_ont_enterocolitica_kma(self) -> None:
         """
-        Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma as detection
+        Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma as the detection method.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -259,7 +279,7 @@ class TestYersiniaPipeline(CamelTestSuite):
     @longRunningTest()
     def test_ont_pseudotuberculosis_kma(self) -> None:
         """
-        Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma dectetion
+        Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma as the detection method.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'

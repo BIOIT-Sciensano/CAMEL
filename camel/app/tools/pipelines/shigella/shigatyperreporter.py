@@ -48,7 +48,6 @@ class ShigaTyperReporter(Tool):
         """
         # Parse the input files
         main_output = pd.read_table(self._tool_inputs['TSV'][0].path, dtype={'notes': str})
-        print(main_output)
 
         # Remove the sample ID column
         main_output.pop('sample')
