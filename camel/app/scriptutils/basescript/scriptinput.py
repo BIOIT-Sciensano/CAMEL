@@ -1,6 +1,6 @@
 import dataclasses
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.utils import fastautils, fastqutils, fileutils
 
@@ -18,8 +18,8 @@ class ScriptInput(model.BaseInput):
     sample_name: str | None = None
     fastq_se: Path | None = None
     fastq_se_name: str | None = None
-    fastq_pe: Optional[tuple[Path, Path]] = None
-    fastq_pe_names: Optional[tuple[str, str]] = None
+    fastq_pe: tuple[Path, Path] | None = None
+    fastq_pe_names: tuple[str, str] | None = None
     fasta: Path | None = None
     fasta_name: str | None = None
     vcf_unfiltered: Path | None = None
@@ -74,7 +74,7 @@ class ScriptInput(model.BaseInput):
         # FASTQ SE
         if self.fastq_se is not None:
             data["fastq_se"] = [{
-                "name": self.fastq_se_name if self.fastq_se_name is None else self.fastq_se_name,
+                "name": self.fastq_se_name if self.fastq_se_name is not None else self.fastq_se.name,
                 "path": str(self.fastq_se)}
             ]
 

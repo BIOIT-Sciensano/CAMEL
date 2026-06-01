@@ -3,7 +3,6 @@ import dataclasses
 import json
 import re
 import shutil
-from importlib.resources import files
 from pathlib import Path
 
 import click
@@ -13,8 +12,8 @@ from camelcore.app.utils import fastautils
 
 from camel.app.cli import cliutils
 from camel.app.config import config
-from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipe import BasePipe
@@ -22,11 +21,9 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.scripts.viralconsensuspipeline import SNAKEFILE_MAIN
+from camel.scripts.viralconsensuspipeline import CONFIG_DATA, SNAKEFILE_MAIN
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
 
-
-DB_ROOT = Path(config.dir_db, 'pipelines', 'viral_consensus', 'version_1.1')
 
 @dataclasses.dataclass(frozen=True)
 class Options(model.BaseOptions):
@@ -90,7 +87,7 @@ class MainViralConsensusPipeline(BasePipe):
         """
         super().__init__(
             name='Viral consensus pipeline',
-            version='1.1',
+            version='1.2.0',
             script_in=in_,
             script_out=out,
             opts=opts,
@@ -132,7 +129,7 @@ class MainViralConsensusPipeline(BasePipe):
                     f"{{identifier}}-{{segment_name}}, use 'genome' as segment name for viral species without "
                     f"segments)")
 
-    def determine_genome_size(self) -> int:
+    def _determine_genome_size(self) -> int:
         """
         Determines the genome size.
         :return: Genome size
@@ -154,6 +151,8 @@ class MainViralConsensusPipeline(BasePipe):
         :return: True if valid, False otherwise
         """
         self.check_dbs(config_data)
+        if ('antivirals' in config_data['analyses_selected']) and (config_data['antivirals']['species'] is None):
+            raise ValueError(f'Antiviral resistance detection is not available for species: {self._opts_custom.species}')
         return True
 
     def _execute(self) -> None:
@@ -180,24 +179,23 @@ class MainViralConsensusPipeline(BasePipe):
                 self._script_opts.working_dir, iterativemapping.OUTPUT_FASTA_CONSENSUS_FINAL_TRIMMED))
             shutil.copyfile(output_io_list[0].path, self._script_out.fasta)
 
-    def __config_add_yaml_data(self, config_data: dict) -> None:
+    def _config_add_yaml_data(self, config_data: dict) -> None:
         """
         Adds the data from parsing the config YAML file.
         :param config_data: Configuration data
         :return: None
         """
-        path_config_template = Path(str(files('camel').joinpath('scripts/viralconsensuspipeline/config_data.yml')))
-        logger.info(f'Adding config data from: {path_config_template}')
-        with path_config_template.open() as handle_in:
+        logger.info(f'Adding config data from: {CONFIG_DATA}')
+        with CONFIG_DATA.open() as handle_in:
             basepipeutils.dict_merge(
                 config_data, yaml.safe_load(handle_in.read().format(
                     COV_MAX=self._script_opts.cov_max,
                     COV_MAX_SEGMENT=self._opts_custom.cov_max_segment,
                     DB_ROOT=config.dir_db,
-                    GENOME_SIZE=self.determine_genome_size(),
+                    GENOME_SIZE=self._determine_genome_size(),
                 )))
 
-    def __config_add_iterative_mapping_data(self, config_data: dict) -> None:
+    def _config_add_iterative_mapping_data(self, config_data: dict) -> None:
         """
         Adds the config data for the iterative mapping assay.
         :param config_data: Configuration data
@@ -224,7 +222,7 @@ class MainViralConsensusPipeline(BasePipe):
             'clair3': {'model': str(clair3_model)}
         }
 
-    def __config_add_coverage_data(self, config_data: dict) -> None:
+    def _config_add_coverage_data(self, config_data: dict) -> None:
         """
         Adds the config data for the downsampling & gap identification.
         :param config_data: Configuration data
@@ -241,21 +239,14 @@ class MainViralConsensusPipeline(BasePipe):
         :return: Configuration data
         """
         # Input files and read type
-        config_data = self.get_config_data() # TODO: check if invalid species raises an error
+        config_data = self.get_config_data()
 
         # YAML data
-        self.__config_add_yaml_data(config_data)
-        config_data['analyses_selected'] = ['kraken2']
-        config_data['analyses_selected'].extend(self._opts_custom.analyses)
+        self._config_add_yaml_data(config_data)
+        config_data['analyses_selected'] = self._opts_custom.analyses
 
         if self._opts_custom.species == 'other':
             config_data['contamination_check']['expected_species'] = self._opts_custom.species_name
-
-        # Antiviral mutation detection (only for selected species)
-        # species_antivirals = DATA_BY_SPECIES.get(self._opts_custom.species, {}).get('antivirals_species')
-        # if species_antivirals is not None:
-        #     config_data['analyses_selected'].append('antivirals')
-        #     config_data['antivirals']['species'] = species_antivirals
 
         # Amplicon primer clipping
         if self._opts_custom.fasta_primers is not None:
@@ -268,8 +259,8 @@ class MainViralConsensusPipeline(BasePipe):
             'db': str(self._opts_custom.ref_genome_db) if self._opts_custom.fasta_ref is None else None}
 
         # Other assays
-        self.__config_add_coverage_data(config_data)
-        self.__config_add_iterative_mapping_data(config_data)
+        self._config_add_coverage_data(config_data)
+        self._config_add_iterative_mapping_data(config_data)
 
         # Resolve species specific values
         config_data = basepipeutils.resolve_config(
@@ -296,6 +287,7 @@ def main(**kwargs) -> None:
         **cliutils.from_kwargs(Options, kwargs, skip=['analyses'])
     )
     pipe_script = MainViralConsensusPipeline(script_input, script_out, script_opts, custom_opts)
+    pipe_script.prepare_input()
     pipe_script.run()
 
 

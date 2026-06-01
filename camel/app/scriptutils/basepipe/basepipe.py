@@ -8,17 +8,17 @@ from typing import Any, TypeVar
 import click
 from camelcore.app.utils import fastautils
 
+from camel.app.core import errors
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.dbs.dbutils import DBEntry
+from camel.app.loggers import logger
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.app.scriptutils.model import BaseInput
-from camel.app.core import errors
-from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
-from camel.app.loggers import logger
+from camel.app.scriptutils.model import BaseInput, InputType
 from camel.snakefiles import assembly
 
 TInput = TypeVar("TInput", bound=BaseInput)
@@ -90,13 +90,21 @@ class BasePipe(BaseScript[ScriptInput, ScriptOutput, ScriptOptions], metaclass=a
         Returns the base config data.
         :return: Base config data
         """
-        return {
+        base_data: dict[str, str | dict] = {
             "input": self._script_in.to_dict(),
             "output": self._script_out.to_dict(),
             "script_info": self.info(),
             "working_dir": str(self._script_opts.working_dir),
-            "read_trimming": {"method": self._script_opts.trimming_method},
+            "read_trimming": {
+                "method": self._script_opts.trimming_method,
+            },
         }
+        if self._script_in.type_ in {InputType.ONT, InputType.HYBRID}:
+            base_data['read_trimming']['ont'] = {
+                'min_length': self._script_opts.ont_min_len,
+                'min_qual': self._script_opts.ont_min_qual,
+            }
+        return base_data
 
     def run_snakefile(self, path_config: Path | str) -> None:
         """

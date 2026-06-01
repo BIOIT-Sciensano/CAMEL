@@ -3,11 +3,14 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
 from cyvcf2 import VCF, Variant
 
+from camel.app.core.piping import pipeutils
+from camel.app.tools.bcftools.bcftoolscall import BcftoolsCall
+from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
 from camel.app.tools.clair3.clair3 import Clair3
+from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
 
 
 @dataclasses.dataclass
@@ -71,27 +74,29 @@ class CallVariants:
         # Create working directory
         path_vcf_out = self._dir / 'variants.vcf'
 
-        # Config
-        config = 'illumina' if input_type == 'illumina' else 'ont'
-
-        # Collect input file
-        command = Command(' '.join([
-            'module load bcftools/1.17;',
-            'bcftools mpileup', f'-d {max_depth}', '--output-type v', f'--config {config}',
-            f'--fasta-ref {path_fasta}', str(bam_in), '|',
-            f'bcftools call --output {path_vcf_out} --output-type v --ploidy 1 --consensus-caller --variants-only'
-        ]))
-        command.run(self._dir)
-        if not command.exit_code == 0:
-            raise RuntimeError(command.stderr)
-        self._informs.append({
-            '_name': 'bcftools mpileup',
-            '_name_full': 'bcftools mpileup 1.17',
-            '_version': '1.17',
-            '_command': command.command
+        # Pileup
+        bcftools_mpileup = BcftoolsMpileup()
+        bcftools_mpileup.add_input_files({
+            'BAM': [ToolIOFile(bam_in)],
+            'FASTA': [ToolIOFile(path_fasta)],
         })
+        bcftools_mpileup.update_parameters(
+            output_type='v',
+            max_depth=max_depth,
+            config='illumina' if input_type == 'illumina' else 'ont',
+        )
 
-        # Save output file
+        # Variant calling
+        bcftools_call = BcftoolsCall()
+        bcftools_call.update_parameters(
+            calling_method='consensus',
+            output_type='v',
+            output_filename=str(path_vcf_out),
+            ploidy='1',
+            variants_only=True
+        )
+        pipeutils.run_as_pipe([bcftools_mpileup, bcftools_call], self._dir)
+        self._informs.extend([bcftools_mpileup.informs, bcftools_call.informs])
         return path_vcf_out
 
     def call_variants_clair3(
@@ -150,9 +155,8 @@ class CallVariants:
             path_symlink.symlink_to(fasta_in)
 
         # Create FAI index
-        command = Command(f'module load samtools/1.17; samtools faidx {path_symlink};')
-        command.run(self._dir)
-        if not command.exit_code == 0:
-            raise RuntimeError(f'Error creating FASTA index: {command.stderr}')
-        logging.info(f'Reference FASTA file indexed: {path_symlink.name}')
+        samtools_faidx = SamtoolsFastaIndex()
+        samtools_faidx.add_input_files({'FASTA': [ToolIOFile(path_symlink)]})
+        samtools_faidx.update_parameters(symlink_input=False)
+        samtools_faidx.run(path_symlink.parent)
         return path_symlink

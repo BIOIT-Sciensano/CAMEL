@@ -3,7 +3,11 @@ from pathlib import Path
 from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.core.errors import InvalidParameterError, ToolExecutionError
+from camel.app.core.errors import (
+    InvalidParameterError,
+    InvalidToolInputError,
+    ToolExecutionError,
+)
 from camel.app.loggers import logger
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
 
@@ -25,9 +29,9 @@ class SamtoolsFastaIndex(SamtoolsBase):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise ValueError("No FASTA input file found")
+            raise InvalidToolInputError("No FASTA input file found")
         if len(self._tool_inputs['FASTA']) != 1:
-            raise ValueError("Only one FASTA input file is supported.")
+            raise InvalidToolInputError("Only one FASTA input file is supported.")
         super()._check_input()
 
     def _check_parameters(self) -> None:
@@ -45,10 +49,13 @@ class SamtoolsFastaIndex(SamtoolsBase):
         :return: Path to the symlink of the input
         """
         symlink_location = self.folder / self._tool_inputs['FASTA'][0].path.name
-        try:
-            symlink_location.symlink_to(self._tool_inputs['FASTA'][0].path)
-        except OSError:
-            pass
+        expected_target = self._tool_inputs['FASTA'][0].path
+        if symlink_location.is_symlink():
+            if symlink_location.resolve() != expected_target.resolve():
+                raise ToolExecutionError(
+                    self.name,f"Symlink already exists but points to a different file: {symlink_location}")
+            return symlink_location
+        symlink_location.symlink_to(expected_target)
         return symlink_location
 
     def _execute_tool(self) -> None:
@@ -56,17 +63,17 @@ class SamtoolsFastaIndex(SamtoolsBase):
         Executes this tool.
         :return: None
         """
-        if 'symlink_input' in self._parameters:
-            fasta_file = self.__symlink_input()
+        if self.get_param_value('symlink_input') is True:
+            fasta_in = self.__symlink_input()
         else:
-            fasta_file = self._tool_inputs['FASTA'][0].path
-        self.__build_command(fasta_file)
+            fasta_in = self._tool_inputs['FASTA'][0].path
+        self.__build_command(fasta_in)
         self._execute_command()
         self._check_stderr(self._command)
         if 'regions' in self._parameters:
             self._tool_outputs['FASTA'] = [ToolIOFile(self.folder / self._parameters['output_filename'].value)]
         else:
-            self._tool_outputs['FASTA'] = [ToolIOFile(fasta_file)]
+            self._tool_outputs['FASTA'] = [ToolIOFile(fasta_in)]
 
     def __build_command(self, fasta_file: Path) -> None:
         """
@@ -75,9 +82,10 @@ class SamtoolsFastaIndex(SamtoolsBase):
         :return: None
         """
         self._command.command = ' '.join([self._tool_command, str(fasta_file)])
-        if 'output_filename' in self._parameters and 'regions' in self._parameters:
+        if all(x in self._parameters for x in ('output_filename', 'regions')):
             logger.info("Extracting regions from FASTA file, file should already be indexed.")
-            self._command.command += f" {self._parameters['regions'].value} > {self._parameters['output_filename'].value}"
+            path_out = self._folder / self.get_param_value('output_filename')
+            self._command.command += f" {self._parameters['regions'].value} > {path_out}"
 
     def _check_stderr(self, command: Command) -> None:
         """
@@ -87,3 +95,4 @@ class SamtoolsFastaIndex(SamtoolsBase):
         """
         if 'build FASTA index' in command.stderr:
             raise ToolExecutionError(self.name, "Cannot extract regions from an unindexed FASTA file.")
+        super()._check_stderr(command)

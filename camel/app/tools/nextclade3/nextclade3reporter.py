@@ -37,7 +37,7 @@ class Nextclade3Reporter(Tool):
         """
         Initializes this tool.
         """
-        super().__init__('Nextclade3 reporter', '0.1')
+        super().__init__('Nextclade3 reporter', version='0.1')
 
     def _check_input(self) -> None:
         """
@@ -73,8 +73,8 @@ class Nextclade3Reporter(Tool):
         :param segment: Segment
         :return: Output name
         """
-        if 'name' in self._parameters:
-            name = self._parameters['name'].value
+        name = self.get_param_value('name')
+        if name is not None:
             return f'nextclade-{name}_{segment}.tsv'
         return f'nextclade-{segment}.tsv'
 
@@ -86,7 +86,7 @@ class Nextclade3Reporter(Tool):
         records_out = []
         for path_tsv in [x.path for x in self._tool_inputs['TSV']]:
             data = pd.read_table(path_tsv)
-            data['segment'] = path_tsv.parent.name
+            data['segment'] = path_tsv.parents[1].name
             records_out.extend(data.to_dict('records'))
         return pd.DataFrame(records_out)
 
@@ -100,8 +100,8 @@ class Nextclade3Reporter(Tool):
         section.add_header('Quality control', 4)
         header = ['Segment', 'Overall QC score', *[title for _, title in Nextclade3Reporter.KEYS_QC]]
         section.add_table([[
-            row['segment'].upper() if 'capitalize_segment_names' in self._parameters else row['segment'],
-            f"{row['qc.overallScore']:.2f}",
+            self._format_segment(row['segment']),
+            f"{row['qc.overallScore']:.2f}" if not pd.isna(row['qc.overallScore']) else 'n/a',
             *[Nextclade3Reporter.format_qc_cell(row[k]) for k, _ in Nextclade3Reporter.KEYS_QC]
         ] for row in data_nextclade.to_dict('records')], header, [('class', 'data')])
 
@@ -115,7 +115,7 @@ class Nextclade3Reporter(Tool):
         section.add_header('Mutations', 4)
         header = ['Segment', *[title for _, title in Nextclade3Reporter.KEYS_MUTS]]
         section.add_table([[
-            row['segment'].upper() if 'capitalize_segment_names' in self._parameters else row['segment'],
+            self._format_segment(row['segment']),
             *[row[k] for k, _ in Nextclade3Reporter.KEYS_MUTS]
         ] for row in data_nextclade.fillna('n/a').to_dict('records')], header, [('class', 'data')])
         section.add_paragraph('A complete overview of all detected mutations is available in the TSV output.')
@@ -143,10 +143,17 @@ class Nextclade3Reporter(Tool):
         # Add table
         header = ['Segment', *[title for _, title in columns.items()]]
         section.add_table([[
-            row['segment'].upper() if 'capitalize_segment_names' in self._parameters else row['segment'],
+            self._format_segment(row['segment']),
             *[row[k] for k, _ in columns.items()]
         ] for row in data_nextclade.fillna('n/a').to_dict('records')], header, [('class', 'data')])
 
+    def _format_segment(self, segment_name: str) -> str:
+        """
+        Formats the segment name.
+        :param segment_name: Segment name
+        :return: Formatted segment name
+        """
+        return segment_name.upper() if self.get_param_value('capitalize_segment_names') else segment_name
 
     def _execute_tool(self) -> None:
         """
@@ -154,7 +161,7 @@ class Nextclade3Reporter(Tool):
         :return: None
         """
         if len(self._input_informs['nextclade']) > 0:
-            section = HtmlReportSection('Nextclade', subtitle=self._input_informs['nextclade'][0]['_name'])
+            section = HtmlReportSection('Nextclade', subtitle=self._input_informs['nextclade'][0]['_name_full'])
             data_nextclade = self.__parse_tsv_input()
             self.__add_table_qc(section, data_nextclade)
             self.__add_table_mutations(section, data_nextclade)
@@ -167,7 +174,7 @@ class Nextclade3Reporter(Tool):
             for i, segment in enumerate(data_nextclade['segment'].unique()):
                 relative_path = Path(self.DIR, self.__get_output_name(segment))
                 section.add_file(self._tool_inputs['TSV'][i].path, relative_path)
-                segment_name = segment.upper() if 'capitalize_segment_names' in self._parameters else segment
+                segment_name = self._format_segment(segment)
                 table_data.append([segment_name, HtmlTableCell('Download (TSV)', link=str(relative_path))])
             section.add_table(table_data, header, [('class', 'data')])
 
@@ -175,7 +182,7 @@ class Nextclade3Reporter(Tool):
             section.add_header('Database information', 4)
             header = ['Segment', 'Version', 'Reference']
             section.add_table([[
-                segment.upper() if 'capitalize_segment_names' in self._parameters else segment,
+                self._format_segment(segment),
                 informs['db']['version'],
                 informs['db']['reference']
             ] for segment, informs in zip(data_nextclade['segment'], self._input_informs['nextclade'])],

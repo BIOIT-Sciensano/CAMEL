@@ -1,12 +1,15 @@
 import dataclasses
-import logging
 import tempfile
 from pathlib import Path
 
 from Bio import SeqIO
-from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.config import config
+from camel.app.loggers import logger
+from camel.app.tools.bcftools.bcftoolsconsensus import BcftoolsConsensus
+from camel.app.tools.bcftools.bcftoolsindex import BcftoolsIndex
+from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
 
 
 @dataclasses.dataclass
@@ -31,29 +34,29 @@ class ApplyVariants:
         """
         self._dir = dir_
         if not self._dir.exists():
-            logging.info(f'Creating working directory: {self._dir}')
+            logger.info(f'Creating working directory: {self._dir}')
             self._dir.mkdir(parents=True)
-        self._informs = []
 
     def run(self, fasta_in: Path, vcf_in: Path, name: str, prefix: str = 'consensus', description: str = '') -> \
             ApplyVariantsOutput:
         """
-        Runs the variant caller.
+        Runs the apply variants workflow.
         :param fasta_in: Original FASTA file
         :param vcf_in: Input VCF file
-        :param name: Dataset name for sequence
+        :param name: Dataset name for sequence headers
         :param prefix: Prefix for the output file
         :param description: Description for the headers
-        :return: None
+        :return: Apply variants output
         """
         path_fasta_out = self._dir / f'{prefix}.fasta'
+        informs = []
         with tempfile.TemporaryDirectory(prefix='camel_', dir=config.dir_temp) as dir_temp:
-            path_vcf_idx = self.__index_vcf(vcf_in, Path(dir_temp))
-            self.__apply_variants(fasta_in, path_vcf_idx, path_fasta_out)
-            self.__update_headers(path_fasta_out, name, description)
-        return ApplyVariantsOutput(path_fasta_out, self._informs)
+            path_vcf_idx = self._index_vcf(vcf_in, Path(dir_temp))
+            informs.append(self._apply_variants(fasta_in, path_vcf_idx, path_fasta_out))
+            self._update_headers(path_fasta_out, name, description)
+        return ApplyVariantsOutput(path_fasta_out, informs)
 
-    def __index_vcf(self, path_vcf_in: Path, dir_: Path) -> Path:
+    def _index_vcf(self, path_vcf_in: Path, dir_: Path) -> Path:
         """
         Creates an indexed VCF file.
         :param path_vcf_in: Input VCF file
@@ -61,37 +64,41 @@ class ApplyVariants:
         :return: Path to indexed VCF file
         """
         path_vcf_out = Path(dir_, f'{path_vcf_in.name}.gz')
-        command = Command(' '.join([
-            'module load bcftools/1.17;',
-            f'bcftools view --output-type z --apply-filters "PASS,." {path_vcf_in} > {path_vcf_out};',
-            f'bcftools index -f {path_vcf_out};'
-        ]))
-        command.run(dir_)
+        bcftools_view = BcftoolsView()
+        bcftools_view.add_input_files({
+            'VCF': [ToolIOFile(path_vcf_in)],
+        })
+        bcftools_view.update_parameters(
+            apply_filters='"PASS,."',
+            output_filename=str(path_vcf_out),
+            output_type='z'
+        )
+        bcftools_view.run(path_vcf_out.parent)
+        bcftools_index = BcftoolsIndex()
+        bcftools_index.add_input_files({
+            'VCF_GZ': [ToolIOFile(path_vcf_out)]
+        })
+        bcftools_index.run(path_vcf_out.parent)
         return path_vcf_out
 
-    def __apply_variants(self, fasta_in: Path, vcf_in: Path, fasta_out: Path) -> None:
+    def _apply_variants(self, fasta_in: Path, vcf_in: Path, fasta_out: Path) -> dict:
         """
         Applies the variants to the target FASTA file.
         :param fasta_in: Input FASTA file
         :param vcf_in: Input VCF file
         :param fasta_out: Output FASTA file
-        :return: Path to updated consensus
+        :return: Tool informs
         """
-        command = Command(' '.join([
-            'module load bcftools/1.17;'
-            f'bcftools consensus --fasta-ref {fasta_in} {vcf_in} > {fasta_out};'
-        ]))
-        command.run(self._dir)
-        if not command.exit_code == 0:
-            raise RuntimeError(f'Error applying variants: {command.stderr}')
-        self._informs.append({
-            '_name': 'bcftools consensus',
-            '_name_full': 'bcftools consensus 1.17',
-            '_version': '1.17',
-            '_command': command.command
+        bcftools_consensus = BcftoolsConsensus()
+        bcftools_consensus.add_input_files({
+            'FASTA': [ToolIOFile(fasta_in)],
+            'VCF': [ToolIOFile(vcf_in)]
         })
+        bcftools_consensus.update_parameters(output_filename=str(fasta_out))
+        bcftools_consensus.run()
+        return bcftools_consensus.informs
 
-    def __update_headers(self, path_fasta: Path, name: str, description: str = '') -> None:
+    def _update_headers(self, path_fasta: Path, name: str, description: str = '') -> None:
         """
         Updates the headers of the FASTA file by adding the target description to the headers.
         :param path_fasta: FASTA file to update

@@ -19,7 +19,6 @@ rule antivirals_check_mutations:
     output:
         JSON = 'antivirals/check/json.io'
     params:
-        dir_ = 'antivirals/check',
         species = config.get('antivirals', {}).get('species'),
         db = config.get('antivirals', {}).get('db')
     run:
@@ -34,9 +33,9 @@ rule antivirals_check_mutations:
         informs_subtype = snakemakeutils.load_object(Path(str(input.INFORMS_subtype)))
         subtype = informs_subtype.get('subtype')
         if subtype is None:
-            raise RuntimeError(f'A subtype should be detected to detected antiviral mutations.')
+            raise RuntimeError(f'A subtype should be detected to detect antiviral mutations.')
         detection.update_parameters(species=params.species, subtype=subtype)
-        step = Step(rule_name=str(rule), tool=detection, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=detection, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(detection, output)
 
@@ -48,13 +47,11 @@ rule antivirals_report:
         JSON = rules.antivirals_check_mutations.output.JSON
     output:
         VAL_HTML = 'antivirals/report/html.iob' # antivirals.OUTPUT_REPORT
-    params:
-        dir_ = 'antivirals/report'
     run:
         from camel.app.tools.pipelines.viral_consensus.antiviralsreporter import AntiviralsReporter
         reporter = AntiviralsReporter()
         snakemakeutils.add_io_inputs(reporter, input)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

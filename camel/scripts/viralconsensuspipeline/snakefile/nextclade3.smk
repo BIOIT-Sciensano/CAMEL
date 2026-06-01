@@ -6,6 +6,10 @@ from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.viralconsensuspipeline.snakefile import preprocess, nextclade3
 
 
+wildcard_constraints:
+    segment = '[^/]+' # Required to avoid subdirectories matching the wildcard
+
+
 rule nextclade3_detect_subtype_mash:
     """
     Uses mash to determine the best matching subtype.
@@ -17,7 +21,6 @@ rule nextclade3_detect_subtype_mash:
         TSV = 'nextclade/subtype_determination/mash/tsv.io',
         INFORMS = 'nextclade/subtype_determination/mash/informs.io'
     params:
-        dir_ = 'nextclade/subtype_determination/mash',
         input_type = config['input']['type'],
         db = config['nextclade'].get('db_mash')
     run:
@@ -39,7 +42,7 @@ rule nextclade3_detect_subtype_mash:
         logging.info(f'Mash database found: {path_db}')
         mash_screen.add_input_files({'DB': [ToolIOFile(path_db)]})
         try:
-            step = Step(rule_name=str(rule), tool=mash_screen, dir_=Path(Path(params.dir_)))
+            step = Step(rule_name=str(rule), tool=mash_screen, dir_=snakemakeutils.get_rule_dir(output))
             step.run()
             snakemakeutils.dump_io_outputs(mash_screen, output)
         except ToolExecutionError as err:
@@ -58,7 +61,6 @@ checkpoint nextclade3_detect_subtype_report:
         HTML = 'nextclade/subtype_determination/report/html.iob',
         INFORMS = 'nextclade/subtype_determination/report/informs.io'
     params:
-        dir_ = 'nextclade/subtype_determination/report',
         db = config['nextclade'].get('db_mash')
     run:
         from camelcore.app.io.tooliodirectory import ToolIODirectory
@@ -68,8 +70,9 @@ checkpoint nextclade3_detect_subtype_report:
         if params.db is not None:
             reporter = NextcladeSubTypeReporter()
             snakemakeutils.add_io_inputs(reporter, input)
+            step = Step(str(rule), reporter, dir_=snakemakeutils.get_rule_dir(output))
             reporter.add_input_files({'DB': [ToolIODirectory(Path(params.db))]})
-            reporter.run(Path(params.dir_))
+            step.run()
             snakemakeutils.dump_io_outputs(reporter, output)
         else:
             snakepipelineutils.create_empty_report_section('Subtype determination', Path(output.HTML))
@@ -135,8 +138,6 @@ rule nextclade3_run:
     output:
         TSV = 'nextclade/{segment}/tsv.io',
         INFORMS = 'nextclade/{segment}/informs.io'
-    params:
-        dir_ = lambda wildcards: f'nextclade/{wildcards.segment}'
     run:
         from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.nextclade3.nextclade3 import Nextclade3
@@ -154,7 +155,7 @@ rule nextclade3_run:
                 'FASTA': snakemakeutils.load_object(Path(input.FASTA)),
                 'DB': [ToolIODirectory(Path(str(input.DB)))]
             })
-            step = Step(rule_name=str(rule), tool=nextclade, dir_=Path(str(params.dir_)))
+            step = Step(rule_name=str(rule), tool=nextclade, dir_=snakemakeutils.get_rule_dir(output))
             step.run()
             snakemakeutils.dump_io_outputs(nextclade, output)
 
@@ -168,7 +169,6 @@ rule nextclade3_reporter:
     output:
         HTML = 'nextclade/report/html.iob' # nextclade3.OUTPUT_REPORT
     params:
-        dir_ = 'nextclade/report',
         name = config['input']['sample_name'],
         capitalize_segment_names = config['nextclade'].get('capitalize', False)
     run:
@@ -192,7 +192,7 @@ rule nextclade3_reporter:
         reporter.add_input_files({'TSV': inputs_tsv})
         reporter.add_input_informs({'nextclade': informs_nextclade})
         reporter.update_parameters(name=params.name, capitalize_segment_names=params.capitalize_segment_names)
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

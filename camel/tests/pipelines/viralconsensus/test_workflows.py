@@ -1,4 +1,3 @@
-import logging
 import unittest
 from pathlib import Path
 
@@ -7,8 +6,10 @@ from camelcore.app.utils import vcfutils
 
 from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.loggers import logger
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.wrappers.trimmingilluminawrapper import TrimmingIlluminaWrapper
+from camel.scripts.viralconsensuspipeline.workflows.applyvariants import ApplyVariants
 from camel.scripts.viralconsensuspipeline.workflows.callvariants import CallVariants
 from camel.scripts.viralconsensuspipeline.workflows.filtervariants import FilterVariants
 from camel.scripts.viralconsensuspipeline.workflows.readmappingworkflow import (
@@ -126,11 +127,12 @@ class TestWorkflows(CamelTestSuite):
         output = workflow.run(dir_test / 'bsubtilis_ont.bam', dir_test / 'bsubtilis.fa', 'nanopore', 'bcftools', {})
         self.assertTrue(output.path_vcf.exists())
         self.assertGreater(vcfutils.count_variants(output.path_vcf), 0)
-        logging.info(f'Stats: {output.stats}')
+        self.assertGreater(len(output.informs), 0)
+        logger.info(f'Stats: {output.stats}')
 
     def test_call_variants_illumina_bcftools(self) -> None:
         """
-        Runs the variant calling workflow with ONT data using bcftools.
+        Runs the variant calling workflow with Illumina data using bcftools.
         :return: None
         """
         dir_test = CamelTestSuite.get_test_file_dir('clair3')
@@ -140,7 +142,7 @@ class TestWorkflows(CamelTestSuite):
         self.assertTrue(output.path_vcf.exists())
         self.assertGreater(vcfutils.count_variants(output.path_vcf), 0)
         self.assertGreater(len(output.informs), 0)
-        logging.info(f'Stats: {output.stats}')
+        logger.info(f'Stats: {output.stats}')
 
     def test_filter_variants_bcftools(self) -> None:
         """
@@ -154,11 +156,13 @@ class TestWorkflows(CamelTestSuite):
         self.assertTrue(out.path_vcf.exists())
         self.assertGreater(len(out.informs), 0)
         self.assertGreater(vcfutils.count_variants(out.path_vcf), 0)
+        self.assertGreater(out.stats['nb_variants'], 0)
+        self.assertLessEqual(out.stats['nb_snps_pass'], out.stats['nb_snps'])
 
     @longRunningTest()
     def test_call_variants_ont_clair3(self) -> None:
         """
-        Runs the variant calling workflow with ONT data using bcftools.
+        Runs the variant calling workflow with ONT data using clair3.
         :return: None
         """
         dir_test = CamelTestSuite.get_test_file_dir('clair3')
@@ -169,12 +173,12 @@ class TestWorkflows(CamelTestSuite):
         self.assertTrue(output.path_vcf.exists())
         self.assertGreater(vcfutils.count_variants(output.path_vcf), 0)
         self.assertGreater(len(output.informs), 0)
-        logging.info(f'Stats: {output.stats}')
+        logger.info(f'Stats: {output.stats}')
 
     @longRunningTest()
     def test_call_variants_illumina_clair3(self) -> None:
         """
-        Runs the variant calling workflow with ONT data using bcftools.
+        Runs the variant calling workflow with Illumina data using clair3.
         :return: None
         """
         dir_test = CamelTestSuite.get_test_file_dir('clair3')
@@ -185,7 +189,7 @@ class TestWorkflows(CamelTestSuite):
         self.assertTrue(output.path_vcf.exists())
         self.assertGreater(vcfutils.count_variants(output.path_vcf), 0)
         self.assertGreater(len(output.informs), 0)
-        logging.info(f'Stats: {output.stats}')
+        logger.info(f'Stats: {output.stats}')
 
     def test_filter_variants_clair3(self) -> None:
         """
@@ -199,6 +203,24 @@ class TestWorkflows(CamelTestSuite):
         self.assertTrue(out.path_vcf.exists())
         self.assertGreater(len(out.informs), 0)
         self.assertGreater(vcfutils.count_variants(out.path_vcf), 0)
+        self.assertGreater(out.stats['nb_variants'], 0)
+        self.assertLessEqual(out.stats['nb_snps_pass'], out.stats['nb_snps'])
+
+    def test_apply_variants_bcftools(self) -> None:
+        """
+        Tests the apply variants workflow using a bcftools-called VCF.
+        :return: None
+        """
+        dir_test = CamelTestSuite.get_test_file_dir('variant_calling')
+        workflow = ApplyVariants(self.running_dir)
+        out = workflow.run(
+            dir_test / 'consensus.fa',
+            dir_test / 'consensus.vcf',
+            name='test_sample'
+        )
+        self.assertTrue(out.path_fasta.exists())
+        self.assertGreater(out.path_fasta.stat().st_size, 0)
+        self.assertGreater(len(out.informs), 0)
 
     def test_segment_downsampling_workflow(self) -> None:
         """

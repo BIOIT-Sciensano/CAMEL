@@ -25,7 +25,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_influenza_a_h1n1(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, and influenza A (H1N1).
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -50,7 +50,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_influenza_a_h1n1_with_json(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, influenza A (H1N1), and JSON output.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -78,7 +78,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_influenza_a_h1n1_with_fasta_export(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, influenza A (H1N1), and FASTA consensus export.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -106,7 +106,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_influenza_a_h1n1_with_scrubbing(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, influenza A (H1N1), and human read scrubbing.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -132,7 +132,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_influenza_a_h3n2(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, and influenza A (H3N2).
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -157,7 +157,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_influenza_b_yam(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, and influenza B (Yamagata).
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -182,7 +182,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_influenza_b_vic(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, and influenza B (Victoria).
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -207,7 +207,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_sars_cov_2(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, and SARS-CoV-2.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -232,7 +232,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_illumina_fasta_ref_other(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data, FASTA reference file, and a non-standard species (RSV).
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -255,54 +255,13 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
-    @longRunningTest()
-    def test_fasta_ref_fasta_input(self) -> None:
-        """
-        Tests the viral consensus pipeline with FASTA input.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        result = cliutils.invoke(main, [
-            '--species', 'influenza_a',
-            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
-            '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'influenza_a-full_genome.fasta'),
-            '--input-type', 'fasta',
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ])
-        self.assertEqual(result.exit_code, 0)
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    def test_fasta_ref_fasta_input_with_antivirals(self) -> None:
-        """
-        Tests the viral consensus pipeline with FASTA input and antiviral mutation detection.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        result = cliutils.invoke(main, [
-            '--species', 'influenza_a',
-            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
-            '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'influenza_a-h3n2-with_antivirals.fasta'),
-            '--input-type', 'fasta',
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ])
-        self.assertEqual(result.exit_code, 0)
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
     ############################################
     # Illumina - Automatic reference selection #
     ############################################
     @longRunningTest()
     def test_illumina_ref_selection_influenza_a_h1n1(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with Illumina data and automatic reference selection for influenza A (H1N1).
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -330,7 +289,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_ont_fasta_ref_influenza_a_h1n1(self) -> None:
         """
-        Tests the viral consensus pipeline with ONT data.
+        Tests the pipeline with ONT data, FASTA reference file, and influenza A (H1N1).
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -354,7 +313,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_ont_fasta_ref_influenza_a_h1n1_with_scrubbing(self) -> None:
         """
-        Tests the viral consensus pipeline with ONT data.
+        Tests the pipeline with ONT data, FASTA reference file, influenza A (H1N1), and human read scrubbing.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -379,7 +338,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_ont_fasta_ref_influenza_a_h3n2(self) -> None:
         """
-        Tests the viral consensus pipeline with ONT data.
+        Tests the pipeline with ONT data, FASTA reference file, and influenza A (H3N2).
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -401,9 +360,9 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_ont_ref_selection_influenza_b_missing_segments_fastaref(self) -> None:
+    def test_ont_fasta_ref_influenza_b_missing_segments(self) -> None:
         """
-        Tests the viral consensus pipeline with ONT data with missing segments.
+        Tests the pipeline with ONT data, FASTA reference file, and influenza B with missing segments.
         Previously the pipeline used to fail on Nextclade when segments were missing but after adding the rule
         'iterative_mapping_add_empty_unselected_segments' in iterative_mapping.smk, the pipeline succeeds.
         :return: None
@@ -429,7 +388,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_ont_fasta_ref_sars_cov_2(self) -> None:
         """
-        Tests the viral consensus pipeline with ONT data.
+        Tests the pipeline with ONT data, FASTA reference file, and SARS-CoV-2.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -453,7 +412,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_ont_fasta_ref_sars_cov_2_primer_removal(self) -> None:
         """
-        Tests the viral consensus pipeline with Illumina data.
+        Tests the pipeline with ONT data, FASTA reference file, SARS-CoV-2, and primer removal.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -475,33 +434,13 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
-    def test_fasta_ref_fasta_input_sars_cov_2(self) -> None:
-        """
-        Tests the viral consensus pipeline with Illumina data.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        result = cliutils.invoke(main, [
-            '--species', 'sars_cov_2',
-            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'sars_cov_2-Wuhan-Hu-1.fasta'),
-            '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'sars_cov_2-BS004897.1.fasta'),
-            '--input-type', 'fasta',
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ])
-        self.assertEqual(result.exit_code, 0)
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    #######################################
-    # ONT + automatic reference selection #
-    #######################################
+    ##########################################
+    # ONT - Automatic reference selection    #
+    ##########################################
     @longRunningTest()
-    def test_ont_ref_selection_influenza_b_missing_segments_refsel(self) -> None:
+    def test_ont_ref_selection_influenza_b_missing_segments(self) -> None:
         """
-        Tests the viral consensus pipeline with ONT data with missing segments.
+        Tests the pipeline with ONT data, automatic reference selection, and influenza B with missing segments.
         Previously the pipeline used to fail on Nextclade when segments were missing but after adding the rule
         'iterative_mapping_add_empty_unselected_segments' in iterative_mapping.smk, the pipeline succeeds.
         :return: None
@@ -527,7 +466,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
     @longRunningTest()
     def test_ont_ref_selection_sars_cov_2(self) -> None:
         """
-        Tests the viral consensus pipeline with ONT data & automatic reference selection.
+        Tests the pipeline with ONT data and automatic reference selection for SARS-CoV-2.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
@@ -540,6 +479,71 @@ class TestViralConsensusPipeline(CamelTestSuite):
             '--clair3-model', str(Path(config.dir_db, 'clair3', 'models', 'ont')),
             '--cov-max', '5000',
             '--cov-max-segment', '500',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir)
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    ######################################
+    # FASTA input - FASTA reference file #
+    ######################################
+    @longRunningTest()
+    def test_fasta_fasta_ref_influenza_a(self) -> None:
+        """
+        Tests the pipeline with FASTA input and FASTA reference file for influenza A (H1N1).
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--species', 'influenza_a',
+            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
+            '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'influenza_a-full_genome.fasta'),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', 'antivirals,nextclade'
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    def test_fasta_fasta_ref_influenza_a_with_antivirals(self) -> None:
+        """
+        Tests the pipeline with FASTA input, FASTA reference file, and antiviral mutation detection for influenza A.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--species', 'influenza_a',
+            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'influenza_a-H1N1.fasta'),
+            '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'influenza_a-h3n2-with_antivirals.fasta'),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir)
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    def test_fasta_fasta_ref_sars_cov_2(self) -> None:
+        """
+        Tests the pipeline with FASTA input and FASTA reference file for SARS-CoV-2.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--species', 'sars_cov_2',
+            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'sars_cov_2-Wuhan-Hu-1.fasta'),
+            '--fasta', str(TestViralConsensusPipeline.dir_testdata / 'sars_cov_2-BS004897.1.fasta'),
+            '--input-type', 'fasta',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),

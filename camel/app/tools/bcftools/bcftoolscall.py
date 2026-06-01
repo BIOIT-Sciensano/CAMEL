@@ -3,11 +3,12 @@ from pathlib import Path
 from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core.errors import InvalidParameterError, InvalidToolInputError
+from camel.app.core.piping.toolpipeable import ToolPipeable
 from camel.app.loggers import logger
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
 
 
-class BcftoolsCall(BcftoolsBase):
+class BcftoolsCall(BcftoolsBase, ToolPipeable):
     """
     SNP/indel variant calling from VCF/BCF. To be used in conjunction with samtools mpileup.
     """
@@ -43,9 +44,9 @@ class BcftoolsCall(BcftoolsBase):
         Executes this tool.
         :return: None
         """
-        self.__build_command()
+        self._build_command(self._get_output_path())
         self._execute_command()
-        self.__set_output()
+        self._tool_outputs[self._get_output_key()] = [ToolIOFile(self._get_output_path())]
 
     def __get_input_file_path(self) -> Path:
         """
@@ -54,31 +55,55 @@ class BcftoolsCall(BcftoolsBase):
         """
         return next(self._tool_inputs[k][0].path for k in ('VCF', 'VCF_GZ', 'BCF') if k in self._tool_inputs)
 
-    def __build_command(self) -> None:
+    def _build_command(self, path_out: Path | None, pipe_in: bool = False, pipe_out: bool = False) -> None:
         """
         Builds the command.
+        :param path_out: Output path
+        :param pipe_in: True if tool receives piped input
+        :param pipe_out: True if tool generates piped output
         :return: None
         """
         command_parts = [
             self._tool_command,
-            str(self.__get_input_file_path()),
+            '-' if pipe_in else str(self.__get_input_file_path()),
         ]
-        if self._parameters['calling_method'].value == 'consensus':
-            command_parts.append('--consensus-caller')
-        else:
-            command_parts.append('--multiallelic-caller')
+
+        # Calling method
+        caller_flags = {
+            'consensus': '--consensus-caller',
+            'multiallelic': '--multiallelic-caller',
+        }
+        method = self.get_param_value('calling_method')
+        if method not in caller_flags:
+            raise ValueError(f"Unknown calling method: {method} (supported: {', '.join(caller_flags.keys())})")
+        command_parts.append(caller_flags[method])
 
         if 'TXT_RG' in self._tool_inputs:
             command_parts.append(f'--regions-file {self._tool_inputs["TXT_RG"][0].path}')
         if 'TXT_SAMPLES' in self._tool_inputs:
             command_parts.append(f'--samples-file {self._tool_inputs["TXT_SAMPLES"][0].path}')
 
-        command_parts += self._build_options(['calling_method', 'compress_output'])
+        command_parts += self._build_options(excluded_parameters=['calling_method', 'compress_output', 'output_filename'])
+        if not pipe_out:
+            command_parts.extend(['--output', str(path_out)])
         self._command.command = ' '.join(command_parts)
 
-    def __set_output(self) -> None:
+    def _before_pipe(self, dir_: Path, pipe_in: bool, pipe_out: bool) -> None:
         """
-        Sets the tool output.
+        Prepares the command that will be piped.
+        :param dir_: Running directory
+        :param pipe_in: True if tool receives piped input
+        :param pipe_out: True if tool generates piped output
         :return: None
         """
-        self._tool_outputs[self._get_output_key()] = [ToolIOFile(self._get_output_path())]
+        self._build_command(self._get_output_path(), pipe_in, pipe_out)
+
+    def _after_pipe(self, stderr: str, is_last_in_pipe: bool) -> None:
+        """
+        Performs the required steps after executing the tool as part of a pipe.
+        :param stderr: Stderr for this command in the pipe
+        :param is_last_in_pipe: Boolean to indicate if this is the last step in the pipe
+        :return: None
+        """
+        if is_last_in_pipe:
+            self._tool_outputs[self._get_output_key()] = [ToolIOFile(self._get_output_path())]

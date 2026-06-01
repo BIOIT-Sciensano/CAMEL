@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Union
 
 import pandas as pd
 from camelcore.app.io.tooliovalue import ToolIOValue
@@ -92,7 +92,7 @@ class ReporterIterativeMapping(Tool):
         super()._check_input()
 
     @staticmethod
-    def __format_value(value: str, fmt: Union[Callable, None]) -> str:
+    def __format_value(value: str, fmt: Callable | None) -> str:
         """
         Formats the given value.
         :param value: Value
@@ -183,7 +183,7 @@ class ReporterIterativeMapping(Tool):
 
     def __add_section_low_depth(self, section: HtmlReportSection, data_stats: pd.DataFrame) -> None:
         """
-        Adds the section with the low depth regions.
+        Adds the section with the low-depth regions.
         :param section: Report section
         :param data_stats: Iterative mapping statistics data
         :return: None
@@ -216,9 +216,9 @@ class ReporterIterativeMapping(Tool):
 
         # Add explanation
         div.add_paragraph(
-            """The workflow identifies regions as missing when (1) all corresponding positions have a depth of 
+            """The workflow identifies regions as missing when (1) all corresponding positions have a depth of
             <b>{gap_cov}</b> or less, and (2) the length of the region is longer than <b>{gap_len}</b> bp. When missing
-            regions are located at the beginning or end of a segment, they are removed or "clipped" from the consensus 
+            regions are located at the beginning or end of a segment, they are removed or "clipped" from the consensus
             sequence. However, if the missing regions appear within the segment, they are substituted with the letter N
             to represent their absence.""".format(
                 gap_cov=self._parameters['gap_depth_cutoff'].value, gap_len=self._parameters['gap_len_cutoff'].value))
@@ -234,11 +234,11 @@ class ReporterIterativeMapping(Tool):
         div.add_header('Additional information', 3)
         div.add_paragraph(
             """
-            The iterative mapping workflow iteratively reconstructs the consensus sequence. In each iteration, the 
+            The iterative mapping workflow iteratively reconstructs the consensus sequence. In each iteration, the
             trimmed reads are mapped to the consensus of the previous iteration, or the provided reference genome in the
-            first iteration. Afterwards, variants are called using <i>bcftools</i> (phase 1), followed by <i>Clair3</i> 
-            (phase 2). The workflow stops when the consensus sequence has converged (i.e., no changes in the last two 
-            iterations) or when the maximum number of iterations has passed (<b>{max_iter}</b>). 
+            first iteration. Afterwards, variants are called using <i>bcftools</i> (phase 1), followed by <i>Clair3</i>
+            (phase 2). The workflow stops when the consensus sequence has converged (i.e., no changes in the last two
+            iterations) or when the maximum number of iterations has passed (<b>{max_iter}</b>).
             """.format(max_iter=self._parameters['max_iter'].value))
         section.add_html_object(div)
 

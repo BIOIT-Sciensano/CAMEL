@@ -353,9 +353,7 @@ rule iterative_mapping_combine_stats_all_iterations:
         records_out = []
         records_out_by_segment = []
         # noinspection PyTypeChecker
-        print(f'O:: {input.JSON}')
         for path_json in [Path(x) for x in input.JSON]:
-            print('->>', path_json)
             nb_iter = int(path_json.parent.name.replace('iter_', ''))
 
             # Global

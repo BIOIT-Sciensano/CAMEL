@@ -1,18 +1,17 @@
 import json
 import logging
 import math
-from io import StringIO
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 from Bio import SeqIO
-from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
 from pysam.libcvcf import defaultdict
 
 from camel.app.core import toolutils
 from camel.app.core.tool import Tool
+from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
 
 
 class RefSelection(Tool):
@@ -153,7 +152,7 @@ class RefSelection(Tool):
         return path_out
 
     def _filter_mutually_exclusive_segments(
-            self, ref_by_segment: dict[str, Union[pd.Series, None]], mut_exclusive_segments: list[str]) -> None:
+            self, ref_by_segment: dict[str, pd.Series | None], mut_exclusive_segments: list[str]) -> None:
         """
         Filters the mutually exclusive segments.
         :param ref_by_segment: Reference by segment
@@ -183,20 +182,28 @@ class RefSelection(Tool):
             raise FileNotFoundError("Segment folder does not exist ('fasta_by_segment')")
 
         # Collect corresponding FASTA records
-        records_out = []
+        to_concat = []
         for segment, ref_info in ref_by_segment.items():
             if ref_info is None:
                 continue
             path_fasta = dir_db / 'fasta_by_segment' / f'{segment}.fasta'
-            command = Command(f"module load samtools; samtools faidx {path_fasta} {ref_info['ref_id']}")
-            command.run(self.folder, disable_logging=True)
-            if not command.exit_code == 0:
-                raise RuntimeError(f'Error extracting sequence: {command.stderr}')
-            records_out.append(next(SeqIO.parse(StringIO(command.stdout), 'fasta')))
+            samtools_faidx = SamtoolsFastaIndex()
+            samtools_faidx.add_input_files({
+                'FASTA': [ToolIOFile(path_fasta)]
+            })
+            samtools_faidx.update_parameters(
+                regions=ref_info['ref_id'],
+                output_filename=f'{segment}.fasta',
+                symlink_input=False
+            )
+            samtools_faidx.run(self.folder.absolute())
+            to_concat.append(samtools_faidx.tool_outputs['FASTA'][0].path)
 
         # Save to merged FASTA file
         path_out = self.folder / 'merged_ref.fasta'
-        with path_out.open('w') as handle:
-            SeqIO.write(records_out, handle, 'fasta')
-        logging.info(f'Merged FASTA file created ({len(records_out)} sequences)')
+        with path_out.open('w') as handle_out:
+            for path in to_concat:
+                with path.open() as handle_in:
+                    SeqIO.write(SeqIO.parse(handle_in, 'fasta'), handle_out, 'fasta')
+        logging.info(f'Merged FASTA file created ({len(to_concat)} sequences)')
         return path_out

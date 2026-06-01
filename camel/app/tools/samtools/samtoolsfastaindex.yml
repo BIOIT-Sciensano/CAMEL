@@ -18,6 +18,5 @@ parameters:
   symlink_input:
     default: true
     mandatory: false
-    option: null
-    value: null
+    flag: true
 tool_command: samtools faidx

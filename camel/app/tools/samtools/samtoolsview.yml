@@ -14,7 +14,7 @@ parameters:
     default: true
     mandatory: false
     option: '-h'
-    value: null
+    flag: true
   library:
     default: false
     mandatory: false
@@ -45,6 +45,11 @@ parameters:
     mandatory: false
     option: null
     value: null
+  subsample:
+    default: false
+    mandatory: false
+    option: '-s'
+    value: '1.0'
   threads:
     default: true
     mandatory: false

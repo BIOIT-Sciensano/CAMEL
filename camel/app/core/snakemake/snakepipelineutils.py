@@ -2,7 +2,7 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import yaml
 from camelcore.app.command import Command
@@ -40,9 +40,10 @@ def init_pipeline_report(
     return report
 
 
-def __get_failed_rule(stderr: str) -> Union[str, None]:
+def __get_failed_rule(stderr: str) -> str | None:
     """
     Returns the name of the rule that failed during Snakemake execution.
+    :param stderr: Snakemake stderr
     :return: Name of the failed rule
     """
     for line in reversed(stderr.splitlines()):
@@ -59,8 +60,8 @@ def run_snakemake(
     targets: list[Path],
     working_dir: Path,
     threads: int = 8,
-    resources: Optional[dict[str, Any]] = None,
-    slurm_args: Optional[dict[str, int]] = None,
+    resources: dict[str, Any] | None = None,
+    slurm_args: dict[str, int] | None = None,
 ) -> Command:
     """
     Helper function to run snakemake workflows.
@@ -119,7 +120,7 @@ def create_input_section(
     pipeline_version: str,
     input_files: str,
     input_type: str,
-    extra_data: Optional[list[tuple[str, str]]] = None,
+    extra_data: list[tuple[str, str]] | None = None,
     key_citation: str = None,
 ) -> HtmlReportSection:
     """
@@ -222,9 +223,9 @@ def combine_summary_data(snake_in: Any, path_out: Path, ext: str) -> None:
 
 def extract_fq_input(
     io_dict: Path,
-    key_pe: Optional[str] = 'FASTQ_PE',
-    key_se: Optional[str] = None,
-    keys_se: Optional[list[str]] = None,
+    key_pe: str | None = 'FASTQ_PE',
+    key_se: str | None = None,
+    keys_se: list[str] | None = None,
     drop_empty: bool = False,
     read_type: str = 'PE',
 ) -> dict[str, list[ToolIOFile]]:

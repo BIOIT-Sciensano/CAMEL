@@ -22,7 +22,7 @@ dbs:
     required: false
     method: ftp
   kraken2:
-    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    location: &db_kraken2 {DB_ROOT}/kraken2_full/20240113
     required: false
     method: ftp
   ncbi_human_read_scrubber:
@@ -86,7 +86,7 @@ species:
 citations:
   main: null
   other:
-    - Bolger_2014-trimmomatic
+    - Chen_2023-fastp
     - Coster_2023-nanoplot
     - Shen_2016-seqkit
     - Wood_2019-kraken2

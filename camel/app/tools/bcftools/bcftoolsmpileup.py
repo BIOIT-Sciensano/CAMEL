@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
@@ -63,7 +62,7 @@ class BcftoolsMpileup(ToolPipeable):
         self._execute_command()
         self._tool_outputs[self.__get_output_key()] = [ToolIOFile(self.__get_output_path())]
 
-    def _build_command(self, path_out: Optional[Path], pipe_in: bool = False, pipe_out: bool = False) -> None:
+    def _build_command(self, path_out: Path | None, pipe_in: bool = False, pipe_out: bool = False) -> None:
         """
         Builds the command that is called.
         :param pipe_in: True if the tool is the input of a pipe

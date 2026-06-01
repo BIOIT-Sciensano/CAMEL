@@ -1,16 +1,19 @@
 import dataclasses
-import logging
 from pathlib import Path
 from typing import Any
 
-from camelcore.app.command import Command
-from cyvcf2 import VCF, Variant
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
+from cyvcf2 import Variant
+
+from camel.app.loggers import logger
+from camel.app.tools.bcftools.bcftoolsfilter import BcftoolsFilter
 
 
 @dataclasses.dataclass
 class FilterVariantsOutput:
     """
-    Holder for the output of the variant filtering output.
+    Holder for the variant filtering output.
     """
     path_vcf: Path
     stats: dict[str, Any]
@@ -44,63 +47,64 @@ class FilterVariants:
         """
         self._dir = dir_
         if not self._dir.exists():
-            logging.info(f'Creating working directory: {self._dir}')
+            logger.info(f'Creating working directory: {self._dir}')
             self._dir.mkdir(parents=True)
-        self._informs = []
 
     def run(self, vcf_in: Path, calling_method: str, filters: dict[str, Any]) -> FilterVariantsOutput:
         """
         Runs the variant filtering workflow.
+        :param vcf_in: Input VCF file
+        :param calling_method: Variant calling method
+        :param filters: Filters to apply, keyed by filter name
+        :return: Variant filtering output
         """
-        logging.info(f"Applying filters: {', '.join(filters.keys())}")
+        logger.info(f"Applying filters: {', '.join(filters.keys())}")
         path_vcf = vcf_in
+        informs = []
         for filter_key, filter_value in filters.items():
             if filter_key not in FilterVariants.PARAMS_BY_CALLER[calling_method]:
                 raise ValueError(f"Filter '{filter_key}' not supported for {calling_method}")
-            logging.info(f'Applying filter: {filter_key} (value={filter_value})')
-            path_vcf = self.__apply_filter(path_vcf, calling_method, filter_key, filter_value)
-        return FilterVariantsOutput(path_vcf, FilterVariants.__extract_stats(path_vcf), self._informs)
+            logger.info(f'Applying filter: {filter_key} (value={filter_value})')
+            path_vcf, inform = self._apply_filter(path_vcf, calling_method, filter_key, filter_value)
+            informs.append(inform)
+        return FilterVariantsOutput(path_vcf, FilterVariants._extract_stats(path_vcf), informs)
 
-    def __apply_filter(self, path_vcf_in: Path, caller: str, filter_key: str, filter_value: str) -> Path:
+    def _apply_filter(self, path_vcf_in: Path, caller: str, filter_key: str, filter_value: Any) -> tuple[Path, dict]:
         """
         Applies the given variant filter to the input VCF file.
         :param path_vcf_in: Input VCF file
         :param caller: Variant caller
         :param filter_key: Filter key
         :param filter_value: Filter value
-        :return: Path to filtered VCF file
+        :return: Path to filtered VCF file and tool informs
         """
         path_out = self._dir / f'variants-filt_{filter_key}.vcf'
         expression = str(FilterVariants.PARAMS_BY_CALLER[caller][filter_key]['expression']).format(filter_value)
-        command = Command(' '.join([
-            "module load bcftools/1.17;",
-            f'bcftools filter --output-type v --soft-filter {filter_key} --exclude "{expression}" {path_vcf_in}',
-            f'--output {path_out};'
-        ]))
-        command.run(self._dir)
-        if not command.exit_code == 0:
-            raise RuntimeError(f'Error applying filter ({filter_key}): {command.stderr}')
-        self._informs.append({
-            '_name': 'bcftools filter',
-            '_name_full': 'bcftools filter 1.17',
-            '_version': '1.17',
-            '_command': command.command
+        bcftools_filter = BcftoolsFilter()
+        bcftools_filter.add_input_files({
+            'VCF': [ToolIOFile(path_vcf_in)]
         })
-        return path_out
+        bcftools_filter.update_parameters(
+            exclude=f'"{expression}"',
+            output_filename=str(path_out),
+            output_type='v',
+            soft_filter=filter_key,
+        )
+        bcftools_filter.run()
+        return path_out, bcftools_filter.informs
 
     @staticmethod
-    def __extract_stats(path_vcf: Path) -> dict[str, Any]:
+    def _extract_stats(path_vcf: Path) -> dict[str, Any]:
         """
         Extracts variant filtering stats by parsing the output VCF file.
         :param path_vcf: Input VCF file
         :return: Variant filtering statistics
         """
-        with VCF(str(path_vcf)) as vcf_reader:
-            variants: list[Variant] = list(vcf_reader)
+        variants: list[Variant] = vcfutils.parse_all_variants(path_vcf)
         return {
             'nb_variants': len(variants),
             'nb_snps': sum(v.is_snp for v in variants),
-            'nb_snps_filt': sum(v.is_snp for v in variants if (v.FILTER is None) or (len(v.FILTER) == 0)),
+            'nb_snps_pass': sum(v.is_snp for v in variants if (v.FILTER is None) or (len(v.FILTER) == 0)),
             'nb_indels': sum(v.is_indel for v in variants),
-            'nb_indels_filt': sum(v.is_indel for v in variants if (v.FILTER is None) or (len(v.FILTER) == 0)),
+            'nb_indels_pass': sum(v.is_indel for v in variants if (v.FILTER is None) or (len(v.FILTER) == 0)),
         }

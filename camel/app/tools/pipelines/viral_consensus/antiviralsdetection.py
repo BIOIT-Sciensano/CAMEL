@@ -107,7 +107,7 @@ class AntiviralsDetection(Tool):
             logger.debug(f'Parsed: {len(mutations_segment)} mutations from: {path_io.path.name}')
             data_segment = pd.DataFrame({
                 'mutation': mutations_segment,
-                'segment': path_io.path.parent.name.upper()
+                'segment': path_io.path.parents[1].name.upper()
             })
             mutations_all.extend(data_segment.to_dict('records'))
         return pd.DataFrame(mutations_all)

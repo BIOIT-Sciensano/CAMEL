@@ -2,10 +2,13 @@ import shutil
 import unittest
 
 from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastqutils, sambamutils
 
 from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.tools.samtools.samtoolsampliconclip import SamtoolsAmpliconClip
 from camel.app.tools.samtools.samtoolsdepth import SamtoolsDepth
 from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
+from camel.app.tools.samtools.samtoolsfastq import SamtoolsFastq
 from camel.app.tools.samtools.samtoolsflagstat import SamtoolsFlagstat
 from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
 from camel.app.tools.samtools.samtoolsindexcram import SamtoolsIndexCram
@@ -23,8 +26,23 @@ class TestSamtools(CamelTestSuite):
     FILE_BAM = ToolIOFile(test_file_dir / 'aln.bam')
     FILE_BAM1 = ToolIOFile(test_file_dir / 'aln1.bam')
     FILE_BAM2 = ToolIOFile(test_file_dir / 'aln2.bam')
+    FILE_BAM_AMPLICON = ToolIOFile(test_file_dir / 'eboVir3.bam')
+    FILE_BED_AMPLICON = ToolIOFile(test_file_dir / 'eboVir3.1.bed')
     FILE_CRAM = ToolIOFile(test_file_dir / 'aln.cram')
     FILE_TXTdepth = ToolIOFile(test_file_dir / 'aln_depth.txt')
+
+    def test_samtools_ampliconclip(self) -> None:
+        """
+        Tests samtools ampliconclip.
+        :return: None
+        """
+        samtools_ampliconclip = SamtoolsAmpliconClip()
+        samtools_ampliconclip.add_input_files({
+            'BAM': [TestSamtools.FILE_BAM_AMPLICON],
+            'BED': [TestSamtools.FILE_BED_AMPLICON],
+        })
+        samtools_ampliconclip.run(self.running_dir)
+        self.verify_output_files(samtools_ampliconclip, 'BAM')
 
     def test_samtools_depth(self) -> None:
         """
@@ -62,6 +80,76 @@ class TestSamtools(CamelTestSuite):
         samtools_fastaindex.run(self.running_dir)
         self.verify_output_files(samtools_fastaindex, 'FASTA')
         self.assertFalse(samtools_fastaindex.tool_outputs['FASTA'][0].path.is_symlink())
+
+    def test_samtools_fastq_pe(self) -> None:
+        """
+        Tests the samtools fastq command.
+        :return: None
+        """
+        nb_reads_in = sambamutils.get_record_count(TestSamtools.FILE_BAM.path)
+        samtools_fastq = SamtoolsFastq()
+        samtools_fastq.add_input_files({'BAM': [TestSamtools.FILE_BAM]})
+        samtools_fastq.update_parameters(
+            read_1='reads_fwd.fastq',
+            read_2='reads_rev.fastq',
+            read_other='reads_other.fastq'
+        )
+        samtools_fastq.run(self.running_dir)
+        self.verify_output_files(samtools_fastq, 'FASTQ_PE', nb_files=2)
+        self.assertEqual(
+            nb_reads_in,
+            sum(
+                fastqutils.count_reads(io.path)
+                for key in ('FASTQ_PE', 'FASTQ_OTHER')
+                for io in samtools_fastq.tool_outputs[key]
+            ),
+        )
+
+    def test_samtools_fastq_pe_with_suffix(self) -> None:
+        """
+        Tests the samtools fastq command.
+        :return: None
+        """
+        nb_reads_in = sambamutils.get_record_count(TestSamtools.FILE_BAM.path)
+        samtools_fastq = SamtoolsFastq()
+        samtools_fastq.add_input_files({'BAM': [TestSamtools.FILE_BAM]})
+        samtools_fastq.update_parameters(
+            read_1='reads_fwd.fastq',
+            read_2='reads_rev.fastq',
+            read_other='reads_other.fastq',
+            append_suffix=True
+        )
+        samtools_fastq.run(self.running_dir)
+        self.verify_output_files(samtools_fastq, 'FASTQ_PE', nb_files=2)
+        self.assertEqual(
+            nb_reads_in,
+            sum(
+                fastqutils.count_reads(io.path)
+                for key in ('FASTQ_PE', 'FASTQ_OTHER')
+                for io in samtools_fastq.tool_outputs[key]
+            ),
+        )
+
+    def test_samtools_fastq_pe_combined(self) -> None:
+        """
+        Tests the samtools fastq command.
+        :return: None
+        """
+        nb_reads_in = sambamutils.get_record_count(TestSamtools.FILE_BAM.path)
+        samtools_fastq = SamtoolsFastq()
+        samtools_fastq.add_input_files({'BAM': [TestSamtools.FILE_BAM]})
+        samtools_fastq.update_parameters(
+            output='reads_pe_interleaved.fastq',
+            read_other='reads_other.fastq'
+        )
+        samtools_fastq.run(self.running_dir)
+        self.verify_output_files(samtools_fastq, 'FASTQ')
+        self.verify_output_files(samtools_fastq, 'FASTQ_OTHER')
+        self.assertEqual(
+            nb_reads_in,
+            fastqutils.count_reads(samtools_fastq.tool_outputs['FASTQ'][0].path) +
+            fastqutils.count_reads(samtools_fastq.tool_outputs['FASTQ_OTHER'][0].path),
+        )
 
     def test_samtools_flagstat(self) -> None:
         """
@@ -131,6 +219,20 @@ class TestSamtools(CamelTestSuite):
         samtools_view.update_parameters(output_format='SAM')
         samtools_view.run(self.running_dir)
         self.verify_output_files(samtools_view, 'SAM')
+
+    def test_samtools_view_subsample(self) -> None:
+        """
+        Tests SamtoolsView with subsampling, verifying fewer reads are present in the output.
+        :return: None
+        """
+        nb_reads_in = sambamutils.get_record_count(TestSamtools.FILE_BAM.path)
+        samtools_view = SamtoolsView()
+        samtools_view.add_input_files({'BAM': [TestSamtools.FILE_BAM]})
+        samtools_view.update_parameters(subsample='7.5')
+        samtools_view.run(self.running_dir)
+        self.verify_output_files(samtools_view, 'BAM')
+        nb_reads_out = sambamutils.get_record_count(samtools_view.tool_outputs['BAM'][0].path)
+        self.assertLess(nb_reads_out, nb_reads_in)
 
 
 if __name__ == '__main__':

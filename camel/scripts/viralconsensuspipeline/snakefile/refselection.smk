@@ -19,7 +19,6 @@ rule ref_selection_mash_screen:
         INFORMS = 'ref_selection/mash_screen/{segment}/informs.io'
     threads: 8
     params:
-        dir_ = lambda wildcards: f'ref_selection/mash_screen/{wildcards.segment}',
         input_type = config['input']['type'],
         segment = lambda wildcards: wildcards.segment
     run:
@@ -37,7 +36,7 @@ rule ref_selection_mash_screen:
             'DB': [ToolIOFile(Path(str(input.DB)))]
         })
         mash.update_parameters(threads=threads)
-        step = Step(rule_name=str(rule), tool=mash, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=mash, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(mash, output)
 
@@ -53,8 +52,6 @@ rule ref_selection_create_fasta:
         TSV = 'ref_selection/create_fasta/tsv.io',
         JSON = 'ref_selection/create_fasta/json.io',
         FASTA = 'ref_selection/create_fasta/fasta.io' # refselection.OUTPUT_FASTA
-    params:
-        dir_ = 'ref_selection/create_fasta'
     run:
         import itertools
         from camelcore.app.io.tooliodirectory import ToolIODirectory
@@ -62,7 +59,7 @@ rule ref_selection_create_fasta:
         ref_selection = RefSelection()
         tsv_in = list(itertools.chain(*[snakemakeutils.load_object(Path(io)) for io in input.TSV]))
         ref_selection.add_input_files({'TSV': tsv_in, 'DB': [ToolIODirectory(Path(input.DB))]})
-        step = Step(rule_name=str(rule), tool=ref_selection, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=ref_selection, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(ref_selection, output)
 
@@ -77,13 +74,11 @@ rule ref_selection_report:
         DB = Path(config['ref_selection']['db']) if config['ref_selection'].get('db') is not None else []
     output:
         VAL_HTML = 'ref_selection/report/html.iob' # refselection.OUTPUT_REPORT
-    params:
-        dir_ = 'ref_selection/report'
     run:
         from camelcore.app.io.tooliodirectory import ToolIODirectory
         from camel.app.tools.pipelines.viral_consensus.reporterrefselection import ReporterRefSelection
         reporter = ReporterRefSelection()
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['DB'])
         reporter.add_input_files({'DB': [ToolIODirectory(Path(input.DB))]})
         step.run()
