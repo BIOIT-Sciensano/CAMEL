@@ -39,6 +39,8 @@ class IlluminaAssemblyOpts(AssemblyOpts):
         param_data = {}
         if self.assembly_kmers is not None:
             param_data['kmers'] = self.assembly_kmers
+        if self.assembly_cov_cutoff is not None:
+            param_data['cov_cutoff'] = self.assembly_cov_cutoff
         return param_data
 
 
@@ -137,6 +139,10 @@ class IlluminaHelper(InputHelperBase[IlluminaTrimmingOpts, IlluminaAssemblyOpts]
                 trim_reads=opts['trim_reads'],
                 include_fastq=opts['include_fastq'],
             ),
-            IlluminaAssemblyOpts(assembly_min_contig_len=opts['assembly_min_contig_len']),
+            IlluminaAssemblyOpts(
+                assembly_min_contig_len=opts['assembly_min_contig_len'],
+                assembly_cov_cutoff=opts['assembly_cov_cutoff'],
+                assembly_kmers=opts['assembly_kmers'],
+            ),
             opts['threads']
         )

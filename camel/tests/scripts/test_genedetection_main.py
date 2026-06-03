@@ -1,9 +1,11 @@
+import json
 import unittest
 
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.loggers import initialize_logging
 from camel.scripts.genedetection.maingenedetection import main
+from camel.snakefiles import assembly, assembly_spades
 
 
 class TestGeneDetection(CamelTestSuite):
@@ -162,6 +164,45 @@ class TestGeneDetection(CamelTestSuite):
         result = cliutils.invoke(main, args)
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
+
+    def test_gene_detection_blast_illumina_custom_params(self) -> None:
+        """
+        Tests the gene detection workflow with BLAST detection on Illumina data with custom assembly parameters.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'report' / 'report.html'
+        args = [
+            '--fastq-pe',
+            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
+            str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
+            '--input-type', 'illumina',
+            '--db', str(TestGeneDetection.input_gene_detection_db),
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--working-dir', str(self.running_dir),
+            '--assembly-kmers', '33,55',
+            '--assembly-min-contig-len', '777',
+            '--assembly-cov-cutoff', '7',
+            '--threads', '4'
+        ]
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+        # Check if the SPAdes parameters were added
+        path_spades_informs = self.running_dir / 'assembly' / assembly_spades.OUTPUT_INFORMS
+        self.assertTrue(path_spades_informs.exists(), "Cannot parse SPAdes informs")
+        with path_spades_informs.open() as handle:
+            informs_spades = json.load(handle)
+        self.assertIn('-k 33,55', informs_spades['_command'])
+        self.assertIn('--cov-cutoff 7', informs_spades['_command'])
+
+        # Check if the filtering parameters were added
+        path_filtering_informs = self.running_dir / 'assembly' / assembly.OUTPUT_INFORMS_FILTERING
+        self.assertTrue(path_filtering_informs.exists(), "Cannot parse filtering informs")
+        with path_filtering_informs.open() as handle:
+            informs_filtering = json.load(handle)
+        self.assertIn('-L 777', informs_filtering['_command'])
 
     def test_gene_detection_blast_illumina_fasta_out(self) -> None:
         """

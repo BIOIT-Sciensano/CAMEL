@@ -214,9 +214,9 @@ rule assembly_quast_report:
         from camelcore.app.io.tooliovalue import ToolIOValue
         reporter = HtmlReporterAssembly()
         reporter.add_input_files({'SAMPLE_NAME': [ToolIOValue(params.sample_name)]})
-        assembler_name = ', '.join(snakemakeutils.load_object(Path(x))['_name'] for x in input.INFORMS_assembler) \
+        assembler_name = ', '.join(snakemakeutils.load_object(Path(x))['_name_full'] for x in input.INFORMS_assembler) \
             if input.INFORMS_assembler else 'n/a'
-        reporter.add_input_informs({'assembler': {'_name': assembler_name}})
+        reporter.add_input_informs({'assembler': assembler_name})
         snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['INFORMS_assembler'])
         step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()

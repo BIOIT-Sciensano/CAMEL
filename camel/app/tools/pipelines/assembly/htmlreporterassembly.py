@@ -27,6 +27,9 @@ class HtmlReporterAssembly(Tool):
         Executes this tool.
         :return: None
         """
+        import pprint
+        pprint.pprint(self._input_informs)
+        print('^ ^ ^' * 10)
         self._report_section = HtmlReportSection('Assembly', subtitle=self._input_informs['assembler'])
         self.__add_assembly_info()
         self.__add_assembly_download_link()
@@ -56,10 +59,10 @@ class HtmlReporterAssembly(Tool):
         """
         quast_informs = self._input_informs['quast']
         table_data = [
-            ('Assembler:', self._input_informs['assembler']['_name']),
-            ('N50:', '{:,}'.format(int(quast_informs['contig']['N50']))),
-            ('Number of contigs:', '{:,}'.format(int(quast_informs['contig']['# contigs (>= 1000 bp)']))),
-            ('Total length:', '{:,}'.format(int(quast_informs['genome']['Total length'])))
+            ('Assembler:', self._input_informs['assembler']),
+            ('N50:', f'{int(quast_informs["contig"]["N50"]):,}'),
+            ('Number of contigs:', f'{int(quast_informs["contig"]["# contigs (>= 1000 bp)"]):,}'),
+            ('Total length:', f'{int(quast_informs["genome"]["Total length"]):,}')
         ]
         self._report_section.add_table(table_data, table_attributes=[('class', 'information')])
 
