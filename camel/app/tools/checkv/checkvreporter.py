@@ -68,6 +68,8 @@ class CheckVReporter(Tool):
         :param value: Value
         :return: Formatted value
         """
+        if pd.isna(value):
+            return 'n/a'
         if type(value) == float:
             return f'{value:.2f}'
         return value
