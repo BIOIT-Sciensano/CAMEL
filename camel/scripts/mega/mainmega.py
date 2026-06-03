@@ -17,6 +17,7 @@ from camel.app.toolkits.phylogeny.megautils import MEGAUtils
 from camel.app.tools.mega.mltreeconstruction import MLTreeConstruction
 from camel.app.tools.mega.modelselection import ModelSelection
 from camel.app.tools.snpmatrix.snpmatrixconstructor import SnpMatrixConstructor
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -99,9 +100,10 @@ class MainMega(BaseScript[Input, Output, Options]):
         ;param script_opts: Script options
         :return: None
         """
+        tool_version = MLTreeConstruction().version
         super().__init__(
             name='MEGA',
-            version='1.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=script_opts

@@ -18,6 +18,7 @@ from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.integronfinder.integronfinder import IntegronFinder
 from camel.app.tools.integronfinder.integronfinderreporter import IntegronFinderReporter
 from camel.resources import DIR_CITATIONS
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -45,9 +46,10 @@ class MainIntegronFinder(BaseScript[FastaInput, ScriptOutput, Options]):
         :param opts: Options
         :return: None
         """
+        tool_version = IntegronFinder().version
         super().__init__(
             name='IntegronFinder',
-            version='1.0.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out,
             script_opts=opts

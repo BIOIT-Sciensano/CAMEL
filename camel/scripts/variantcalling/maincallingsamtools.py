@@ -13,7 +13,9 @@ from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basescript.bamwithrefinput import BAMWithRefInput
 from camel.app.scriptutils.basescript.basescript import BaseScript
+from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
 from camel.snakefiles import variant_calling
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -57,9 +59,10 @@ class MainCalling(BaseScript[BAMWithRefInput, Output, Options]):
         """
         Initializes the main script.
         """
+        tool_version = BcftoolsMpileup().version
         super().__init__(
             name='Variant calling (SAMtools)',
-            version='1.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out_,
             script_opts=opts

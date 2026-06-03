@@ -43,7 +43,7 @@ class CheckVReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('CheckV')
+        section = HtmlReportSection('CheckV', subtitle=self._input_informs['checkv']['_name_full'])
 
         # Add overview output table
         for output_file in CheckVReporter.OUTPUT_FILES:

@@ -2,7 +2,6 @@
 import dataclasses
 import json
 from pathlib import Path
-from typing import Optional
 
 import click
 import yaml
@@ -21,6 +20,7 @@ from camel.app.scriptutils.inputhelper import helper_by_input_type
 from camel.app.scriptutils.inputhelper.inputhelperbase import InputHelperBase
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.wrappers.genedetectionwrapper import GeneDetectionWrapper
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -50,7 +50,7 @@ class MainSCCmecFinder(BaseScript[ScriptInput, ScriptOutput, Options]):
         """
         super().__init__(
             name='SCCmecFinder',
-            version='1.0.0',
+            version=f'CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=script_opts
@@ -60,8 +60,7 @@ class MainSCCmecFinder(BaseScript[ScriptInput, ScriptOutput, Options]):
         self._informs: dict[str, str] = {}
 
     @staticmethod
-    def __get_matching_complex(detected_genes: list[str], genes_by_complex: dict[str, list[str]]) -> \
-            Optional[str]:
+    def __get_matching_complex(detected_genes: list[str], genes_by_complex: dict[str, list[str]]) -> str | None:
         """
         Returns the matching complex (if there is one).
         :param genes_by_complex: Genes by complex

@@ -61,7 +61,6 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 '--output-html', str(path_report),
                 '--output-dir', str(path_report.parent),
                 '--working-dir', str(dir_working),
-                '--output-tsv', "None",
                 '--input-type', 'illumina',
                 '--threads', '2'
             ]
@@ -109,7 +108,6 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 '--output-html', str(path_report),
                 '--output-dir', str(path_report.parent),
                 '--working-dir', str(dir_working),
-                '--output-tsv', "None",
                 '--input-type', 'illumina',
                 '--threads', '2',
                 '--export-removed-reads'
@@ -149,7 +147,6 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 '--output-html', str(path_report),
                 '--output-dir', str(path_report.parent),
                 '--working-dir', str(dir_working),
-                '--output-tsv', "None",
                 '--input-type', 'ont',
                 '--threads', '2'
             ]
@@ -196,7 +193,6 @@ class TestNcbiHumanReadScrubber(CamelTestSuite):
                 '--output-html', str(path_report),
                 '--output-dir', str(path_report.parent),
                 '--working-dir', str(dir_working),
-                '--output-tsv', "None",
                 '--input-type', 'ont',
                 '--threads', '2',
                 '--export-removed-reads'

@@ -10,6 +10,7 @@ from camel.app.loggers import initialize_logging
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.model import BaseInput, BaseOptions, BaseOutput
 from camel.app.tools.freebayes.freebayes import Freebayes
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -55,9 +56,10 @@ class MainFreebayesCalling(BaseScript[Input, Output, Options]):
         :param opts: Options
         :return: None
         """
+        tool_version = Freebayes().version
         super().__init__(
             name='Freebayes',
-            version='1.0.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out,
             script_opts=opts

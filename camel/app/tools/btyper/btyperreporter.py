@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 from camelcore.app.io.tooliovalue import ToolIOValue
@@ -43,7 +42,7 @@ class BTyperReporter(Tool):
         Executes the BTyper reporter tool
         :return: None
         """
-        section = HtmlReportSection(BTyperReporter.TITLE, subtitle=self._input_informs['btyper']['_name'])
+        section = HtmlReportSection(BTyperReporter.TITLE, subtitle=self._input_informs['btyper']['_name_full'])
 
         # Add output tables
         formatted_tables = self.__parse_input_file()
@@ -162,7 +161,7 @@ class BTyperReporter(Tool):
 
     def __add_output_table(
             self, section: HtmlReportSection, header: list[str],
-            data: list[list[Union[str, HtmlTableCell]]], prefix: str) -> None:
+            data: list[list[str | HtmlTableCell]], prefix: str) -> None:
         """
         Adds an output table to the HTML report.
         :param section: Report section

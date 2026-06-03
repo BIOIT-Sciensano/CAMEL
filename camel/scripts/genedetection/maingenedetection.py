@@ -24,6 +24,7 @@ from camel.app.wrappers.genedetectionwrapper import (
     GeneDetectionOutput,
     GeneDetectionWrapper,
 )
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -88,7 +89,7 @@ class MainGeneDetection(BaseScript[ScriptInput, ScriptOutput, Options]):
         """
         super().__init__(
             name='Gene detection',
-            version='1.0',
+            version=f'CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=script_opts

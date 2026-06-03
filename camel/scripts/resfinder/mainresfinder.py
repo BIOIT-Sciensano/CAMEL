@@ -20,6 +20,7 @@ from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.resfinder.resfinder import ResFinder
 from camel.app.tools.resfinder.resfinderreporter import ResFinderReporter
 from camel.resources import DIR_CITATIONS
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -50,9 +51,10 @@ class MainResFinder(BaseScript[ScriptInput, ScriptOutput, Options]):
         :param opts: Options
         :return: None
         """
+        tool_version = ResFinder().version
         super().__init__(
             name='ResFinder',
-            version='1.0.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out,
             script_opts=opts

@@ -110,6 +110,11 @@ def parse_tsv_typing_list(
         )
         allele_data.append(alleles_parsed)
         sample_names.append(isolate_name)
+    if allele_data and not all(len(x) == len(allele_data[0]) for x in allele_data):
+        raise ValueError(
+            f"Samples have inconsistent allele counts: "
+            f"expected {len(allele_data[0]):,}, got counts {[len(x) for x in allele_data]}"
+        )
     return pd.DataFrame(allele_data, index=sample_names, dtype=str)
 
 
@@ -172,7 +177,7 @@ def parse_html_typing_list(
             except StopIteration:
                 pass
 
-        # Hashing disabled or no hash allele TSv file found
+        # Hashing disabled or no hash allele TSV file found
         if tsv_typing is None:
             tsv_typing = next(path_json_meta.parent.glob('typing-*.tsv'))
 
@@ -181,4 +186,9 @@ def parse_html_typing_list(
             f"{sum(v != '-' for _, v in alleles_parsed.items()):,}/{len(alleles_parsed):,} perfect hits"
         )
         allele_data.append(alleles_parsed)
+    if allele_data and not all(len(x) == len(allele_data[0]) for x in allele_data):
+        raise ValueError(
+            f"Samples have inconsistent allele counts: "
+            f"expected {len(allele_data[0]):,}, got counts {[len(x) for x in allele_data]}"
+        )
     return pd.DataFrame(allele_data, index=sample_names, dtype=str)

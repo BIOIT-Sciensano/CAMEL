@@ -190,15 +190,14 @@ rule scrubbing_fasta_fq2fa_removed:
     output:
         FASTA_REMOVED = 'human_read_scrubbing/{input_format}/output/fasta_removed.io'
     params:
-        running_dir = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/output'
+        dir_ = lambda wildcards: f'human_read_scrubbing/{wildcards.input_format}/output'
     run:
         from Bio import SeqIO
 
         scrubber_informs = snakemakeutils.load_object(Path(input.INFORMS_SCRUBBER))
-        path_removed_in = (snakemakeutils.load_object(Path(input.FASTQ_REMOVED)))[0].path
-        path_removed_out = Path(str(params.running_dir), f"{path_removed_in.stem}.fasta")
-
-        if scrubber_informs['statistics']['count_removed'] != 0:
+        if scrubber_informs['statistics']['count_removed'] > 0:
+            path_removed_in = snakemakeutils.load_object(Path(input.FASTQ_REMOVED))[0].path
+            path_removed_out = Path(str(params.dir_), f"{path_removed_in.stem}.fasta")
             with path_removed_in.open('r') as fastq_removed_file, path_removed_out.open('w') as fasta_removed_file:
                 # Write the FASTQ SeqRecords in FASTA format, not using SeqIO.write directly because it writes multine fasta's
                 fasta_removed_out = SeqIO.FastaIO.FastaWriter(fasta_removed_file, wrap=None)

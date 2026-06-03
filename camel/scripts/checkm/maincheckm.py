@@ -16,6 +16,7 @@ from camel.app.scriptutils.model import BaseOptions, BaseOutput
 from camel.app.tools.checkm.checkm import CheckM
 from camel.app.tools.checkm.checkmreporter import CheckMReporter
 from camel.resources import DIR_CITATIONS
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -51,9 +52,10 @@ class MainCheckM(BaseScript[FastaInput, Output, Options]):
         :param opts: Options
         :return: None
         """
+        tool_version = CheckM().version
         super().__init__(
             name='CheckM+',
-            version='1.0.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out,
             script_opts=opts

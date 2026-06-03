@@ -17,6 +17,7 @@ from camel.app.scriptutils.model import BaseOptions
 from camel.app.toolkits.genedetection.dbhelper import DBHelper
 from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
 from camel.app.tools.cdhit.cdhitest import Cluster
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -51,7 +52,7 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         """
         super().__init__(
             name='Gene detection: Make DB',
-            version='1.0.0',
+            version=f'CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out,
             script_opts=opts,
@@ -59,7 +60,7 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         self._db_name = fileutils.make_valid(self._script_in.name)
         self._helper = DBHelper(self._db_name, self._script_opts.working_dir)
         self._clusters: list[Cluster] | None = None
-        self._new_name_by_header = None
+        self._new_name_by_header: dict[str, str] | None = None
 
     def _execute(self) -> None:
         """
@@ -117,10 +118,10 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         :return: None
         """
         self._report = reportutils.init_report(
-            self._script_out.html,
-            'gene_detection',
-            'Gene detection database',
-            self._script_out.dir,
+            path_out=self._script_out.html,
+            key='gene_detection',
+            title='Gene detection database',
+            dir_out=self._script_out.dir,
         )
         self._report.add_html_object(self.__create_db_info_section())
         self._report.add_html_object(self.__create_clusters_section())
@@ -140,6 +141,7 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         section_db_info.add_table(
             [
                 ['Name:', self._db_name],
+                ['Script version:', self._version],
                 ['Size:', sum(len(c.seq_ids) for c in self._clusters)],
                 ['Nb. clusters:', len(self._clusters)],
                 ['Clustering cutoff: ', f'{self._script_opts.identity_cutoff}%'],

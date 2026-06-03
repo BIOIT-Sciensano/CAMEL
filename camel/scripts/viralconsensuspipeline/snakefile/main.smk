@@ -3,10 +3,13 @@ from pathlib import Path
 
 from camel.app.core.snakemake import snakemakeutils
 from camel.app.core.snakemake import snakepipelineutils
+from camel.app.loggers import initialize_logging
 from camel.snakefiles import trimming_illumina, trimming_ont, trimming, downsampling, \
     contamination_check_kraken, core, human_read_scrubbing, assembly
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection, preprocess, \
     multiallelicsites, nextclade3, antivirals
+
+initialize_logging()
 
 #######################
 # Included snakefiles #

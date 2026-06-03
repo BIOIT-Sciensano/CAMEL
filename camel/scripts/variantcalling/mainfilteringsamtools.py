@@ -7,11 +7,13 @@ from typing import Any
 import click
 import yaml
 
-from camel.app.loggers import initialize_logging
-from camel.app.scriptutils.basescript.basescript import BaseScript
-from camel.app.wrappers.variantfilteringwrapper import VariantFilteringWrapper
 from camel.app.cli import cliutils
+from camel.app.loggers import initialize_logging
 from camel.app.scriptutils import model
+from camel.app.scriptutils.basescript.basescript import BaseScript
+from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
+from camel.app.wrappers.variantfilteringwrapper import VariantFilteringWrapper
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -76,9 +78,10 @@ class MainFiltering(BaseScript[Input, Output, Options]):
         :param opts: Script options
         :return: None
         """
+        tool_version = BcftoolsMpileup().version
         super().__init__(
             name='Variant filtering (SAMtools)',
-            version='1.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=opts

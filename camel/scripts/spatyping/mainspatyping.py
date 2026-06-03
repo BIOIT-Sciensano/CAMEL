@@ -21,6 +21,7 @@ from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.blast.blastn import Blastn
 from camel.app.tools.spatyping.spatyping import SpaTyping
 from camel.app.tools.spatyping.spatypingreporter import SpaTypingReporter
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -31,6 +32,7 @@ class Options(BaseOptions):
     db: Path = dataclasses.field(metadata={'help': 'Path to the database'})
     working_dir: Path = dataclasses.field(default=Path('working'), metadata={
         'help': 'Working directory', 'show_default': True})
+    threads: int | None = dataclasses.field(default=1, metadata={'help': 'Number of threads', 'show_default': True})
 
 
 class MainSpaTyping(BaseScript[ScriptInput, ScriptOutput, Options]):
@@ -51,7 +53,7 @@ class MainSpaTyping(BaseScript[ScriptInput, ScriptOutput, Options]):
         super().__init__(
             name='spa typing',
             title='<i>spa</i> typing',
-            version='1.0.0',
+            version=f'CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=script_opts
@@ -100,10 +102,11 @@ class MainSpaTyping(BaseScript[ScriptInput, ScriptOutput, Options]):
             'DB_BLAST': [ToolIOFile(self._script_opts.db / 'profiles.fasta')],
             'FASTA': [ToolIOFile(fasta_file)]})
         blastn.update_parameters(
-            output_format=SpaTyping.BLASTN_OUTPUT_FORMAT,
+            dust='no',
             num_alignments=100_000,
+            output_format=SpaTyping.BLASTN_OUTPUT_FORMAT,
             task='blastn',
-            dust='no'
+            threads=self._script_opts.threads,
         )
         blastn.run(self._script_opts.working_dir)
         self._helper.informs.append(blastn.informs)

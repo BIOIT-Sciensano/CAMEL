@@ -19,6 +19,7 @@ from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.confindr.confindr import ConFindr
 from camel.app.tools.confindr.confindrreporter import ConFindrReporter
 from camel.resources import DIR_CITATIONS
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -67,9 +68,10 @@ class MainConFindr(BaseScript[ScriptInput, ScriptOutput, Options]):
         ;param script_opts: Script options
         :return: None
         """
+        tool_version = ConFindr().version
         super().__init__(
             name='ConFindr',
-            version='1.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=script_opts,

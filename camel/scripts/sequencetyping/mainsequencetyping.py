@@ -24,6 +24,7 @@ from camel.app.wrappers.sequencetypingwrapper import (
     SequenceTypingOutput,
     SequenceTypingWrapper,
 )
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -70,7 +71,7 @@ class MainSequenceTyping(BaseScript[ScriptInput, Output, Options]):
         """
         super().__init__(
             name='Sequence typing',
-            version='1.0',
+            version=f'CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=script_opts

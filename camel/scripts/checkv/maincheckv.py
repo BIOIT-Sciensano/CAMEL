@@ -16,6 +16,7 @@ from camel.app.scriptutils.model import BaseOptions
 from camel.app.tools.checkv.checkv import CheckV
 from camel.app.tools.checkv.checkvreporter import CheckVReporter
 from camel.resources import DIR_CITATIONS
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -39,9 +40,10 @@ class MainCheckV(BaseScript[FastaInput, ScriptOutput, CheckVOpts]):
         :param opts: Script options
         :return: None
         """
+        tool_version = CheckV().version
         super().__init__(
             name='CheckV',
-            version='1.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=opts
@@ -69,6 +71,7 @@ class MainCheckV(BaseScript[FastaInput, ScriptOutput, CheckVOpts]):
         # Create the output report
         checkv_reporter = CheckVReporter()
         checkv_reporter.add_input_files({key: checkv.tool_outputs[key] for key in checkv.tool_outputs.keys()})
+        checkv_reporter.add_input_informs({'checkv': checkv.informs})
         checkv_reporter.run(self._script_opts.working_dir)
         section = checkv_reporter.tool_outputs['HTML'][0].value
         report.add_html_object(section)

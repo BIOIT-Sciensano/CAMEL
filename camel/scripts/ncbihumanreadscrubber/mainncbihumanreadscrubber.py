@@ -7,9 +7,8 @@ import click
 import yaml
 
 from camel.app.cli import cliutils
-from camel.app.core.snakemake import snakemakeutils
-from camel.app.core.snakemake import snakepipelineutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe.basepipe import BasePipe
 from camel.app.scriptutils.basescript import basescriptutils
@@ -17,9 +16,12 @@ from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.app.scriptutils.model import BaseOptions
-from camel.scripts.ncbihumanreadscrubber import CONFIG_DATA
-from camel.scripts.ncbihumanreadscrubber import SNAKEFILE_MAIN
+from camel.app.tools.ncbihumanreadscrubber.ncbihumanreadscrubber import (
+    NcbiHumanReadScrubber,
+)
+from camel.scripts.ncbihumanreadscrubber import CONFIG_DATA, SNAKEFILE_MAIN
 from camel.snakefiles import human_read_scrubbing
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -51,10 +53,11 @@ class MainNcbiHumanReadScrubber(BasePipe):
         :param opts_custom: Pipeline-specific options
         :return: None
         """
+        tool_version = NcbiHumanReadScrubber().version
         super().__init__(
             name='NCBI human read scrubbing',
             title='NCBI human read scrubbing',
-            version='0.3',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out,
             opts=opts,
@@ -100,6 +103,8 @@ class MainNcbiHumanReadScrubber(BasePipe):
             shutil.copyfile(output_files[1].path, Path(self._script_out.dir / f'{self._script_in.name}-scrubbed_R2.fastq.gz'))
         elif self._script_in.type_ is model.InputType.ONT:
             shutil.copyfile(output_files[0].path, Path(self._script_out.dir / f'{self._script_in.name}-scrubbed.fastq.gz'))
+        elif self._script_in.type_ is model.InputType.FASTA:
+            shutil.copyfile(output_files[0].path, Path(self._script_out.dir / f'{self._script_in.name}-scrubbed.fasta'))
         else:
             raise ValueError(f"Invalid input type: {self._script_in.type_}")
 
@@ -119,6 +124,13 @@ class MainNcbiHumanReadScrubber(BasePipe):
                 return
             shutil.copyfile(fq_removed[0].path, self._script_out.dir / f'{self._script_in.name}-removed_R1.fastq.gz')
             shutil.copyfile(fq_removed[1].path, self._script_out.dir / f'{self._script_in.name}-removed_R2.fastq.gz')
+        elif self._script_in.type_ is model.InputType.FASTA:
+            fa_removed = snakemakeutils.load_object(
+                self._script_opts.working_dir / human_read_scrubbing.get_removed('fasta'))
+            if len(fa_removed) == 0:
+                logger.warning('No removed reads found')
+                return
+            shutil.copyfile(fa_removed[0].path, self._script_out.dir / f'{self._script_in.name}-removed.fasta')
 
 @click.command(name='ncbi_human_read_scrubber', short_help='Wrapper for NCBI human read scrubber')
 @basescriptutils.add_input_opts()

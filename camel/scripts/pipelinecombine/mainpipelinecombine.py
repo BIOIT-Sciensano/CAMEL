@@ -10,9 +10,10 @@ import humanize
 import pandas as pd
 
 from camel.app.cli import cliutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils.basescript.basescript import BaseScript
-from camel.app.scriptutils.model import BaseInput, BaseOutput, BaseOptions
+from camel.app.scriptutils.model import BaseInput, BaseOptions, BaseOutput
+from camel.version import __VERSION__
 
 GENE_FORMATS = {
     'simple': '{hit[1]}',
@@ -72,7 +73,7 @@ class MainPipelineCombine(BaseScript[PipelineCombineInput, PipelineCombineOutput
         """
         super().__init__(
             name='Pipeline Combine',
-            version='1.0',
+            version=f'CAMEL_{__VERSION__}',
             script_in=script_in,
             script_out=script_out,
             script_opts=opts

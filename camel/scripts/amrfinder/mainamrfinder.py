@@ -18,6 +18,7 @@ from camel.app.scriptutils.model import BaseOptions, BaseOutput
 from camel.app.tools.amrfinder.amrfinder import AMRFinder
 from camel.app.tools.amrfinder.amrfinderreporter import AMRFinderReporter
 from camel.resources import DIR_CITATIONS
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -58,9 +59,10 @@ class MainAMRFinder(BaseScript[FastaInput, Output, Options]):
         :param opts: Options
         :return: None
         """
+        tool_version = AMRFinder().version
         super().__init__(
             name='AMRFinder+',
-            version='1.0.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             title='AMRFinder+',
             script_in=in_,
             script_out=out,
@@ -77,7 +79,7 @@ class MainAMRFinder(BaseScript[FastaInput, Output, Options]):
             path_out=self._script_out.output_html,
             dir_out=self._script_out.output_dir,
             key=self.name,
-            title=f'{self.name} v{self.version}',
+            title=self.name,
         )
 
         # Create the overview section

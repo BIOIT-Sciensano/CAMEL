@@ -18,6 +18,7 @@ from camel.app.scriptutils.model import BaseOptions, BaseOutput
 from camel.app.tools.btyper.btyper import BTyper
 from camel.app.tools.btyper.btyperreporter import BTyperReporter
 from camel.resources import DIR_CITATIONS
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -56,9 +57,10 @@ class MainBTyper(BaseScript[FastaInput, Output, Options]):
         :param opts: Options
         :return: None
         """
+        tool_version = BTyper().version
         super().__init__(
             name='BTyper',
-            version='1.0.0',
+            version=f'{tool_version}+CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out,
             script_opts=opts
@@ -69,18 +71,18 @@ class MainBTyper(BaseScript[FastaInput, Output, Options]):
         Runs the main script.
         :return: None
         """
-        # Initialize report
+        # Initialize the HTML report
         report = reportutils.init_report(
             path_out=self._script_out.output_html,
             dir_out=self._script_out.output_dir,
             key=self.name,
-            title=f'{self.name} v{self.version}',
+            title=self.name,
         )
         additional_info = [
-            ['Virulence:', str(self._script_opts.virulence)],
-            ['MLST:', str(self._script_opts.mlst)],
-            ['PanC:', str(self._script_opts.panc)],
-            ['BT:', str(self._script_opts.bt)],
+            ['Virulence', 'Yes' if self._script_opts.virulence else 'No'],
+            ['MLST', 'Yes' if self._script_opts.mlst else 'No'],
+            ['PanC', 'Yes' if self._script_opts.panc else 'No'],
+            ['BT', 'Yes' if self._script_opts.bt else 'No'],
         ]
         report.add_html_object(reportutils.create_overview_section(
             version=self.version,

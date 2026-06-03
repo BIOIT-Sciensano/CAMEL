@@ -28,6 +28,7 @@ class AssemblyOpts(metaclass=abc.ABCMeta):
     Dataclass to store assembly options.
     """
     assembly_min_contig_len: int = dataclasses.field(default=1000, metadata={'help': 'Minimum contig length for assembly'})
+    assembly_cov_cutoff: str | None = dataclasses.field(default='auto', metadata={'help': 'Coverage cutoff'})
 
     @abc.abstractmethod
     def to_dict(self):

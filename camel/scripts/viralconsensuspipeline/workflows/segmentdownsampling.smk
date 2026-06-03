@@ -5,10 +5,10 @@ from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core.snakemake.step import Step
-from camel.app.loggers import initialize_logging
 from camel.app.core.snakemake import snakemakeutils
 
 
+from camel.app.loggers import initialize_logging
 initialize_logging()
 
 

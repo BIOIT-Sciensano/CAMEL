@@ -24,6 +24,7 @@ from camel.app.toolkits.phylogeny.newickutils import NewickUtils
 from camel.app.tools.figtree.figtree import FigTree
 from camel.app.tools.grapetree.grapetree import GrapeTree
 from camel.resources import DIR_CITATIONS
+from camel.version import __VERSION__
 
 
 @dataclasses.dataclass(frozen=True)
@@ -80,7 +81,7 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
         """
         super().__init__(
             name='MLST phylogeny',
-            version='1.0',
+            version=f'CAMEL_{__VERSION__}',
             script_in=in_,
             script_out=out,
             script_opts=opts
@@ -172,8 +173,8 @@ class MainMLSTPhylogeny(BaseScript[Input, Output, Options]):
         # Header
         report = reportutils.init_report(
             path_out=self._script_out.output_html,
-            key='MLST phylogeny',
-            title='MLST phylogeny report',
+            key=self.name,
+            title=self.name,
             dir_out=self._script_out.output_dir)
         if len(self._script_in.input_tsv) > 0:
             input_file_str = f'Sequence typing output ({len(self._script_in.input_tsv)} datasets)'

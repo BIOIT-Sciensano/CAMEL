@@ -75,6 +75,7 @@ class DBHelper:
         """
         samtools_faindex = SamtoolsFastaIndex()
         samtools_faindex.add_input_files({'FASTA': [ToolIOFile(fasta_file)]})
+        samtools_faindex.update_parameters(symlink_input=False)
         samtools_faindex.run(working_dir)
         self._informs.append(samtools_faindex.informs)
 
