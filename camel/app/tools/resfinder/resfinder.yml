@@ -43,6 +43,11 @@ parameters:
     mandatory: false
     option: '--kmaPath'
     value: ''
+  kma_threads:
+    default: false
+    mandatory: false
+    option: '--kma_threads'
+    value: 4
   min_cov:
     default: false
     mandatory: false

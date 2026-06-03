@@ -36,6 +36,7 @@ class Options(BaseOptions):
     threshold: int = dataclasses.field(default=80, metadata={'help': 'Minimum identity threshold'})
     acq_overlap: int = dataclasses.field(default=30, metadata={'help': 'Overlap for acquired genes'})
     species: str | None = dataclasses.field(default=None, metadata={'help': 'Species'})
+    threads: int | None = dataclasses.field(default=1, metadata={'help': 'Number of threads', 'show_default': True})
 
 
 class MainResFinder(BaseScript[ScriptInput, ScriptOutput, Options]):
@@ -116,7 +117,11 @@ class MainResFinder(BaseScript[ScriptInput, ScriptOutput, Options]):
             resfinder.add_input_files({'FASTQ_SE': [ToolIOFile(self._script_in.fastq_se)]})
 
         # Update parameters
-        resfinder.update_parameters(output_path=str(self._script_opts.working_dir), min_cov=0.6, threshold=0.8)
+        resfinder.update_parameters(
+            min_cov=0.6,
+            kma_threads=self._script_opts.threads,
+            output_path=str(self._script_opts.working_dir),
+            threshold=0.8)
         if self._script_opts.min_cov != 60:
             resfinder.update_parameters(min_cov=self._script_opts.min_cov / 100.0)
         if self._script_opts.threshold != 80:
