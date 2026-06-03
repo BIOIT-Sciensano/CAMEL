@@ -74,11 +74,11 @@ class MainResFinder(BaseScript[ScriptInput, ScriptOutput, Options]):
             title=self.name,
         )
         additional_info = [
-            ['Species:', '<i>{}</i>'.format(self._script_opts.species.replace('"', '')) if
+            ['Species', '<i>{}</i>'.format(self._script_opts.species.replace('"', '')) if
                 self._script_opts.species is not None else 'Not specified'],
-            ['Min % identity:',
+            ['Min % identity',
              f'{self._script_opts.threshold}' if self._script_opts.threshold is not None else 'Curated (default)'],
-            ['Min % coverage:', f'{self._script_opts.min_cov}'],
+            ['Min % coverage', f'{self._script_opts.min_cov}'],
         ]
         report.add_html_object(reportutils.create_overview_section(
             version=self.version,
