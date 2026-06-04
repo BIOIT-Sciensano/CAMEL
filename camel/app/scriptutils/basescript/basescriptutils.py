@@ -1,9 +1,10 @@
 import collections
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Any
+from typing import Any
 
 import click
-from camelcore.app.utils import fileutils, fastqutils
+from camelcore.app.utils import fastqutils, fileutils
 
 from camel.app.cli import cliutils
 from camel.app.dbs.dbutils import DBEntry
@@ -275,8 +276,13 @@ def parse_script_opts(kwargs) -> ScriptOptions:
             if kwargs.get("working_dir")
             else None
         ),
+        trimming_method=kwargs["trimming_method"],
         cov_max=kwargs["cov_max"],
+        ont_min_len=kwargs["ont_min_len"],
+        ont_min_qual=kwargs["ont_min_qual"],
         threads=kwargs.get("threads", 1),
+        include_bam=kwargs["include_bam"],
+        log=kwargs["log"],
         kraken2_small_db=kwargs["kraken2_small_db"],
     )
 

@@ -139,6 +139,7 @@ def main(**kwargs) -> None:
     pipeline = MainKlebsiellaPipeline(
         script_input, script_out, script_opts, custom_opts
     )
+    pipeline.prepare_input()
     pipeline.run()
 
 

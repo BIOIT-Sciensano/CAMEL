@@ -8,7 +8,7 @@ import yaml
 from camel.app.cli import cliutils
 from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipe import BasePipe
@@ -16,8 +16,7 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.scripts.enterococcuspipeline import SNAKEFILE_MAIN, CONFIG_DATA
-
+from camel.scripts.enterococcuspipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 DISABLED_FOR_SPP = ['mlst', 'cgmlst', 'variant_calling']
 
@@ -183,6 +182,7 @@ def main(**kwargs) -> None:
     pipe_script = MainEnterococcusPipeline(
         script_input, script_out, script_opts, custom_opts
     )
+    pipe_script.prepare_input()
     pipe_script.run()
 
 

@@ -196,9 +196,9 @@ rule core_init_summary:
             content.append(('typing_method', config['sequence_typing']['options']['method']))
         snakemakeutils.export_summary(content, Path(output.OUT), str(params.ext))
 
-rule core_report_pickle_citations:
+rule core_report_prepare_citations:
     """
-    This rule core_creates a pickle with a report section containing the citations.
+    This rule creates a IO file with a report section containing the citations.
     """
     output:
         HTML = 'report/html-citations.iob'
