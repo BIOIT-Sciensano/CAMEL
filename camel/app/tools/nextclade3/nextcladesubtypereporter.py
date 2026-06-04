@@ -41,7 +41,7 @@ class NextcladeSubTypeReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('Subtype determination', subtitle=self._input_informs['mash']['_name'])
+        section = HtmlReportSection('Subtype determination', subtitle=self._input_informs['mash']['_name_full'])
         if len(self._tool_inputs['TSV']) == 0:
             section.add_alert('Subtype determination failed', 'error')
             subtype = None

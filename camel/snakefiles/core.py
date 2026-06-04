@@ -1,7 +1,12 @@
 from pathlib import Path
 from typing import Any
 
-from camel.snakefiles import trimming_illumina, trimming_ont, human_read_scrubbing, read_simulation
+from camel.snakefiles import (
+    human_read_scrubbing,
+    read_simulation,
+    trimming_illumina,
+    trimming_ont,
+)
 
 SNAKEFILE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
 INPUT_FASTA_IO = Path('input', 'fasta.io')

@@ -1,15 +1,10 @@
-import shutil
 from pathlib import Path
 
-from camel.app.core.snakemake import snakemakeutils
-from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import initialize_logging
 from camel.snakefiles import trimming_illumina, trimming_ont, trimming, downsampling, \
     contamination_check_kraken, core, human_read_scrubbing, assembly
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection, preprocess, \
     multiallelicsites, nextclade3, antivirals
-
-initialize_logging()
 
 #######################
 # Included snakefiles #
@@ -27,6 +22,8 @@ include: iterativemapping.SNAKEFILE
 include: nextclade3.SNAKEFILE_NEXTCLADE
 include: multiallelicsites.SNAKEFILE
 include: antivirals.SNAKEFILE
+
+initialize_logging()
 
 #########
 # Rules #
@@ -52,7 +49,9 @@ rule link_fasta_to_iterative_mapping:
         input_type = config['input']['type'],
         fasta_ref = config['fasta_ref']
     run:
+        import shutil
         from camelcore.app.io.tooliofile import ToolIOFile
+        from camel.app.core.snakemake import snakemakeutils
         if params.fasta_ref is not None:
             snakemakeutils.dump_object([ToolIOFile(Path(params.fasta_ref))], Path(output.FASTA))
         else:
@@ -67,7 +66,7 @@ rule select_fasta_file:
     output:
         FASTA = 'fasta.io'
     shell:
-        "cp {input.FASTA} {output.FASTA};"
+        "cp {input.FASTA} {output.FASTA}"
 
 rule report_create_command_section:
     """
@@ -121,6 +120,7 @@ rule report_combine_all:
         pipeline_info = config['script_info']
     run:
         import datetime
+        from camel.app.core.snakemake import snakepipelineutils
         from camel.app.scriptutils import model
         from camel.app.scriptutils.basescript.scriptinput import ScriptInput
         from camel.app.scriptutils.basepipe import basepipeutils
