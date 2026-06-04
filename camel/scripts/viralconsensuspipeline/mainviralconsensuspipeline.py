@@ -109,8 +109,8 @@ class MainViralConsensusPipeline(BasePipe):
             MainViralConsensusPipeline._validate_ref_genome_file(self._opts_custom.fasta_ref)
 
         # Primer removal
-        if (self._opts_custom.fasta_primers is not None) and (self._opts_custom.species != 'sars_cov_2'):
-            raise ValueError("Primer removal is currently only supported for SARS-CoV-2")
+        # if (self._opts_custom.fasta_primers is not None) and (self._opts_custom.species != 'sars_cov_2'):
+        #     raise ValueError("Primer removal is currently only supported for SARS-CoV-2")
 
     @staticmethod
     def _validate_ref_genome_file(path_fasta: Path) -> None:
@@ -143,17 +143,6 @@ class MainViralConsensusPipeline(BasePipe):
                 data_genome = json.load(handle)
                 return data_genome['genome_size']
         raise ValueError('Cannot determine genome size')
-
-    def _validate_config_data(self, config_data: dict) -> bool:
-        """
-        Validates the config data.
-        :param config_data: Config data
-        :return: True if valid, False otherwise
-        """
-        self.check_dbs(config_data)
-        if ('antivirals' in config_data['analyses_selected']) and (config_data['antivirals']['species'] is None):
-            raise ValueError(f'Antiviral resistance detection is not available for species: {self._opts_custom.species}')
-        return True
 
     def _execute(self) -> None:
         """
@@ -266,7 +255,25 @@ class MainViralConsensusPipeline(BasePipe):
         config_data = basepipeutils.resolve_config(
             config_data, self._opts_custom.species
         )
+
+        # Antiviral resistance detection
+        if ('antivirals' in config_data['analyses_selected']) and (config_data['antivirals']['species'] is None):
+            logger.warning(f'Antiviral resistance detection is not available for species: {self._opts_custom.species}')
+            config_data['analyses_selected'].remove('antivirals')
+
         return config_data
+
+    def prepare_input(self) -> None:
+        """
+        Prepares the script input by creating symlinks.
+        :return: None
+        """
+        super().prepare_input()
+        if self._opts_custom.fasta_primers is not None:
+            name = self._opts_custom.fasta_primers_name or self._opts_custom.fasta_primers.name
+            path_symlink = self._script_opts.working_dir / 'input' / name
+            path_symlink.symlink_to(self._opts_custom.fasta_primers)
+            self._opts_custom = dataclasses.replace(self._opts_custom, fasta_primers=path_symlink)
 
 
 @click.command(name='viral_consensus_pipeline', short_help='Extracts the consensus sequence from viral sequencing data')

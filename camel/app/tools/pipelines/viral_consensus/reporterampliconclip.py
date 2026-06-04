@@ -15,7 +15,7 @@ class ReporterAmpliconClip(Tool):
         {'title': 'Both clipped', 'key': 'BOTH CLIPPED'},
         {'title': 'Forward clipped', 'key': 'FORWARD CLIPPED'},
         {'title': 'Reverse clipped', 'key': 'REVERSE CLIPPED'},
-        {'title': 'Not clipped', 'key': 'NOT CLIPPED'}
+        {'title': 'Not clipped', 'key': 'NOT CLIPPED'},
     ]
 
     def __init__(self) -> None:
@@ -39,12 +39,23 @@ class ReporterAmpliconClip(Tool):
         :return: None
         """
         # Create report section
-        section = HtmlReportSection('Primer removal', 3, subtitle=self._input_informs['ampliconclip']['_name'])
+        section = HtmlReportSection(
+            'Primer removal',
+            3,
+            subtitle=self._input_informs['ampliconclip']['_name_full'],
+        )
 
         # Information table
-        section.add_table([
-            [f"{self._input_informs['ampliconclip']['stats'][c['key']]:,}" for c in ReporterAmpliconClip.COLUMNS]],
-            [c['title'] for c in ReporterAmpliconClip.COLUMNS], [('class', 'data')])
+        section.add_table(
+            [
+                [
+                    f"{self._input_informs['ampliconclip']['stats'][c['key']]:,}"
+                    for c in ReporterAmpliconClip.COLUMNS
+                ]
+            ],
+            [c['title'] for c in ReporterAmpliconClip.COLUMNS],
+            [('class', 'data')],
+        )
 
         # Set the tool outputs
         self._tool_outputs['HTML'] = [ToolIOValue(section)]
