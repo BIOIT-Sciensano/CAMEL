@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Union, Optional, Any
 
-from snakemake.io import Wildcards
-
 from camel.app import loggers
 from camel.app.core.utils import toolutils
 from camel.app.loggers import logger
@@ -22,7 +20,7 @@ class StepOutput:
     key: str
     index: int
     hash: str
-    wildcards: Optional[Wildcards] = None
+    wildcards: Any | None = None
 
     @property
     def wildcards_json(self) -> Union[None, str]:
@@ -40,7 +38,7 @@ class Step:
     This class represents a step in a Snakemake pipeline. It executes a single tool.
     """
 
-    def __init__(self, rule_name: str, tool: Tool, wildcards: Wildcards | Any = None, dir_: Optional[Path]= None) -> None:
+    def __init__(self, rule_name: str, tool: Tool, wildcards: Any = None, dir_: Optional[Path]= None) -> None:
         """
         Initializes a step.
         :param rule_name: Name of the rule in Snakemake.

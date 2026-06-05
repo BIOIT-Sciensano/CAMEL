@@ -41,6 +41,15 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         else:
             return None
 
+    @property
+    def color(self) -> str:
+        """
+        For a mixed hit, I depend on KMA and/or Blast colors. I set this to white so that the "accession" cell
+        does not get colored by the "gene_detection_get_column_names" rule in the snakefile.
+        :return: White
+        """
+        return 'white'
+
     def is_perfect_hit(self) -> dict[str, bool]:
         """
         Function to check if this is a perfect hit.
@@ -102,8 +111,8 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         :return: List of table cell values
         """
         return ([HtmlTableCell(v) for v in self.to_table_row()][1:-1] + [self._get_accession_cell()] +
-                [HtmlTableCell('✓' if self._kma_hit else '✗', self._kma_hit.color if self._kma_hit else 'red')] +
-                [HtmlTableCell('✓' if self._blast_hit else '✗', self._blast_hit.color if self._blast_hit else 'red')])
+                [HtmlTableCell('v' if self._kma_hit else 'x', self._kma_hit.color if self._kma_hit else 'red')] +
+                [HtmlTableCell('v' if self._blast_hit else 'x', self._blast_hit.color if self._blast_hit else 'red')])
 
     def kma_hit(self) -> GeneDetectionKMAHit:
         """

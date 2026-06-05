@@ -117,3 +117,11 @@ class GeneDetectionBlastHit(GeneDetectionHitBase):
         :return: None
         """
         self._alignment_path = alignment_path
+
+    @property
+    def cluster(self) -> str:
+        """
+        Returns the cluster of the alignment.
+        :return: Cluster
+        """
+        return self.blast_stats.subject_id.split('__')[1]
