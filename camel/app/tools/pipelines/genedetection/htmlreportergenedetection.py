@@ -7,8 +7,8 @@ from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.tool import Tool
 from camel.app.core.utils import fileutils
 from camel.app.loggers import logger
-from camel.app.toolkits.export.tsvexporter import TsvExporter
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
+from camel.app.tools.pipelines.genedetection.mixedhitaggregating import AggregatedHit
 
 
 class HtmlReporterGeneDetection(Tool):
@@ -37,7 +37,8 @@ class HtmlReporterGeneDetection(Tool):
         else:
             self.__add_output_table([h.value for h in self._tool_inputs['VAL_Hits']])
             if self._tool_inputs['VAL_agg_hits']:
-                self.__add_aggregated_table([h.value for h in self._tool_inputs['VAL_agg_hits']])
+                self.__add_additional_info_section_aggregated_hits()
+
         self.__add_database_information()
 
         # Add a warning when the detection method is different from the general detection
@@ -109,7 +110,7 @@ class HtmlReporterGeneDetection(Tool):
         self._report_section.add_file(self._tool_inputs['TSV'][0].path, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
 
-    def __add_aggregated_table(self, hits: list) -> None:
+    def __add_aggregated_table(self, hits: list[AggregatedHit]) -> None:
         """
         Adds the aggregated table to the report.
         This table is added only if the "mixed" gene detection approach is selected
@@ -117,15 +118,31 @@ class HtmlReporterGeneDetection(Tool):
         :param hits: Detected aggregated hits
         :return: None
         """
-        all_hits = [hit.to_html_list() for hit in sorted(hits, key=lambda x: x.locus)]
-        self._report_section.add_horizontal_line()
-        self._report_section.add_paragraph('This table shows the details about the genes detected.')
-        self._report_section.add_table(all_hits,
+        self._report_section.add_table([hit.to_html_list() for hit in sorted(hits, key=lambda x: x.locus)],
                                        column_names=hits[0].header()[:-2],
                                        table_attributes=[('class', 'data')])
         relative_path = self._sub_folder / Path(self._tool_inputs['TSV_agg_hits'][0].path).name
         self._report_section.add_file(self._tool_inputs['TSV_agg_hits'][0].path, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
+
+    def __add_additional_info_section_aggregated_hits(self) -> None:
+        """
+        Adds the complete aggregated hit list section to the report.
+        :return: None
+        """
+        self._report_section.add_header('Additional information', level=4)
+        self._report_section.add_paragraph(
+            'In the case of the mixed gene detection strategy, both <b>read-based (KMA)</b> and <b>assembly-based (Blast)</b> '
+            'gene detection methods are used. '
+            'Since Blast can report hits on multiple closely related alleles, and KMA only single best hits, '
+            'the table contains matching alleles detected with both KMA and Blast. '
+            'The details about all detected genes (i.e., all alleles) are presented in the following table.'
+        )
+        self._report_section.add_header('Aggregated hits: complete list.', level=3)
+        self._report_section.add_paragraph(
+            'This table shows the details about all genes detected by either strategies.'
+        )
+        self.__add_aggregated_table([h.value for h in self._tool_inputs['VAL_agg_hits']])
 
     def __add_database_information(self) -> None:
         """
