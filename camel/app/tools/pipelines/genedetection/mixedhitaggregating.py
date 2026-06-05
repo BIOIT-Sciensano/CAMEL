@@ -38,7 +38,7 @@ class AggregatedHit:
 
     def to_html_list(self) -> list:
         """
-        Returns the gene detection information as a list.
+        Returns the genes detected as an HTML list.
         :return: list
         """
         return [HtmlTableCell(self.locus), HtmlTableCell(self.locus_length),
@@ -48,7 +48,7 @@ class AggregatedHit:
 
     def to_list(self) -> list:
         """
-        Returns the gene detection as a list.
+        Returns the genes detected as a list.
         :return: list
         """
         return [self.locus, self.locus_length, self.kma_identity, self.kma_coverage, self.kma_depth,
@@ -57,7 +57,7 @@ class AggregatedHit:
 
 class MixedHitAggregating(Tool):
     """
-    Performs mixed hit aggregating from KMA and Blast gene detection.
+    Performs the aggregation of hits from KMA and Blast gene detection.
     """
 
     def __init__(self) -> None:
@@ -186,22 +186,22 @@ class MixedHitAggregating(Tool):
             GeneDetectionMixedHit(locus=locus, accession=None, blast_hit=filter_unique_hits_dic[locus]['blast'],
                                   kma_hit=filter_unique_hits_dic[locus]['kma']) for locus in filter_unique_hits_dic
         ]
-        sub_dictionary = {
+        all_loci_dictionary = {
             locus: hits_per_cluster[cluster][locus]
             for cluster in hits_per_cluster.keys()
             for locus in hits_per_cluster[cluster].keys()
         }
         complete_hit_list = [
-            GeneDetectionMixedHit(locus=locus, accession=None, blast_hit=sub_dictionary[locus]['blast'],
-                                  kma_hit=sub_dictionary[locus]['kma']) for locus in sub_dictionary
+            GeneDetectionMixedHit(locus=locus, accession=None, blast_hit=all_loci_dictionary[locus]['blast'],
+                                  kma_hit=all_loci_dictionary[locus]['kma']) for locus in all_loci_dictionary
         ]
         return {'unique_hits': output_unique_hits, 'complete': complete_hit_list}
 
     def __create_combined_hits_summary(self, combined_hits: list[GeneDetectionMixedHit]) -> list[AggregatedHit]:
         """
-        Creates a summary table based on genes discovered by both methods.
+        Creates a list containing all aggregated hits.
         :param combined_hits: List of GeneDetectionMixedHit objects
-        :return: None
+        :return: List of all the aggregated hits
         """
         res_summary = []
         for hit in combined_hits:
@@ -229,7 +229,8 @@ class MixedHitAggregating(Tool):
     def _retrieve_locus_name(self, locus: str) -> str:
         """
         Retrieves the locus name.
-        :return: locus name
+        :param locus: Locus
+        :return: allele name
         """
         locus_name = self._input_informs['db']['mapping'].get_metadata(locus, 'allele')
         return locus_name
