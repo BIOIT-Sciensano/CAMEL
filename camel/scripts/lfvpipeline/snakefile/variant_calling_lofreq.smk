@@ -30,13 +30,10 @@ rule fai_index:
         FASTA = rules.variant_calling_prep_reference.output.FASTA
     output:
         FASTA = 'variant_calling/reference/genome_prefix_index_fai.io'
-    params:
-        dir_ = 'variant_calling/reference'
     run:
         from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
-
         samtools_index = SamtoolsFastaIndex()
-        step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=samtools_index, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(samtools_index, input)
         step.run()
         snakemakeutils.dump_io_outputs(samtools_index, output)
@@ -49,13 +46,10 @@ rule create_sequence_dictionary:
         FASTA_REF = rules.fai_index.output.FASTA
     output:
         FASTA_REF = 'variant_calling/reference/fasta_sequence_dictionary.io'
-    params:
-        dir_ = 'variant_calling/reference'
     run:
         from camel.app.tools.picard.createsequencedictionary import CreateSequenceDictionary
-
         create_dictionary = CreateSequenceDictionary()
-        step = Step(rule_name=str(rule), tool=create_dictionary, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=create_dictionary, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(create_dictionary, input)
         step.run()
         snakemakeutils.dump_io_outputs(create_dictionary, output)
@@ -68,13 +62,10 @@ rule bt2_index:
         FASTA_REF = rules.fai_index.output.FASTA
     output:
         INDEX_GENOME_PREFIX = 'variant_calling/reference/genome_prefix_index.io'
-    params:
-        dir_ = 'variant_calling/reference'
     run:
         from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
-
         bowtie2_index = Bowtie2Index()
-        step = Step(rule_name=str(rule), tool=bowtie2_index, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=bowtie2_index, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(bowtie2_index, input)
         step.run()
         snakemakeutils.dump_io_outputs(bowtie2_index, output)
@@ -124,14 +115,11 @@ rule picard_add_readgroups:
         BAM = rules.variant_calling_map_reads_illumina_lofreq.output.BAM
     output:
         BAM = 'variant_calling/read_mapping/illumina/bam-rg.io'
-    params:
-        dir_ = 'variant_calling/read_mapping/illumina'
     run:
         from camel.app.tools.picard.addorreplacereadgroups import AddOrReplaceReadGroups
-
         add_rg = AddOrReplaceReadGroups()
         snakemakeutils.add_io_inputs(add_rg, input)
-        step = Step(rule_name=str(rule), tool=add_rg, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=add_rg, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(add_rg, output)
 
@@ -143,34 +131,36 @@ rule bam_index:
         BAM = rules.picard_add_readgroups.output.BAM
     output:
         BAM = 'variant_calling/read_mapping/illumina/bam-rg-index.io'
-    params:
-        dir_ = 'variant_calling/read_mapping/illumina'
     run:
         from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
 
         samtools_index = SamtoolsIndex()
         snakemakeutils.add_io_inputs(samtools_index, input)
-        step = Step(rule_name=str(rule), tool=samtools_index, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=samtools_index, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(samtools_index, output)
 
 rule gatk_realigner_target_creator:
+    """
+    Identifies the target windows to perform Indel realignment. Necessary for LoFreq indel calling.
+    """
     input:
         BAM = rules.bam_index.output.BAM,
         FASTA_REF = rules.create_sequence_dictionary.output.FASTA_REF
     output:
         TXT_realign_intervals = 'variant_calling/read_mapping/illumina/txt-realign-intervals.io'
-    params:
-        dir_ = 'variant_calling/read_mapping/illumina'
     run:
         from camel.app.tools.gatk.gatkrealignertargetcreator import GATKRealignerTargetCreator
         gatk_realigner = GATKRealignerTargetCreator()
         snakemakeutils.add_io_inputs(gatk_realigner, input)
-        step = Step(rule_name=str(rule), tool=gatk_realigner, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=gatk_realigner, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(gatk_realigner, output)
 
 rule gatk_indel_realigner:
+    """
+    Realigns the BAM file around Indels identified above.
+    """
     input:
         BAM = rules.bam_index.output.BAM,
         FASTA_REF = rules.create_sequence_dictionary.output.FASTA_REF,
@@ -178,15 +168,13 @@ rule gatk_indel_realigner:
     output:
         BAM = 'variant_calling/read_mapping/illumina/bam_realigned/bam.io',
         INFORMS = 'variant_calling/read_mapping/illumina/bam_realigned/informs.io'
-    params:
-        dir_ = 'variant_calling/read_mapping/illumina/bam_realigned'
     run:
         from camel.app.tools.gatk.gatkindelrealigner import GATKIndelRealigner
         gatk_realigner = GATKIndelRealigner()
-        snakemakeutils.add_io_inputs(gatk_realigner,input)
-        step = Step(rule_name=str(rule),tool=gatk_realigner,dir_=Path(params.dir_))
+        snakemakeutils.add_io_inputs(gatk_realigner, input)
+        step = Step(rule_name=str(rule), tool=gatk_realigner, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
-        snakemakeutils.dump_io_outputs(gatk_realigner,output)
+        snakemakeutils.dump_io_outputs(gatk_realigner, output)
 
 rule lofreq_indel_qualities:
     """
@@ -198,14 +186,11 @@ rule lofreq_indel_qualities:
     output:
         BAM = 'variant_calling/read_mapping/illumina/bam-indelqual.io',
         INFORMS = 'variant_calling/read_mapping/illumina/indelqual_informs.io'
-    params:
-        dir_ = 'variant_calling/read_mapping/illumina'
     run:
         from camel.app.tools.lofreq.lofreqindelqual import LofreqIndelqual
-
         lofreq_indelqual = LofreqIndelqual()
         snakemakeutils.add_io_inputs(lofreq_indelqual, input)
-        step = Step(rule_name=str(rule), tool=lofreq_indelqual, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=lofreq_indelqual, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(lofreq_indelqual, output)
 
@@ -221,16 +206,14 @@ rule variant_calling_with_lofreq:
         VCF = 'variant_calling/vcf.io',
         INFORMS = 'variant_calling/informs.io'
     params:
-        dir_ = 'variant_calling',
         call_indels = config.get('variant_calling', {}).get('call_indels', None)
     threads: 8
     run:
         from camel.app.tools.lofreq.lofreqcall import LofreqCall
-
         lofreq_call = LofreqCall()
         snakemakeutils.add_io_inputs(lofreq_call, input)
         lofreq_call.update_parameters(call_indels=True if params.call_indels else False)
-        step = Step(rule_name=str(rule), tool=lofreq_call, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=lofreq_call, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(lofreq_call, output)
 
@@ -245,7 +228,6 @@ rule annotate_variants_csq:
         VCF = 'variant_calling/csq/vcf_csq.io',
         INFORMS = 'variant_calling/csq/csq_informs.io'
     params:
-        dir_ = 'variant_calling/csq/',
         gff = config.get('reference', {}).get('gff', None)
     run:
         from camel.app.tools.bcftools.bcftoolscsq import BcftoolsCsq
@@ -255,7 +237,7 @@ rule annotate_variants_csq:
         snakemakeutils.add_io_inputs(csq, input)
         if params.gff:
             csq.add_input_files({'GFF': [ToolIOFile(Path(params.gff))]})
-        step = Step(rule_name=str(rule), tool=csq, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=csq, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(csq, output)
 
@@ -268,17 +250,18 @@ rule extract_variants_effect_from_vcf:
         else rules.variant_calling_with_lofreq.output.VCF
     output:
         TSV = 'variant_calling/variants_list/tsv.iob'
-    params:
-        dir_ = 'variant_calling/variants_list'
     run:
         from camel.app.tools.pipelines.variant_calling.extractvariantsandeffectfromvcf import ExtractVariantsAndEffectFromVCF
         extract_variants = ExtractVariantsAndEffectFromVCF()
-        step = Step(rule_name=str(rule), tool=extract_variants, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=extract_variants, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(extract_variants, input)
         step.run()
         snakemakeutils.dump_io_outputs(extract_variants, output)
 
 rule lofreq_reporter:
+    """
+    Generates the LoFreq HTML section.
+    """
     input:
         VCF = rules.annotate_variants_csq.output.VCF if config['variant_calling'].get('csq', False) is True
         else rules.variant_calling_with_lofreq.output.VCF,
@@ -294,14 +277,13 @@ rule lofreq_reporter:
         VAL_HTML = 'variant_calling/report/html-lofreq.iob',  # variant_calling_lofreq.OUTPUT_REPORT_LOFREQ
         INFORMS = 'variant_calling/report/informs.io'
     params:
-        dir_ = 'variant_calling/report',
         sample_name = config['input']['sample_name'],
         include_bam = config.get('variant_calling', {}).get('report_include_bam', False),
         min_af = config.get('variant_calling', {}).get('min_af', 0),
         csq = config.get('variant_calling', {}).get('csq', False)
     run:
         reporter = LofreqReporter()
-        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(reporter, input)
         reporter.update_parameters(
             export_bam='true' if params.include_bam else 'false',
@@ -328,6 +310,9 @@ rule report_create_commands_section:
         basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 rule generate_report:
+    """
+    Creates the LFV pipeline report.
+    """
     input:
         report_trimming = trimming.get_reports(config),
         report_lofreq = variant_calling_lofreq.OUTPUT_REPORT_LOFREQ,

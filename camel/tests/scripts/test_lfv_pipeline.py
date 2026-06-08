@@ -2,12 +2,12 @@ from camelcore.app.utils import vcfutils
 
 from camel.app.cli import cliutils
 from camel.app.core.cameltestsuite import CamelTestSuite
-from camel.scripts.lfvpipeline.mainlfvpipeline import main
+from camel.scripts.lfvpipeline.maincallinglfv import main
 
 
 class TestVariantCalling(CamelTestSuite):
     """
-    Tests the variant calling tool.
+    Tests the LFV pipeline.
     """
     # Input files
     test_file_dir = CamelTestSuite.get_test_file_dir('variant_calling_lofreq')
@@ -22,6 +22,7 @@ class TestVariantCalling(CamelTestSuite):
         :return: None
         """
         output_file_vcf = self.running_dir / 'detected_variants.vcf'
+        output_file_html = self.running_dir / 'lfv_report.html'
         result = cliutils.invoke(
             main, [
                 '--fastq-pe', str(TestVariantCalling.fastq_1), str(TestVariantCalling.fastq_2),
@@ -29,6 +30,7 @@ class TestVariantCalling(CamelTestSuite):
                 '--gff', str(TestVariantCalling.input_gff_file),
                 '--working-dir', str(self.running_dir),
                 '--output-vcf', str(output_file_vcf),
+                '--output-html', str(output_file_html),
                 '--input-type', 'illumina',
                 '--call-indels'
             ]
@@ -36,3 +38,4 @@ class TestVariantCalling(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(output_file_vcf.stat().st_size, 0)
         self.assertGreater(vcfutils.count_variants(output_file_vcf), 0)
+        self.assertGreater(output_file_html.stat().st_size, 0)

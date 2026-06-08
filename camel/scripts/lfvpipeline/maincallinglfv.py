@@ -7,8 +7,8 @@ from typing import Any
 import click
 
 from camel.app.cli import cliutils
-from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
-from camel.app.loggers import initialize_logging, logger
+from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
+from camel.app.loggers import logger, initialize_logging
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipeutils import dict_merge
@@ -26,7 +26,7 @@ class Options(model.BaseOptions):
     Defines the custom options for the script.
     """
     reference: Path = dataclasses.field(metadata={'help': 'Reference FASTA file'})
-    output_vcf: Path = dataclasses.field(default=Path('output.vcf'), metadata={'help': 'Output VCF file'})
+    output_vcf: Path = dataclasses.field(default='output.vcf', metadata={'help': 'Output VCF file'})
     gff: Path = dataclasses.field(default=None, metadata={'help': 'GFF file'})
     reference_name: str | None = dataclasses.field(default=None, metadata={'help': 'Reference genome name'})
 
@@ -39,14 +39,14 @@ class Options(model.BaseOptions):
         name = self.reference_name if self.reference_name is not None else self.reference.name
         return name
 
-    working_dir: Path = dataclasses.field(default_factory=Path.cwd, metadata={'help': 'Working directory'})
+    working_dir: Path = dataclasses.field(default=Path.cwd(), metadata={'help': 'Working directory'})
     call_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call indels'})
     only_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call only indels'})
     threads: int = dataclasses.field(default=8, metadata={'help': 'Number of threads'})
     min_af: float = dataclasses.field(default=0.0, metadata={'help': 'Minimum allele frequency'})
 
 
-class MainLFVPipeline(BaseScript[ScriptInput, ScriptOutput, Options]):
+class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
     """
     Class to perform variant calling from a BAM file.
     """
@@ -158,7 +158,7 @@ class MainLFVPipeline(BaseScript[ScriptInput, ScriptOutput, Options]):
         }
         variant_calling_config = {
             k: getattr(self._script_opts, k)
-            for k in MainLFVPipeline.VARIANT_CALLING_OPTS
+            for k in MainCalling.VARIANT_CALLING_OPTS
             if getattr(self._script_opts, k, None) is not None
         }
         config_data['variant_calling'].update(variant_calling_config)
@@ -167,7 +167,7 @@ class MainLFVPipeline(BaseScript[ScriptInput, ScriptOutput, Options]):
         return config_data
 
 
-@click.command(name='LFV_pipeline', short_help='Detection of low frequency variants.')
+@click.command(name='lfv_pipeline', short_help='Detection of low frequency variants.')
 @basescriptutils.add_input_opts()
 @basescriptutils.add_output_opts
 @cliutils.add_click_options_from_dataclass(Options)
@@ -180,7 +180,7 @@ def main(**kwargs) -> None:
     script_input = basescriptutils.parse_script_input(kwargs)
     script_out = basescriptutils.parse_script_output(kwargs)
 
-    script = MainLFVPipeline(
+    script = MainCalling(
         in_=script_input,
         out_=script_out,
         opts=Options(**cliutils.from_kwargs(Options, kwargs))

@@ -136,7 +136,7 @@ class LofreqReporter(Tool):
             )
             len_genome = len(self._coverage_table)
             for cov in LofreqReporter.COVERAGE_THRESHOLDS_FOR_BREADTH:
-                cov_fraction_above_thresh = len(self._coverage_table[self._coverage_table["depth"] >= cov])/ len_genome
+                cov_fraction_above_thresh = len(self._coverage_table[self._coverage_table["depth"] >= cov]) / len_genome
                 res[f'{cov}X'] = f'{cov_fraction_above_thresh * 100:.2f}'
             self._section.add_paragraph('Breadth of coverage at different thresholds.')
             self._section.add_table(
@@ -186,7 +186,7 @@ class LofreqReporter(Tool):
             include_lowest=True,
         )
         dataframe_with_counts = (
-            af_and_variants_df.groupby('AF_bin')
+            af_and_variants_df.groupby('AF_bin', observed=False)
             .var_type.value_counts()
             .unstack(fill_value=0)
         )
@@ -329,7 +329,7 @@ class LofreqReporter(Tool):
         table_binned[column_binned_renamed] = pd.cut(
             table_binned[column_for_binning], bins=bins
         )
-        final_binned_df = table_binned.groupby(column_binned_renamed)[column].agg(
+        final_binned_df = table_binned.groupby(column_binned_renamed, observed=False)[column].agg(
             ['sum', 'count']
         )
         final_binned_df['proportion'] = (
