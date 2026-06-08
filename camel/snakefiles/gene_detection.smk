@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
@@ -9,6 +8,7 @@ from camel.snakefiles import gene_detection
 # Include workflows for the different detection methods
 include: gene_detection.SNAKEFILE_BLAST
 include: gene_detection.SNAKEFILE_KMA
+include: gene_detection.SNAKEFILE_MIXED
 
 # Common rules
 rule gene_detection_db_manager:
@@ -35,38 +35,14 @@ rule gene_detection_db_manager:
         step.run()
         snakemakeutils.dump_tool_outputs(db_manager, output)
 
-rule aggregate_hits:
-    input:
-        KMA_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='kma'),
-        BLAST_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='blast'),
-        INFORMS_db = rules.gene_detection_db_manager.output.INFORMS,
-        INFORMS_kma = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method='kma'),
-        INFORMS_blast = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method='blast')
-    output:
-        VAL_hits = 'gene_detection/{db}/mixed/hits.iob',  # gene_detection.OUTPUT_HITS_METHOD
-        INFORMS = 'gene_detection/{db}/mixed/informs.io',
-        VAL_agg_hits = 'gene_detection/{db}/mixed/agg-hits-summary.iob',
-        TSV_agg_hits = 'gene_detection/{db}/mixed/tsv-agg-hits-summary.iob'
-    params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/mixed',
-        min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_percent_identity', 90),
-        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_coverage', 60),
-    run:
-        from camel.app.tools.pipelines.genedetection.mixedhitaggregating import MixedHitAggregating
-        mixed_hit = MixedHitAggregating()
-        snakemakeutils.add_pickle_inputs(mixed_hit, input)
-        step = Step(rule_name=str(rule), tool=mixed_hit, dir_=Path(str(params.dir_)))
-        step.run()
-        snakemakeutils.dump_tool_outputs(mixed_hit, output)
-
 rule gene_detection_get_hits:
     """
     Retrieves the hits based on the detection method species in the configuration.
     """
     input:
         INFORMS_DB = rules.gene_detection_db_manager.output.INFORMS,
-        VAL_agg_hits = lambda wildcards: rules.aggregate_hits.output.VAL_agg_hits if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
-        TSV_agg_hits = lambda wildcards: rules.aggregate_hits.output.TSV_agg_hits if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
+        VAL_agg_hits = lambda wildcards: 'gene_detection/{db}/mixed/agg-hits-summary.iob' if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
+        TSV_agg_hits = lambda wildcards: 'gene_detection/{db}/mixed/tsv-agg-hits-summary.iob' if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
         VAL_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db)),
         INFORMS_hits = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db))
     output:
