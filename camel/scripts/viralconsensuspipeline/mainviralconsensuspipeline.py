@@ -30,6 +30,7 @@ class Options(model.BaseOptions):
     """
     Pipeline-specific options.
     """
+
     # Species
     species: str
     species_name: str | None = None
@@ -37,24 +38,25 @@ class Options(model.BaseOptions):
     # Reference genome or database
     fasta_ref: Path | None = dataclasses.field(default=None, metadata={'help': 'Reference genome FASTA file'})
     fasta_ref_name: str | None = None
-    ref_genome_db: Path | None = dataclasses.field(default=None, metadata={
-        'help': 'Path to reference genome database'})
+    ref_genome_db: Path | None = dataclasses.field(default=None, metadata={'help': 'Path to reference genome database'})
 
     # Primer removal
-    fasta_primers: Path | None = dataclasses.field(default=None, metadata={
-        'help': 'Path to FASTA file with primer sequences'})
+    fasta_primers: Path | None = dataclasses.field(
+        default=None, metadata={'help': 'Path to FASTA file with primer sequences'}
+    )
     fasta_primers_name: str | None = None
 
     # Downsampling & gaps
     cov_max_segment: int = dataclasses.field(default=10_000, metadata={'help': 'Maximum segment coverage'})
-    gap_depth_cutoff: int = dataclasses.field(default=5, metadata={
-        'help': 'Positions with a depth smaller than this value are flagged as missing / gaps'})
-    gap_len_cutoff: int = dataclasses.field(default=10, metadata={
-        'help': 'Minimum length to mark a region as a gap'})
+    gap_depth_cutoff: int = dataclasses.field(
+        default=5, metadata={'help': 'Positions with a depth smaller than this value are flagged as missing / gaps'}
+    )
+    gap_len_cutoff: int = dataclasses.field(default=10, metadata={'help': 'Minimum length to mark a region as a gap'})
 
     # Variant filtering & iterative mapping
-    max_iter: int = dataclasses.field(default=6, metadata={
-        'help': 'Maximum number of iterations for iterative mapping'})
+    max_iter: int = dataclasses.field(
+        default=6, metadata={'help': 'Maximum number of iterations for iterative mapping'}
+    )
     variant_min_af: float = dataclasses.field(default=0.5, metadata={'help': 'Minimum allele frequency'})
     variant_min_dp: float = dataclasses.field(default=5, metadata={'help': 'Minimum depth at variant position'})
     variant_min_qual: int = dataclasses.field(default=10, metadata={'help': 'Minimum variant quality'})
@@ -70,13 +72,7 @@ class MainViralConsensusPipeline(BasePipe):
     Main script for the viral consensus pipeline.
     """
 
-    def __init__(
-        self,
-        in_: ScriptInput,
-        out: ScriptOutput,
-        opts: ScriptOptions,
-        opts_custom: Options
-    ) -> None:
+    def __init__(self, in_: ScriptInput, out: ScriptOutput, opts: ScriptOptions, opts_custom: Options) -> None:
         """
         Initializes the main class.
         :param in_: Script input
@@ -91,7 +87,7 @@ class MainViralConsensusPipeline(BasePipe):
             script_in=in_,
             script_out=out,
             opts=opts,
-            snakefile=SNAKEFILE_MAIN
+            snakefile=SNAKEFILE_MAIN,
         )
         self._opts_custom = opts_custom
 
@@ -106,28 +102,31 @@ class MainViralConsensusPipeline(BasePipe):
 
         # Reference genome
         if self._opts_custom.fasta_ref is not None:
-            MainViralConsensusPipeline._validate_ref_genome_file(self._opts_custom.fasta_ref)
+            MainViralConsensusPipeline._validate_fasta_file(self._opts_custom.fasta_ref)
 
-        # Primer removal
-        # if (self._opts_custom.fasta_primers is not None) and (self._opts_custom.species != 'sars_cov_2'):
-        #     raise ValueError("Primer removal is currently only supported for SARS-CoV-2")
+        # FASTA input
+        if self._script_in.type_ == model.InputType.FASTA:
+            MainViralConsensusPipeline._validate_fasta_file(self._script_in.fasta)
 
     @staticmethod
-    def _validate_ref_genome_file(path_fasta: Path) -> None:
+    def _validate_fasta_file(path_fasta: Path) -> None:
         """
         Checks if the input file is a valid reference genome file.
         :param path_fasta: Input FASTA path
         :return: None
         """
         with path_fasta.open() as handle:
-            for seq in SeqIO.parse(handle, 'fasta'):
-                m = re.match(r'^[\w.]+-\w+', seq.id)
-                if m:
-                    continue
-                raise ValueError(
-                    f"Invalid reference genome, sequence '{seq.id}' does not match format ("
-                    f"{{identifier}}-{{segment_name}}, use 'genome' as segment name for viral species without "
-                    f"segments)")
+            seqs = list(SeqIO.parse(handle, 'fasta'))
+        if len(seqs) == 1:
+            # A single segment is accepted
+            return
+        for seq in seqs:
+            m = re.match(r'^[\w.]+-\w+', seq.id)
+            if m:
+                continue
+            raise ValueError(
+                f"Invalid FASTA input, sequence '{seq.id}' does not match format ({{identifier}}-{{segment_name}})"
+            )
 
     def _determine_genome_size(self) -> int:
         """
@@ -157,15 +156,14 @@ class MainViralConsensusPipeline(BasePipe):
 
         # Create the config file and run snakefile
         self._script_out.dir.mkdir(parents=True, exist_ok=True)
-        path_config = snakepipelineutils.generate_config_file(
-            config_data, self._script_opts.working_dir
-        )
+        path_config = snakepipelineutils.generate_config_file(config_data, self._script_opts.working_dir)
         self.run_snakefile(path_config)
 
         # Copy the FASTA file of the consensus sequence (if specified)
         if self._script_out.fasta is not None:
-            output_io_list = snakemakeutils.load_object(Path(
-                self._script_opts.working_dir, iterativemapping.OUTPUT_FASTA_CONSENSUS_FINAL_TRIMMED))
+            output_io_list = snakemakeutils.load_object(
+                Path(self._script_opts.working_dir, iterativemapping.OUTPUT_FASTA_CONSENSUS_FINAL_TRIMMED)
+            )
             shutil.copyfile(output_io_list[0].path, self._script_out.fasta)
 
     def _config_add_yaml_data(self, config_data: dict) -> None:
@@ -177,12 +175,16 @@ class MainViralConsensusPipeline(BasePipe):
         logger.info(f'Adding config data from: {CONFIG_DATA}')
         with CONFIG_DATA.open() as handle_in:
             basepipeutils.dict_merge(
-                config_data, yaml.safe_load(handle_in.read().format(
-                    COV_MAX=self._script_opts.cov_max,
-                    COV_MAX_SEGMENT=self._opts_custom.cov_max_segment,
-                    DB_ROOT=config.dir_db,
-                    GENOME_SIZE=self._determine_genome_size(),
-                )))
+                config_data,
+                yaml.safe_load(
+                    handle_in.read().format(
+                        COV_MAX=self._script_opts.cov_max,
+                        COV_MAX_SEGMENT=self._opts_custom.cov_max_segment,
+                        DB_ROOT=config.dir_db,
+                        GENOME_SIZE=self._determine_genome_size(),
+                    )
+                ),
+            )
 
     def _config_add_iterative_mapping_data(self, config_data: dict) -> None:
         """
@@ -207,8 +209,9 @@ class MainViralConsensusPipeline(BasePipe):
                 'min_af': self._opts_custom.variant_min_af,
                 'min_dp': self._opts_custom.variant_min_dp,
                 'min_qual': self._opts_custom.variant_min_qual,
-                'min_mq': self._opts_custom.variant_min_mq},
-            'clair3': {'model': str(clair3_model)}
+                'min_mq': self._opts_custom.variant_min_mq,
+            },
+            'clair3': {'model': str(clair3_model)},
         }
 
     def _config_add_coverage_data(self, config_data: dict) -> None:
@@ -219,7 +222,7 @@ class MainViralConsensusPipeline(BasePipe):
         """
         config_data['low_depth'] = {
             'gap_depth_cutoff': self._opts_custom.gap_depth_cutoff,
-            'gap_len_cutoff': self._opts_custom.gap_len_cutoff
+            'gap_len_cutoff': self._opts_custom.gap_len_cutoff,
         }
 
     def _build_config(self) -> dict:
@@ -245,16 +248,15 @@ class MainViralConsensusPipeline(BasePipe):
         # Reference genome / reference selection
         config_data['fasta_ref'] = str(self._opts_custom.fasta_ref) if self._opts_custom.fasta_ref is not None else None
         config_data['ref_selection'] = {
-            'db': str(self._opts_custom.ref_genome_db) if self._opts_custom.fasta_ref is None else None}
+            'db': str(self._opts_custom.ref_genome_db) if self._opts_custom.fasta_ref is None else None
+        }
 
         # Other assays
         self._config_add_coverage_data(config_data)
         self._config_add_iterative_mapping_data(config_data)
 
         # Resolve species specific values
-        config_data = basepipeutils.resolve_config(
-            config_data, self._opts_custom.species
-        )
+        config_data = basepipeutils.resolve_config(config_data, self._opts_custom.species)
 
         # Antiviral resistance detection
         if ('antivirals' in config_data['analyses_selected']) and (config_data['antivirals']['species'] is None):
@@ -291,7 +293,7 @@ def main(**kwargs) -> None:
     script_opts = basescriptutils.parse_script_opts(kwargs)
     custom_opts = Options(
         analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
-        **cliutils.from_kwargs(Options, kwargs, skip=['analyses'])
+        **cliutils.from_kwargs(Options, kwargs, skip=['analyses']),
     )
     pipe_script = MainViralConsensusPipeline(script_input, script_out, script_opts, custom_opts)
     pipe_script.prepare_input()
