@@ -92,7 +92,7 @@ class MixedHitAggregating(Tool):
         Checks whether the input is correct.
         :return: None
         """
-        toolutils.check_input(self, keys_required=['KMA_hits', 'BLAST_hits'])
+        toolutils.check_input(self, keys_required=['HITS_kma', 'HITS_blast'])
         super()._check_input()
 
     def __set_informs(self) -> None:
@@ -147,7 +147,7 @@ class MixedHitAggregating(Tool):
         :return: GeneDetectionMixedHit list
         """
         # If no hits (this shouldn't happen), an exception is thrown
-        if not any([x for x in [self._tool_inputs['KMA_hits'], self._tool_inputs['BLAST_hits']]]):
+        if not any([x for x in [self._tool_inputs['HITS_kma'], self._tool_inputs['HITS_blast']]]):
             raise ValueError("Empty hit tables. This shouldn't happen.")
 
         def __init_cluster_entry(dic_orig: dict, cluster_in: str, locus_in: str) -> dict[str, dict[str, dict[str, None]]]:
@@ -167,11 +167,11 @@ class MixedHitAggregating(Tool):
         # Now looping over all hits to store hits, arranged by clusters.
         # That way, it catches unique hits of KMA vs multiple hits from Blast in the same cluster.
         hits_per_cluster = {}
-        for hit in self._tool_inputs['KMA_hits']:
+        for hit in self._tool_inputs['HITS_kma']:
             cluster, locus = hit.value.cluster, hit.value.locus
             hits_per_cluster = __init_cluster_entry(dic_orig=hits_per_cluster, cluster_in=cluster, locus_in=locus)
             hits_per_cluster[cluster][locus]['kma'] = hit.value
-        for hit in self._tool_inputs['BLAST_hits']:
+        for hit in self._tool_inputs['HITS_blast']:
             blast_hit = hit.value
             updated_blast_hit = self.__set_blast_identity_same_as_kma(blast_hit)
             if updated_blast_hit is not None:
