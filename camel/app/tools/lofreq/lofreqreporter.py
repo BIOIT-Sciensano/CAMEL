@@ -124,10 +124,8 @@ class LofreqReporter(Tool):
         self._section.add_header('Breadth of coverage', 4)
         if 'TSV_depth' in self._tool_inputs:
             res = {}
-            coverage_list = [
-                x.strip().split()
-                for x in open(self._tool_inputs['TSV_depth'][0].path).readlines()
-            ]
+            with open(self._tool_inputs['TSV_depth'][0].path) as handle:
+                coverage_list = [line.strip().split() for line in handle]
             self._coverage_table = pd.DataFrame(
                 coverage_list, columns=['reference', 'position', 'depth']
             )

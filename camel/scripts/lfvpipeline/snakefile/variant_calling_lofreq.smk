@@ -206,13 +206,14 @@ rule variant_calling_with_lofreq:
         VCF = 'variant_calling/vcf.io',
         INFORMS = 'variant_calling/informs.io'
     params:
-        call_indels = config.get('variant_calling', {}).get('call_indels', None)
+        call_indels = config.get('variant_calling', {}).get('call_indels', False),
+        only_indels = config.get('variant_calling', {}).get('only_indels', False)
     threads: 8
     run:
         from camel.app.tools.lofreq.lofreqcall import LofreqCall
         lofreq_call = LofreqCall()
         snakemakeutils.add_io_inputs(lofreq_call, input)
-        lofreq_call.update_parameters(call_indels=True if params.call_indels else False)
+        lofreq_call.update_parameters(call_indels=params.call_indels, only_indels=params.only_indels)
         step = Step(rule_name=str(rule), tool=lofreq_call, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(lofreq_call, output)
@@ -286,7 +287,7 @@ rule lofreq_reporter:
         step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
         snakemakeutils.add_io_inputs(reporter, input)
         reporter.update_parameters(
-            export_bam='true' if params.include_bam else 'false',
+            export_bam=params.include_bam,
             min_af=params.min_af,
             sample_name=params.sample_name)
         step.run()

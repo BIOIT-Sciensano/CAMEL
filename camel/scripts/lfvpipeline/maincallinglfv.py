@@ -44,6 +44,9 @@ class Options(model.BaseOptions):
     only_indels: bool = dataclasses.field(default=False, metadata={'help': 'Call only indels'})
     threads: int = dataclasses.field(default=8, metadata={'help': 'Number of threads'})
     min_af: float = dataclasses.field(default=0.0, metadata={'help': 'Minimum allele frequency'})
+    report_include_bam: bool = dataclasses.field(
+        default=False, metadata={"help": "Include the BAM file in the output report"}
+    )
 
 
 class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
@@ -51,7 +54,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
     Class to perform variant calling from a BAM file.
     """
 
-    VARIANT_CALLING_OPTS = ['call_indels', 'only_indels', 'min_af']
+    VARIANT_CALLING_OPTS = ['call_indels', 'only_indels', 'min_af', 'report_include_bam']
 
     def __init__(self, in_: ScriptInput, out_: ScriptOutput, opts: Options) -> None:
         """
@@ -150,7 +153,7 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
             'reference': {
                 'name': self._script_opts.reference.name,
                 'fasta': str(self._script_opts.reference),
-                'gff': str(self._script_opts.gff)
+                'gff': str(self._script_opts.gff) if self._script_opts.gff is not None else None
             },
             'variant_calling': {},
             'variant_filtering': {},
@@ -161,6 +164,9 @@ class MainCalling(BaseScript[ScriptInput, ScriptOutput, Options]):
             for k in MainCalling.VARIANT_CALLING_OPTS
             if getattr(self._script_opts, k, None) is not None
         }
+        if variant_calling_config['only_indels']:
+            variant_calling_config['call_indels'] = True
+
         config_data['variant_calling'].update(variant_calling_config)
         if self._script_opts.__getattribute__('gff') is not None:
             config_data['variant_calling']['csq'] = True
