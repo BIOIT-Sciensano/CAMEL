@@ -1,58 +1,13 @@
-from dataclasses import dataclass
+from dataclasses import asdict, fields
 
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.io.tooliovalue import ToolIOValue
-from camel.app.core.reports.htmltablecell import HtmlTableCell
 from camel.app.core.tool import Tool
 from camel.app.core.utils import toolutils
 from camel.app.toolkits.export.tsvexporter import TsvExporter
+from camel.app.toolkits.genedetection.genedetectionaggregatedhit import AggregatedHit
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
 from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
-
-
-@dataclass
-class AggregatedHit:
-    """
-    This class represents a variant from a VCF file.
-    """
-    locus: str
-    locus_length: int | str = '-'
-    kma_color: str = 'red'
-    blast_color: str = 'red'
-    kma_identity: float | str = '-'
-    kma_coverage: float | str = '-'
-    kma_depth: float | str = '-'
-    blast_identity: float | str = '-'
-    blast_coverage: float | str = '-'
-    blast_sequence: float | str = '-'
-    blast_coordinates: float | str = '-'
-
-    @staticmethod
-    def header() -> list[str]:
-        """
-        Returns the header for the table.
-        :return: header
-        """
-        return ['Locus', 'Locus length', 'KMA %identity', 'KMA %coverage', 'KMA depth', 'Blast %identity',
-                'Blast HSP/Locus length', 'Blast Sequence (read or contig)', 'Blast Coordinates']
-
-    def to_html_list(self) -> list:
-        """
-        Returns the genes detected as an HTML list.
-        :return: list
-        """
-        return [HtmlTableCell(self.locus), HtmlTableCell(self.locus_length),
-                HtmlTableCell(self.kma_identity, self.kma_color), HtmlTableCell(self.kma_coverage, self.kma_color),
-                HtmlTableCell(self.kma_depth, self.kma_color), HtmlTableCell(self.blast_identity, self.blast_color),
-                HtmlTableCell(self.blast_coverage, self.blast_color)]
-
-    def to_list(self) -> list:
-        """
-        Returns the genes detected as a list.
-        :return: list
-        """
-        return [self.locus, self.locus_length, self.kma_identity, self.kma_coverage, self.kma_depth,
-                self.blast_identity, self.blast_coverage, self.blast_sequence, self.blast_coordinates]
 
 
 class MixedHitAggregating(Tool):
@@ -104,7 +59,12 @@ class MixedHitAggregating(Tool):
         self._informs['_blast'] = self._input_informs['blast']
         self._informs['Min. percent identity'] = f"{self._parameters['min_percent_identity'].value}%"
         self._informs['Min. coverage'] = f"{self._parameters['min_coverage'].value}%"
-        self._informs['_command'] = 'Gene detection mixed filtering'
+        self._informs['extra_info'] = (
+            'In the case of the mixed gene detection strategy, both <b>read-based (KMA)</b> and <b>assembly-based (Blast)</b> '
+            'gene detection methods are used. Since Blast can report hits on multiple closely related alleles, and KMA only single best hits, '
+            'the table contains matching alleles detected with both KMA and Blast. '
+            'The details about all detected genes (i.e., all alleles) are presented in the following table.'
+        )
 
     def __set_blast_identity_same_as_kma(self, hit: GeneDetectionBlastHit) -> GeneDetectionBlastHit | None:
         """
@@ -203,6 +163,10 @@ class MixedHitAggregating(Tool):
         :param combined_hits: List of GeneDetectionMixedHit objects
         :return: List of all the aggregated hits
         """
+        # Req(**{"id": 123, "description": "hello"})
+        agg_hit_values = {field.name: '-' for field in fields(AggregatedHit)}
+        agg_hit_values['kma_color'] = 'red'
+        agg_hit_values['blast_color'] = 'red'
         res_summary = []
         for hit in combined_hits:
             the_locus = self._retrieve_locus_name(hit.locus)

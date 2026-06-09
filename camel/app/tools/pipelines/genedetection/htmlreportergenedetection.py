@@ -37,9 +37,10 @@ class HtmlReporterGeneDetection(Tool):
         else:
             self.__add_output_table([h.value for h in self._tool_inputs['VAL_Hits']])
             if self._tool_inputs['VAL_agg_hits']:
-                self.__add_additional_info_section_aggregated_hits()
+                self.__add_complete_aggregated_table_section([h.value for h in self._tool_inputs['VAL_agg_hits']])
 
-        self.__add_database_information()
+        if 'extra_info' in self._input_informs['detection']:
+            self.__add_additional_info_section_aggregated_hits(self._input_informs['detection']['extra_info'])
 
         # Add a warning when the detection method is different from the general detection
         if 'forced_detection_method' in self._parameters:
@@ -110,7 +111,7 @@ class HtmlReporterGeneDetection(Tool):
         self._report_section.add_file(self._tool_inputs['TSV'][0].path, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
 
-    def __add_aggregated_table(self, hits: list[AggregatedHit]) -> None:
+    def __add_complete_aggregated_table_section(self, hits: list[AggregatedHit]) -> None:
         """
         Adds the aggregated table to the report.
         This table is added only if the "mixed" gene detection approach is selected
@@ -118,31 +119,29 @@ class HtmlReporterGeneDetection(Tool):
         :param hits: Detected aggregated hits
         :return: None
         """
-        self._report_section.add_table([hit.to_html_list() for hit in sorted(hits, key=lambda x: x.locus)],
-                                       column_names=hits[0].header()[:-2],
-                                       table_attributes=[('class', 'data')])
-        relative_path = self._sub_folder / Path(self._tool_inputs['TSV_agg_hits'][0].path).name
-        self._report_section.add_file(self._tool_inputs['TSV_agg_hits'][0].path, relative_path)
-        self._report_section.add_link_to_file("Download (TSV)", relative_path)
-
-    def __add_additional_info_section_aggregated_hits(self) -> None:
-        """
-        Adds the complete aggregated hit list section to the report.
-        :return: None
-        """
-        self._report_section.add_header('Additional information', level=4)
-        self._report_section.add_paragraph(
-            'In the case of the mixed gene detection strategy, both <b>read-based (KMA)</b> and <b>assembly-based (Blast)</b> '
-            'gene detection methods are used. '
-            'Since Blast can report hits on multiple closely related alleles, and KMA only single best hits, '
-            'the table contains matching alleles detected with both KMA and Blast. '
-            'The details about all detected genes (i.e., all alleles) are presented in the following table.'
-        )
         self._report_section.add_header('Aggregated hits: complete list.', level=3)
         self._report_section.add_paragraph(
             'This table shows the details about all genes detected by either strategies.'
         )
-        self.__add_aggregated_table([h.value for h in self._tool_inputs['VAL_agg_hits']])
+        div = HtmlExpandableDiv('table_complete_agg_hits', f'{len(hits)}')
+        div.add_table(
+            [hit.to_html_list() for hit in sorted(hits, key=lambda x: x.locus)],
+            column_names=hits[0].header()[:-2],
+            table_attributes=[('class', 'data')]
+        )
+        self._report_section.add_html_object(div)
+        relative_path = self._sub_folder / Path(self._tool_inputs['TSV_agg_hits'][0].path).name
+        self._report_section.add_file(self._tool_inputs['TSV_agg_hits'][0].path, relative_path)
+        self._report_section.add_link_to_file("Download (TSV)", relative_path)
+
+    def __add_additional_info_section_aggregated_hits(self, extra_info: str) -> None:
+        """
+        Adds the complete aggregated hit list section to the report.
+        :param extra_info: parapgraph to add
+        :return: None
+        """
+        self._report_section.add_header('Additional information', level=4)
+        self._report_section.add_paragraph(extra_info)
 
     def __add_database_information(self) -> None:
         """

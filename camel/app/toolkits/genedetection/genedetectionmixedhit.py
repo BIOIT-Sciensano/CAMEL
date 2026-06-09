@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union
 
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.reports.htmltablecell import HtmlTableCell
@@ -13,7 +13,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
     This class represents a gene detection hit detected with BLAST and/or KMA.
     """
 
-    def __init__(self, locus: str, accession: Optional[str], blast_hit: GeneDetectionBlastHit | None,
+    def __init__(self, locus: str, accession: str | None, blast_hit: GeneDetectionBlastHit | None,
                  kma_hit: GeneDetectionKMAHit | None) -> None:
         """
         Initializes this hit.
