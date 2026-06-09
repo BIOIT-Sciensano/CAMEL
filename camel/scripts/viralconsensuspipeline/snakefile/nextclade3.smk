@@ -45,6 +45,9 @@ rule nextclade3_detect_subtype_mash:
             step = Step(rule_name=str(rule), tool=mash_screen, dir_=snakemakeutils.get_rule_dir(output))
             step.run()
             snakemakeutils.dump_io_outputs(mash_screen, output)
+            path_mash = mash_screen.tool_outputs['TSV'][0].path
+            if path_mash.stat().st_size == 0:
+                raise ValueError('Cannot determine subtype (empty mash output), make sure to select the correct species')
         except ToolExecutionError as err:
             logging.info(f'Error executing {mash_screen.name}')
             snakemakeutils.dump_object([], Path(output.TSV))
