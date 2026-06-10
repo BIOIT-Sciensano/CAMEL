@@ -39,8 +39,8 @@ class HtmlReporterGeneDetection(Tool):
             if self._tool_inputs['VAL_agg_hits']:
                 self.__add_complete_aggregated_table_section([h.value for h in self._tool_inputs['VAL_agg_hits']])
 
-        if 'extra_info' in self._input_informs['detection']:
-            self.__add_additional_info_section_aggregated_hits(self._input_informs['detection']['extra_info'])
+        if '_extra_info' in self._input_informs['detection']:
+            self.__add_additional_info_section_aggregated_hits(self._input_informs['detection']['_extra_info'])
 
         # Add a warning when the detection method is different from the general detection
         if 'forced_detection_method' in self._parameters:
@@ -125,7 +125,7 @@ class HtmlReporterGeneDetection(Tool):
         )
         div = HtmlExpandableDiv('table_complete_agg_hits', f'{len(hits)}')
         div.add_table(
-            [hit.to_html_list() for hit in sorted(hits, key=lambda x: x.locus)],
+            [hit.to_html_list() for hit in sorted(hits, key=lambda x: x.cluster)],
             column_names=hits[0].header()[:-2],
             table_attributes=[('class', 'data')]
         )
@@ -137,7 +137,7 @@ class HtmlReporterGeneDetection(Tool):
     def __add_additional_info_section_aggregated_hits(self, extra_info: str) -> None:
         """
         Adds the complete aggregated hit list section to the report.
-        :param extra_info: parapgraph to add
+        :param extra_info: paragraph to add
         :return: None
         """
         self._report_section.add_header('Additional information', level=4)
