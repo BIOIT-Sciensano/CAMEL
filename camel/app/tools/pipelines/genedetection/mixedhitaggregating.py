@@ -1,5 +1,7 @@
 from dataclasses import fields, replace
 
+import pandas as pd
+
 from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
@@ -36,9 +38,12 @@ class MixedHitAggregating(Tool):
         # Setting the outputs
         self._tool_outputs['VAL_hits'] = [ToolIOValue(hit) for hit in hits_combined_filt]
         self._tool_outputs['VAL_agg_hits'] = [ToolIOValue(hit) for hit in aggregated_summary_hits]
-        output_tsv_summary = self.folder / 'aggregated_hits_summary.tsv'
-        TsvExporter.export([hit.to_list() for hit in sorted(aggregated_summary_hits, key=lambda x: x.locus)],
-                           aggregated_summary_hits[0].header(), str(output_tsv_summary))
+        output_tsv_summary = self._parameters['output_filename'].value
+        if aggregated_summary_hits:
+            TsvExporter.export([hit.to_list() for hit in sorted(aggregated_summary_hits, key=lambda x: x.locus)],
+                               aggregated_summary_hits[0].header(), str(output_tsv_summary))
+        else:
+            pd.DataFrame().to_csv(output_tsv_summary)
         self._tool_outputs['TSV_agg_hits'] = [ToolIOFile(output_tsv_summary)]
         self.__set_informs()
 
@@ -58,8 +63,9 @@ class MixedHitAggregating(Tool):
         self._informs['Min. percent identity'] = f"{self._parameters['min_percent_identity'].value}%"
         self._informs['Min. coverage'] = f"{self._parameters['min_coverage'].value}%"
         self._informs['_extra_info'] = (
-            'In the case of the mixed gene detection strategy, both <b>read-based (KMA)</b> and <b>assembly-based (Blast)</b> '
-            'gene detection methods are used. Since Blast can report hits on multiple closely related alleles, and KMA only single best hits, '
+            'In the case of the mixed gene detection strategy, both <b>read-based (KMA)</b> and '
+            '<b>assembly-based (Blast)</b> gene detection methods are used. Since Blast can report hits on multiple '
+            'closely related alleles, and KMA only single best hits, '
             'the table contains matching alleles detected with both KMA and Blast. '
             'The details about all detected genes (i.e., all alleles) are presented in the second table.'
         )
@@ -104,9 +110,6 @@ class MixedHitAggregating(Tool):
         Combines KMA + BLAST hits into a GeneDetectionMixedHit object list.
         :return: GeneDetectionMixedHit list
         """
-        # If no hits (this shouldn't happen), an exception is thrown
-        if not any([x for x in [self._tool_inputs['HITS_kma'], self._tool_inputs['HITS_blast']]]):
-            raise ValueError("Empty hit tables. This shouldn't happen.")
 
         def __init_cluster_entry(dic_orig: dict, cluster_in: str, locus_in: str) -> dict[str, dict[str, dict[str, None]]]:
             """
@@ -114,7 +117,7 @@ class MixedHitAggregating(Tool):
             :param dic_orig: original dictionary
             :param cluster_in: cluster string
             :param locus_in: locus string
-            :return: initialized cluster dictionary or original dictionary
+            :return: Initialized cluster dictionary or original dictionary
             """
             if cluster_in not in dic_orig:
                 dic_orig[cluster] = {}
@@ -127,14 +130,22 @@ class MixedHitAggregating(Tool):
         hits_per_cluster = {}
         for hit in self._tool_inputs['HITS_kma']:
             cluster, locus = hit.value.cluster, hit.value.locus
-            hits_per_cluster = __init_cluster_entry(dic_orig=hits_per_cluster, cluster_in=cluster, locus_in=locus)
+            hits_per_cluster = __init_cluster_entry(
+                dic_orig=hits_per_cluster,
+                cluster_in=cluster,
+                locus_in=locus
+            )
             hits_per_cluster[cluster][locus]['kma'] = hit.value
         for hit in self._tool_inputs['HITS_blast']:
             blast_hit = hit.value
             updated_blast_hit = self.__set_blast_identity_same_as_kma(blast_hit)
             if updated_blast_hit is not None:
                 cluster, locus = hit.value.cluster, hit.value.locus
-                hits_per_cluster = __init_cluster_entry(dic_orig=hits_per_cluster, cluster_in=cluster, locus_in=locus)
+                hits_per_cluster = __init_cluster_entry(
+                    dic_orig=hits_per_cluster,
+                    cluster_in=cluster,
+                    locus_in=locus
+                )
                 hits_per_cluster[cluster][locus]['blast'] = hit.value
         filter_unique_hits_dic = {}
         for cluster in hits_per_cluster:

@@ -26,7 +26,6 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         super().__init__(locus, accession)
         self._blast_hit = blast_hit
         self._kma_hit = kma_hit
-        self.alignment_path = None
         self._cluster = None
 
     def cluster(self) -> str | None:
@@ -104,7 +103,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
     def to_html_row(self, report_section: HtmlReportSection, sub_directory: Path, colored: bool = True) \
             -> list[Union[str, HtmlTableCell]]:
         """
-        Returns the hit as a HTML table row.
+        Returns the hit as an HTML table row.
         :param report_section: Section is passed to save additional data
         :param sub_directory: Subdirectory to save the additional data
         :param colored: If True, the row is colored

@@ -66,7 +66,7 @@ class GeneDetectionWrapper:
         self.__run(config_data, threads)
 
     def run_kma(self, fastq_input: FastqInput, sample_name: str, db_data: dict[str, Any],
-                         threads: int = 8) -> None:
+                threads: int = 8) -> None:
         """
         Runs the gene detection workflow using KMA.
         :param fastq_input: FASTQ input files
@@ -77,6 +77,22 @@ class GeneDetectionWrapper:
         """
         self.__create_input_fastq(fastq_input)
         config_data = self.__get_config_data(sample_name, db_data, 'kma', fastq_input.read_type)
+        self.__run(config_data, threads)
+
+    def run_mixed(self, fasta_path: Path, fastq_input: FastqInput, sample_name: str, db_data: dict[str, Any],
+                  threads: int = 8) -> None:
+        """
+        Runs the gene detection workflow using KMA and Blast.
+        :param fasta_path: Input FASTA file
+        :param fastq_input: FASTQ input files
+        :param sample_name: Sample name
+        :param db_data: Database configuration
+        :param threads: Number of threads to use
+        :return: None
+        """
+        self.__create_input_fastq(fastq_input)
+        self.__create_input_blast(fasta_path)
+        config_data = self.__get_config_data(sample_name, db_data, 'mixed', fastq_input.read_type)
         self.__run(config_data, threads)
 
     def __create_input_blast(self, fasta_path: Path) -> None:

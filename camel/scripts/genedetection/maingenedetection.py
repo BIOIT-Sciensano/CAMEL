@@ -17,7 +17,7 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.basescript import BaseScript
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.app.scriptutils.inputhelper import helper_by_input_type, ONTHelper
+from camel.app.scriptutils.inputhelper import helper_by_input_type, ONTHelper, IlluminaHelper
 from camel.app.scriptutils.inputhelper.inputhelperbase import InputHelperBase
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.wrappers.genedetectionwrapper import (
@@ -35,7 +35,7 @@ class Options(BaseOptions):
     working_dir: Path = dataclasses.field(default=Path.cwd(), metadata={'help': 'Working directory'})
     detection_method: str | None = dataclasses.field(default='blast', metadata={
         'help': 'Gene detection method',
-        'choices': ['blast', 'kma'],
+        'choices': ['blast', 'kma', 'mixed'],
         'show_default': True})
     threads: int | None = dataclasses.field(default=1, metadata={'help': 'Number of threads', 'show_default': True})
 
@@ -134,6 +134,12 @@ class MainGeneDetection(BaseScript[ScriptInput, ScriptOutput, Options]):
         elif self._script_opts.detection_method == 'kma':
             fastq_input = self._helper.prepare_fastq_input(self._script_in, report)
             wrapper.run_kma(fastq_input, self._script_in.name, db_data, self._script_opts.threads)
+        elif self._script_opts.detection_method == 'mixed':
+            fasta_input = self._helper.prepare_fasta_input(self._script_in, report)
+            fastq_input = self._helper.prepare_fastq_input(self._script_in, report)
+            if not isinstance(self._helper, IlluminaHelper):
+                raise ValueError('The helper should be Illumina.')
+            wrapper.run_mixed(fasta_input, fastq_input, self._script_in.name, db_data, self._script_opts.threads)
 
         # Export all output
         self.__export_output(report, wrapper.output)

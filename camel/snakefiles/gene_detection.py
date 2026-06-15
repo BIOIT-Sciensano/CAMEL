@@ -28,22 +28,16 @@ OUTPUT_REPORT = 'gene_detection/{db}/report/html.iob'
 OUTPUT_REPORT_EMPTY = 'gene_detection/{db}/report/html-empty.iob'
 OUTPUT_SUMMARY = 'gene_detection/{db}/report/summary_out.{ext}'
 
-# Mixed strategy
-OUTPUT_REPORT_MIXED = 'gene_detection/{db}/report/mixed_report_html.iob'
 
-
-def get_gene_detection_report(db_key: str, config: dict[str, Any], analysis_name: Optional[str] = None, mixed_strategy: Optional[bool] = False) -> str:
+def get_gene_detection_report(db_key: str, config: dict[str, Any], analysis_name: Optional[str] = None) -> str:
     """
     Returns the report input for the given database key.
     :param db_key: Database key
     :param config: Pipeline config
     :param analysis_name: Analysis name that is checked
-    :param mixed_strategy: Combine the results from kma and blast gene detection
     :return: Report input path
     """
     search_key = analysis_name if analysis_name is not None else db_key
     if search_key not in config['analyses']:
         return str(OUTPUT_REPORT_EMPTY).format(db=db_key)
-    if mixed_strategy:
-        return str(OUTPUT_REPORT_MIXED).format(db=db_key)
     return str(OUTPUT_REPORT).format(db=db_key)

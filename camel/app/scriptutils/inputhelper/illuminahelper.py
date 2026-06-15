@@ -57,7 +57,9 @@ class IlluminaHelper(InputHelperBase[IlluminaTrimmingOpts, IlluminaAssemblyOpts]
         paths_symlinks = []
         for path_fq, ori in zip(fq_in.fastq_pe, ('1', '2')):
             path_symlink = dir_symlinks / f"{self._name}_{ori}.fastq{'.gz' if fileutils.is_gzipped(path_fq) else ''}"
-            path_symlink.symlink_to(path_fq)
+            # If not checked, cause issues when running the genedetection wrapper with the 'mixed' method
+            if not path_symlink.is_symlink():
+                path_symlink.symlink_to(path_fq)
             paths_symlinks.append(path_symlink)
         return FastqInput('illumina', pe=[ToolIOFile(p) for p in paths_symlinks], is_pe=True)
 
