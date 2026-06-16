@@ -66,6 +66,10 @@ dbs:
     location: &db_confindr {DB_ROOT}/confindr/0.8.1
     required: false
     method: skip
+  gene_detection_ncbi_amr:
+    location: &db_gd_ncbi_amr {DB_ROOT}/gene_detection/NCBI_AMR
+    required: false
+    method: ftp
   gene_detection_plasmidfinder:
     location: &db_gd_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-gram_positive
     required: false
@@ -224,7 +228,7 @@ gene_detection:
   dbs:
     # AMR
     ncbi_amr:
-      path: /db/gene_detection/NCBI_AMR/
+      path: *db_gd_ncbi_amr
       perc_identity_cutoff: 90
       metadata:
         name: Antibiotic(s)

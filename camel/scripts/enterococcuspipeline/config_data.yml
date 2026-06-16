@@ -97,7 +97,7 @@ dbs:
     required: true
     method: ftp
   ref_fasta_faecium:
-    location: &ref_fasta_faecium {DB_ROOT}/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.fasta
+    location: &ref_fasta_faecium {DB_ROOT}/refgenomes/Enterococcus_faecium/CP038996.1.fasta
     is_file: true
     required: true
     method: ftp
@@ -107,7 +107,7 @@ dbs:
     required: true
     method: ftp
   ref_gff3_faecium:
-    location: &ref_gff3_faecium {DB_ROOT}/refgenomes/Yersinia_enterocolitica/GCF_025758635.1.gff3
+    location: &ref_gff3_faecium {DB_ROOT}/refgenomes/Enterococcus_faecium/CP038996.1.gff3
     is_file: true
     required: true
     method: ftp
@@ -128,11 +128,11 @@ dbs:
     species:
       - faecium
   typing_mlst_faecalis:
-    location: &db_typing_mlst_faecalis {DB_ROOT}/sequence_typing/enterococcus_faecalis/cgmlst
+    location: &db_typing_mlst_faecalis {DB_ROOT}/sequence_typing/enterococcus_faecalis/mlst
     required: false
     method: mist
   typing_mlst_faecium:
-    location: &db_typing_mlst_faecium {DB_ROOT}/sequence_typing/enterococcus_faecium/cgmlst
+    location: &db_typing_mlst_faecium {DB_ROOT}/sequence_typing/enterococcus_faecium/mlst
     required: false
     method: mist
   typing_mlst_faecium_bezdicek:
@@ -180,7 +180,7 @@ species:
     amrfinder_species: null
     cgmlst_db: null
     full_name: Enterococcus spp.
-    kraken2_name: Entrococcus
+    kraken2_name: Enterococcus
     kraken2_level: G
     ref:
       expected_gc: 37.4
@@ -336,5 +336,5 @@ sequence_typing:
     cgmlst:
       path:
         resolve: species
-        key: mlst_db
+        key: cgmlst_db
       detection_method: blast
