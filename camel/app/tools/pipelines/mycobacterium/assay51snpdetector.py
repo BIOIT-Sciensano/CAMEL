@@ -53,23 +53,28 @@ class Assay51SnpDetector(Tool):
     def __parse_vcf_variants(self, vcf_key: str) -> dict:
         """
         Parses VCF variants and returns a dict indexed by position.
+        All variants (including indels/MNPs) are retained; only the first nucleotide of the ALT allele is
+        used downstream (see __get_alt_allele), which keeps the single-base, position-wise comparison the
+        51 SNP assay relies on while staying backwards-equivalent with the original behaviour.
         :param vcf_key: Key for tool inputs ('VCF' or 'VCF_filt')
         :return: Dictionary mapping positions to variant records
         """
         variants = vcfutils.parse_all_variants(self._tool_inputs[vcf_key][0].path)
-        records_by_pos = {v.POS: v for v in variants}
-        logger.debug(f'{len(records_by_pos)} SNPs parsed from {vcf_key}')
+        records_by_pos = {v.POS: v for v in variants if len(v.ALT) > 0}
+        logger.debug(f'{len(records_by_pos)} variants parsed from {vcf_key}')
         return records_by_pos
 
     @staticmethod
     def __get_alt_allele(records_by_pos: dict, pos: int) -> str | None:
         """
         Safely extracts the ALT allele from variant records.
+        Only the first nucleotide is returned, so indels/MNPs collapse to a single base. This matches the
+        original behaviour of the 51 SNP assay (backwards equivalence).
         :param records_by_pos: Dictionary of variant records by position
         :param pos: Position to look up
-        :return: ALT allele as string or None
+        :return: First nucleotide of the ALT allele as string or None
         """
-        return str(records_by_pos[pos].ALT[0]) if pos in records_by_pos else None
+        return str(records_by_pos[pos].ALT[0])[0] if pos in records_by_pos else None
 
     def __update_snp_position(self, snp_position: SNPPosition, records_by_pos: dict,
                               records_filt_by_pos: dict) -> SNPPosition:
@@ -96,7 +101,6 @@ class Assay51SnpDetector(Tool):
         """
         records_by_pos = self.__parse_vcf_variants('VCF')
         records_filt_by_pos = self.__parse_vcf_variants('VCF_filt')
-
         return [
             self.__update_snp_position(snp_position, records_by_pos, records_filt_by_pos)
             for snp_position in snp_positions

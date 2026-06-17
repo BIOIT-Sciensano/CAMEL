@@ -67,10 +67,7 @@ class Assay51SnpReporter(Tool):
             ],
             [
                 '<i>gyrB</i> species differentiation:',
-                '{} ({})'.format(
-                    self._input_informs['detection']['gyrB_group'],
-                    self._input_informs['detection']['gyrB_species'],
-                ),
+                f'{self._input_informs["detection"]["gyrB_group"]} ({self._input_informs["detection"]["gyrB_species"]})',
             ],
             ['Genetic group:', self._input_informs['detection']['genetic_group']],
             [

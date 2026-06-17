@@ -29,14 +29,12 @@ rule assay_51snp_filter_vcf:
         BED = rules.assay_51snp_init_db.output.BED
     output:
         VCF = '51snp/filter_vcf/vcf.io'
-    params:
-        dir_ = '51snp/filter_vcf'
     run:
         from camel.app.tools.bcftools.bcftoolsfilter import BcftoolsFilter
         bcf_filter = BcftoolsFilter()
         snakemakeutils.add_io_inputs(bcf_filter, input)
         bcf_filter.update_parameters(output_filename='51_snps.vcf')
-        step = Step(rule_name=str(rule), tool=bcf_filter, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=bcf_filter, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(bcf_filter, output)
 
@@ -51,13 +49,11 @@ rule assay_51snp_detect_info:
         VCF_filt = variant_filtering.OUTPUT_VCF
     output:
         INFORMS = '51snp/detect/informs.io'
-    params:
-        dir_ = '51snp/detect'
     run:
         from camel.app.tools.pipelines.mycobacterium.assay51snpdetector import Assay51SnpDetector
         detector = Assay51SnpDetector()
         snakemakeutils.add_io_inputs(detector, input)
-        step = Step(rule_name=str(rule), tool=detector, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=detector, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(detector, output)
 
@@ -70,7 +66,6 @@ rule assay_51snp_report:
     output:
         VAL_HTML = '51snp/report/html.iob' # assay51snp.OUTPUT_REPORT
     params:
-        dir_ = '51snp/report',
         sample_name = config['input']['sample_name']
     run:
         from camelcore.app.io.tooliovalue import ToolIOValue
@@ -78,7 +73,7 @@ rule assay_51snp_report:
         spr = Assay51SnpReporter()
         snakemakeutils.add_io_inputs(spr, input)
         spr.add_input_files({'VAL_Sample': [ToolIOValue(params.sample_name)]})
-        step = Step(rule_name=str(rule), tool=spr, dir_=Path(str(params.dir_)))
+        step = Step(rule_name=str(rule), tool=spr, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(spr, output)
 
