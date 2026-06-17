@@ -29,12 +29,12 @@ parameters:
     default: false
     mandatory: false
     option: '-a'
-    value: null
+    flag: true
   output_all_positions_absolutely:
     default: false
     mandatory: false
     option: '-aa'
-    value: null
+    flag: true
   output_filename:
     default: true
     mandatory: true

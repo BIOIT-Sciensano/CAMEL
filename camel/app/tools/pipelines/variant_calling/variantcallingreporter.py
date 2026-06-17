@@ -1,5 +1,4 @@
 import json
-from distutils.util import strtobool
 from pathlib import Path
 from typing import Any
 
@@ -139,7 +138,7 @@ class VariantCallingReporter(Tool):
             f"{self._input_informs['depth']['median_depth']:.0f}"
         ]]
         self._section.add_table(table_data, ['Mapping rate (%)', 'Median depth'], [('class', 'data')])
-        if bool(strtobool(self._parameters['export_bam'].value)) is True:
+        if self.get_param_value('export_bam') is True:
             relative_path = Path('variant_calling', 'alignment-{}.bam'.format(
                 fileutils.make_valid(self._tool_inputs['VAL_Sample'][0].value)))
             self._section.add_file(self._tool_inputs['BAM'][0].path, relative_path)

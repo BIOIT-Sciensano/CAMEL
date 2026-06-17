@@ -19,7 +19,7 @@ parameters:
     default: false
     mandatory: false
     option: '--count-orphans'
-    value: null
+    flag: true
   config:
     default: false
     mandatory: false

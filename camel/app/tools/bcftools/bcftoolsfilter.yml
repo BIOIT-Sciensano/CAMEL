@@ -15,6 +15,11 @@ parameters:
     mandatory: false
     option: null
     value: null
+  mode:
+    default: false
+    mandatory: false
+    option: '--mode'
+    value: '+'
   output_filename:
     default: true
     mandatory: true
