@@ -3,9 +3,10 @@ import importlib
 import pkgutil
 import traceback
 import typing
+from collections.abc import Callable
 from pathlib import Path
 from types import UnionType
-from typing import Callable, get_origin, get_args, Any
+from typing import Any, get_args, get_origin
 
 import click
 from click.testing import Result
@@ -35,7 +36,7 @@ def load_script_module(script_name: str, script_dir: Path) -> Any:
     :param script_dir: Script directory
     :return: Imported module
     """
-    module_path = f"{script_dir.name}.{script_name}"
+    module_path = f"camel.scripts.{script_dir.name}.{script_name}"
     return importlib.import_module(module_path)
 
 

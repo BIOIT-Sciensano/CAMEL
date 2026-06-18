@@ -28,7 +28,11 @@ def list_() -> None:
     :return: None
     """
     for dir_, script_name in cliutils.list_scripts(SCRIPT_DIR):
-        module = cliutils.load_script_module(script_name, dir_)
+        try:
+            module = cliutils.load_script_module(script_name, dir_)
+        except Exception as err:
+            logger.warning(f"Skipping script '{script_name}': failed to import ({err})")
+            continue
         cmd = getattr(module, "main", None)
         if isinstance(cmd, click.Command):
             click.echo(f"{cmd.name:<30} {cmd.short_help}")
@@ -50,7 +54,11 @@ def register_dynamic_subcommands() -> None:
     :return: None
     """
     for dir_, script_name in cliutils.list_scripts(SCRIPT_DIR):
-        module = cliutils.load_script_module(script_name, dir_)
+        try:
+            module = cliutils.load_script_module(script_name, dir_)
+        except Exception as err:
+            logger.warning(f"Skipping script '{script_name}': failed to import ({err})")
+            continue
         cmd = getattr(module, "main", None)
         if isinstance(cmd, click.Command):
             run.add_command(cmd)

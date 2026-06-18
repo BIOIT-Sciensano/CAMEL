@@ -1,0 +1,110 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "camel"
+dynamic = ["version"]
+description = "Framework for running bioinformatics workflows and stand-alone tools"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+
+authors = [
+  {name = "Bert Bogaerts", email = "bioit@sciensano.be"},
+  {name= "Maxime Godfroid", email="bioit@sciensano.be"}
+]
+
+keywords = ["bioinformatics", "genomics", "workflows", "snakemake", "wgs"]
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Programming Language :: Python :: 3",
+]
+
+dependencies = [
+  "Pillow==9.5.0",
+  "PuLP==2.7.0",
+  "biopython",
+  "bs4",
+  "camel-core",
+  "click",
+  "cyvcf2",
+  "furl",
+  "humanize",
+  "matplotlib==3.10.1",
+  "openpyxl",
+  "pandas",
+  "plotnine",
+  "pydantic",
+  "pydotplus",
+  "pysam",
+  "pytest",
+  "scipy",
+  "setuptools",
+  "snakemake",
+  "typing-extensions",
+  "yattag",
+]
+
+[project.urls]
+Homepage = "https://github.com/BioinformaticsPlatformWIV-ISP/CAMEL"
+Issues = "https://github.com/BioinformaticsPlatformWIV-ISP/CAMEL/issues"
+
+[project.scripts]
+CAMEL = "camel.scripts.cli:cli"
+
+[tool.setuptools.packages.find]
+include = ["camel*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "camel.version.__VERSION__"}
+
+[tool.setuptools.package-data]
+"camel" = [
+  "app/tools/**/*.yml",
+  "resources/citations/*.json",
+  "resources/fonts/*.ttf",
+  "resources/reports/**/*",
+  "resources/testing/**/*",
+  "resources/tools/**/*",
+  "resources/*.css",
+  "resources/*.js",
+  "resources/*.smk",
+  "scripts/**/config_data.yml",
+  "snakefiles/**/*.smk",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "D",
+    "I",
+    "F",
+    "PL",
+    "UP",
+    "W"
+]
+ignore = [
+    "D100",
+    "D104",
+    "D200",
+    "D204",
+    "D205",
+    "D400",
+    "D401",
+    "PLW1510",
+    "PLR2004",
+    "PLR0913",
+    "PLR0911"
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.format]
+quote-style = "preserve"
