@@ -154,6 +154,7 @@ dbs:
   typing_cgmlst:
     location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/staphylococcus/cgmlst
     required: false
+    method: mist
   typing_mlst:
     location: &db_typing_mlst {DB_ROOT}/sequence_typing/staphylococcus/mlst
     required: false

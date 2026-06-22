@@ -99,7 +99,7 @@ dbs:
     required: true
     method: ftp
   ref_gff3:
-    location: &ref_gff3 {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.gff
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.gff3
     is_file: true
     required: true
     method: ftp

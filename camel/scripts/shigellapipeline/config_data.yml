@@ -97,7 +97,7 @@ dbs:
     required: true
     method: ftp
   ref_gff3:
-    location: &ref_gff3 {DB_ROOT}/refgenomes/Shigella_sonnei/GCA_000092525.1.gff
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Shigella_sonnei/GCA_000092525.1.gff3
     is_file: true
     required: true
     method: ftp
@@ -108,6 +108,7 @@ dbs:
   typing_cgmlst:
     location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/ecoli/cgmlst
     required: false
+    method: mist
   typing_mlst_pasteur:
     location: &db_typing_mlst_pasteur {DB_ROOT}/sequence_typing/ecoli/mlst_pasteur
     required: false
@@ -119,6 +120,7 @@ dbs:
   typing_rmlst:
     location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
     required: false
+    method: skip
 
 ####################
 # Pipeline options #
@@ -157,7 +159,7 @@ citations:
 # Reference genome #
 ####################
 reference:
-  name: <i>Shigella sonnei</i> Ss046 (CP000038.1)
+  name: <i>Shigella sonnei</i> Ss046 (GCA_000092525.1)
   fasta: *ref_fasta
   gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_000092525.1/

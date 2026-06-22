@@ -98,7 +98,7 @@ dbs:
     required: true
     method: ftp
   ref_gff3:
-    location: &ref_gff3 {DB_ROOT}/refgenomes/Mycobacterium_tuberculosis/H37Rv.gff
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Mycobacterium_tuberculosis/H37Rv.gff3
     is_file: true
     required: true
     method: ftp
