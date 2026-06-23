@@ -80,8 +80,10 @@ rule mendevar_create_summary:
         informs = snakemakeutils.load_object(Path(input.INFORMS_mendevar))
 
         # Create output files
-        rows_out = [
-            ('mendevar_bexsero_status', informs['bexsero_status']),
-            ('mendevar_trumenba_status', informs['trumenba_status'])
-        ]
+        rows_out = [('mendevar_bexsero_status', informs['bexsero_status'])]
+        for locus, allele_status in informs['bexsero_allele_status']:
+            rows_out.append((f'mendevar_bexsero_allele_status_{locus}', allele_status))
+        rows_out.append(('mendevar_trumenba_status', informs['trumenba_status']))
+        for locus, allele_status in informs['trumenba_allele_status']:
+            rows_out.append((f'mendevar_trumenba_allele_status_{locus}', allele_status))
         snakemakeutils.export_summary(rows_out, Path(output.TSV), str(params.ext), 'mendevar')

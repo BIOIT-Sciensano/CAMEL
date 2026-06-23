@@ -76,4 +76,6 @@ rule gmats_create_summary:
     run:
         informs = snakemakeutils.load_object(Path(input.INFORMS_gmats))
         data_summary = [('gmats_status', informs['gMATS_status'])]
+        for locus, allele_status in informs['allele_status']:
+            data_summary.append((f'gmats_allele_status_{locus}', allele_status))
         snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'gmats')

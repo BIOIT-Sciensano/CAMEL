@@ -82,6 +82,7 @@ class CharacterizeNeisseriaCapsule(Tool):
         :return: None
         """
         data_sero = pd.read_table(path_tsv)
-        output_dict = data_sero.to_dict('records')[0]
+        output_dict = data_sero.where(data_sero.notna(), '-').to_dict('records')[0]
         self._informs['detected_serogroup'] = output_dict['SG']
         self._informs['genes_present'] = output_dict['Genes_Present']
+        self._informs['notes'] = output_dict['Notes']

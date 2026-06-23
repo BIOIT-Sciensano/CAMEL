@@ -119,7 +119,8 @@ rule serogroup_determination_summary:
         informs_capsule = snakemakeutils.load_object(Path(input.INFORMS_capsule))
         rows_out.extend([
             ('serogroup_capsule', informs_capsule['detected_serogroup']),
-            ('serogroup_capsule_genes', informs_capsule['genes_present'])
+            ('serogroup_capsule_genes', informs_capsule['genes_present']),
+            ('serogroup_capsule_notes', informs_capsule['notes'])
         ])
 
         # Legacy detection

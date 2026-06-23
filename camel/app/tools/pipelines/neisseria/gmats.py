@@ -53,6 +53,9 @@ class GMats(Tool):
         antigen_info['Allele status'] = antigen_info.apply(
             lambda x: self.__determine_gmats_alelle(x['Locus'], x['Allele'], gmats_db), axis=1)
 
+        # Store the per-locus allele status
+        self._informs['allele_status'] = list(zip(antigen_info['Locus'], antigen_info['Allele status']))
+
         # Determine global gMATS status
         status = self.__determine_gmats_status(antigen_info['Allele status'])
         antigen_info['gMATS status'] = status

@@ -72,6 +72,12 @@ class MenDeVAR(Tool):
         antigen_info.loc[antigen_info['Locus'] == 'fHbp_peptide', 'Trumenba status'] = trumenba_status
         self._informs['trumenba_status'] = trumenba_status
 
+        # Store the per-locus allele reactivity indexes
+        self._informs['bexsero_allele_status'] = list(
+            zip(antigen_info['Locus'], antigen_info['Bexsero allele status']))
+        self._informs['trumenba_allele_status'] = list(
+            zip(antigen_info['Locus'], antigen_info['Trumenba allele status']))
+
         # Get the output directory
         self.__create_output_file(antigen_info, sample_id)
 
