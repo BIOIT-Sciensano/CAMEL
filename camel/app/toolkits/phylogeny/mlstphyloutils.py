@@ -181,7 +181,7 @@ def parse_html_typing_list(
         if tsv_typing is None:
             tsv_typing = next(path_json_meta.parent.glob('typing-*.tsv'))
 
-        alleles_parsed = parse_tsv_typing(tsv_typing, detection_method)
+        alleles_parsed = parse_tsv_typing(tsv_typing, detection_method, use_temp)
         logger.debug(
             f"{sum(v != '-' for _, v in alleles_parsed.items()):,}/{len(alleles_parsed):,} perfect hits"
         )

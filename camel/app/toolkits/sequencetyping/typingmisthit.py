@@ -54,7 +54,7 @@ class TypingMiSTHit(TypingHitBase):
         Returns the column names for the tabular output.
         :return: Table column names
         """
-        return ['Locus', 'Allele', 'Tag(s)', 'Sequence', 'Position', 'Strand']
+        return ['Locus', 'Allele', 'Tag(s)', 'Sequence', 'Position', 'Strand', 'Closest allele(s)']
 
     def to_table_row(self, hash_allele_ids: bool = False) -> list[str]:
         """
@@ -68,7 +68,8 @@ class TypingMiSTHit(TypingHitBase):
             ', '.join(self._tags) if len(self._tags) > 0 else '-',
             ' '.join(r['alignment']['seq_id'] for r in self._allele_results) if len(self._allele_results) > 0 else '-',
             ' '.join(f"{r['alignment']['start']}-{r['alignment']['end']}" for r in self._allele_results) if len(self._allele_results) > 0 else '-',
-            ' '.join(r['alignment']['strand'] for r in self._allele_results)  if len(self._allele_results) > 0 else '-',
+            ' '.join(r['alignment']['strand'] for r in self._allele_results) if len(self._allele_results) > 0 else '-',
+            self._closest_alleles_str(),
         ]
 
     @staticmethod
@@ -93,6 +94,7 @@ class TypingMiSTHit(TypingHitBase):
             ' '.join(r['alignment']['seq_id'] for r in self._allele_results) if len(self._allele_results) > 0 else '-',
             ' '.join(f"{r['alignment']['start']}-{r['alignment']['end']}" for r in self._allele_results) if len(self._allele_results) > 0 else '-',
             ' '.join(r['alignment']['strand'] for r in self._allele_results) if len(self._allele_results) > 0 else '-',
+            self._closest_alleles_str(),
         ]
 
     @property
@@ -107,6 +109,8 @@ class TypingMiSTHit(TypingHitBase):
         """
         if self.is_perfect_hit():
             return 'green'
+        if self.is_new_allele():
+            return 'lightgreen'
         return 'red'
 
     def __repr__(self) -> str:
@@ -115,6 +119,16 @@ class TypingMiSTHit(TypingHitBase):
         :return: Representation
         """
         return f"TypingMiSTHit('{self.locus}', allele_id='{self.allele_id}')"
+
+    def _closest_alleles_str(self) -> str:
+        """
+        Returns the string with the closest alleles in case of novel alleles.
+        :return: String of closest alleles
+        """
+        alleles = []
+        for r in self._allele_results:
+            alleles.extend(r.get('closest_alleles') or [])
+        return ', '.join(alleles) if alleles else '-'
 
     def is_perfect_hit(self) -> bool:
         """
