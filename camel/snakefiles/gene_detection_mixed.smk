@@ -41,8 +41,8 @@ rule gene_detection_export_informs:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/mixed'
     run:
         informs = snakemakeutils.load_object(Path(input.INFORMS))
-        informs_kma = snakemakeutils.load_object(Path(input.INFORMS_kma))
-        informs_blast = snakemakeutils.load_object(Path(input.INFORMS_blast))
+        informs_kma = snakemakeutils.load_object(Path(str(input.INFORMS_kma)))
+        informs_blast = snakemakeutils.load_object(Path(str(input.INFORMS_blast)))
         informs['_kma'] = snakemakeutils.load_object(Path(input.INFORMS_kma))
         informs['_blast'] = snakemakeutils.load_object(Path(input.INFORMS_blast))
         informs['_command'] = f'{informs_kma["_command"]}\n{informs_blast["_command"]}'

@@ -60,7 +60,10 @@ class ONTHelper(InputHelperBase[ONTTrimmingOpts, ONTAssemblyOpts]):
         dir_symlinks = self._dir / 'symlinks'
         dir_symlinks.mkdir(exist_ok=True, parents=True)
         path_symlink = dir_symlinks / f"{self._name}.fastq{'.gz' if fileutils.is_gzipped(script_in.fastq_se) else ''}"
-        path_symlink.symlink_to(script_in.fastq_se)
+
+        # If not checked, cause issues when running the genedetection wrapper with the 'mixed' method
+        if not path_symlink.is_symlink():
+            path_symlink.symlink_to(script_in.fastq_se)
         return FastqInput('ont', se=[ToolIOFile(path_symlink)], is_pe=False)
 
     def prepare_fasta_input(self, script_in: ScriptInput, report: HtmlReport) -> Path:

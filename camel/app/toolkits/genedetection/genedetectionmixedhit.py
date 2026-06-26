@@ -28,6 +28,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         self._kma_hit = kma_hit
         self._cluster = None
 
+    @property
     def cluster(self) -> str | None:
         """
         Define cluster based on input.
@@ -84,7 +85,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         :return: List of table cell values
         """
         data = [
-            self.cluster(),
+            self.cluster,
             self.locus,
             self._accession if self._accession is not None else '-',
         ]

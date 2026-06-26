@@ -98,6 +98,14 @@ class GeneDetectionHitBase(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
+    @property
+    def cluster(self) -> str:
+        """
+        Returns the cluster of the alignment.
+        :return: Cluster
+        """
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def to_table_row(self) -> list[str]:
         """

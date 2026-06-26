@@ -41,8 +41,8 @@ rule gene_detection_get_hits:
     """
     input:
         INFORMS_DB = rules.gene_detection_db_manager.output.INFORMS,
-        VAL_agg_hits = lambda wildcards: 'gene_detection/{db}/mixed/agg-hits-summary.iob' if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
-        TSV_agg_hits = lambda wildcards: 'gene_detection/{db}/mixed/tsv-agg-hits-summary.iob' if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
+        VAL_agg_hits = lambda wildcards: gene_detection.OUTPUT_AGG_HITS_SUMMARY.format(db=wildcards.db) if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
+        TSV_agg_hits = lambda wildcards: gene_detection.OUTPUT_AGG_HITS_SUMMARY_TSV.format(db=wildcards.db) if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
         VAL_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db)),
         INFORMS_hits = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db))
     output:
@@ -52,7 +52,6 @@ rule gene_detection_get_hits:
         TSV_agg_hits = 'gene_detection/{db}/hit_selection/tsv-agg-hits-summary.iob'
     run:
         import shutil
-        import pandas as pd
         shutil.copyfile(str(input.VAL_hits), output.VAL_hits)
         # Add a tag for the database to distinguish commands in the output
         informs = snakemakeutils.load_object(Path(str(input.INFORMS_hits)))

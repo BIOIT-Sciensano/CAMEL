@@ -419,6 +419,48 @@ class TestGeneDetection(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
+    def test_gene_detection_mixed_ont(self) -> None:
+        """
+        Tests the gene detection workflow with KMA and Blast detection on ONT data, including trimming.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'report' / 'report.html'
+        args = [
+            '--fastq-se',
+            str(TestGeneDetection.input_fastq_by_key['ont'][0]),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--working-dir', str(self.running_dir),
+            '--input-type', 'ont',
+            '--detection-method', 'mixed',
+        ]
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    def test_gene_detection_mixed_illumina_no_hit(self) -> None:
+        """
+        Tests the gene detection workflow with KMA and Blast detection on Illumina data, including trimming.
+        The test data contains no hits.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'report' / 'report.html'
+        args = [
+            '--fastq-pe',
+            str(TestGeneDetection.input_reads_no_hit[0]),
+            str(TestGeneDetection.input_reads_no_hit[1]),
+            '--db', str(TestGeneDetection.input_gene_detection_db),
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--working-dir', str(self.running_dir),
+            '--input-type', 'illumina',
+            '--detection-method', 'mixed',
+        ]
+        result = cliutils.invoke(main, args)
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
 
 if __name__ == '__main__':
     initialize_logging()

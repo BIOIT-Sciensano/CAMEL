@@ -1,4 +1,5 @@
 from dataclasses import fields, replace
+from pathlib import Path
 
 import pandas as pd
 
@@ -7,7 +8,7 @@ from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 from camel.app.core.utils import toolutils
 from camel.app.toolkits.export.tsvexporter import TsvExporter
-from camel.app.toolkits.genedetection.genedetectionaggregatedhit import AggregatedHit
+from camel.app.toolkits.genedetection.genedetectionaggregatedhit import MixedHitHolder
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
 from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 
@@ -40,11 +41,11 @@ class MixedHitAggregating(Tool):
         self._tool_outputs['VAL_agg_hits'] = [ToolIOValue(hit) for hit in aggregated_summary_hits]
         output_tsv_summary = self._parameters['output_filename'].value
         if aggregated_summary_hits:
-            TsvExporter.export([hit.to_list() for hit in sorted(aggregated_summary_hits, key=lambda x: x.locus)],
+            TsvExporter.export([hit.to_table_row() for hit in sorted(aggregated_summary_hits, key=lambda x: x.locus)],
                                aggregated_summary_hits[0].header(), str(output_tsv_summary))
         else:
             pd.DataFrame().to_csv(output_tsv_summary)
-        self._tool_outputs['TSV_agg_hits'] = [ToolIOFile(output_tsv_summary)]
+        self._tool_outputs['TSV_agg_hits'] = [ToolIOFile(Path(output_tsv_summary))]
         self.__set_informs()
 
     def _check_input(self) -> None:
@@ -90,7 +91,7 @@ class MixedHitAggregating(Tool):
     @staticmethod
     def __extract_locus_name_for_table(cluster_dic: dict) -> str:
         """
-        Given a cluster list, returns the locus with both KMA and Blast Hit.
+        Given a cluster dictionary, returns the locus with both KMA and Blast Hit.
         Alternatively, if either of those is empty, returns the first locus in appearance.
         :return: Locus name
         """
@@ -99,7 +100,12 @@ class MixedHitAggregating(Tool):
 
         # First: checking whether both methods detected the same locus in the cluster
         if res_locus['kma'] and res_locus['blast']:
-            return [loc for loc in res_locus['kma'] if loc in res_locus['blast']][0]
+            try:
+                locus_to_return = [loc for loc in res_locus['kma'] if loc in res_locus['blast']][0]
+            except IndexError:
+                # For now, only returns the KMA locus.
+                locus_to_return = res_locus['kma'][0]
+            return locus_to_return
 
         # Then: Checking which one detected a locus in the cluster.
         # Returns the first locus occurrence in the list.
@@ -108,10 +114,14 @@ class MixedHitAggregating(Tool):
     def __combine_hits(self) -> dict[str, list[GeneDetectionMixedHit]]:
         """
         Combines KMA + BLAST hits into a GeneDetectionMixedHit object list.
-        :return: GeneDetectionMixedHit list
+        :return: GeneDetectionMixedHit dictionary
         """
 
-        def __init_cluster_entry(dic_orig: dict, cluster_in: str, locus_in: str) -> dict[str, dict[str, dict[str, None]]]:
+        def __init_cluster_entry(
+                dic_orig: dict,
+                cluster_in: str,
+                locus_in: str
+        ) -> dict[str, dict[str, dict[str, None]]]:
             """
             Initialize the cluster entry in the dictionary if necessary.
             :param dic_orig: original dictionary
@@ -120,7 +130,7 @@ class MixedHitAggregating(Tool):
             :return: Initialized cluster dictionary or original dictionary
             """
             if cluster_in not in dic_orig:
-                dic_orig[cluster] = {}
+                dic_orig[cluster_in] = {}
             if locus_in not in dic_orig[cluster_in].keys():
                 dic_orig[cluster_in][locus_in] = {'kma': None, 'blast': None}
             return dic_orig
@@ -174,18 +184,18 @@ class MixedHitAggregating(Tool):
         ]
         return {'unique_hits': output_unique_hits, 'complete': complete_hit_list}
 
-    def __build_aggregated_hit(self, hit: GeneDetectionMixedHit) -> AggregatedHit:
+    def __build_aggregated_hit(self, hit: GeneDetectionMixedHit) -> MixedHitHolder:
         """
-        Takes a mixed hit object and transform into an AggregatedHit object.
+        Takes a mixed hit object and transform into an MixedHitHolder object.
         :param hit: GeneDetectionMixedHit object
-        :return: AggregatedHit object
+        :return: MixedHitHolder object
         """
-        agg_hit = AggregatedHit(**{f.name: '-' for f in fields(AggregatedHit) if
-                                   f.name not in ['kma_color', 'blast_color']})
+        agg_hit = MixedHitHolder(**{f.name: None for f in fields(MixedHitHolder) if
+                                    f.name not in ['kma_color', 'blast_color']})
         agg_hit = replace(
             agg_hit,
             locus=self._retrieve_locus_name(hit.locus),
-            cluster=hit.cluster()
+            cluster=hit.cluster
         )
         if kma_hit := hit.kma_hit():
             agg_hit = replace(
@@ -200,7 +210,7 @@ class MixedHitAggregating(Tool):
             blast_stats = blast_hit.blast_stats
             agg_hit = replace(
                 agg_hit,
-                blast_identity=f'{blast_stats.percent_identity:.2f}',
+                blast_identity=blast_stats.percent_identity,
                 blast_coverage=blast_stats.length_statistic,
                 blast_sequence=blast_stats.query_id,
                 blast_coordinates=f'{blast_stats.query_start}..{blast_stats.query_end}',
@@ -209,7 +219,7 @@ class MixedHitAggregating(Tool):
             )
         return agg_hit
 
-    def __create_combined_hits_summary(self, combined_hits: list[GeneDetectionMixedHit]) -> list[AggregatedHit]:
+    def __create_combined_hits_summary(self, combined_hits: list[GeneDetectionMixedHit]) -> list[MixedHitHolder]:
         """
         Creates a list containing all aggregated hits.
         :param combined_hits: List of GeneDetectionMixedHit objects

@@ -8,7 +8,7 @@ from camel.app.core.tool import Tool
 from camel.app.core.utils import fileutils
 from camel.app.loggers import logger
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
-from camel.app.tools.pipelines.genedetection.mixedhitaggregating import AggregatedHit
+from camel.app.toolkits.genedetection.genedetectionaggregatedhit import MixedHitHolder
 
 
 class HtmlReporterGeneDetection(Tool):
@@ -41,6 +41,8 @@ class HtmlReporterGeneDetection(Tool):
 
         if '_extra_info' in self._input_informs['detection']:
             self.__add_additional_info_section_aggregated_hits(self._input_informs['detection']['_extra_info'])
+
+        self.__add_database_information()
 
         # Add a warning when the detection method is different from the general detection
         if 'forced_detection_method' in self._parameters:
@@ -111,7 +113,7 @@ class HtmlReporterGeneDetection(Tool):
         self._report_section.add_file(self._tool_inputs['TSV'][0].path, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
 
-    def __add_complete_aggregated_table_section(self, hits: list[AggregatedHit]) -> None:
+    def __add_complete_aggregated_table_section(self, hits: list[MixedHitHolder]) -> None:
         """
         Adds the aggregated table to the report.
         This table is added only if the "mixed" gene detection approach is selected
@@ -125,7 +127,7 @@ class HtmlReporterGeneDetection(Tool):
         )
         div = HtmlExpandableDiv('table_complete_agg_hits', f'{len(hits)}')
         div.add_table(
-            [hit.to_html_list() for hit in sorted(hits, key=lambda x: x.cluster)],
+            [hit.to_html_row() for hit in sorted(hits, key=lambda x: x.cluster)],
             column_names=hits[0].header()[:-2],
             table_attributes=[('class', 'data')]
         )
