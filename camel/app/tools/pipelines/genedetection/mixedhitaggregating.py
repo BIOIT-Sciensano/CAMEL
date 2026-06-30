@@ -89,7 +89,7 @@ class MixedHitAggregating(Tool):
         return hit
 
     @staticmethod
-    def __extract_locus_name_for_table(cluster_dic: dict) -> str:
+    def __extract_locus_name_for_table(cluster_dic: dict) -> list[str]:
         """
         Given a cluster dictionary, returns the locus with both KMA and Blast Hit.
         Alternatively, if either of those is empty, returns the first locus in appearance.
@@ -101,15 +101,15 @@ class MixedHitAggregating(Tool):
         # First: checking whether both methods detected the same locus in the cluster
         if res_locus['kma'] and res_locus['blast']:
             try:
-                locus_to_return = [loc for loc in res_locus['kma'] if loc in res_locus['blast']][0]
+                locus_to_return = [[loc for loc in res_locus['kma'] if loc in res_locus['blast']][0]]
             except IndexError:
-                # For now, only returns the KMA locus.
-                locus_to_return = res_locus['kma'][0]
+                # Returns both if both tools didn't detect the same locus from the same cluster
+                locus_to_return = [res_locus['kma'][0], res_locus['blast'][0]]
             return locus_to_return
 
         # Then: Checking which one detected a locus in the cluster.
         # Returns the first locus occurrence in the list.
-        return res_locus['kma'][0] if res_locus['kma'] else res_locus['blast'][0]
+        return [res_locus['kma'][0] if res_locus['kma'] else res_locus['blast'][0]]
 
     def __combine_hits(self) -> dict[str, list[GeneDetectionMixedHit]]:
         """
@@ -160,7 +160,8 @@ class MixedHitAggregating(Tool):
         filter_unique_hits_dic = {}
         for cluster in hits_per_cluster:
             locus_to_add = self.__extract_locus_name_for_table(hits_per_cluster[cluster])
-            filter_unique_hits_dic[locus_to_add] = hits_per_cluster[cluster][locus_to_add]
+            for locus in locus_to_add:
+                filter_unique_hits_dic[locus] = hits_per_cluster[cluster][locus]
         output_unique_hits = [
             GeneDetectionMixedHit(
                 locus=locus,

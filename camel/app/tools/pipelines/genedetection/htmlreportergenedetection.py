@@ -127,7 +127,7 @@ class HtmlReporterGeneDetection(Tool):
         )
         div = HtmlExpandableDiv('table_complete_agg_hits', f'{len(hits)}')
         div.add_table(
-            [hit.to_html_row() for hit in sorted(hits, key=lambda x: x.cluster)],
+            [hit.to_html_row() for hit in sorted(hits, key=lambda x: x.locus)],
             column_names=hits[0].header()[:-2],
             table_attributes=[('class', 'data')]
         )
