@@ -11,7 +11,7 @@ class MixedHitHolder:
     cluster: str
     locus: str
     locus_length: int = None
-    kma_identity: float = None
+    kma_identity: float | None = None
     kma_coverage: float = None
     kma_depth: float = None
     blast_identity: float = None
