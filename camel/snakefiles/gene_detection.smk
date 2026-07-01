@@ -175,7 +175,9 @@ rule gene_detection_report:
             reporter.update_parameters(message_category=params.config_data['message']['category'])
 
         # Run tool
-        snakemakeutils.add_pickle_inputs(reporter, input)
+        snakemakeutils.add_pickle_inputs(reporter, input, excluded_keys=['VAL_hits_complete'])
+        if input.VAL_hits_complete:
+            snakemakeutils.add_pickle_input(reporter, 'VAL_hits_complete', Path(input.VAL_hits_complete))
         step.run()
         snakemakeutils.dump_tool_outputs(reporter, output)
 

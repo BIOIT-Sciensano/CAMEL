@@ -42,5 +42,5 @@ rule gene_detection_mixed_export_informs:
         informs_blast = snakemakeutils.load_object(Path(str(input.INFORMS_blast)))
         informs['_kma'] = snakemakeutils.load_object(Path(str(input.INFORMS_kma)))
         informs['_blast'] = snakemakeutils.load_object(Path(str(input.INFORMS_blast)))
-        informs['_command'] = '\n'.join(i['_command'] for i in (informs_kma, informs_blast["_command"]))
+        informs['_command'] = '\n'.join(i['_command'] for i in (informs_kma, informs_blast))
         snakemakeutils.dump_object(informs, Path(output.INFORMS))

@@ -48,7 +48,7 @@ class MixedHitAggregating(Tool):
         """
         self._informs['Min. percent identity'] = f"{self._parameters['min_percent_identity'].value}%"
         self._informs['Min. coverage'] = f"{self._parameters['min_coverage'].value}%"
-        self._informs['_extra_info'] = (
+        self._informs['extra_info'] = (
             'In the case of the mixed gene detection strategy, both <b>read-based (KMA)</b> and '
             '<b>assembly-based (Blast)</b> gene detection methods are used. Since Blast can report hits on multiple '
             'closely related alleles, and KMA only single best hits, '

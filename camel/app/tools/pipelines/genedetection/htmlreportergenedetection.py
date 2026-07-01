@@ -8,7 +8,7 @@ from camel.app.core.tool import Tool
 from camel.app.core.utils import fileutils
 from camel.app.loggers import logger
 from camel.app.toolkits.export.tsvexporter import TsvExporter
-from camel.app.toolkits.genedetection.genedetectionaggregatedhit import MixedHitHolder
+from camel.app.toolkits.genedetection.mixedhitholder import MixedHitHolder
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 
@@ -38,11 +38,11 @@ class HtmlReporterGeneDetection(Tool):
             self._report_section.add_paragraph('No hits found.')
         else:
             self.__add_output_table([h.value for h in self._tool_inputs['VAL_Hits']])
-            if self._tool_inputs['VAL_hits_complete']:
+            if 'VAL_hits_complete' in self._tool_inputs:
                 self.__add_table_mixed([h.value for h in self._tool_inputs['VAL_hits_complete']])
 
-        if '_extra_info' in self._input_informs['detection']:
-            self.__add_additional_info_section_aggregated_hits(self._input_informs['detection']['_extra_info'])
+        if 'extra_info' in self._input_informs['detection']:
+            self.__add_additional_info_section_aggregated_hits(self._input_informs['detection']['extra_info'])
 
         self.__add_database_information()
 
@@ -93,7 +93,9 @@ class HtmlReporterGeneDetection(Tool):
         :return: None
         """
         self._report_section.add_table([
-            [f'{key}:', value] for key, value in sorted(informs_detection.items()) if not key.startswith('_')
+            [f'{key}:', value] for key, value in sorted(informs_detection.items())
+            if not key.startswith('_')
+            and key != 'extra_info'
         ], None, [('class', 'information')])
 
     def __add_output_table(self, hits: list[GeneDetectionHitBase]) -> None:
@@ -128,7 +130,7 @@ class HtmlReporterGeneDetection(Tool):
         self._report_section.add_paragraph(
             'This table shows the details about all genes detected by either strategies.'
         )
-        div = HtmlExpandableDiv('table_complete_agg_hits', f'hits ({len(holders)})')
+        div = HtmlExpandableDiv('table_complete_agg_hits', f'detected hits ({len(holders)})')
         div.add_table(
             [holder.to_html_row() for holder in holders],
             column_names=MixedHitHolder.header()[:-2],

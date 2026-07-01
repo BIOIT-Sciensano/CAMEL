@@ -10,14 +10,14 @@ class MixedHitHolder:
     """
     cluster: str
     locus: str
-    locus_length: int = None
+    locus_length: int | None = None
     kma_identity: float | None = None
-    kma_coverage: float = None
-    kma_depth: float = None
-    blast_identity: float = None
-    blast_coverage: str = None
-    blast_sequence: str = None
-    blast_coordinates: str = None
+    kma_coverage: float | None = None
+    kma_depth: float | None = None
+    blast_identity: float | None = None
+    blast_coverage: str | None = None
+    blast_sequence: str | None = None
+    blast_coordinates: str | None = None
     kma_color: str = 'red'
     blast_color: str = 'red'
 
