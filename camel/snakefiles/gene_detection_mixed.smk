@@ -26,7 +26,7 @@ rule gene_detection_mixed_aggregate:
         step.run()
         snakemakeutils.dump_tool_outputs(mixed_hit, output)
 
-rule gene_detection_export_informs:
+rule gene_detection_mixed_export_informs:
     """
     Adds the commands informs so that they are displayed correctly in the report.
     """
