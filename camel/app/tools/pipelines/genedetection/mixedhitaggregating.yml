@@ -2,5 +2,4 @@ dependencies: []
 parameters:
   min_coverage: {default: true, mandatory: true, option: null, value: '60'}
   min_percent_identity: {default: true, mandatory: true, option: null, value: '90'}
-  output_filename: {default: true, mandatory: true, option: null, value: aggregated_hits_summary.tsv}
 tool_command: null

@@ -16,9 +16,8 @@ INPUT_FASTA = 'gene_detection/{db}/input/fasta.io'
 OUTPUT_HITS_METHOD = 'gene_detection/{db}/{method}/hits.iob'
 OUTPUT_INFORMS_METHOD = 'gene_detection/{db}/{method}/informs.io'
 
-# Generic output paths for aggregated hits
-OUTPUT_AGG_HITS_SUMMARY = 'gene_detection/{db}/mixed/agg-hits-summary.iob'
-OUTPUT_AGG_HITS_SUMMARY_TSV = 'gene_detection/{db}/mixed/tsv-agg-hits-summary.iob'
+# Complete (non-deduplicated) hit list, only produced by the mixed detection method
+OUTPUT_HITS_COMPLETE = 'gene_detection/{db}/mixed/hits-complete.iob'
 
 # Selected hits and informs for the given database
 OUTPUT_ALL_HITS = 'gene_detection/{db}/hit_selection/selected-hits.iob'

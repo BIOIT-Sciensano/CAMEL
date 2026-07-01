@@ -13,8 +13,7 @@ rule gene_detection_mixed_aggregate:
     output:
         VAL_hits = 'gene_detection/{db}/mixed/hits.iob',  # gene_detection.OUTPUT_HITS_METHOD
         INFORMS = 'gene_detection/{db}/mixed/informs_pre.io',
-        VAL_agg_hits = 'gene_detection/{db}/mixed/agg-hits-summary.iob',
-        TSV_agg_hits = 'gene_detection/{db}/mixed/tsv-agg-hits-summary.iob'
+        VAL_hits_complete = 'gene_detection/{db}/mixed/hits-complete.iob'  # gene_detection.OUTPUT_HITS_COMPLETE
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/mixed',
         min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_percent_identity', 90),
@@ -37,13 +36,11 @@ rule gene_detection_export_informs:
         INFORMS_blast = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method='blast')
     output:
         INFORMS = 'gene_detection/{db}/mixed/informs.io'  # gene_detection.OUTPUT_INFORMS_METHOD
-    params:
-        dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/mixed'
     run:
         informs = snakemakeutils.load_object(Path(input.INFORMS))
         informs_kma = snakemakeutils.load_object(Path(str(input.INFORMS_kma)))
         informs_blast = snakemakeutils.load_object(Path(str(input.INFORMS_blast)))
-        informs['_kma'] = snakemakeutils.load_object(Path(input.INFORMS_kma))
-        informs['_blast'] = snakemakeutils.load_object(Path(input.INFORMS_blast))
-        informs['_command'] = f'{informs_kma["_command"]}\n{informs_blast["_command"]}'
+        informs['_kma'] = snakemakeutils.load_object(Path(str(input.INFORMS_kma)))
+        informs['_blast'] = snakemakeutils.load_object(Path(str(input.INFORMS_blast)))
+        informs['_command'] = '\n'.join(i['_command'] for i in (informs_kma, informs_blast["_command"]))
         snakemakeutils.dump_object(informs, Path(output.INFORMS))

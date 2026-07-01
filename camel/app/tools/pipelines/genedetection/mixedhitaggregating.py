@@ -1,14 +1,6 @@
-from dataclasses import fields, replace
-from pathlib import Path
-
-import pandas as pd
-
-from camel.app.core.io.tooliofile import ToolIOFile
 from camel.app.core.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
 from camel.app.core.utils import toolutils
-from camel.app.toolkits.export.tsvexporter import TsvExporter
-from camel.app.toolkits.genedetection.genedetectionaggregatedhit import MixedHitHolder
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
 from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 
@@ -30,22 +22,15 @@ class MixedHitAggregating(Tool):
         Executes this tool.
         :return: None
         """
-        # Gathering and aggregating hits
-        all_hits_combined = self.__combine_hits()
+        all_hits_combined: dict[str, list[GeneDetectionMixedHit]] = self.__combine_hits()
         hits_combined = all_hits_combined['complete']
         hits_combined_filt = all_hits_combined['unique_hits']
-        aggregated_summary_hits = self.__create_combined_hits_summary(hits_combined)
+        for hit in hits_combined:
+            hit.locus = self._retrieve_locus_name(hit.locus)
 
         # Setting the outputs
         self._tool_outputs['VAL_hits'] = [ToolIOValue(hit) for hit in hits_combined_filt]
-        self._tool_outputs['VAL_agg_hits'] = [ToolIOValue(hit) for hit in aggregated_summary_hits]
-        output_tsv_summary = self._parameters['output_filename'].value
-        if aggregated_summary_hits:
-            TsvExporter.export([hit.to_table_row() for hit in sorted(aggregated_summary_hits, key=lambda x: x.locus)],
-                               aggregated_summary_hits[0].header(), str(output_tsv_summary))
-        else:
-            pd.DataFrame().to_csv(output_tsv_summary)
-        self._tool_outputs['TSV_agg_hits'] = [ToolIOFile(Path(output_tsv_summary))]
+        self._tool_outputs['VAL_hits_complete'] = [ToolIOValue(hit) for hit in hits_combined]
         self.__set_informs()
 
     def _check_input(self) -> None:
@@ -184,49 +169,6 @@ class MixedHitAggregating(Tool):
             ) for locus in all_loci_dictionary
         ]
         return {'unique_hits': output_unique_hits, 'complete': complete_hit_list}
-
-    def __build_aggregated_hit(self, hit: GeneDetectionMixedHit) -> MixedHitHolder:
-        """
-        Takes a mixed hit object and transform into an MixedHitHolder object.
-        :param hit: GeneDetectionMixedHit object
-        :return: MixedHitHolder object
-        """
-        agg_hit = MixedHitHolder(**{f.name: None for f in fields(MixedHitHolder) if
-                                    f.name not in ['kma_color', 'blast_color']})
-        agg_hit = replace(
-            agg_hit,
-            locus=self._retrieve_locus_name(hit.locus),
-            cluster=hit.cluster
-        )
-        if kma_hit := hit.kma_hit():
-            agg_hit = replace(
-                agg_hit,
-                kma_identity=kma_hit.percent_identity,
-                kma_coverage=kma_hit.subject_coverage,
-                kma_depth=kma_hit.depth,
-                kma_color=kma_hit.color,
-                locus_length=kma_hit.length
-            )
-        if blast_hit := hit.blast_hit():
-            blast_stats = blast_hit.blast_stats
-            agg_hit = replace(
-                agg_hit,
-                blast_identity=blast_stats.percent_identity,
-                blast_coverage=blast_stats.length_statistic,
-                blast_sequence=blast_stats.query_id,
-                blast_coordinates=f'{blast_stats.query_start}..{blast_stats.query_end}',
-                blast_color=blast_hit.color,
-                locus_length=agg_hit.locus_length if agg_hit.locus_length != '-' else blast_stats.subject_length
-            )
-        return agg_hit
-
-    def __create_combined_hits_summary(self, combined_hits: list[GeneDetectionMixedHit]) -> list[MixedHitHolder]:
-        """
-        Creates a list containing all aggregated hits.
-        :param combined_hits: List of GeneDetectionMixedHit objects
-        :return: List of all the aggregated hits
-        """
-        return [self.__build_aggregated_hit(hit) for hit in combined_hits]
 
     def _retrieve_locus_name(self, locus: str) -> str:
         """

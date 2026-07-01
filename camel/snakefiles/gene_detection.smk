@@ -41,15 +41,11 @@ rule gene_detection_get_hits:
     """
     input:
         INFORMS_DB = rules.gene_detection_db_manager.output.INFORMS,
-        VAL_agg_hits = lambda wildcards: gene_detection.OUTPUT_AGG_HITS_SUMMARY.format(db=wildcards.db) if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
-        TSV_agg_hits = lambda wildcards: gene_detection.OUTPUT_AGG_HITS_SUMMARY_TSV.format(db=wildcards.db) if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
         VAL_hits = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db)),
         INFORMS_hits = lambda wildcards: gene_detection.OUTPUT_INFORMS_METHOD.format(db=wildcards.db, method=GeneDetectionUtils.get_detection_method_key(config, wildcards.db))
     output:
         VAL_hits = 'gene_detection/{db}/hit_selection/hits-standardized.iob',
-        INFORMS = 'gene_detection/{db}/hit_selection/informs.io',  # gene_detection.OUTPUT_INFORMS
-        VAL_agg_hits = 'gene_detection/{db}/hit_selection/agg-hits-summary.iob',
-        TSV_agg_hits = 'gene_detection/{db}/hit_selection/tsv-agg-hits-summary.iob'
+        INFORMS = 'gene_detection/{db}/hit_selection/informs.io'  # gene_detection.OUTPUT_INFORMS
     run:
         import shutil
         shutil.copyfile(str(input.VAL_hits), output.VAL_hits)
@@ -57,12 +53,6 @@ rule gene_detection_get_hits:
         informs = snakemakeutils.load_object(Path(str(input.INFORMS_hits)))
         informs['_tag'] = snakemakeutils.load_object(Path(str(input.INFORMS_DB)))['title']
         snakemakeutils.dump_object(informs, Path(output.INFORMS))
-        if input.VAL_agg_hits:
-            shutil.copyfile(str(input.VAL_agg_hits), output.VAL_agg_hits)
-            shutil.copyfile(str(input.TSV_agg_hits), output.TSV_agg_hits)
-        else:
-            snakemakeutils.dump_object(input.VAL_agg_hits, Path(output.VAL_agg_hits))
-            snakemakeutils.dump_object(input.TSV_agg_hits, Path(output.TSV_agg_hits))
 
 rule gene_detection_map_names:
     """
@@ -151,10 +141,9 @@ rule gene_detection_report:
     Creates HTML reports for the gene detection.
     """
     input:
-        VAL_Hits = rules.gene_detection_map_names.output.HITS,
         TSV = rules.gene_detection_map_names.output.TSV,
-        VAL_agg_hits = rules.gene_detection_get_hits.output.VAL_agg_hits,
-        TSV_agg_hits = rules.gene_detection_get_hits.output.TSV_agg_hits,
+        VAL_Hits = rules.gene_detection_map_names.output.HITS,
+        VAL_hits_complete = lambda wildcards: gene_detection.OUTPUT_HITS_COMPLETE.format(db=wildcards.db) if GeneDetectionUtils.get_detection_method_key(config, wildcards.db) == 'mixed' else [],
         INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS,
         INFORMS_detection = rules.gene_detection_get_hits.output.INFORMS
     output:

@@ -7,8 +7,10 @@ from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.tool import Tool
 from camel.app.core.utils import fileutils
 from camel.app.loggers import logger
-from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
+from camel.app.toolkits.export.tsvexporter import TsvExporter
 from camel.app.toolkits.genedetection.genedetectionaggregatedhit import MixedHitHolder
+from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
+from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 
 
 class HtmlReporterGeneDetection(Tool):
@@ -36,8 +38,8 @@ class HtmlReporterGeneDetection(Tool):
             self._report_section.add_paragraph('No hits found.')
         else:
             self.__add_output_table([h.value for h in self._tool_inputs['VAL_Hits']])
-            if self._tool_inputs['VAL_agg_hits']:
-                self.__add_complete_aggregated_table_section([h.value for h in self._tool_inputs['VAL_agg_hits']])
+            if self._tool_inputs['VAL_hits_complete']:
+                self.__add_table_mixed([h.value for h in self._tool_inputs['VAL_hits_complete']])
 
         if '_extra_info' in self._input_informs['detection']:
             self.__add_additional_info_section_aggregated_hits(self._input_informs['detection']['_extra_info'])
@@ -113,27 +115,32 @@ class HtmlReporterGeneDetection(Tool):
         self._report_section.add_file(self._tool_inputs['TSV'][0].path, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
 
-    def __add_complete_aggregated_table_section(self, hits: list[MixedHitHolder]) -> None:
+    def __add_table_mixed(self, hits: list[GeneDetectionMixedHit]) -> None:
         """
         Adds the aggregated table to the report.
         This table is added only if the "mixed" gene detection approach is selected
         and includes all genes detected by either method.
-        :param hits: Detected aggregated hits
+        :param hits: Detected hits (complete, non-deduplicated list)
         :return: None
         """
+        holders = [hit.holder for hit in sorted(hits, key=lambda x: x.locus)]
         self._report_section.add_header('Aggregated hits: complete list.', level=3)
         self._report_section.add_paragraph(
             'This table shows the details about all genes detected by either strategies.'
         )
-        div = HtmlExpandableDiv('table_complete_agg_hits', f'{len(hits)}')
+        div = HtmlExpandableDiv('table_complete_agg_hits', f'hits ({len(holders)})')
         div.add_table(
-            [hit.to_html_row() for hit in sorted(hits, key=lambda x: x.locus)],
-            column_names=hits[0].header()[:-2],
+            [holder.to_html_row() for holder in holders],
+            column_names=MixedHitHolder.header()[:-2],
             table_attributes=[('class', 'data')]
         )
         self._report_section.add_html_object(div)
-        relative_path = self._sub_folder / Path(self._tool_inputs['TSV_agg_hits'][0].path).name
-        self._report_section.add_file(self._tool_inputs['TSV_agg_hits'][0].path, relative_path)
+
+        # Create TSV file and add download link
+        output_tsv = Path(self._folder) / 'agg-hits-summary.tsv'
+        TsvExporter.export([holder.to_table_row() for holder in holders], MixedHitHolder.header(), str(output_tsv))
+        relative_path = self._sub_folder / output_tsv.name
+        self._report_section.add_file(output_tsv, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
 
     def __add_additional_info_section_aggregated_hits(self, extra_info: str) -> None:

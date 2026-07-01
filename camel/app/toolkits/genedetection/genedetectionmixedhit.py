@@ -1,8 +1,10 @@
+from dataclasses import replace
 from pathlib import Path
 from typing import Union
 
 from camel.app.core.reports.htmlreportsection import HtmlReportSection
 from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camel.app.toolkits.genedetection.genedetectionaggregatedhit import MixedHitHolder
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.app.toolkits.genedetection.genedetectionkmahit import GeneDetectionKMAHit
@@ -113,6 +115,33 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         return ([HtmlTableCell(v) for v in self.to_table_row()][1:-1] + [self._get_accession_cell()] +
                 [HtmlTableCell('v' if self._kma_hit else 'x', self._kma_hit.color if self._kma_hit else 'red')] +
                 [HtmlTableCell('v' if self._blast_hit else 'x', self._blast_hit.color if self._blast_hit else 'red')])
+
+    @property
+    def holder(self) -> MixedHitHolder:
+        """
+        Returns this hit as a MixedHitHolder, combining the KMA and Blast statistics into a single object.
+        :return: MixedHitHolder
+        """
+        agg_hit = MixedHitHolder(cluster=self.cluster, locus=self.locus)
+        if self._kma_hit:
+            agg_hit = replace(
+                agg_hit,
+                kma_identity=self._kma_hit.percent_identity,
+                kma_coverage=self._kma_hit.subject_coverage,
+                kma_depth=self._kma_hit.depth,
+                kma_color=self._kma_hit.color,
+                locus_length=self._kma_hit.length)
+        if self._blast_hit:
+            blast_stats = self._blast_hit.blast_stats
+            agg_hit = replace(
+                agg_hit,
+                blast_identity=blast_stats.percent_identity,
+                blast_coverage=blast_stats.length_statistic,
+                blast_sequence=blast_stats.query_id,
+                blast_coordinates=f'{blast_stats.query_start}..{blast_stats.query_end}',
+                blast_color=self._blast_hit.color,
+                locus_length=agg_hit.locus_length if agg_hit.locus_length != '-' else blast_stats.subject_length)
+        return agg_hit
 
     def kma_hit(self) -> GeneDetectionKMAHit:
         """
