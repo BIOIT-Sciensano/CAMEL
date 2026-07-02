@@ -29,8 +29,17 @@ def add_input_opts(*, supported: list[model.InputType] | None = None) -> Callabl
         """
         options = [click.option("--sample-name", type=str, help="Sample name")]
 
-        # Input type option is only needed if there are multiple input types
-        if supported is None or len(supported) != 1:
+        if supported is not None and len(supported) == 1:
+            # Ensure input_type is always available in kwargs
+            options.append(
+                click.option(
+                    "--input-type",
+                    type=click.Choice([supported[0].value]),
+                    default=supported[0].value,
+                    hidden=True,
+                )
+            )
+        else:
             input_type_opts = [
                 t.value
                 for t in (supported if supported is not None else model.InputType)
