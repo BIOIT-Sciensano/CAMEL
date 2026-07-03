@@ -21,10 +21,10 @@ rule gene_detection_mixed_aggregate:
     run:
         from camel.app.tools.pipelines.genedetection.mixedhitaggregating import MixedHitAggregating
         mixed_hit = MixedHitAggregating()
-        snakemakeutils.add_pickle_inputs(mixed_hit, input)
+        snakemakeutils.add_io_inputs(mixed_hit, input)
         step = Step(rule_name=str(rule), tool=mixed_hit, dir_=Path(str(params.dir_)))
         step.run()
-        snakemakeutils.dump_tool_outputs(mixed_hit, output)
+        snakemakeutils.dump_io_outputs(mixed_hit, output)
 
 rule gene_detection_mixed_export_informs:
     """

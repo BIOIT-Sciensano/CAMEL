@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from camel.app.core.reports.htmltablecell import HtmlTableCell
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
 
 @dataclass(frozen=True)

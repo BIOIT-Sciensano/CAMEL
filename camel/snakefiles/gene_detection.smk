@@ -8,7 +8,7 @@ from camel.snakefiles import gene_detection
 # Include workflows for the different detection methods
 include: gene_detection.SNAKEFILE_BLAST
 include: gene_detection.SNAKEFILE_KMA
-
+include: gene_detection.SNAKEFILE_MIXED
 
 # Common rules
 rule gene_detection_db_manager:
@@ -127,12 +127,15 @@ rule gene_detection_get_column_names:
         from camel.app.toolkits.blast.blasthitstatistics import BlastHitStatistics
         from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
         from camel.app.toolkits.genedetection.genedetectionkmahit import GeneDetectionKMAHit
+        from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 
         # Create empty hit
         if params.detection_method == 'blast':
             empty_hit = GeneDetectionBlastHit('Locus', None, BlastHitStatistics('subject', 0, '', 'query', 0, 0, '', 0.0, '+'))
         elif params.detection_method == 'kma':
             empty_hit = GeneDetectionKMAHit('DB_cluster', 'Locus', None, '', 0, 0, 0.0, 0.0, 0.0)
+        elif params.detection_method == 'mixed':
+            empty_hit = GeneDetectionMixedHit('Locus','Length',None,None)
         else:
             raise ValueError(f"Invalid detection method: {params.detection_method}")
 
@@ -150,8 +153,9 @@ rule gene_detection_report:
     Creates HTML reports for the gene detection.
     """
     input:
-        VAL_Hits = rules.gene_detection_map_names.output.HITS,
         TSV = rules.gene_detection_map_names.output.TSV,
+        VAL_Hits = rules.gene_detection_map_names.output.HITS,
+        VAL_hits_complete = lambda wildcards: gene_detection.OUTPUT_HITS_COMPLETE.format(db=wildcards.db) if GeneDetectionUtils.get_detection_method_key(config,wildcards.db) == 'mixed' else[],
         INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS,
         INFORMS_detection = rules.gene_detection_get_hits.output.INFORMS
     output:
@@ -182,7 +186,9 @@ rule gene_detection_report:
             reporter.update_parameters(message_category=params.config_data['message']['category'])
 
         # Run tool
-        snakemakeutils.add_io_inputs(reporter, input)
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['VAL_hits_complete'])
+        if input.VAL_hits_complete:
+            snakemakeutils.add_io_input(reporter, 'VAL_hits_complete', Path(input.VAL_hits_complete))
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

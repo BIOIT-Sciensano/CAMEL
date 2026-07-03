@@ -1,6 +1,6 @@
-from camel.app.core.io.tooliovalue import ToolIOValue
+from camelcore.app.io.tooliovalue import ToolIOValue
 from camel.app.core.tool import Tool
-from camel.app.core.utils import toolutils
+from camel.app.core import toolutils
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
 from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
 
