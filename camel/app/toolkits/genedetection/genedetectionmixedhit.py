@@ -122,7 +122,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         Returns this hit as a MixedHitHolder, combining the KMA and Blast statistics into a single object.
         :return: MixedHitHolder
         """
-        mixed_hit = MixedHitHolder(cluster=self.cluster, locus=self.locus)
+        mixed_hit = MixedHitHolder(cluster=self.cluster, locus=self.locus, accession=self._get_accession_cell())
         if self._kma_hit:
             mixed_hit = replace(
                 mixed_hit,

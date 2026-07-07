@@ -26,6 +26,7 @@ class MixedHitAggregating(Tool):
         hits_combined = all_hits_combined['complete']
         hits_combined_filt = all_hits_combined['unique_hits']
         for hit in hits_combined:
+            hit.accession = self._retrieve_accession_number(hit.locus)
             hit.locus = self._retrieve_locus_name(hit.locus)
 
         # Setting the outputs
@@ -178,3 +179,12 @@ class MixedHitAggregating(Tool):
         """
         locus_name = self._input_informs['db']['mapping'].get_metadata(locus, 'allele')
         return locus_name
+
+    def _retrieve_accession_number(self, locus: str) -> str:
+        """
+        Retrieves the accession number.
+        :param locus: Locus
+        :return: Accession cell
+        """
+        accession = self._input_informs['db']['mapping'].get_metadata(locus, 'accession', '-')
+        return accession

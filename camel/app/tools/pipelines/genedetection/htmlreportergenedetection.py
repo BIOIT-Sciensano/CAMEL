@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlelement import HtmlElement
 from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.utils import fileutils
@@ -126,22 +127,50 @@ class HtmlReporterGeneDetection(Tool):
         :param hits: Detected hits (complete, non-deduplicated list)
         :return: None
         """
-        holders = [hit.holder for hit in sorted(hits, key=lambda x: x.locus)]
+        holders = [hit.holder for hit in sorted(hits, key=lambda x: x.cluster)]
+
+        # For formatting the output table, store the hits in dictionary by cluster
+        holders_by_cluster = {}
+        for holder in holders:
+            cluster = holder.cluster
+            if cluster not in holders_by_cluster:
+                holders_by_cluster[cluster] = []
+            holders_by_cluster[cluster].append(holder)
+
         self._report_section.add_header('Aggregated hits: complete list.', level=3)
         self._report_section.add_paragraph(
             'This table shows the details about all genes detected by either strategies.'
         )
         div = HtmlExpandableDiv('table_complete_agg_hits', f'detected hits ({len(holders)})')
-        div.add_table(
-            [holder.to_html_row() for holder in holders],
-            column_names=MixedHitHolder.header()[:-2],
-            table_attributes=[('class', 'data')]
-        )
+
+        # Add table heading
+        table_data = [
+            [HtmlElement('th', MixedHitHolder.header_html()[i], [('rowspan', 2)]) for i in range(4)] +
+            [HtmlElement('th', 'KMA', [('colspan', 3)]),
+             HtmlElement('th', 'BLAST', [('colspan', 2)])],
+            [HtmlElement('th', MixedHitHolder.header_html()[i]) for i in range(4, len(MixedHitHolder.header_html()))]
+        ]
+
+        # Add table cells
+        for cluster in holders_by_cluster:
+            if len(holders_by_cluster[cluster]) == 1:
+                # If KMA and BLAST detected the same loci in the cluster, adds the line as is in the output table
+                table_data.append(holders_by_cluster[cluster][0].to_html_row())
+            else:
+                # If KMA and BLAST detected different loci, merge the cluster ID cells and add all lines afterward,
+                # without the cluster cell.
+                merged_clu_cell = [HtmlElement('td', cluster, [('rowspan', len(holders_by_cluster[cluster]))])]
+                merged_clu_cell += holders_by_cluster[cluster][0].to_html_row()[1:]
+                table_data.append(merged_clu_cell)
+                for i in range(1, len(holders_by_cluster[cluster])):
+                    table_data.append(holders_by_cluster[cluster][i].to_html_row()[1:])
+
+        div.add_table(table_data, None, [('class', 'data')])
         self._report_section.add_html_object(div)
 
         # Create TSV file and add download link
         output_tsv = Path(self._folder) / 'agg-hits-summary.tsv'
-        TsvExporter.export([holder.to_table_row() for holder in holders], MixedHitHolder.header(), str(output_tsv))
+        TsvExporter.export([holder.to_table_row() for holder in holders], MixedHitHolder.header_tsv(), str(output_tsv))
         relative_path = self._sub_folder / output_tsv.name
         self._report_section.add_file(output_tsv, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
