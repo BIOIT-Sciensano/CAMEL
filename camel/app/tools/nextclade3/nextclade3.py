@@ -27,7 +27,7 @@ class Nextclade3(Tool):
         :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('Nextclade', '3.1.1', camel)
+        super().__init__('Nextclade', '3.18.1', camel)
 
     def _check_input(self) -> None:
         """
