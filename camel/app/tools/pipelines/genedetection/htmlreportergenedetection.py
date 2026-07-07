@@ -130,12 +130,13 @@ class HtmlReporterGeneDetection(Tool):
         holders = [hit.holder for hit in sorted(hits, key=lambda x: x.cluster)]
 
         # For formatting the output table, store the hits in dictionary by cluster
-        holders_by_cluster = {}
+        temp_dic_holders = {}
         for holder in holders:
             cluster = holder.cluster
-            if cluster not in holders_by_cluster:
-                holders_by_cluster[cluster] = []
-            holders_by_cluster[cluster].append(holder)
+            if cluster not in temp_dic_holders:
+                temp_dic_holders[cluster] = []
+            temp_dic_holders[cluster].append(holder)
+        holders_by_cluster = dict(sorted(temp_dic_holders.items(), key=lambda x: x[1][0].locus))
 
         self._report_section.add_header('Aggregated hits: complete list.', level=3)
         self._report_section.add_paragraph(

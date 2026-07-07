@@ -11,7 +11,7 @@ class MixedHitHolder:
     """
     cluster: str
     locus: str
-    accession: str | HtmlTableCell
+    accession: HtmlTableCell | None
     locus_length: int | None = None
     kma_identity: float | None = None
     kma_coverage: float | None = None
@@ -30,8 +30,8 @@ class MixedHitHolder:
         :return: header
         """
         return [
-            'Cluster', 'Locus', 'Accession', 'Locus length', 'KMA %identity', 'KMA %coverage', 'KMA depth',
-            'Blast %identity', 'Blast HSP/Locus length', 'Blast Sequence (read or contig)', 'Blast Coordinates'
+            'Cluster', 'Locus', 'Accession', 'Locus length', 'KMA % Identity', 'KMA % Covered', 'KMA Depth',
+            'Blast % Identity', 'Blast HSP/Locus length', 'Blast Sequence (read or contig)', 'Blast Coordinates'
         ]
 
     @staticmethod
@@ -41,7 +41,7 @@ class MixedHitHolder:
         :return: header
         """
         return [
-            'Cluster', 'Locus', 'Accession', 'Locus length', '%identity', '%coverage', 'depth', '%identity',
+            'Cluster', 'Locus', 'Accession', 'Length', '% Identity', '% Covered', 'Depth', '% Identity',
             'HSP/Locus length'
         ]
 
@@ -59,7 +59,7 @@ class MixedHitHolder:
                 HtmlTableCell(f'{self.kma_depth:.2f}', self.kma_color)
             ]
         else:
-            return [HtmlElement('td', 'Not detected by KMA.', [('colspan', 3)])]
+            return [HtmlElement('td', 'Not detected by KMA', [('colspan', 3)])]
 
     def blast_cells(self) -> list[HtmlTableCell | HtmlElement]:
         """
@@ -74,7 +74,7 @@ class MixedHitHolder:
                 HtmlTableCell(self.blast_coverage, self.blast_color)
             ]
         else:
-            return [HtmlElement('td', 'Not detected by BLAST.', [('colspan', 2)])]
+            return [HtmlElement('td', 'Not detected by BLAST', [('colspan', 2)])]
 
     def to_html_row(self) -> list[HtmlTableCell | str]:
         """
