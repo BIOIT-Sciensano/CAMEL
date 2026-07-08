@@ -4,10 +4,11 @@ from typing import Union
 
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
-from camel.app.toolkits.genedetection.mixedhitholder import MixedHitHolder
+
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.app.toolkits.genedetection.genedetectionkmahit import GeneDetectionKMAHit
+from camel.app.toolkits.genedetection.mixedhitholder import MixedHitHolder
 
 
 class GeneDetectionMixedHit(GeneDetectionHitBase):
@@ -15,19 +16,36 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
     This class represents a gene detection hit detected with BLAST and/or KMA.
     """
 
+    VALID_EXTRA_INFO = {
+        'both': {
+            'text': 'Both',
+            'color': 'green'
+        },
+        'single': {
+            'text': 'Single',
+            'color': 'lightgreen'
+        },
+        'diff': {
+            'text': 'Both - diff. alleles',
+            'color': 'yellow'
+        }
+    }
+
     def __init__(self, locus: str, accession: str | None, blast_hit: GeneDetectionBlastHit | None,
-                 kma_hit: GeneDetectionKMAHit | None) -> None:
+                 kma_hit: GeneDetectionKMAHit | None, extra_info: str = None) -> None:
         """
         Initializes this hit.
         :param locus: Locus
         :param accession: Accession
         :param blast_hit: Blast hit
         :param kma_hit: KMA hit
+        :param extra_info: Extra info related to how the hit is detected by Blast and KMA
         :return: None
         """
         super().__init__(locus, accession)
         self._blast_hit = blast_hit
         self._kma_hit = kma_hit
+        self._extra_info = extra_info
         self._cluster = None
 
     @property
@@ -52,10 +70,25 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         """
         return 'white'
 
+    def set_text_and_color_detection_level(self) -> tuple[str, str]:
+        """
+        Green if the same locus detected by both tools, lightgreen by a single tool and yellow if tools
+        detected different loci from the same cluster.
+        :return: Color
+        """
+        if self._extra_info is not None:
+            try:
+                text = self.VALID_EXTRA_INFO[self._extra_info]['text']
+                color = self.VALID_EXTRA_INFO[self._extra_info]['color']
+            except KeyError:
+                raise ValueError(f'Invalid extra info: {self._extra_info}')
+        return text, color
+
     def is_perfect_hit(self) -> dict[str, bool]:
         """
         Function to check if this is a perfect hit.
-        :return: True if perfect hit, False otherwise
+        This is a placeholder not used as colors are set depending on the respective detection by either BLAST or KMA.
+        :return: Dictionary of boolean
         """
         conditions = {'kma': self._kma_hit.is_perfect_hit() if self._kma_hit else False,
                       'blast': self._blast_hit.is_perfect_hit() if self._blast_hit else False}
@@ -64,6 +97,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
     def is_full_length(self) -> dict[str, bool]:
         """
         Function to check if this is a full length hit.
+        This is a placeholder not used as colors are set depending on the respective detection by either BLAST or KMA.
         :return: True if full length, False otherwise
         """
         conditions = {'kma': self._kma_hit.is_full_length() if self._kma_hit else False,
@@ -76,7 +110,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         Returns the names of the columns of the tabular output.
         :return: List of column names
         """
-        columns = ['DB_cluster', 'Locus', 'Accession']
+        columns = ['DB_cluster', 'Locus', 'Detected by']
         for metadata in self._metadata:
             columns.insert(-1, metadata['name'])
         return columns
@@ -89,7 +123,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         data = [
             self.cluster,
             self.locus,
-            self._accession if self._accession is not None else '-',
+            self._extra_info,
         ]
         for metadata in self._metadata:
             data.insert(-1, metadata['value'])
@@ -101,7 +135,7 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         Returns the names of the columns of the HTML output.
         :return: List of column names
         """
-        return self.table_column_names[1:] + ['KMA', 'Blast']
+        return self.table_column_names[1:-1] + ['Detected by']
 
     def to_html_row(self, report_section: HtmlReportSection, sub_directory: Path, colored: bool = True) \
             -> list[Union[str, HtmlTableCell]]:
@@ -112,9 +146,8 @@ class GeneDetectionMixedHit(GeneDetectionHitBase):
         :param colored: If True, the row is colored
         :return: List of table cell values
         """
-        return ([HtmlTableCell(v) for v in self.to_table_row()][1:-1] + [self._get_accession_cell()] +
-                [HtmlTableCell('v' if self._kma_hit else 'x', self._kma_hit.color if self._kma_hit else 'red')] +
-                [HtmlTableCell('v' if self._blast_hit else 'x', self._blast_hit.color if self._blast_hit else 'red')])
+        text, color = self.set_text_and_color_detection_level()
+        return [HtmlTableCell(v) for v in self.to_table_row()][1:-1] + [HtmlTableCell(text, color)]
 
     @property
     def holder(self) -> MixedHitHolder:

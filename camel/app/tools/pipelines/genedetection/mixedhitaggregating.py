@@ -24,13 +24,13 @@ class MixedHitAggregating(Tool):
         """
         all_hits_combined: dict[str, list[GeneDetectionMixedHit]] = self.__combine_hits()
         hits_combined = all_hits_combined['complete']
-        hits_combined_filt = all_hits_combined['unique_hits']
+        hits_combined_summary = all_hits_combined['summary_hits']
         for hit in hits_combined:
             hit.accession = self._retrieve_accession_number(hit.locus)
             hit.locus = self._retrieve_locus_name(hit.locus)
 
         # Setting the outputs
-        self._tool_outputs['VAL_hits'] = [ToolIOValue(hit) for hit in hits_combined_filt]
+        self._tool_outputs['VAL_hits'] = [ToolIOValue(hit) for hit in hits_combined_summary]
         self._tool_outputs['VAL_hits_complete'] = [ToolIOValue(hit) for hit in hits_combined]
         self.__set_informs()
 
@@ -75,11 +75,12 @@ class MixedHitAggregating(Tool):
         return hit
 
     @staticmethod
-    def __extract_locus_name_for_table(cluster_dic: dict) -> list[str]:
+    def __extract_locus_name_for_table(cluster_dic: dict) -> dict[str, str]:
         """
         Given a cluster dictionary, returns the locus with both KMA and Blast Hit.
         Alternatively, if either of those is empty, returns the first locus in appearance.
-        :return: Locus name
+        :param cluster_dic: Cluster-Locus dictionary
+        :return: List of locus/loci name(s)
         """
         res_locus = {'kma': [loc for loc in cluster_dic.keys() if cluster_dic[loc]['kma']],
                      'blast': [loc for loc in cluster_dic.keys() if cluster_dic[loc]['blast']]}
@@ -87,22 +88,23 @@ class MixedHitAggregating(Tool):
         # First: checking whether both methods detected the same locus in the cluster
         if res_locus['kma'] and res_locus['blast']:
             try:
-                locus_to_return = [[loc for loc in res_locus['kma'] if loc in res_locus['blast']][0]]
+                locus_to_return, extra_info = [loc for loc in res_locus['kma'] if loc in res_locus['blast']][0], 'both'
             except IndexError:
-                # Returns both if both tools didn't detect the same locus from the same cluster
-                locus_to_return = [res_locus['kma'][0], res_locus['blast'][0]]
-            return locus_to_return
+                # Returns one allele only but marking the extra info as diff - which will show in the HTML table
+                # that both tools found different alleles
+                locus_to_return, extra_info = res_locus['kma'][0], 'diff'
+            return {'locus_to_return': locus_to_return, 'extra_info': extra_info}
 
         # Then: Checking which one detected a locus in the cluster.
         # Returns the first locus occurrence in the list.
-        return [res_locus['kma'][0] if res_locus['kma'] else res_locus['blast'][0]]
+        return {'locus_to_return': res_locus['kma'][0] if res_locus['kma'] else res_locus['blast'][0], 'extra_info': 'single'}
 
-    def __combine_hits(self) -> dict[str, list[GeneDetectionMixedHit]]:
+    def __build_hits_per_cluster_dictionary(self) -> dict[str, dict[str, dict[str, None]]]:
         """
-        Combines KMA + BLAST hits into a GeneDetectionMixedHit object list.
-        :return: GeneDetectionMixedHit dictionary
+        Builds the dictionary storing all loci hits by either tool, stored by cluster ID.
+        That way, the method stores the unique hits of KMA vs potential multiple hits from Blast in the same cluster.
+        :return: Dictionary
         """
-
         def __init_cluster_entry(
                 dic_orig: dict,
                 cluster_in: str,
@@ -121,8 +123,6 @@ class MixedHitAggregating(Tool):
                 dic_orig[cluster_in][locus_in] = {'kma': None, 'blast': None}
             return dic_orig
 
-        # Now looping over all hits to store hits, arranged by clusters.
-        # That way, it catches unique hits of KMA vs multiple hits from Blast in the same cluster.
         hits_per_cluster = {}
         for hit in self._tool_inputs['HITS_kma']:
             cluster, locus = hit.value.cluster, hit.value.locus
@@ -143,23 +143,32 @@ class MixedHitAggregating(Tool):
                     locus_in=locus
                 )
                 hits_per_cluster[cluster][locus]['blast'] = hit.value
-        filter_unique_hits_dic = {}
-        for cluster in hits_per_cluster:
-            locus_to_add = self.__extract_locus_name_for_table(hits_per_cluster[cluster])
-            for locus in locus_to_add:
-                filter_unique_hits_dic[locus] = hits_per_cluster[cluster][locus]
-        output_unique_hits = [
-            GeneDetectionMixedHit(
-                locus=locus,
-                accession=None,
-                blast_hit=filter_unique_hits_dic[locus]['blast'],
-                kma_hit=filter_unique_hits_dic[locus]['kma']
-            ) for locus in filter_unique_hits_dic
-        ]
+        return hits_per_cluster
+
+    def __combine_hits(self) -> dict[str, list[GeneDetectionMixedHit]]:
+        """
+        Combines KMA + BLAST hits into a GeneDetectionMixedHit object list. The list is split in two for summary hits
+        and the complete hit list.
+        :return: GeneDetectionMixedHit dictionary
+        """
+        dictionary_hits_per_cluster = self.__build_hits_per_cluster_dictionary()
+        output_summary_hits = []
+        for cluster in dictionary_hits_per_cluster:
+            loci_summary = self.__extract_locus_name_for_table(dictionary_hits_per_cluster[cluster])
+            locus = loci_summary['locus_to_return']
+            output_summary_hits.append(
+                GeneDetectionMixedHit(
+                    locus=locus,
+                    accession=None,
+                    blast_hit=dictionary_hits_per_cluster[cluster][locus]['blast'],
+                    kma_hit=dictionary_hits_per_cluster[cluster][locus]['kma'],
+                    extra_info=loci_summary['extra_info']
+                )
+            )
         all_loci_dictionary = {
-            locus: hits_per_cluster[cluster][locus]
-            for cluster in hits_per_cluster.keys()
-            for locus in hits_per_cluster[cluster].keys()
+            locus: dictionary_hits_per_cluster[cluster][locus]
+            for cluster in dictionary_hits_per_cluster.keys()
+            for locus in dictionary_hits_per_cluster[cluster].keys()
         }
         complete_hit_list = [
             GeneDetectionMixedHit(
@@ -169,7 +178,7 @@ class MixedHitAggregating(Tool):
                 kma_hit=all_loci_dictionary[locus]['kma']
             ) for locus in all_loci_dictionary
         ]
-        return {'unique_hits': output_unique_hits, 'complete': complete_hit_list}
+        return {'summary_hits': output_summary_hits, 'complete': complete_hit_list}
 
     def _retrieve_locus_name(self, locus: str) -> str:
         """

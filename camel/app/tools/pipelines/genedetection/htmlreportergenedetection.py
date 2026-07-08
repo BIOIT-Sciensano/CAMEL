@@ -129,7 +129,7 @@ class HtmlReporterGeneDetection(Tool):
         """
         holders = [hit.holder for hit in sorted(hits, key=lambda x: x.cluster)]
 
-        # For formatting the output table, store the hits in dictionary by cluster
+        # For sorting the output table by locus ID, first store the hits in dictionary by cluster and then sort
         temp_dic_holders = {}
         for holder in holders:
             cluster = holder.cluster
@@ -145,6 +145,10 @@ class HtmlReporterGeneDetection(Tool):
         div = HtmlExpandableDiv('table_complete_agg_hits', f'detected hits ({len(holders)})')
 
         # Add table heading
+        # First, the loop is going up to 4 to include Cluster, Locus, Accession and Length that span two rows
+        # Then KMA requires three columns for its metrics (% identity, % covered, depth)
+        # BLAST requires two columns (% identity, HSP/Locus Length)
+        # Finally, we add the tool metrics as a single row
         table_data = [
             [HtmlElement('th', MixedHitHolder.header_html()[i], [('rowspan', 2)]) for i in range(4)] +
             [HtmlElement('th', 'KMA', [('colspan', 3)]),
@@ -155,14 +159,14 @@ class HtmlReporterGeneDetection(Tool):
         # Add table cells
         for cluster in holders_by_cluster:
             if len(holders_by_cluster[cluster]) == 1:
-                # If KMA and BLAST detected the same loci in the cluster, adds the line as is in the output table
+                # If KMA and BLAST detected the same loci in the cluster, adds the line 'as is' in the output table
                 table_data.append(holders_by_cluster[cluster][0].to_html_row())
             else:
-                # If KMA and BLAST detected different loci, merge the cluster ID cells and add all lines afterward,
-                # without the cluster cell.
-                merged_clu_cell = [HtmlElement('td', cluster, [('rowspan', len(holders_by_cluster[cluster]))])]
-                merged_clu_cell += holders_by_cluster[cluster][0].to_html_row()[1:]
-                table_data.append(merged_clu_cell)
+                # If KMA and BLAST detected different loci, first merge the cluster ID cells ,
+                # Afterward, add all lines without the cluster cell.
+                merged_cluster_cell = [HtmlElement('td', cluster, [('rowspan', len(holders_by_cluster[cluster]))])]
+                merged_cluster_cell += holders_by_cluster[cluster][0].to_html_row()[1:]
+                table_data.append(merged_cluster_cell)
                 for i in range(1, len(holders_by_cluster[cluster])):
                     table_data.append(holders_by_cluster[cluster][i].to_html_row()[1:])
 
