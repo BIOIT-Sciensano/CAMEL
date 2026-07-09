@@ -138,6 +138,8 @@ class MainGeneDetection(BaseScript[ScriptInput, ScriptOutput, Options]):
         elif self._script_opts.detection_method == 'mixed':
             fasta_input = self._helper.prepare_fasta_input(self._script_in, report)
             fastq_input = self._helper.prepare_fastq_input(self._script_in, report)
+            if self._script_out.fasta is not None:
+                shutil.copyfile(str(fasta_input), self._script_out.fasta)
             wrapper.run_mixed(fasta_input, fastq_input, self._script_in.name, db_data, self._script_opts.threads)
 
         # Export all output
