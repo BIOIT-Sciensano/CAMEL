@@ -1,11 +1,13 @@
 import abc
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
 
 from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
+from camel.app.toolkits.genedetection.mapping import Mapping
+from camel.app.toolkits.genedetection.mappingjson import MappingJSON
 
 
 class GeneDetectionHitBase(metaclass=abc.ABCMeta):
@@ -13,7 +15,7 @@ class GeneDetectionHitBase(metaclass=abc.ABCMeta):
     This is the base class for hits detected by the gene detection workflows.
     """
 
-    def __init__(self, locus: str, accession: Optional[str] = None) -> None:
+    def __init__(self, locus: str, accession: str | None = None) -> None:
         """
         Initializes the hit.
         :param locus: Locus corresponding to the hit.
@@ -41,7 +43,7 @@ class GeneDetectionHitBase(metaclass=abc.ABCMeta):
         self._locus = locus
 
     @property
-    def accession(self) -> Optional[str]:
+    def accession(self) -> str | None:
         """
         Returns the accession.
         :return: Accession
@@ -131,8 +133,9 @@ class GeneDetectionHitBase(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def to_html_row(self, report_section: HtmlReportSection, sub_directory: Path, colored: bool = True) \
-            -> list[Union[str, HtmlTableCell]]:
+    def to_html_row(
+        self, report_section: HtmlReportSection, sub_directory: Path, colored: bool = True
+    ) -> list[str | HtmlTableCell]:
         """
         Returns the hit as a HTML table row.
         :param report_section: Section is passed to save additional data
@@ -151,18 +154,33 @@ class GeneDetectionHitBase(metaclass=abc.ABCMeta):
         """
         self._metadata.append({'name': name, 'value': value})
 
-    def _get_accession_cell(self) -> HtmlTableCell:
+    def resolve_names(self, mapping: Mapping | MappingJSON, extra_metadata: dict[str, str] | None = None) -> None:
+        """
+        Resolves this hit's locus name and accession from their standardized seq_id via the given mapping.
+        :param mapping: Mapping of standardized seq_ids to original metadata
+        :param extra_metadata: Optional extra per-DB metadata to add, as {'name': ..., 'key': ...}
+        :return: None
+        """
+        seq_id = self.locus
+        self.locus = mapping.get_metadata(seq_id, 'allele')
+        self.accession = mapping.get_metadata(seq_id, 'accession', '-')
+        if extra_metadata is not None:
+            self.add_metadata(extra_metadata['name'], mapping.get_metadata(seq_id, extra_metadata['key']))
+
+    def _get_accession_cell(self, colored: bool = True) -> HtmlTableCell:
         """
         Returns the table cell for the accession.
+        :param colored: If True, colors the cell using this hit's color
         :return: Table cell with accession
         """
+        color = self.color if colored else None
         if self._accession is None:
-            return HtmlTableCell('-', self.color)
+            return HtmlTableCell('-', color)
         elif GeneDetectionUtils.is_ncbi_accession(self._accession):
             link = f'https://www.ncbi.nlm.nih.gov/nuccore/{self._accession}'
-            return HtmlTableCell(self._accession, self.color, link=link)
+            return HtmlTableCell(self._accession, color, link=link)
         else:
-            return HtmlTableCell(self._accession, self.color)
+            return HtmlTableCell(self._accession, color)
 
     def get_metadata_value(self, key) -> Any:
         """
