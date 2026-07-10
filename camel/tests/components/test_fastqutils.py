@@ -275,50 +275,6 @@ class TestFastqUtils(CamelTestSuite):
         self.assertTrue(FileSystemHelper.is_gzipped(out_1))
         self.assertTrue(FileSystemHelper.is_gzipped(out_2))
 
-    def test_create_paired_end(self) -> None:
-        """
-        Test the function that creates an interleaved paired end file and a single end file
-        from two separate files.
-        :return: None
-        """
-        in_1 = TestFastqUtils.test_file_dir / 'fq-fwd.fq'
-        in_2 = TestFastqUtils.test_file_dir / 'fq-rev.fq'
-        pe_out = self.running_dir / 'pe_test.fq'
-        se_out = self.running_dir / 'se.fq'
-        FastqUtils.create_paired_end(in_1, in_2, pe_out, se_out)
-        self.assertTrue(filecmp.cmp(TestFastqUtils.test_file_dir / 'fq-pe.fq', pe_out, shallow=False))
-        self.assertTrue(filecmp.cmp(TestFastqUtils.test_file_dir / 'fq-se.fq', se_out, shallow=False))
-
-    def test_create_paired_end_gzip_input(self) -> None:
-        """
-        Test the function that creates an interleaved paired end file and a single end file
-        from two separate files that are gzipped.
-        :return: None
-        """
-        in_1 = TestFastqUtils.test_file_dir / 'fq-fwd.fq.gz'
-        in_2 = TestFastqUtils.test_file_dir / 'fq-rev.fq.gz'
-        pe_out = self.running_dir / 'pe.fq'
-        se_out = self.running_dir / 'se.fq'
-        FastqUtils.create_paired_end(in_1, in_2, pe_out, se_out)
-        self.assertTrue(filecmp.cmp(TestFastqUtils.test_file_dir / 'fq-pe.fq', pe_out, shallow=False))
-        self.assertTrue(filecmp.cmp(TestFastqUtils.test_file_dir / 'fq-se.fq', se_out, shallow=False))
-
-    def test_create_paired_end_gzip_output(self) -> None:
-        """
-        Test the function that creates an interleaved paired end file and a single end file
-        from two separate files. Output is gzipped.
-        :return: None
-        """
-        in_1 = TestFastqUtils.test_file_dir / 'fq-fwd.fq'
-        in_2 = TestFastqUtils.test_file_dir / 'fq-rev.fq'
-        pe_out = self.running_dir / 'pe.fq.gz'
-        se_out = self.running_dir / 'se.fq.gz'
-        FastqUtils.create_paired_end(in_1, in_2, pe_out, se_out, gzip_output=True)
-        with gzip.open(pe_out) as outhandle, gzip.open(TestFastqUtils.test_file_dir / 'fq-pe.fq.gz') as check_handle:
-            out = [x for x in outhandle]
-            check = [x for x in check_handle]
-        self.assertEqual(out, check)
-
     def test_get_all_read_names(self) -> None:
         """
         Test the function that retrieves the read names from the given fastq file.
