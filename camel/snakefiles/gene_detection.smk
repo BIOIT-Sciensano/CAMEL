@@ -90,12 +90,7 @@ rule gene_detection_map_names:
         # Map standardized names to original ones
         hits_updated = []
         for hit in [io.value for io in hits]:
-            seq_id = hit.locus
-            hit.locus = informs_db['mapping'].get_metadata(seq_id, 'allele')
-            hit.accession = informs_db['mapping'].get_metadata(seq_id, 'accession', '-')
-            if params.db_config.get('metadata') is not None:
-                key = params.db_config['metadata']['key']
-                hit.add_metadata(params.db_config['metadata']['name'], informs_db['mapping'].get_metadata(seq_id, key))
+            hit.resolve_names(informs_db['mapping'], params.db_config.get('metadata'))
             hits_updated.append(hit)
         snakemakeutils.dump_object([ToolIOValue(hit) for hit in hits_updated], Path(output.HITS))
 
@@ -155,7 +150,6 @@ rule gene_detection_report:
     input:
         TSV = rules.gene_detection_map_names.output.TSV,
         VAL_Hits = rules.gene_detection_map_names.output.HITS,
-        VAL_hits_complete = lambda wildcards: gene_detection.OUTPUT_HITS_COMPLETE.format(db=wildcards.db) if GeneDetectionUtils.get_detection_method_key(config,wildcards.db) == 'mixed' else[],
         INFORMS_db_info = rules.gene_detection_db_manager.output.INFORMS,
         INFORMS_detection = rules.gene_detection_get_hits.output.INFORMS
     output:
@@ -173,7 +167,7 @@ rule gene_detection_report:
 
         # Parameters
         if 'force_detection_method' in params.config_data:
-            reporter.update_parameters(forced_detection_method = params.config_data['force_detection_method'])
+            reporter.update_parameters(forced_detection_method=params.config_data['force_detection_method'])
         if params.config_data.get('hidden', False) is True:
             reporter.update_parameters(hidden=True)
         if params.input_type == 'fasta' and params.detection_method in ('kma',):
@@ -184,11 +178,10 @@ rule gene_detection_report:
             reporter.update_parameters(message=params.config_data['message']['content'])
         if ('message' in params.config_data) and ('category' in params.config_data['message']):
             reporter.update_parameters(message_category=params.config_data['message']['category'])
+        reporter.update_parameters(detection_method=params.detection_method)
 
         # Run tool
-        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['VAL_hits_complete'])
-        if input.VAL_hits_complete:
-            snakemakeutils.add_io_input(reporter, 'VAL_hits_complete', Path(input.VAL_hits_complete))
+        snakemakeutils.add_io_inputs(reporter, input)
         step.run()
         snakemakeutils.dump_io_outputs(reporter, output)
 

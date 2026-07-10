@@ -11,9 +11,8 @@ rule gene_detection_mixed_aggregate:
         HITS_blast = lambda wildcards: gene_detection.OUTPUT_HITS_METHOD.format(db=wildcards.db, method='blast'),
         INFORMS_db = gene_detection.OUTPUT_DB_INFORMS
     output:
-        VAL_hits = 'gene_detection/{db}/mixed/hits.iob',  # gene_detection.OUTPUT_HITS_METHOD
-        INFORMS = 'gene_detection/{db}/mixed/informs_pre.io',
-        VAL_hits_complete = 'gene_detection/{db}/mixed/hits-complete.iob'  # gene_detection.OUTPUT_HITS_COMPLETE
+        VAL_hits = 'gene_detection/{db}/mixed/hits.iob', # gene_detection.OUTPUT_HITS_METHOD
+        INFORMS = 'gene_detection/{db}/mixed/informs_pre.io'
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/mixed',
         min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_percent_identity', 90),
