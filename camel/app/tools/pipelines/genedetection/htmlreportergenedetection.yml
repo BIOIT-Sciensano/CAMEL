@@ -1,5 +1,10 @@
 dependencies: []
 parameters:
+  detection_method:
+    default: false
+    mandatory: true
+    option: null
+    value: null
   forced_detection_method:
     default: false
     mandatory: false
@@ -27,6 +32,5 @@ parameters:
   pseudo_reads:
     default: false
     mandatory: false
-    option: null
-    value: null
+    flag: true
 tool_command: null

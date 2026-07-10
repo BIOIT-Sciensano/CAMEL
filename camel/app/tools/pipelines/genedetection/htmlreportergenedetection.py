@@ -4,6 +4,7 @@ from camelcore.app.io.tooliovalue import ToolIOValue
 from camelcore.app.reports.htmlelement import HtmlElement
 from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 from camelcore.app.utils import fileutils
 
 from camel.app.core.errors import InvalidToolInputError
@@ -12,13 +13,36 @@ from camel.app.loggers import logger
 from camel.app.toolkits.export.tsvexporter import TsvExporter
 from camel.app.toolkits.genedetection.genedetectionhitbase import GeneDetectionHitBase
 from camel.app.toolkits.genedetection.genedetectionmixedhit import GeneDetectionMixedHit
-from camel.app.toolkits.genedetection.mixedhitholder import MixedHitHolder
 
 
 class HtmlReporterGeneDetection(Tool):
     """
     Tool that creates HTML reports for the gene detection pipeline.
     """
+
+    COLS_MIXED = {
+        'blast': [{
+            'name': '% identity',
+            'func': lambda x: f'{x.blast_stats.subject_normalized_identity:.2f}'
+        }, {
+            'name': '% covered',
+            'func': lambda x: f'{x.blast_stats.subject_coverage:.2f}'
+        }],
+        'kma': [
+            {
+                'name': '% identity',
+                'func': lambda x: f'{x.percent_identity:.2f}'
+            },
+            {
+                'name': '% covered',
+                'func': lambda x: f'{x.subject_coverage:.2f}'
+            },
+            {
+                'name': 'Depth',
+                'func': lambda x: f'{x.depth:,}'
+            },
+        ],
+    }
 
     def __init__(self) -> None:
         """
@@ -35,32 +59,29 @@ class HtmlReporterGeneDetection(Tool):
         :return: None
         """
         self.__initialize_report()
+
+        # Parameter section
         self.__add_parameter_table(self._input_informs['detection'])
+
+        # Detected hits
         if len(self._tool_inputs['VAL_Hits']) == 0:
             self._report_section.add_paragraph('No hits found.')
         else:
             self.__add_output_table([h.value for h in self._tool_inputs['VAL_Hits']])
-            if 'VAL_hits_complete' in self._tool_inputs:
-                self.__add_table_mixed([h.value for h in self._tool_inputs['VAL_hits_complete']])
 
+        # For mixed gene detection, show the table with additional details
+        if self.get_param_value('detection_method') == 'mixed':
+            self.__add_table_mixed_long([io.value for io in self._tool_inputs['VAL_Hits']])
+
+        # Additional information
         if 'extra_info' in self._input_informs['detection']:
             self.__add_additional_info_section_aggregated_hits(self._input_informs['detection']['extra_info'])
 
+        # Status messages
+        self.__add_messages()
+
+        # Database information
         self.__add_database_information()
-
-        # Add a warning when the detection method is different from the general detection
-        if 'forced_detection_method' in self._parameters:
-            self._report_section.add_alert(
-                f"Detection for this DB is always done using '{self._parameters['forced_detection_method'].value}', "
-                f"regardless of pipeline setting.", 'info')
-
-        if 'pseudo_reads' in self._parameters:
-            self._report_section.add_warning_message("The tool is executed on simulated reads.")
-
-        # Add a custom message (if specified in the parameters)
-        if 'message' in self._parameters:
-            self._report_section.add_alert(
-                self._parameters['message'].value, self._parameters['message_category'].value)
 
         # Create output
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._report_section)]
@@ -73,7 +94,7 @@ class HtmlReporterGeneDetection(Tool):
         if 'db_info' not in self._input_informs:
             raise InvalidToolInputError("No database info found")
         if 'VAL_Hits' not in self._tool_inputs:
-            logger.warning("No blast hits found")
+            logger.warning("No BLAST hits found")
         if ('VAL_Hits' in self._tool_inputs) and (len(self._tool_inputs['VAL_Hits']) > 0) and \
                 ('TSV' not in self._tool_inputs):
             raise InvalidToolInputError("TSV input is required when hits were detected.")
@@ -119,63 +140,114 @@ class HtmlReporterGeneDetection(Tool):
         self._report_section.add_file(self._tool_inputs['TSV'][0].path, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
 
-    def __add_table_mixed(self, hits: list[GeneDetectionMixedHit]) -> None:
+    @staticmethod
+    def __first_locus_name(hit_mixed: GeneDetectionMixedHit) -> str:
         """
-        Adds the aggregated table to the report.
-        This table is added only if the "mixed" gene detection approach is selected
-        and includes all genes detected by either method.
-        :param hits: Detected hits (complete, non-deduplicated list)
+        Returns the alphabetically first locus name detected for this hit's cluster, used to sort clusters.
+        :param hit_mixed: Mixed hit
+        :return: Alphabetically first locus name, or '' if no loci were detected
+        """
+        locus_names = [(locus_hits['kma'] or locus_hits['blast']).locus for locus_hits in hit_mixed.hits_by_locus.values()]
+        return min(locus_names, default='')
+
+    def __add_table_mixed_long(self, hits: list[GeneDetectionMixedHit]) -> None:
+        """
+        Adds the complete list of detected hits as a "long" HTML table, with one row per locus. A locus detected
+        by both KMA and Blast is rendered on a single row with both tools' stats; a locus detected by only one
+        tool is rendered with a "Not detected by <other tool>" placeholder. The cluster cell is merged (rowspan)
+        across all locus rows belonging to the same cluster. Rows are sorted alphabetically by locus name, both
+        within a cluster and across clusters (a cluster is ordered by its alphabetically first locus).
+        :param hits: Mixed hits to render, one per cluster
         :return: None
         """
-        holders = [hit.holder for hit in sorted(hits, key=lambda x: x.cluster)]
-
-        # For sorting the output table by locus ID, first store the hits in dictionary by cluster and then sort
-        temp_dic_holders = {}
-        for holder in holders:
-            cluster = holder.cluster
-            if cluster not in temp_dic_holders:
-                temp_dic_holders[cluster] = []
-            temp_dic_holders[cluster].append(holder)
-        holders_by_cluster = dict(sorted(temp_dic_holders.items(), key=lambda x: x[1][0].locus))
-
-        self._report_section.add_header('Aggregated hits: complete list.', level=3)
+        self._report_section.add_header('All detected hits (complete list)', level=3)
         self._report_section.add_paragraph(
-            'This table shows the details about all genes detected by either strategies.'
-        )
-        div = HtmlExpandableDiv('table_complete_agg_hits', f'detected hits ({len(holders)})')
+            'This table lists every locus detected by KMA and/or BLAST, along with the detailed statistics from each '
+            'method.')
 
-        # Add table heading
-        # First, the loop is going up to 4 to include Cluster, Locus, Accession and Length that span two rows
-        # Then KMA requires three columns for its metrics (% identity, % covered, depth)
-        # BLAST requires two columns (% identity, HSP/Locus Length)
-        # Finally, we add the tool metrics as a single row
-        table_data = [
-            [HtmlElement('th', MixedHitHolder.header_html()[i], [('rowspan', 2)]) for i in range(4)] +
-            [HtmlElement('th', 'KMA', [('colspan', 3)]),
-             HtmlElement('th', 'BLAST', [('colspan', 2)])],
-            [HtmlElement('th', MixedHitHolder.header_html()[i]) for i in range(4, len(MixedHitHolder.header_html()))]
+        ##########
+        # Header #
+        ##########
+        tsv_header = [
+            'Cluster', 'Locus', 'Accession', 'Length',
+            *(f"BLAST {info['name']}" for info in HtmlReporterGeneDetection.COLS_MIXED['blast']),
+            *(f"KMA {info['name']}" for info in HtmlReporterGeneDetection.COLS_MIXED['kma']),
+        ]
+        header = [
+            [
+                HtmlElement('th', 'Cluster', [('rowspan', 2)]),
+                HtmlElement('th', 'Locus', [('rowspan', 2)]),
+                HtmlElement('th', 'Accession', [('rowspan', 2)]),
+                HtmlElement('th', 'Length', [('rowspan', 2)]),
+                HtmlElement('th', 'BLAST', [('colspan', len(HtmlReporterGeneDetection.COLS_MIXED['blast']))]),
+                HtmlElement('th', 'KMA', [('colspan', len(HtmlReporterGeneDetection.COLS_MIXED['kma']))]),
+            ],
+            [
+                *(HtmlElement('th', info['name']) for info in HtmlReporterGeneDetection.COLS_MIXED['blast']),
+                *(HtmlElement('th', info['name']) for info in HtmlReporterGeneDetection.COLS_MIXED['kma']),
+            ]
         ]
 
-        # Add table cells
-        for cluster in holders_by_cluster:
-            if len(holders_by_cluster[cluster]) == 1:
-                # If KMA and BLAST detected the same loci in the cluster, adds the line 'as is' in the output table
-                table_data.append(holders_by_cluster[cluster][0].to_html_row())
-            else:
-                # If KMA and BLAST detected different loci, first merge the cluster ID cells ,
-                # Afterward, add all lines without the cluster cell.
-                merged_cluster_cell = [HtmlElement('td', cluster, [('rowspan', len(holders_by_cluster[cluster]))])]
-                merged_cluster_cell += holders_by_cluster[cluster][0].to_html_row()[1:]
-                table_data.append(merged_cluster_cell)
-                for i in range(1, len(holders_by_cluster[cluster])):
-                    table_data.append(holders_by_cluster[cluster][i].to_html_row()[1:])
+        ##############
+        # Table rows #
+        ##############
+        table_data = []
+        tsv_data = []
+        for hit_mixed in sorted(hits, key=self.__first_locus_name):
+            rows_for_cluster = []
+            locus_hits_sorted = sorted(
+                hit_mixed.hits_by_locus.values(), key=lambda locus_hits: (locus_hits['kma'] or locus_hits['blast']).locus)
+            for locus_hits in locus_hits_sorted:
+                hit_kma, hit_blast = locus_hits['kma'], locus_hits['blast']
+                locus_hit = hit_kma or hit_blast
+                length = hit_kma.length if hit_kma is not None else hit_blast.blast_stats.subject_length
+                row = [
+                    HtmlElement('td', locus_hit.locus),
+                    locus_hit._get_accession_cell(colored=False),
+                    HtmlElement('td', length),
+                ]
+                if hit_blast is not None:
+                    row += [
+                        HtmlTableCell(info['func'](hit_blast), hit_blast.color) for info in HtmlReporterGeneDetection.COLS_MIXED['blast']
+                    ]
+                else:
+                    row.append(HtmlElement(
+                        'td', 'Not detected by BLAST', [('colspan', len(HtmlReporterGeneDetection.COLS_MIXED['blast']))]))
+                if hit_kma is not None:
+                    row += [
+                        HtmlTableCell(info['func'](hit_kma), hit_kma.color) for info in HtmlReporterGeneDetection.COLS_MIXED['kma']
+                    ]
+                else:
+                    row.append(HtmlElement(
+                        'td', 'Not detected by KMA', [('colspan', len(HtmlReporterGeneDetection.COLS_MIXED['kma']))]))
+                rows_for_cluster.append(row)
+                tsv_data.append([
+                    hit_mixed.cluster,
+                    locus_hit.locus,
+                    locus_hit.accession if locus_hit.accession is not None else '-',
+                    length,
+                    *(info['func'](hit_blast) if hit_blast is not None else '-'
+                        for info in HtmlReporterGeneDetection.COLS_MIXED['blast']),
+                    *(info['func'](hit_kma) if hit_kma is not None else '-'
+                        for info in HtmlReporterGeneDetection.COLS_MIXED['kma']),
+                ])
+            if not rows_for_cluster:
+                continue
 
-        div.add_table(table_data, None, [('class', 'data')])
+            # Merge the cluster cell across all rows of this cluster, then add the remaining rows as-is
+            table_data.append(
+                [HtmlElement('td', hit_mixed.cluster, [('rowspan', len(rows_for_cluster))])] + rows_for_cluster[0]
+            )
+            table_data.extend(rows_for_cluster[1:])
+
+        # Add the table, in an expandable div
+        div = HtmlExpandableDiv('table_complete_agg_hits', f'detected hits ({len(tsv_data):,})')
+        div.add_table(header + table_data, None, [('class', 'data')])
         self._report_section.add_html_object(div)
 
         # Create TSV file and add download link
         output_tsv = Path(self._folder) / 'agg-hits-summary.tsv'
-        TsvExporter.export([holder.to_table_row() for holder in holders], MixedHitHolder.header_tsv(), str(output_tsv))
+        TsvExporter.export(tsv_data, tsv_header, str(output_tsv))
         relative_path = self._sub_folder / output_tsv.name
         self._report_section.add_file(output_tsv, relative_path)
         self._report_section.add_link_to_file("Download (TSV)", relative_path)
@@ -188,6 +260,24 @@ class HtmlReporterGeneDetection(Tool):
         """
         self._report_section.add_header('Additional information', level=4)
         self._report_section.add_paragraph(extra_info)
+
+    def __add_messages(self) -> None:
+        """
+        Adds status messages to the report: a notice when the detection method is forced, a warning when run on
+        simulated reads, and a custom message (if configured).
+        :return: None
+        """
+        if 'forced_detection_method' in self._parameters:
+            self._report_section.add_alert(
+                f"Detection for this DB is always done using '{self._parameters['forced_detection_method'].value}', "
+                f"regardless of pipeline setting.", 'info')
+
+        if self.get_param_value('pseudo_reads') is True:
+            self._report_section.add_warning_message("The tool is executed on simulated reads.")
+
+        if 'message' in self._parameters:
+            self._report_section.add_alert(
+                self._parameters['message'].value, self._parameters['message_category'].value)
 
     def __add_database_information(self) -> None:
         """
