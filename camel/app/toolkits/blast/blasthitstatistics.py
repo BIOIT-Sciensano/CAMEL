@@ -70,6 +70,18 @@ class BlastHitStatistics:
         """
         return 100.0 * float(self.alignment_length) / self.subject_length
 
+    @property
+    def subject_normalized_identity(self) -> float:
+        """
+        Returns the percent identity normalized over the full subject length, following the same principle KMA
+        uses (percent identity is penalized by any uncovered part of the subject), rather than BLAST's default of
+        computing identity only over the aligned region. This makes identity values comparable between BLAST and
+        KMA hits. Capped at 100.0, since an alignment with insertions relative to the subject can otherwise push
+        the raw ratio above it.
+        :return: Percent identity normalized over the subject length
+        """
+        return min(self.percent_identity * self.subject_coverage / 100.0, 100.0)
+
     def is_full_length(self) -> bool:
         """
         Function to check if this is a full length hit
