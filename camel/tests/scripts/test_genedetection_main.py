@@ -2,6 +2,7 @@ import json
 import unittest
 
 from camel.app.cli import cliutils
+from camel.app.config import config
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.loggers import initialize_logging
 from camel.scripts.genedetection.maingenedetection import main
@@ -35,6 +36,9 @@ class TestGeneDetection(CamelTestSuite):
     input_reads_raw_galaxy = [test_file_dir / 'workflows' / 'dataset_fwd_11.dat',
                               test_file_dir / 'workflows' / 'dataset_rev_10.dat']
     input_gene_detection_db = test_file_dir / 'gene_detection' / 'db'
+    input_illumina_both_mixed_hits = [test_file_dir / 'workflows' / 'gene_detection' / 'ecoli_10k_ilmn_1.fastq.gz',
+                                      test_file_dir / 'workflows' / 'gene_detection' / 'ecoli_10k_ilmn_2.fastq.gz']
+    amr_db = config.dir_db / 'gene_detection' / 'NCBI_AMR'
 
     ###############
     # FASTA input #
@@ -447,9 +451,9 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
             '--fastq-pe',
-            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
-            str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
-            '--db', str(TestGeneDetection.input_gene_detection_db),
+            str(TestGeneDetection.input_illumina_both_mixed_hits[0]),
+            str(TestGeneDetection.input_illumina_both_mixed_hits[1]),
+            '--db', str(TestGeneDetection.amr_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
@@ -468,9 +472,9 @@ class TestGeneDetection(CamelTestSuite):
         path_report_out = self.running_dir / 'report' / 'report.html'
         args = [
             '--fastq-pe',
-            str(TestGeneDetection.input_fastq_by_key['illumina'][0]),
-            str(TestGeneDetection.input_fastq_by_key['illumina'][1]),
-            '--db', str(TestGeneDetection.input_gene_detection_db),
+            str(TestGeneDetection.input_illumina_both_mixed_hits[0]),
+            str(TestGeneDetection.input_illumina_both_mixed_hits[0]),
+            '--db', str(TestGeneDetection.amr_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
@@ -491,7 +495,7 @@ class TestGeneDetection(CamelTestSuite):
         args = [
             '--fastq-se',
             str(TestGeneDetection.input_fastq_by_key['ont'][0]),
-            '--db', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.amr_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
@@ -511,7 +515,7 @@ class TestGeneDetection(CamelTestSuite):
         args = [
             '--fastq-se',
             str(TestGeneDetection.input_fastq_by_key['ont'][0]),
-            '--db', str(TestGeneDetection.input_gene_detection_db),
+            '--db', str(TestGeneDetection.amr_db),
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--working-dir', str(self.running_dir),
