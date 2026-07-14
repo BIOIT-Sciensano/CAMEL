@@ -19,11 +19,15 @@ rule gene_detection_mixed_aggregate:
         min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('mixed', {}).get('min_coverage', 60)
     run:
         from camel.app.tools.pipelines.genedetection.mixedhitaggregating import MixedHitAggregating
-        mixed_hit = MixedHitAggregating()
-        snakemakeutils.add_io_inputs(mixed_hit, input)
-        step = Step(rule_name=str(rule), tool=mixed_hit, dir_=Path(str(params.dir_)))
+        hit_agg = MixedHitAggregating()
+        snakemakeutils.add_io_inputs(hit_agg, input)
+        step = Step(rule_name=str(rule), tool=hit_agg, dir_=snakemakeutils.get_rule_dir(output))
+        hit_agg.update_parameters(
+            min_coverage=str(params.min_coverage),
+            min_percent_identity=str(params.min_identity)
+        )
         step.run()
-        snakemakeutils.dump_io_outputs(mixed_hit, output)
+        snakemakeutils.dump_io_outputs(hit_agg, output)
 
 rule gene_detection_mixed_export_informs:
     """

@@ -73,6 +73,15 @@ class Options(BaseOptions):
     kma_apm: str | None = dataclasses.field(default='u', metadata={
         'help': 'APM mode for KMA', 'choices': ['u', 'p', 'f']})
 
+    # Mixed options
+    mixed_min_percent_identity: int | None = dataclasses.field(default=90, metadata={
+        'help': 'Minimum percent identity for mixed detection',
+        'show_default': True
+    })
+    mixed_min_percent_coverage: int | None = dataclasses.field(default=60, metadata={
+        'help': 'Minimum percent coverage for mixed detection',
+        'show_default': True
+    })
 
 class MainGeneDetection(BaseScript[ScriptInput, ScriptOutput, Options]):
     """
@@ -180,6 +189,18 @@ class MainGeneDetection(BaseScript[ScriptInput, ScriptOutput, Options]):
                             'ont': self._script_opts.kma_ont,
                             'cge': self._script_opts.kma_cge,
                             'apm': self._script_opts.kma_apm
+                        }
+                    }
+                }
+            )
+        elif self._script_opts.detection_method == 'mixed':
+            basepipeutils.dict_merge(
+                config_data,
+                {
+                    'params': {
+                        'mixed': {
+                            'min_percent_identity': self._script_opts.mixed_min_percent_identity,
+                            'min_coverage': self._script_opts.mixed_min_percent_coverage
                         }
                     }
                 }

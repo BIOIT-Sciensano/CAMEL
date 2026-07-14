@@ -43,12 +43,13 @@ class MixedHitAggregating(Tool):
             if hit.cluster not in hits_by_cluster:
                 hits_by_cluster[hit.cluster] = ClusterHits(hit.cluster)
             hits_by_cluster[hit.cluster].hits_kma.append(hit)
+
         for hit in [io.value for io in self._tool_inputs['HITS_blast']]:
             # BLAST computes identity over the aligned region only, unlike KMA which normalizes over the full
             # target length; use the KMA-equivalent identity here so both tools are filtered consistently.
-            if hit.blast_stats.subject_normalized_identity < float(self._parameters['min_percent_identity'].value):
+            if hit.blast_stats.subject_normalized_identity < int(self.get_param_value('min_percent_identity')):
                 continue
-            if hit.blast_stats.subject_coverage < float(self._parameters['min_coverage'].value):
+            if hit.blast_stats.subject_coverage < int(self.get_param_value('min_coverage')):
                 continue
             if hit.cluster not in hits_by_cluster:
                 hits_by_cluster[hit.cluster] = ClusterHits(hit.cluster)
@@ -78,8 +79,8 @@ class MixedHitAggregating(Tool):
         Sets the informs.
         :return: None
         """
-        self._informs['Min. percent identity'] = f"{self._parameters['min_percent_identity'].value}%"
-        self._informs['Min. coverage'] = f"{self._parameters['min_coverage'].value}%"
+        self._informs['Min. percent identity'] = f"{int(self.get_param_value('min_percent_identity'))}%"
+        self._informs['Min. coverage'] = f"{int(self.get_param_value('min_coverage'))}%"
         self._informs['extra_info'] = (
             'In the case of the mixed gene detection strategy, both <b>read-based (KMA)</b> and '
             '<b>assembly-based (BLAST)</b> gene detection methods are used.<ul>'

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
@@ -19,7 +19,7 @@ class GeneDetectionOutput:
     report_section: HtmlReportSection
     detected_hits: list[GeneDetectionHitBase]
     informs: dict[str, Any]
-    log_file: Optional[Path] = None
+    log_file: Path | None = None
 
 
 class GeneDetectionWrapper:
@@ -134,9 +134,14 @@ class GeneDetectionWrapper:
             'working_dir': str(self._working_dir),
             'gene_detection': {
                 'dbs': {'db': db_data},
-                'options': {'method': detection_method}
+                'options': {
+                    'method': detection_method
+                }
             },
-            'input': {'type': input_type, 'sample_name': sample_name}
+            'input': {
+                'sample_name': sample_name,
+                'type': input_type,
+            }
         }
 
     def __set_output(self, output_files: dict[str, str]) -> None:
