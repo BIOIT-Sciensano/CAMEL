@@ -2,6 +2,7 @@ from pathlib import Path
 
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
+from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
 from camel.snakefiles import gene_detection
 
 
@@ -58,8 +59,10 @@ rule gene_detection_blast_hit_filtering:
         INFORMS = 'gene_detection/{db}/blast/informs.io' # gene_detection.OUTPUT_INFORMS_METHOD
     params:
         dir_ = lambda wildcards: f'gene_detection/{wildcards.db}/hit_filtering',
-        min_percent_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('min_percent_identity', 90),
-        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('min_coverage', 60),
+        min_percent_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get(
+            GeneDetectionUtils.get_params_section(config, wildcards.db), {}).get('min_percent_identity', 90),
+        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get(
+            GeneDetectionUtils.get_params_section(config, wildcards.db), {}).get('min_coverage', 60),
         filtering_method = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params',{}).get('blastn',{}).get('filtering_method', 'cluster'),
         score_nb_of_hits = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('blastn', {}).get('score_nb_of_hits', 5)
     run:

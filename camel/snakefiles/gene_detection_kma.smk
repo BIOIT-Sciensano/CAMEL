@@ -2,6 +2,7 @@ from pathlib import Path
 
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
+from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
 
 
 rule gene_detection_kma_get_db:
@@ -70,8 +71,10 @@ rule gene_detection_kma_add_parameters:
     output:
         INFORMS = 'gene_detection/{db}/kma/informs.io' # gene_detection.OUTPUT_INFORMS_METHOD
     params:
-        min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma',{}).get('min_percent_identity', 90),
-        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma',{}).get('min_coverage', 60)
+        min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get(
+            GeneDetectionUtils.get_params_section(config, wildcards.db), {}).get('min_percent_identity', 90),
+        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get(
+            GeneDetectionUtils.get_params_section(config, wildcards.db), {}).get('min_coverage', 60)
     run:
         informs = snakemakeutils.load_object(Path(input.INFORMS))
         informs['Min. percent identity'] = f'{float(str(params.min_identity)):.0f}%'
@@ -87,8 +90,10 @@ rule gene_detection_kma_hit_extraction:
     output:
         VAL_hits = 'gene_detection/{db}/kma/hits.iob' # gene_detection.OUTPUT_HITS_METHOD
     params:
-        min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('min_percent_identity', 90),
-        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get('kma', {}).get('min_coverage', 60)
+        min_identity = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get(
+            GeneDetectionUtils.get_params_section(config, wildcards.db), {}).get('min_percent_identity', 90),
+        min_coverage = lambda wildcards: config['gene_detection']['dbs'][wildcards.db].get('params', {}).get(
+            GeneDetectionUtils.get_params_section(config, wildcards.db), {}).get('min_coverage', 60)
     run:
         from camel.app.tools.kma.kmagenedetectionhitextractor import KMAGeneDetectionHitExtractor
         extractor = KMAGeneDetectionHitExtractor()

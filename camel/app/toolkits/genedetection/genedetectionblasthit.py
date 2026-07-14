@@ -126,3 +126,14 @@ class GeneDetectionBlastHit(GeneDetectionHitBase):
         :return: Cluster
         """
         return self.blast_stats.subject_id.split('__')[1]
+
+    def passes_thresholds(self, min_percent_identity: float, min_coverage: float) -> bool:
+        """
+        Checks whether this hit meets the given identity/coverage thresholds, using the KMA-equivalent
+        (subject-length-normalized) identity so it is comparable to a KMA hit's own identity.
+        :param min_percent_identity: Minimum percent identity
+        :param min_coverage: Minimum percent coverage
+        :return: True if this hit meets both thresholds
+        """
+        return (self.blast_stats.subject_normalized_identity >= min_percent_identity) and \
+            (self.blast_stats.subject_coverage >= min_coverage)

@@ -38,19 +38,19 @@ class MixedHitAggregating(Tool):
         :return: None
         """
         # Parse the input (creates lists of KMA and BLAST hits for each cluster)
+        min_percent_identity = int(self.get_param_value('min_percent_identity'))
+        min_coverage = int(self.get_param_value('min_coverage'))
+
         hits_by_cluster: dict[str, ClusterHits] = {}
         for hit in [io.value for io in self._tool_inputs['HITS_kma']]:
-            # Note that the KMA hits are already filtered beforehand
+            if not hit.passes_thresholds(min_percent_identity, min_coverage):
+                continue
             if hit.cluster not in hits_by_cluster:
                 hits_by_cluster[hit.cluster] = ClusterHits(hit.cluster)
             hits_by_cluster[hit.cluster].hits_kma.append(hit)
 
         for hit in [io.value for io in self._tool_inputs['HITS_blast']]:
-            # BLAST computes identity over the aligned region only, unlike KMA which normalizes over the full
-            # target length; use the KMA-equivalent identity here so both tools are filtered consistently.
-            if hit.blast_stats.subject_normalized_identity < int(self.get_param_value('min_percent_identity')):
-                continue
-            if hit.blast_stats.subject_coverage < int(self.get_param_value('min_coverage')):
+            if not hit.passes_thresholds(min_percent_identity, min_coverage):
                 continue
             if hit.cluster not in hits_by_cluster:
                 hits_by_cluster[hit.cluster] = ClusterHits(hit.cluster)

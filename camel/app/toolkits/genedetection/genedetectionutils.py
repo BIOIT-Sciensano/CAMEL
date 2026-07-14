@@ -71,6 +71,22 @@ class GeneDetectionUtils:
         return db_config.get('force_method', config['gene_detection']['options']['method'])
 
     @staticmethod
+    def get_params_section(config: dict, db_key: str) -> str:
+        """
+        Returns the config 'params' section key holding the KMA/Blast extraction thresholds that actually
+        apply for the given database. When the database's active detection method is 'mixed', this is
+        'mixed' rather than 'kma'/'blastn', so the mixed-aggregation threshold is the one enforced end-to-end
+        (extraction stages would otherwise silently discard hits the mixed stage was configured to keep).
+        :param config: Snakemake configuration
+        :param db_key: Database key
+        :return: Params section key ('mixed', 'kma' or 'blastn')
+        """
+        method = GeneDetectionUtils.get_detection_method_key(config, db_key)
+        if method == 'mixed':
+            return 'mixed'
+        return {'blast': 'blastn'}.get(method, method)
+
+    @staticmethod
     def parse_extra_column_param(value: str) -> tuple[str, str]:
         """
         Parses the value of the extra column parameter.

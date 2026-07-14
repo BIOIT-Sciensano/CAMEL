@@ -1,5 +1,3 @@
-from typing import Optional, Union
-
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
 
@@ -11,7 +9,7 @@ class GeneDetectionKMAHit(GeneDetectionHitBase):
     Gene detection hit detected by KMA.
     """
 
-    def __init__(self, cluster: str, locus: str, accession: Optional[str], subject: str, score: int, length: int,
+    def __init__(self, cluster: str, locus: str, accession: str | None, subject: str, score: int, length: int,
                  p_ident: float, p_cov: float, depth: float) -> None:
         """
         Initializes the hit.
@@ -85,8 +83,8 @@ class GeneDetectionKMAHit(GeneDetectionHitBase):
         """
         return self.table_column_names[1:]
 
-    def to_html_row(self, report_section: HtmlReportSection, sub_directory: str, colored: bool = True) -> list[
-            Union[str, HtmlTableCell]]:
+    def to_html_row(self, report_section: HtmlReportSection, sub_directory: str, colored: bool = True) -> \
+            list[str | HtmlTableCell]:
         """
         Returns the hit as a HTML table row.
         :param report_section: Section is passed to save additional data
@@ -151,3 +149,12 @@ class GeneDetectionKMAHit(GeneDetectionHitBase):
         :return: Length
         """
         return self._length
+
+    def passes_thresholds(self, min_percent_identity: float, min_coverage: float) -> bool:
+        """
+        Checks whether this hit meets the given identity/coverage thresholds.
+        :param min_percent_identity: Minimum percent identity
+        :param min_coverage: Minimum percent coverage
+        :return: True if this hit meets both thresholds
+        """
+        return (self.percent_identity >= min_percent_identity) and (self.subject_coverage >= min_coverage)
