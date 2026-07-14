@@ -39,7 +39,7 @@ class HtmlReporterGeneDetection(Tool):
             },
             {
                 'name': 'Depth',
-                'func': lambda x: f'{x.depth:,}'
+                'func': lambda x: f'{x.depth:.2f}'
             },
         ],
     }
@@ -204,7 +204,7 @@ class HtmlReporterGeneDetection(Tool):
                 row = [
                     HtmlElement('td', locus_hit.locus),
                     locus_hit._get_accession_cell(colored=False),
-                    HtmlElement('td', length),
+                    HtmlElement('td', f'{length:,}'),
                 ]
                 if hit_blast is not None:
                     row += [
