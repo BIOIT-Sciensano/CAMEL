@@ -199,9 +199,9 @@ class MainGeneDetection(BaseScript[ScriptInput, ScriptOutput, Options]):
                 {
                     'params': {
                         'mixed': {
+                            'min_coverage': self._script_opts.mixed_min_percent_coverage,
                             'min_percent_identity': self._script_opts.mixed_min_percent_identity,
-                            'min_coverage': self._script_opts.mixed_min_percent_coverage
-                        }
+                        },
                     }
                 }
             )

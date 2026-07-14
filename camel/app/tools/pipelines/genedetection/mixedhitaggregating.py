@@ -40,6 +40,7 @@ class MixedHitAggregating(Tool):
         # Parse the input (creates lists of KMA and BLAST hits for each cluster)
         hits_by_cluster: dict[str, ClusterHits] = {}
         for hit in [io.value for io in self._tool_inputs['HITS_kma']]:
+            # Note that the KMA hits are already filtered beforehand
             if hit.cluster not in hits_by_cluster:
                 hits_by_cluster[hit.cluster] = ClusterHits(hit.cluster)
             hits_by_cluster[hit.cluster].hits_kma.append(hit)
