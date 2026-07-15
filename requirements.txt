@@ -25,7 +25,7 @@ bs4==0.0.2
     # via
     #   camel (pyproject.toml)
     #   camel-core
-camel-core==0.1.5
+camel-core==0.1.7
     # via camel (pyproject.toml)
 certifi==2026.6.17
     # via requests

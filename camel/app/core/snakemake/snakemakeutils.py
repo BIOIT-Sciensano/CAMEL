@@ -6,62 +6,10 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from camelcore.app.io.tooliodirectory import ToolIODirectory
-from camelcore.app.io.tooliofile import ToolIOFile
-from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.io import serialization
 
 from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-
-
-class IOEncoder(json.JSONEncoder):
-    """
-    This class is used to encode IO objects in JSON format.
-    """
-
-    def default(self, obj: Any) -> dict:
-        """
-        Default encoding function.
-        :param obj: Object to be encoded
-        :return: Encoded object as a dictionary
-        """
-        if isinstance(obj, ToolIOFile):
-            return {
-                'io_type': 'ToolIOFile',
-                'path': str(obj.path),
-                'logged': obj.is_logged,
-            }
-        elif isinstance(obj, ToolIODirectory):
-            return {
-                'io_type': 'ToolIODirectory',
-                'path': str(obj.path),
-                'logged': obj.is_logged,
-            }
-        elif isinstance(obj, ToolIOValue):
-            return {
-                'io_type': 'ToolIOValue',
-                'value': obj.value,
-                'logged': obj.is_logged,
-            }
-        return super().default(obj)
-
-
-def io_hook(obj: dict) -> object | dict:
-    """
-    Method to decode IO objects from JSON.
-    :param obj: Dictionary with object properties
-    :return: Decoded object
-    """
-    if 'io_type' not in obj:
-        return obj
-    if obj['io_type'] == 'ToolIOFile':
-        return ToolIOFile(path=Path(obj['path']), logged=obj['logged'])
-    elif obj['io_type'] == 'ToolIODirectory':
-        return ToolIODirectory(path=Path(obj['path']), logged=obj['logged'])
-    elif obj['io_type'] == 'ToolIOValue':
-        return ToolIOValue(value=obj['value'], logged=obj['logged'])
-    else:
-        raise ValueError(f"Unsupported IO type: {obj['io_type']}")
 
 
 def dump_object(obj: Any, path: Path) -> None:
@@ -74,7 +22,7 @@ def dump_object(obj: Any, path: Path) -> None:
     logger.debug(f"Dumping object '{obj}' in file '{path}'")
     if path.suffix == '.io':
         with open(path, 'w') as handle:
-            json.dump(obj, handle, cls=IOEncoder, indent=2)
+            json.dump(obj, handle, cls=serialization.IOEncoder, indent=2)
     elif path.suffix == '.iob':
         with path.open('wb') as handle:
             # noinspection PyTypeChecker
@@ -92,7 +40,7 @@ def load_object(path: Path) -> Any:
     logger.debug(f"Loading object from file '{path}'")
     if path.name.endswith('.io'):
         with path.open() as handle:
-            return json.load(handle, object_hook=io_hook)
+            return json.load(handle, object_hook=serialization.io_hook)
     elif path.name.endswith('.iob'):
         with path.open('rb') as handle:
             return pickle.load(handle)
