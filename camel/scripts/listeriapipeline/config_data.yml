@@ -5,6 +5,9 @@ analyses:
   cgmlst:
     dbs:
       - typing_cgmlst
+  cgmlst_v2:
+    dbs:
+      - typing_cgmlst_v2
   confindr:
     dbs:
       - confindr
@@ -115,6 +118,10 @@ dbs:
     method: skip
   typing_cgmlst:
     location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/listeria/cgmlst
+    required: false
+    method: mist
+  typing_cgmlst_v2:
+    location: &db_typing_cgmlst_v2 {DB_ROOT}/sequence_typing/listeria/cgmlst_v2
     required: false
     method: mist
   typing_mlst:
@@ -272,7 +279,8 @@ sequence_typing:
   dbs:
     cgmlst:
       path: *db_typing_cgmlst
-      detection_method: blast
+    cgmlst_v2:
+      path: *db_typing_cgmlst_v2
     mlst:
       path: *db_typing_mlst
     pcr_serogroup:

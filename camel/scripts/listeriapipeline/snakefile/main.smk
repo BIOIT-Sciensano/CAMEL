@@ -110,6 +110,7 @@ rule report_combine_all:
         report_species = sequence_typing.get_sequence_typing_report('species_confirmation', config),
         report_amr_typing = sequence_typing.get_sequence_typing_report('typing_amr', config),
         report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
+        report_cgmlst_v2 = sequence_typing.get_sequence_typing_report('cgmlst_v2', config),
         report_pcr_serogroup = sequence_typing.get_sequence_typing_report('pcr_serogroup', config),
         report_viru_typing = sequence_typing.get_sequence_typing_report('typing_virulence', config),
         # Report
@@ -164,7 +165,7 @@ rule report_combine_all:
             ('Virulence detection', 'virulence', [Path(x) for x in (input.report_virulence, input.report_vfdb_core, input.report_viru_typing)]),
             ('Plasmid characterization', 'plasmid', [Path(x) for x in (
                 input.report_plasmidfinder, input.report_mob_suite, input.report_genomic_context)]),
-            ('Sequence typing', 'typing', [Path(x) for x in (input.report_mlst, input.report_cgmlst)]),
+            ('Sequence typing', 'typing', [Path(x) for x in (input.report_mlst, input.report_cgmlst, input.report_cgmlst_v2)]),
             ('Citations', 'citations', [Path(input.report_citations)]),
             ('Commands', 'commands', [Path(input.report_commands)])
         ])

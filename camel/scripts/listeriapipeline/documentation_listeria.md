@@ -253,4 +253,5 @@ The following typing schemes are available:
 | Species confirmation | BIGSdb (Institut Pasteur) |
 | Virulence typing     | BIGSdb (Institut Pasteur) |
 | cgMLST               | BIGSdb (Institut Pasteur) |
+| cgMLST v2            | BIGSdb (Institut Pasteur) |
 | rMLST                | BIGSdb (Institut Pasteur) |
