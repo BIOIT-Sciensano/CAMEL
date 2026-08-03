@@ -94,6 +94,26 @@ class TestListeriaPipeline(CamelTestSuite):
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
+    def test_fasta_mist(self) -> None:
+        """
+        Tests the Listeria pipeline using FASTA as input with all assays and MiST as detection method.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestListeriaPipeline.input_fasta),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(CUSTOM_ANALYSES),
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    @longRunningTest()
     def test_ont(self) -> None:
         """
         Tests the Listeria pipeline using FASTA as input with all assays except for cgMLST with ONT input
