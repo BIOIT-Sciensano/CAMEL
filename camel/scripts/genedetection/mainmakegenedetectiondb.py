@@ -61,6 +61,7 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         self._helper = DBHelper(self._db_name, self._script_opts.working_dir)
         self._clusters: list[Cluster] | None = None
         self._new_name_by_header: dict[str, str] | None = None
+        self._fasta_seq_headers: Path | None = None
 
     def _execute(self) -> None:
         """
@@ -72,6 +73,8 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         input_fasta = self._helper.standardize_fasta_headers(self._script_in.fasta)
         self.__export_blast_db(input_fasta, self._script_out.dir)
         self._clusters = self.__cluster_fasta(input_fasta)
+        self.__export_clustered_db(self._script_out.dir)
+        self._helper.export_mapping(self._new_name_by_header, self._clusters, self._script_out.dir)
         self._helper.export_metadata(self._db_name, self._script_out.dir)
         self.__export_report()
 
@@ -82,15 +85,37 @@ class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
         :return: List of clusters
         """
         dir_clustering = self._helper.get_working_subdir('clustering')
-        fasta_seq_headers = dir_clustering / 'seq_headers.fasta'
+        self._fasta_seq_headers = dir_clustering / 'seq_headers.fasta'
         self._new_name_by_header = self._helper.convert_fasta_headers_to_seq(
-            input_fasta, fasta_seq_headers
+            input_fasta, self._fasta_seq_headers
         )
         return self._helper.get_clusters_form_fasta(
-            fasta_seq_headers,
+            self._fasta_seq_headers,
             self._script_opts.identity_cutoff,
             self._script_opts.threads,
         )
+
+    def __export_clustered_db(self, output_dir: Path) -> None:
+        """
+        Creates and exports the clustered FASTA file, together with its BLAST and KMA indexes.
+        :param output_dir: Output directory
+        :return: None
+        """
+        dir_indexing = self._helper.get_working_subdir('index_clustered')
+        fasta_clustered = dir_indexing / f'{self._db_name}-clustered_{self._script_opts.identity_cutoff}.fasta'
+        self._helper.create_clustered_fasta(self._fasta_seq_headers, fasta_clustered, self._clusters)
+
+        # Index
+        self._helper.index_samtools_faidx(fasta_clustered, dir_indexing)
+        self._helper.index_blast(fasta_clustered, dir_indexing)
+        self._helper.index_kma(fasta_clustered, dir_indexing)
+
+        # Export files
+        for f in dir_indexing.iterdir():
+            if f.is_file():
+                shutil.copyfile(str(f), str(output_dir / f.name))
+            elif f.is_dir():
+                shutil.copytree(str(f), str(output_dir / f.name))
 
     def __export_blast_db(self, input_fasta: Path, output_dir: Path) -> None:
         """

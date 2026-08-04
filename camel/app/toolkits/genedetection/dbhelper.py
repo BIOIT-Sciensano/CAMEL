@@ -5,14 +5,12 @@ from typing import Any
 
 import humanize
 from Bio import SeqIO
-from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.loggers import logger
 from camel.app.tools.blast.makeblastdb import MakeBlastDb
-from camel.app.tools.bowtie2.bowtie2index import Bowtie2Index
 from camel.app.tools.cdhit.cdhitest import CDHitEst, Cluster
-from camel.app.tools.kma.kma import KMA
+from camel.app.tools.kma.kmaindex import KMAIndex
 from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
 
 
@@ -79,18 +77,6 @@ class DBHelper:
         samtools_faindex.run(working_dir)
         self._informs.append(samtools_faindex.informs)
 
-    def index_bowtie2(self, fasta_file: Path, working_dir: Path) -> None:
-        """
-        Creates a bowtie2 index for the given FASTA file.
-        :param fasta_file: Input FASTA file
-        :param working_dir: Working directory
-        :return: None
-        """
-        bowtie2_index = Bowtie2Index()
-        bowtie2_index.add_input_files({'FASTA_REF': [ToolIOFile(fasta_file)]})
-        bowtie2_index.run(working_dir)
-        self._informs.append(bowtie2_index.informs)
-
     def index_blast(self, fasta_file: Path, working_dir: Path) -> None:
         """
         Indexes the given FASTA file with makeblastdb.
@@ -98,29 +84,24 @@ class DBHelper:
         :param working_dir: Working directory
         :return: None
         """
-        makeblastdb = MakeBlastDb()
-        makeblastdb.add_input_files({'FASTA': [ToolIOFile(fasta_file)]})
-        makeblastdb.run(working_dir)
-        self._informs.append(makeblastdb.informs)
+        make_blast_db = MakeBlastDb()
+        make_blast_db.add_input_files({'FASTA': [ToolIOFile(fasta_file)]})
+        make_blast_db.run(working_dir)
+        self._informs.append(make_blast_db.informs)
 
     def index_kma(self, fasta_file: Path, working_dir: Path) -> None:
         """
-        Creates a KMA index.
+        Creates a KMA index for the given FASTA file.
         :param fasta_file: FASTA file
         :param working_dir: Working directory
         :return: None
         """
-        logger.info(f'Indexing - KMA: {fasta_file}')
-        kma = KMA()
-        path_out = fasta_file.parent / 'kma' / fasta_file.stem
-        if not path_out.parent.exists():
-            path_out.parent.mkdir(parents=True)
-        command = Command(
-            f"ml {' '.join(kma.dependencies)}; kma index -i {fasta_file} -o {path_out}")
-        command.run(working_dir)
-        if command.exit_code != 0:
-            raise RuntimeError(f"Error KMA indexing: {command.stderr}")
-        self._informs.append({'_command': command.command, '_name': 'KMA', '_version': kma.version})
+        dir_kma = working_dir / 'kma'
+        dir_kma.mkdir(parents=True, exist_ok=True)
+        kma_index = KMAIndex()
+        kma_index.add_input_files({'FASTA': [ToolIOFile(fasta_file)]})
+        kma_index.run(dir_kma)
+        self._informs.append(kma_index.informs)
 
     def convert_fasta_headers_to_seq(self, input_file: Path, output_file: Path) -> dict[str, str]:
         """
@@ -142,6 +123,33 @@ class DBHelper:
         with output_file.open('w') as handle_out:
             SeqIO.write(output_seqs, handle_out, 'fasta')
         return seq_ids
+
+    @staticmethod
+    def create_clustered_fasta(input_fasta: Path, output_fasta: Path, clusters: list[Cluster]) -> None:
+        """
+        Creates a clustered gene detection FASTA file.
+        The format is: >[clusterUniqueIdentifier]__[clusterSymbol]__[alleleSymbol]__[alleleUniqueIdentifier]
+        :param input_fasta: FASTA containing the renamed sequences
+        :param output_fasta: Output FASTA file
+        :param clusters: Sequence clusters
+        :return: None
+        """
+        seq_record_by_id = {}
+        with input_fasta.open() as handle_in:
+            for seq in SeqIO.parse(handle_in, 'fasta'):
+                seq_record_by_id[seq.id] = seq
+                seq.description = ''
+
+        output_seqs = []
+        for i, cluster in enumerate(clusters):
+            for sequence_name in cluster.seq_ids:
+                seq = seq_record_by_id[sequence_name]
+                full_name = seq.id
+                seq.id = '__'.join([str(i), cluster.name, full_name, full_name])
+                output_seqs.append(seq)
+
+        with output_fasta.open('w') as handle_out:
+            SeqIO.write(output_seqs, handle_out, 'fasta')
 
     def export_metadata(self, name: str, dir_output: Path) -> None:
         """

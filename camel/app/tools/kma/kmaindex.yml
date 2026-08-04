@@ -1,0 +1,8 @@
+conda:
+  name: kma
+  packages:
+    - kma=1.4.14
+dependencies:
+  - kma/1.4.12a
+parameters: {}
+tool_command: kma index
