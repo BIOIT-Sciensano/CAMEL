@@ -1,11 +1,11 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.tool import Tool
 
 
 class SPIFinder(Tool):
@@ -13,13 +13,12 @@ class SPIFinder(Tool):
     BLAST-based detection tool for SPI's (Salmonella Pathogenicity Islands).
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('SPIFinder', '0.1', camel)
+        super().__init__('SPIFinder', '0.1')
         self._input_key = None
 
     def _execute_tool(self) -> None:
@@ -38,17 +37,17 @@ class SPIFinder(Tool):
         Checks if the provided input is valid.
         :return: None
         """
-        super(SPIFinder, self)._check_input()
+        super()._check_input()
         # check if exactly one of the three possible inputs is provided
         input_keys = [key for key in ('FASTQ', 'FASTQ_PE', 'FASTA') if key in self._tool_inputs]
         if len(input_keys) > 1:
-            raise InvalidInputSpecificationError("Too many inputs: Exactly one of FASTQ, FASTQ_PE or FASTA input is required.")
+            raise InvalidToolInputError("Too many inputs: Exactly one of FASTQ, FASTQ_PE or FASTA input is required.")
         elif len(input_keys) == 0:
-            raise InvalidInputSpecificationError("No inputs: exactly one of FASTQ, FASTQ_PE or FASTA input is required.")
+            raise InvalidToolInputError("No inputs: exactly one of FASTQ, FASTQ_PE or FASTA input is required.")
         else:
             self._input_key = input_keys[0]
         if 'DIR' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database input is required (DIR).")
+            raise InvalidToolInputError("Database input is required (DIR).")
 
     def __set_output(self) -> None:
         """
@@ -77,13 +76,13 @@ class SPIFinder(Tool):
             f"-p {str(self._tool_inputs['DIR'][0].path)}"
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
         :return: None
         """
-        if 'error' in self.stderr.lower() or self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr.strip()}")
+        if 'error' in command.stderr.lower() or command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Error executing {self.name}: {command.stderr.strip()}")
 
     def __add_informs(self, db_dir: Path) -> None:
         """

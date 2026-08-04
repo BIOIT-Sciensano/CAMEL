@@ -1,0 +1,25 @@
+{
+  "type_of_reference": "JOUR",
+  "primary_title": "MiST: rapid, accurate and flexible (core-genome) multi-locus sequence typing  (MLST) allele calling from draft genomes.",
+  "first_authors": [
+    "Bogaerts, Bert",
+    "Roosens, Nancy H C",
+    "Vanneste, Kevin"
+  ],
+  "publication_year": "2025/11//",
+  "keywords": [
+    "Alleles",
+    "Genome, Bacterial",
+    "Genomics",
+    "Multilocus Sequence Typing",
+    "Software",
+    "methods"
+  ],
+  "alternate_title3": "BMC genomics",
+  "volume": "26",
+  "language": "eng",
+  "number": "1",
+  "start_page": "1106",
+  "end_page": "1106",
+  "doi": "10.1186/s12864-025-12324-z"
+}

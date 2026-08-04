@@ -1,17 +1,10 @@
-# config file for camel generalities.
-logging:
-  keep_logs: false
-  dir_camel_logs: /logs/camel/camel_logs
-  dir_error_logs: /logs/camel/error_logs
-  dir_snakemake_configs: /logs/camel/pipeline_configs
+# Configuration
+dir_temp: /path/to/temp
+dependency_service: pixi
 
-# Parameters are retrieved from Yaml files with the same name as the tool (can be omitted from config).
-tool_service: yaml
+# Resource locations
+dir_db: /path/to/camel/dbs
+dir_testdata: /path/to/camel/testdata/
 
-testing:
-  testfiles_dir: /testdata/camel/
-
-temp_dir: /scratch/temp
-
-# Root directory for the CAMEL associated databases
-db_root: /db
+# Logging
+dir_error_logs: /logs/camel/camel_logs

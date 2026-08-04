@@ -1,15 +1,81 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  create_index: {default: true, mandatory: false, option: CREATE_INDEX, p_index: 20, value: 'true'}
-  duplicate_scoring_strategy: {default: true, mandatory: false, option: DS, p_index: 30, value: SUM_OF_BASE_QUALITIES}
-  metrics_output: {default: true, mandatory: false, option: M, p_index: 0, value: duplicates_mark.matrics}
-  output: {default: true, mandatory: false, option: O, p_index: 0, value: duplicates_marked.bam}
-  read_name_regex: {default: false, mandatory: false, option: READ_NAME_REGEX, p_index: 0, value: ''}
-  remove_duplicates: {default: true, mandatory: false, option: REMOVE_DUPLICATES, p_index: 10, value: 'false'}
-  validation_stringency: {default: false, mandatory: false, option: VALIDATION_STRINGENCY, p_index: 0, value: 'silent'}
-  optical_duplicate_pixel_distance: {default: false, mandatory: false, option: OPTICAL_DUPLICATE_PIXEL_DISTANCE, p_index: 0, value: '2500'}
-  assume_sort_order: {default: false, mandatory: false, option: ASSUME_SORT_ORDER, p_index: 0, value: 'queryname'}
-  clear_dt: {default: false, mandatory: false, option: CLEAR_DT, p_index: 0, value: 'false'}
-  add_pg_tag_to_reads: {default: false, mandatory: false, option: ADD_PG_TAG_TO_READS, p_index: 0, value: 'false'}
-  max_records_in_ram: {default: false, mandatory: false, option: MAX_RECORDS_IN_RAM, p_index: 0, value: '500000'}
+  create_index:
+    default: true
+    mandatory: false
+    option: CREATE_INDEX
+    p_index: 20
+    value: 'true'
+  duplicate_scoring_strategy:
+    default: true
+    mandatory: false
+    option: DS
+    p_index: 30
+    value: SUM_OF_BASE_QUALITIES
+  metrics_output:
+    default: true
+    mandatory: false
+    option: M
+    p_index: 0
+    value: duplicates_mark.matrics
+  output:
+    default: true
+    mandatory: false
+    option: O
+    p_index: 0
+    value: duplicates_marked.bam
+  read_name_regex:
+    default: false
+    mandatory: false
+    option: READ_NAME_REGEX
+    p_index: 0
+    value: ''
+  remove_duplicates:
+    default: true
+    mandatory: false
+    option: REMOVE_DUPLICATES
+    p_index: 10
+    value: 'false'
+  validation_stringency:
+    default: false
+    mandatory: false
+    option: VALIDATION_STRINGENCY
+    p_index: 0
+    value: silent
+  optical_duplicate_pixel_distance:
+    default: false
+    mandatory: false
+    option: OPTICAL_DUPLICATE_PIXEL_DISTANCE
+    p_index: 0
+    value: '2500'
+  assume_sort_order:
+    default: false
+    mandatory: false
+    option: ASSUME_SORT_ORDER
+    p_index: 0
+    value: queryname
+  clear_dt:
+    default: false
+    mandatory: false
+    option: CLEAR_DT
+    p_index: 0
+    value: 'false'
+  add_pg_tag_to_reads:
+    default: false
+    mandatory: false
+    option: ADD_PG_TAG_TO_READS
+    p_index: 0
+    value: 'false'
+  max_records_in_ram:
+    default: false
+    mandatory: false
+    option: MAX_RECORDS_IN_RAM
+    p_index: 0
+    value: '500000'
 tool_command: MarkDuplicates

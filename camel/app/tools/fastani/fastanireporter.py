@@ -1,14 +1,13 @@
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class FastANIReporter(Tool):
@@ -19,12 +18,11 @@ class FastANIReporter(Tool):
     TITLE = 'FastANI'
     URL_PUBMED = 'https://www.ncbi.nlm.nih.gov/pubmed/{id}'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('FastANI Reporter', '0.1', camel)
+        super().__init__('FastANI Reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -32,9 +30,9 @@ class FastANIReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FastANI input (TSV) is required.')
+            raise InvalidToolInputError('FastANI input (TSV) is required.')
         if 'fastani' not in self._input_informs:
-            raise InvalidInputSpecificationError('FastANI informs are required.')
+            raise InvalidToolInputError('FastANI informs are required.')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -46,7 +44,7 @@ class FastANIReporter(Tool):
 
         # Add output tables
         output_table = self.__parse_input_file()
-        self.__add_output_table(section, output_table.columns, output_table.values.tolist())
+        self.__add_output_table(section, list(output_table.columns), output_table.values.tolist())
 
         # Add link to TSV file
         relative_path = Path('fastani') / self._tool_inputs['TSV'][0].path.name
@@ -97,8 +95,8 @@ class FastANIReporter(Tool):
             return 'fastani.tsv'
 
     def __add_output_table(
-            self, section: HtmlReportSection, header: List[str],
-            data: List[List[Union[str, HtmlTableCell]]]) -> None:
+            self, section: HtmlReportSection, header: list[str],
+            data: list[list[Union[str, HtmlTableCell]]]) -> None:
         """
         Adds an output table to the HTML report.
         :param section: Report section

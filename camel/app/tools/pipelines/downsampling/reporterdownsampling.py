@@ -1,10 +1,10 @@
 from typing import Any
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class ReporterDownsampling(Tool):
@@ -12,12 +12,11 @@ class ReporterDownsampling(Tool):
     Creates output reports for the down sampling workflow.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Reporter: downsampling', '0.1', camel)
+        super().__init__('Reporter: downsampling', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -25,7 +24,7 @@ class ReporterDownsampling(Tool):
         :return: None
         """
         if 'stats' not in self._input_informs:
-            raise InvalidInputSpecificationError("Statistics input is required")
+            raise InvalidToolInputError("Statistics input is required")
         super()._check_input()
 
     def __add_table_params(self, section: HtmlReportSection, stats: dict[str, Any]) -> None:
@@ -72,7 +71,7 @@ class ReporterDownsampling(Tool):
         else:
             header = ['Reads in', 'Reads out']
             table_data = [[f"{stats['nb_reads_in']:,}", f"{self._input_informs['seqtk']['reads_count']:,}"]]
-        section.add_header_with_subtitle('Downsampling', 3, self._input_informs['seqtk']['_name'])
+        section.add_header_with_subtitle('Downsampling', 3, self._input_informs['seqtk']['_name_full'])
         section.add_table(table_data, header, [('class', 'data')])
 
     def _execute_tool(self) -> None:

@@ -1,8 +1,29 @@
-dependencies: [qiime/1.9.1, uclust/1.2.22, blast/2.2.22, ea-utils/27a4809]
+conda:
+  name: qiime
+  packages:
+    - qiime=1.9.1
+dependencies:
+  - qiime/1.9.1
+  - uclust/1.2.22
+  - blast/2.2.22
+  - ea-utils/27a4809
 parameters:
-  assign_taxonomy: {default: false, mandatory: false, option: --assign_taxonomy, p_index: 0,
-    value: 'False'}
-  jobs_to_start: {default: false, mandatory: false, option: --jobs_to_start, p_index: 0,
-    value: '1'}
-  parallel: {default: false, mandatory: false, option: --parallel, p_index: 0, value: 'False'}
+  assign_taxonomy:
+    default: false
+    mandatory: false
+    option: --assign_taxonomy
+    p_index: 0
+    value: "False"
+  jobs_to_start:
+    default: false
+    mandatory: false
+    option: --jobs_to_start
+    p_index: 0
+    value: "1"
+  parallel:
+    default: false
+    mandatory: false
+    option: --parallel
+    p_index: 0
+    value: "False"
 tool_command: pick_closed_reference_otus.py

@@ -1,10 +1,11 @@
 from pathlib import Path
 
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import fileutils
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class HtmlReporterAssembly(Tool):
@@ -12,13 +13,12 @@ class HtmlReporterAssembly(Tool):
     Tool to create HTML reports for the Assembly.
     """
 
-    def __init__(self, camel):
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('HTML Reporter', '0.1', camel)
+        super().__init__('HTML Reporter', '0.1')
         self.__subfolder = Path('assembly')
         self._report_section = None
 
@@ -27,7 +27,10 @@ class HtmlReporterAssembly(Tool):
         Executes this tool.
         :return: None
         """
-        self._report_section = HtmlReportSection('Assembly', subtitle=self._input_informs['assembler']['_name'])
+        import pprint
+        pprint.pprint(self._input_informs)
+        print('^ ^ ^' * 10)
+        self._report_section = HtmlReportSection('Assembly', subtitle=self._input_informs['assembler'])
         self.__add_assembly_info()
         self.__add_assembly_download_link()
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._report_section, False)]
@@ -38,15 +41,15 @@ class HtmlReporterAssembly(Tool):
         :return: None
         """
         if 'FASTA_raw' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No assembly input found ('FASTA_raw')")
+            raise InvalidToolInputError("No assembly input found ('FASTA_raw')")
         if 'FASTA_filt' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No filtered assembly input found ('FASTA_filt')")
+            raise InvalidToolInputError("No filtered assembly input found ('FASTA_filt')")
         if 'SAMPLE_NAME' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No sample name input found ('SAMPLE_NAME')")
+            raise InvalidToolInputError("No sample name input found ('SAMPLE_NAME')")
         if 'quast' not in self._input_informs:
-            raise InvalidInputSpecificationError("Quast informs are required ('quast')")
+            raise InvalidToolInputError("Quast informs are required ('quast')")
         if 'assembler' not in self._input_informs:
-            raise InvalidInputSpecificationError("Assembler informs are required ('assembler')")
+            raise InvalidToolInputError("Assembler informs are required ('assembler')")
         super()._check_input()
 
     def __add_assembly_info(self) -> None:
@@ -56,10 +59,10 @@ class HtmlReporterAssembly(Tool):
         """
         quast_informs = self._input_informs['quast']
         table_data = [
-            ('Assembler:', self._input_informs['assembler']['_name']),
-            ('N50:', '{:,}'.format(int(quast_informs['contig']['N50']))),
-            ('Number of contigs:', '{:,}'.format(int(quast_informs['contig']['# contigs (>= 1000 bp)']))),
-            ('Total length:', '{:,}'.format(int(quast_informs['genome']['Total length'])))
+            ('Assembler:', self._input_informs['assembler']),
+            ('N50:', f'{int(quast_informs["contig"]["N50"]):,}'),
+            ('Number of contigs:', f'{int(quast_informs["contig"]["# contigs (>= 1000 bp)"]):,}'),
+            ('Total length:', f'{int(quast_informs["genome"]["Total length"]):,}')
         ]
         self._report_section.add_table(table_data, table_attributes=[('class', 'information')])
 
@@ -68,7 +71,7 @@ class HtmlReporterAssembly(Tool):
         Adds a download link for the assembly.
         :return: None
         """
-        sample_name_valid = FileSystemHelper.make_valid(self._tool_inputs['SAMPLE_NAME'][0].value)
+        sample_name_valid = fileutils.make_valid(self._tool_inputs['SAMPLE_NAME'][0].value)
 
         # Add filtered assembly
         relative_path = self.__subfolder / f'{sample_name_valid}_contigs.fasta'

@@ -1,12 +1,9 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
 from camel.scripts.broadwgs import references
 from camel.scripts.broadwgs.snakefile import alignment, bam_to_cram, variant_calling
-
-camel = Camel.get_instance()
 
 
 rule picard_quality_yield:
@@ -26,12 +23,12 @@ rule picard_quality_yield:
     run:
         from camel.app.tools.picard.collectqualityyieldmetrics import CollectQualityYieldMetrics
 
-        quality_yield = CollectQualityYieldMetrics(camel)
-        SnakemakeUtils.add_pickle_inputs(quality_yield, input)
-        step = Step(rule, quality_yield, camel, params.working_dir)
+        quality_yield = CollectQualityYieldMetrics()
+        snakemakeutils.add_io_inputs(quality_yield, input)
+        step = Step(rule_name=str(rule), tool=quality_yield, dir_=params.working_dir)
         quality_yield.update_parameters(**config['rule_params']['qc'][rule], output = params.output_file)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(quality_yield, output)
+        step.run()
+        snakemakeutils.dump_io_outputs(quality_yield, output)
 
 rule picard_unsorted_RG_quality:
     """
@@ -59,14 +56,14 @@ rule picard_unsorted_RG_quality:
     run:
         from camel.app.tools.picard.collectmultiplemetrics import CollectMultipleMetrics
 
-        unsorted_RG_quality = CollectMultipleMetrics(camel)
-        SnakemakeUtils.add_pickle_inputs(unsorted_RG_quality, input)
-        step = Step(rule, unsorted_RG_quality, camel, params.working_dir)
+        unsorted_RG_quality = CollectMultipleMetrics()
+        snakemakeutils.add_io_inputs(unsorted_RG_quality, input)
+        step = Step(rule_name=str(rule), tool=unsorted_RG_quality, dir_=params.working_dir)
         unsorted_RG_quality.update_parameters(
             output_prefix = params.output_prefix,
             **config['rule_params']['qc'][rule]
         )
-        step.run_step()
+        step.run()
 
 rule picard_RG_quality:
     """
@@ -90,14 +87,14 @@ rule picard_RG_quality:
     run:
         from camel.app.tools.picard.collectmultiplemetrics import CollectMultipleMetrics
 
-        RG_quality = CollectMultipleMetrics(camel)
-        SnakemakeUtils.add_pickle_inputs(RG_quality, input)
-        step = Step(rule, RG_quality, camel, params.working_dir)
+        RG_quality = CollectMultipleMetrics()
+        snakemakeutils.add_io_inputs(RG_quality, input)
+        step = Step(rule_name=str(rule), tool=RG_quality, dir_=params.working_dir)
         RG_quality.update_parameters(
             output_prefix = params.output_prefix,
             **config['rule_params']['qc'][rule]
         )
-        step.run_step()
+        step.run()
 
 # TODO maybe implement this later
 # rule check_prevalidation:
@@ -165,14 +162,14 @@ rule picard_aggregation_metrics:
     run:
         from camel.app.tools.picard.collectmultiplemetrics import CollectMultipleMetrics
 
-        agg_metrics = CollectMultipleMetrics(camel)
-        SnakemakeUtils.add_pickle_inputs(agg_metrics, input)
-        step = Step(rule, agg_metrics, camel, params.working_dir)
+        agg_metrics = CollectMultipleMetrics()
+        snakemakeutils.add_io_inputs(agg_metrics, input)
+        step = Step(rule_name=str(rule), tool=agg_metrics, dir_=params.working_dir)
         agg_metrics.update_parameters(
             output_prefix = params.output_prefix,
             **config['rule_params']['qc'][rule]
         )
-        step.run_step()
+        step.run()
 
 rule picard_RG_checksum:
     """
@@ -192,11 +189,11 @@ rule picard_RG_checksum:
     run:
         from camel.app.tools.picard.calculatereadgroupchecksum import CalculateReadGroupChecksum
 
-        get_checksum = CalculateReadGroupChecksum(camel)
-        SnakemakeUtils.add_pickle_input(get_checksum, "BAM", Path(input.BAM))
-        step = Step(rule, get_checksum, camel, params.working_dir)
+        get_checksum = CalculateReadGroupChecksum()
+        snakemakeutils.add_io_input(get_checksum,"BAM", Path(input.BAM))
+        step = Step(rule_name=str(rule), tool=get_checksum, dir_=params.working_dir)
         get_checksum.update_parameters(output = params.output_file)
-        step.run_step()
+        step.run()
 
 
 rule picard_wgs_metrics:
@@ -220,14 +217,14 @@ rule picard_wgs_metrics:
 
         Path(params.working_dir).mkdir(exist_ok=True)
 
-        wgs_metrics = CollectWgsMetrics(camel)
-        SnakemakeUtils.add_pickle_inputs(wgs_metrics, input)
-        step = Step(rule, wgs_metrics, camel, params.working_dir)
+        wgs_metrics = CollectWgsMetrics()
+        snakemakeutils.add_io_inputs(wgs_metrics, input)
+        step = Step(rule_name=str(rule), tool=wgs_metrics, dir_=params.working_dir)
         wgs_metrics.update_parameters(
             output = params.output_file,
             **config['rule_params']['qc'][rule]
         )
-        step.run_step()
+        step.run()
 
 rule picard_raw_wgs_metrics:
     """
@@ -248,14 +245,14 @@ rule picard_raw_wgs_metrics:
     run:
         from camel.app.tools.picard.collectrawwgsmetrics import CollectRawWgsMetrics
 
-        raw_wgs_metrics = CollectRawWgsMetrics(camel)
-        SnakemakeUtils.add_pickle_inputs(raw_wgs_metrics, input)
-        step = Step(rule, raw_wgs_metrics, camel, params.working_dir)
+        raw_wgs_metrics = CollectRawWgsMetrics()
+        snakemakeutils.add_io_inputs(raw_wgs_metrics, input)
+        step = Step(rule_name=str(rule), tool=raw_wgs_metrics, dir_=params.working_dir)
         raw_wgs_metrics.update_parameters(
             output = params.output_file,
             **config['rule_params']['qc'][rule]
         )
-        step.run_step()
+        step.run()
 
 
 rule picard_validate_cram:
@@ -277,16 +274,16 @@ rule picard_validate_cram:
 
         Path(params.working_dir).mkdir(exist_ok=True)
 
-        val_cram = ValidateSamFile(camel)
-        SnakemakeUtils.add_pickle_input(val_cram, "BAM", Path(input.CRAM))
-        SnakemakeUtils.add_pickle_input(val_cram, "FASTA_REF", Path(input.FASTA_REF))
-        step = Step(rule, val_cram, camel, params.working_dir)
+        val_cram = ValidateSamFile()
+        snakemakeutils.add_io_input(val_cram,"BAM", Path(input.CRAM))
+        snakemakeutils.add_io_input(val_cram,"FASTA_REF", Path(input.FASTA_REF))
+        step = Step(rule_name=str(rule), tool=val_cram, dir_=params.working_dir)
         val_cram.update_parameters(
             **config['rule_params']['bam_to_cram'][rule]
         )
         val_cram.update_java_options("-mx100G -XX:+UseParallelGC -XX:ParallelGCThreads=1 -Dpicard.useLegacyParser=false")
-        step.run_step()
-        SnakemakeUtils.dump_tool_output(val_cram, 'TXT_report', Path(output.TXT_metrics))
+        step.run()
+        snakemakeutils.dump_io_output(val_cram,'TXT_report', Path(output.TXT_metrics))
 
 rule picard_variant_calling_metrics:
     """
@@ -309,12 +306,12 @@ rule picard_variant_calling_metrics:
 
         Path(params.working_dir).mkdir(exist_ok=True)
 
-        vcf_metrics = CollectVariantCallingMetrics(camel)
-        SnakemakeUtils.add_pickle_inputs(vcf_metrics, input)
-        step = Step(rule, vcf_metrics, camel, params.working_dir)
+        vcf_metrics = CollectVariantCallingMetrics()
+        snakemakeutils.add_io_inputs(vcf_metrics, input)
+        step = Step(rule_name=str(rule), tool=vcf_metrics, dir_=params.working_dir)
         vcf_metrics.update_parameters(
             output_prefix = config["sample"],
             **config['rule_params']['qc'][rule]
         )
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(vcf_metrics, output)
+        step.run()
+        snakemakeutils.dump_io_outputs(vcf_metrics, output)

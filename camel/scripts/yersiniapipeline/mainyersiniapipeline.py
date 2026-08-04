@@ -1,85 +1,145 @@
 #!/usr/bin/env python
-import argparse
-from typing import Optional, Sequence
+import dataclasses
 
+import click
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components import mainscriptutils
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.yersiniapipeline import SNAKEFILE_MAIN, CONFIG_DATA
-from camel.app.loggers import logger
+from camel.app.config import config
+from camel.app.core.snakemake import snakepipelineutils
+from camel.app.loggers import initialize_logging
+from camel.app.scriptutils import model
+from camel.app.scriptutils.basepipe import basepipeutils
+from camel.app.scriptutils.basepipe.basepipe import BasePipe
+from camel.app.scriptutils.basescript import basescriptutils
+from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
+from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
+from camel.scripts.yersiniapipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
-class MainYersiniaPipeline(ReportPipeline):
+
+@dataclasses.dataclass(frozen=True)
+class Options(model.BaseOptions):
+    """
+    Pipeline-specific options.
+    """
+
+    analyses: list[str] = dataclasses.field(default_factory=list)
+
+
+class MainYersiniaPipeline(BasePipe):
     """
     Main class to run the Yersinia pipeline.
     """
 
-    CUSTOM_ANALYSES = ['kraken2', 'confindr', 'amrfinder', 'resfinder4', 'vfdb_core', 'mob_suite', 'cgmlst',
-                       'mlst', 'mlst_mcnally', 'cgmlst_ye', 'cgmlst_yp', 'cgmlst_enterobase', 'rmlst',
-                       'human_read_scrubbing', 'ampc']
-
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(
+        self,
+        in_: ScriptInput,
+        out: ScriptOutput,
+        opts: ScriptOptions,
+        opts_custom: Options,
+    ) -> None:
         """
         Initializes the main class.
-        :param args: Arguments (optional)
+        :param in_: Script input
+        :param out: Script output
+        :param opts: General pipeline options
+        :param opts_custom: Pipeline-specific options
+        :return: None
         """
-        super().__init__('Yersinia Pipeline', '1.1', SNAKEFILE_MAIN, args)
+        super().__init__(
+            name='Yersinia pipeline',
+            title='<i>Yersinia</i> pipeline',
+            version='1.2.0',
+            script_in=in_,
+            script_out=out,
+            opts=opts,
+            snakefile=SNAKEFILE_MAIN,
+        )
+        self._opts_custom = opts_custom
 
-    @property
-    def title(self) -> str:
+    def _build_config(self) -> dict:
         """
-        Returns the title of the pipeline as it appears in the HTML output.
-        :return: Title
+        Builds the configuration data for Snakemake.
+        :return: Configuration data
         """
-        return '<i>Yersinia</i> pipeline'
+        # Parse template data
+        with open(CONFIG_DATA) as handle:
+            yaml_text = handle.read()
+        yaml_text = yaml_text.format(
+            COV_MAX=self._script_opts.cov_max,
+            DB_ROOT=config.dir_db,
+            QC_SCHEME='cgmlst_yersinia_spp' if 'cgmlst_yersinia_spp' in self._opts_custom.analyses else 'mlst_achtman'
+        )
+        data_template = yaml.safe_load(yaml_text)
+        config_data = self.get_config_data()
+        config_data['analyses_selected'] = self._opts_custom.analyses
+        if 'cgmlst_yersinia_spp' in self._opts_custom.analyses:
+            config_data['analyses_selected'].append('species_determination')
+        config_data['sequence_typing'] = {
+            'options': {'method': self._script_opts.typing_method}
+        }
+        config_data['gene_detection'] = {
+            'options': {'method': self._script_opts.gene_detection_method}
+        }
+        basepipeutils.dict_merge(config_data, data_template)
+        return config_data
 
-    def run(self) -> None:
+    def _validate_config_data(self, config_data: dict) -> bool:
+        """
+        Validates the config data.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
+        """
+        self.check_dbs(config_data)
+        return True
+
+    def _execute(self) -> None:
         """
         Runs the pipeline.
         :return: None
         """
-        input_files = self._symlink_input()
-        self._validate_input_files()
-        config_file = self.__construct_config_file(input_files)
-        self._run_snakemake_main(config_file)
+        # Build and validate the config file
+        config_data = self._build_config()
+        self._validate_config_data(config_data)
+
+        # Create the config file and run snakefile
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
+        path_config = snakepipelineutils.generate_config_file(
+            config_data, self._script_opts.working_dir
+        )
+        self.run_snakefile(path_config)
+
+        # Additional export for the assembly
         self._export_assembly()
 
-    def __construct_config_file(self, input_files: dict[str, list[dict[str, str]]]) -> str:
-        """
-        Constructs the configuration file.
-        :param input_files: Dictionary with the input files (keys can be FASTQ_PE, FASTQ_SE).
-        :return: Configuration file
-        """
-        config_data = self.get_template_data(input_files)
-        config_data['analyses'] = [key for key in MainYersiniaPipeline.CUSTOM_ANALYSES if vars(self._args)[key]]
-        with open(CONFIG_DATA) as handle_in:
-            mainscriptutils.dict_merge(
-                config_data, yaml.safe_load(handle_in.read().format(
-                    qc_typing_scheme='cgmlst' if self._args.cgmlst else 'mlst',
-                    coverage_max=self._args.cov_max
-                )))
-            if 'cgmlst' in self._args:
-                config_data['analyses'].append('species')
-            else:
-                logger.warning("CgMLST is disabled, so species determination will not run.")
-        return SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir)
 
-    @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
-        """
-        Parses the command line arguments.
-        :param args: Command line arguments
-        :return: Parsed arguments
-        """
-        parser = argparse.ArgumentParser()
-        ReportPipeline.add_common_arguments(parser)
-        for analysis_key in MainYersiniaPipeline.CUSTOM_ANALYSES:
-            parser.add_argument(f"--{analysis_key.replace('_','-')}", action='store_true')
-        return parser.parse_args(args)
+@click.command(
+    name='yersinia_pipeline',
+    short_help='Pipeline for the complete characterization of Yersinia isolates',
+)
+@basescriptutils.add_input_opts()
+@basescriptutils.add_output_opts
+@basescriptutils.add_general_opts
+@click.option(
+    '--analyses',
+    type=str,
+    help=f"Comma-separated list of analyses to run ({', '.join(basepipeutils.get_custom_analyses(CONFIG_DATA))})",
+)
+def main(**kwargs) -> None:
+    """
+    Pipeline for the complete characterization of Yersinia isolates.
+    """
+    script_input = basescriptutils.parse_script_input(kwargs)
+    script_out = basescriptutils.parse_script_output(kwargs)
+    script_opts = basescriptutils.parse_script_opts(kwargs)
+    custom_opts = Options(
+        analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
+    )
+    pipeline = MainYersiniaPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline.prepare_input()
+    pipeline.run()
+
 
 if __name__ == '__main__':
-    Camel.get_instance()
-    main = MainYersiniaPipeline()
-    main.run()
+    initialize_logging()
+    main()

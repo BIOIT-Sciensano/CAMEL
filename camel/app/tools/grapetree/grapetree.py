@@ -1,8 +1,9 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class GrapeTree(Tool):
@@ -10,12 +11,11 @@ class GrapeTree(Tool):
     Package to create cgMLST-based phylogenies associated with EnteroBase.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('GrapeTree', '2.2', camel)
+        super().__init__('GrapeTree', '2.2')
 
     def _check_input(self) -> None:
         """
@@ -23,7 +23,7 @@ class GrapeTree(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Allele matrix (TSV) input is required")
+            raise InvalidToolInputError("Allele matrix (TSV) input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -41,10 +41,10 @@ class GrapeTree(Tool):
         self._execute_command()
         self._tool_outputs['NWK'] = [ToolIOFile(output_path)]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(self._command.stderr)
+        toolutils.check_tool_execution(self, command, exit_code=0)

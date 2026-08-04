@@ -1,5 +1,21 @@
-dependencies: [ integronfinder/2.0.2, prodigal/2.6.3 ]
+conda:
+  name: integronfinder
+  packages:
+    - integron_finder=2.0.2
+dependencies:
+  - integronfinder/2.0.2
+  - prodigal/2.6.3
+  - hmmer/3.4
+  # - cmsearch (installed globally in tasks/main.yml with apt 'infernal' package)
 parameters:
-  local_max: {default: false, mandatory: false, option: '--local-max', value: null}
-  threads: {default: true, mandatory: false, option: '--cpu', value: 4}
+  local_max:
+    default: false
+    mandatory: false
+    option: '--local-max'
+    flag: true
+  threads:
+    default: true
+    mandatory: false
+    option: '--cpu'
+    value: 4
 tool_command: integron_finder

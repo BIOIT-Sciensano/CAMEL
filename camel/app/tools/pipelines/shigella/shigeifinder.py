@@ -1,12 +1,12 @@
-import pandas as pd
-
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.tools.tool import Tool
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
+import pandas as pd
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.tool import Tool
 
 
 class ShigEiFinder(Tool):
@@ -15,12 +15,11 @@ class ShigEiFinder(Tool):
     identifies the serotype using O-antigen/H-antigen genes.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the ShigEiFinder tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('ShigEiFinder', '1.3.5', camel)
+        super().__init__('ShigEiFinder', '1.3.5')
 
     def _check_input(self) -> None:
         """
@@ -29,9 +28,9 @@ class ShigEiFinder(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA input is required')
+            raise InvalidToolInputError('FASTA input is required')
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError('Only a single FASTA file can be analyzed at a time')
+            raise InvalidToolInputError('Only a single FASTA file can be analyzed at a time')
         super()._check_input()
 
     def __build_command(self, input_fasta: Path, output_tsv: Path) -> None:
@@ -41,20 +40,22 @@ class ShigEiFinder(Tool):
         :param output_tsv: Path of output file
         :return: None
         """
-        self._command.command = ' '.join([
-            self._tool_command,
-            f'-i {input_fasta}',
-            f'--output {output_tsv}',
-            *self._build_options()
-        ])
+        self._command.command = ' '.join(
+            [
+                self._tool_command,
+                f'-i {input_fasta}',
+                f'--output {output_tsv}',
+                *self._build_options(),
+            ]
+        )
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f'Error executing {self.name}: {self.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _execute_tool(self) -> None:
         """
@@ -73,7 +74,7 @@ class ShigEiFinder(Tool):
 
         # Collect the output
         if not tsv_out.exists():
-            raise ToolExecutionError(f'{tsv_out} not generated (TSV)')
+            raise ToolExecutionError(self.name, f'{tsv_out} not generated (TSV)')
         self._tool_outputs['TSV'] = [ToolIOFile(tsv_out)]
 
         # Parse TSV output file
@@ -102,7 +103,7 @@ class ShigEiFinder(Tool):
             return f'Enteroinvasive Escherichia coli {coli_serotype}'
 
         if serotype_abbrev.startswith('Not Shigella/EIEC'):
-            return f'Not Shigella/EIEC'
+            return 'Not Shigella/EIEC'
 
         else:
             return str(serotype_abbrev)

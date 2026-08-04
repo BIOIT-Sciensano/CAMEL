@@ -1,84 +1,138 @@
 #!/usr/bin/env python
-import argparse
-from pathlib import Path
-from typing import Optional, Sequence
+import dataclasses
 
+import click
 import yaml
 
-from camel.app.camel import Camel
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.stecpipeline import CONFIG_DATA
-from camel.scripts.stecpipeline import SNAKEFILE_MAIN
+from camel.app.config import config
+from camel.app.core.snakemake import snakepipelineutils
+from camel.app.loggers import initialize_logging
+from camel.app.scriptutils import model
+from camel.app.scriptutils.basepipe import basepipeutils
+from camel.app.scriptutils.basepipe.basepipe import BasePipe
+from camel.app.scriptutils.basescript import basescriptutils
+from camel.app.scriptutils.basescript.scriptinput import ScriptInput
+from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
+from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
+from camel.scripts.stecpipeline import SNAKEFILE_MAIN, CONFIG_DATA
 
 
-class MainSTECPipeline(ReportPipeline):
+@dataclasses.dataclass(frozen=True)
+class Options(model.BaseOptions):
+    """
+    Pipeline-specific options.
+    """
+    analyses: list[str] = dataclasses.field(default_factory=list)
+
+
+class MainSTECPipeline(BasePipe):
     """
     Main class to run the STEC pipeline.
     """
 
-    CUSTOM_ANALYSES = [
-        'kraken2', 'confindr', 'rmlst', 'amrfinder', 'resfinder4', 'ncbi_stress', 'mlst_pasteur', 'mlst_warwick',
-        'cgmlst', 'plasmidfinder', 'mob_suite', 'serotype', 'virulencefinder', 'innuendo_cgmlst',
-        'human_read_scrubbing', 'variant_calling']
-
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(
+        self,
+        in_: ScriptInput,
+        out: ScriptOutput,
+        opts: ScriptOptions,
+        opts_custom: Options
+    ) -> None:
         """
         Initializes the main class.
-        :param args: Arguments (optional)
+        :param in_: Script input
+        :param out: Script output
+        :param opts: General pipeline options
+        :param opts_custom: Pipeline-specific options
+        :return: None
         """
-        super().__init__('STEC pipeline', '1.2', SNAKEFILE_MAIN, args)
+        super().__init__(
+            name='STEC pipeline',
+            title='STEC pipeline',
+            version='1.3.0',
+            script_in=in_,
+            script_out=out,
+            opts=opts,
+            snakefile=SNAKEFILE_MAIN
+        )
+        self._opts_custom = opts_custom
 
-    def run(self) -> None:
+    def _build_config(self) -> dict:
+        """
+        Builds the configuration data for Snakemake.
+        :return: Configuration data
+        """
+        # Parse template data
+        with open(CONFIG_DATA) as handle:
+            yaml_text = handle.read()
+        yaml_text = yaml_text.format(
+            COV_MAX=self._script_opts.cov_max,
+            DB_ROOT=config.dir_db,
+            EXPORT_BAM=self._script_opts.include_bam,
+            QC_SCHEME='cgmlst' if 'cgmlst' in self._opts_custom.analyses else 'mlst_warwick',
+        )
+        data_template = yaml.safe_load(yaml_text)
+
+        # Add the base config data
+        config_data = self.get_config_data()
+        basepipeutils.dict_merge(config_data, data_template)
+        config_data['analyses_selected'] = self._opts_custom.analyses
+        config_data['sequence_typing']['options'] = {'method': self._script_opts.typing_method}
+        config_data['gene_detection']['options'] = {'method': self._script_opts.gene_detection_method}
+        return config_data
+
+    def _validate_config_data(self, config_data: dict) -> bool:
+        """
+        Validates the config data.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
+        """
+        self.check_dbs(config_data)
+        return True
+
+    def _execute(self) -> None:
         """
         Runs the pipeline.
         :return: None
         """
-        input_files = self._symlink_input()
-        self._validate_input_files()
-        path_config = self.__construct_config_file(input_files)
-        self._run_snakemake_main(str(path_config))
+        # Build and validate the config file
+        config_data = self._build_config()
+        self._validate_config_data(config_data)
+
+        # Create the config file and run snakefile
+        self._script_out.dir.mkdir(parents=True, exist_ok=True)
+        path_config = snakepipelineutils.generate_config_file(
+            config_data, self._script_opts.working_dir
+        )
+        self.run_snakefile(path_config)
+
+        # Additional export for the assembly
         self._export_assembly()
 
-    def __construct_config_file(self, input_files: dict[str, list[dict[str, str]]]) -> Path:
-        """
-        Constructs the configuration file.
-        :return: Configuration file
-        """
-        config_data = self.get_template_data(input_files)
-        config_data['analyses'] = [key for key in MainSTECPipeline.CUSTOM_ANALYSES if vars(self._args)[key]]
-        with open(CONFIG_DATA) as handle_in:
-            config_data.update(yaml.safe_load(handle_in.read().format(
-                coverage_max=self._args.cov_max,
-                qc_typing_scheme='cgmlst' if self._args.cgmlst else 'mlst_warwick',
-                export_bam='true' if self._args.report_include_bam else 'false',
-            )))
 
-        # Read trimming
-        if self._args.library is not None:
-            config_data['read_trimming']['adapter'] = self._args.library
-
-        # cgMLST detection method
-        detection_method_cgmlst = {
-            'blast': 'blast', 'srst2': 'blast', 'kma': 'kma'}.get(self._args.detection_method)
-        config_data['sequence_typing']['cgmlst']['detection_method'] = detection_method_cgmlst
-        config_data['sequence_typing']['innuendo_cgmlst']['detection_method'] = detection_method_cgmlst
-        return Path(SnakePipelineUtils.generate_config_file(config_data, self._args.working_dir))
-
-    @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
-        """
-        Parses the command line arguments.
-        :return: Arguments
-        """
-        parser = argparse.ArgumentParser()
-        ReportPipeline.add_common_arguments(parser)
-        for analysis_key in MainSTECPipeline.CUSTOM_ANALYSES:
-            parser.add_argument(f"--{analysis_key.replace('_', '-')}", action='store_true')
-        return parser.parse_args(args)
+@click.command(name='stec_pipeline', short_help='Pipeline for the complete characterization of Shiga-toxin producing Escherichia coli isolates')
+@basescriptutils.add_input_opts()
+@basescriptutils.add_output_opts
+@basescriptutils.add_general_opts
+@click.option(
+    '--analyses',
+    type=str,
+    help=f"Comma-separated list of analyses to run ({', '.join(basepipeutils.get_custom_analyses(CONFIG_DATA))})",
+)
+def main(**kwargs) -> None:
+    """
+    Pipeline for the complete characterization of Shiga-toxin producing Escherichia coli isolates.
+    """
+    script_input = basescriptutils.parse_script_input(kwargs)
+    script_out = basescriptutils.parse_script_output(kwargs)
+    script_opts = basescriptutils.parse_script_opts(kwargs)
+    custom_opts = Options(
+        analyses=kwargs['analyses'].split(',') if kwargs['analyses'] else [],
+    )
+    pipeline = MainSTECPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline.prepare_input()
+    pipeline.run()
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
-    main = MainSTECPipeline()
-    main.run()
+    initialize_logging()
+    main()

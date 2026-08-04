@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class KleborateReporter(Tool):
@@ -21,12 +21,11 @@ class KleborateReporter(Tool):
         'Resistance': ['resistance_score']
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Kleborate reporter', '0.1', camel)
+        super().__init__('Kleborate reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -34,9 +33,9 @@ class KleborateReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('TSV input is required')
+            raise InvalidToolInputError('TSV input is required')
         if 'kleborate' not in self._input_informs:
-            raise InvalidInputSpecificationError("Kleborate informs input is required")
+            raise InvalidToolInputError("Kleborate informs input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:

@@ -2,11 +2,11 @@ import re
 from typing import Any
 
 import bs4
+from camelcore.app.command import Command
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.tools.tool import Tool
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class LREFinder(Tool):
@@ -16,12 +16,11 @@ class LREFinder(Tool):
     Reference: https://cge.cbs.dtu.dk/services/LRE-Finder/
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('LRE-Finder', '20200812', camel)
+        super().__init__('LRE-Finder', '20200812')
 
     def _check_input(self) -> None:
         """
@@ -29,7 +28,7 @@ class LREFinder(Tool):
         :return: None
         """
         if not any(x in self._tool_inputs for x in ('FASTQ_SE', 'FASTQ_PE')):
-            raise InvalidInputSpecificationError('FASTQ_(SE/PE) input is required')
+            raise InvalidToolInputError('FASTQ_(SE/PE) input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -61,10 +60,10 @@ class LREFinder(Tool):
         """
         info = {}
         soup = bs4.BeautifulSoup(html_code, 'html.parser')
-        info['species'] = soup.find('b', string='Species identified:').findNext('table').find('th').text
-        info['genes'] = LREFinder.__parse_html_table(soup.find('b', string='Genes Identified:').findNext('table'))
+        info['species'] = soup.find('b', string='Species identified:').find_next('table').find('th').text
+        info['genes'] = LREFinder.__parse_html_table(soup.find('b', string='Genes Identified:').find_next('table'))
         info['mutations'] = LREFinder.__parse_html_table(
-            soup.find('b', string='Identified mutations in 23s:').findNext('table'))
+            soup.find('b', string='Identified mutations in 23s:').find_next('table'))
         return info
 
     @staticmethod
@@ -74,13 +73,13 @@ class LREFinder(Tool):
         :param html_table: HTML table
         :return: Parsed information
         """
-        # noinspection PyUnresolvedReferences
-        rows = html_table.findAll('tr')
-        header = [th.text.replace('_', ' ') for th in rows[0].findAll('th')]
+        # noinspection PyUnresolvedReferences,PyCallingNonCallable
+        rows = html_table.find_all('tr')
+        header = [th.text.replace('_', ' ') for th in rows[0].find_all('th')]
         header = [re.sub(r'\[(.*)]', r'(\g<1>)', value) for value in header]
         table_data = [{
-            col: td.text for col, td in zip(header, row.findAll('td'))} for row in rows[1:] if
-            len(row.findAll('td')) > 0]
+            col: td.text for col, td in zip(header, row.find_all('td'))} for row in rows[1:] if
+            len(row.find_all('td')) > 0]
 
         # Convert numeric values to float
         for info_dict in table_data:
@@ -91,10 +90,10 @@ class LREFinder(Tool):
                     continue
         return table_data
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(self._command.stderr)
+        toolutils.check_tool_execution(self, command, exit_code=0)

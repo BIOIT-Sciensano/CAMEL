@@ -1,11 +1,13 @@
 import os
 import shutil
+from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
 
 
 class Interproscan(Tool):
@@ -15,13 +17,12 @@ class Interproscan(Tool):
     contains. InterProScan is the software that can be used to query this database
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('interproscan', '5.20-59.0', camel)
+        super().__init__('interproscan', '5.20-59.0')
         self.__input_key = None
 
     def _execute_tool(self):
@@ -44,15 +45,15 @@ class Interproscan(Tool):
         """
         super(Interproscan, self)._check_input()
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Invalid number of input keys given for InterProScan, only FASTA_Nucl '
-                                                 'or FASTA_Prot allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid number of input keys given for InterProScan, only FASTA_Nucl '
+                                                 f'or FASTA_Prot allowed: {self._tool_inputs!r}')
         if 'FASTA_Nucl' not in self._tool_inputs and 'FASTA_Prot' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('No valid input key given for InterProScan, FASTA_Nucl or FASTA_Prot '
-                                                 'needed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('No valid input key given for InterProScan, FASTA_Nucl or FASTA_Prot '
+                                                 f'needed: {self._tool_inputs!r}')
         for value in self._tool_inputs.values():
             if len(value) > 1:
-                raise InvalidInputSpecificationError('Too many input files per key given for InterProScan '
-                                                     '(max = 1): {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError('Too many input files per key given for InterProScan '
+                                                     f'(max = 1): {self._tool_inputs!r}')
 
     def __set_input_key(self):
         """
@@ -71,7 +72,8 @@ class Interproscan(Tool):
         else:
             output_keys = ['GFF3', 'XML', 'TSV']
         for key in output_keys:
-            self._tool_outputs[key] = [ToolIOFile('{}.{}'.format(os.path.join(self._folder, self.__get_basename()), key.lower()))]
+            self._tool_outputs[key] = [ToolIOFile(Path(
+                f'{os.path.join(self._folder, self.__get_basename())}.{key.lower()}'))]
 
     def __get_basename(self):
         """
@@ -86,7 +88,7 @@ class Interproscan(Tool):
         :return: String with the input parameters
         """
         seqtype = 'n' if self.__input_key == 'FASTA_Nucl' else 'p'
-        return '--input {} --seqtype {}'.format(self._tool_inputs[self.__input_key][0], seqtype)
+        return f'--input {self._tool_inputs[self.__input_key][0]} --seqtype {seqtype}'
 
     def __build_command(self):
         """
@@ -103,20 +105,22 @@ class Interproscan(Tool):
         :return: Path to temporary directory
         """
         if os.path.isfile(os.path.join(self._folder, 'temp_ips')):
-            raise IOError('A file with the name temp_ips already exists!')
+            raise OSError('A file with the name temp_ips already exists!')
         if not os.path.isdir(os.path.join(self._folder, 'temp_ips')):
             os.mkdir(os.path.join(self._folder, 'temp_ips'))
         return os.path.join(self._folder, 'temp_ips')
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if 'Unfortunately the web service has failed.' in self.stdout:
+        if 'Unfortunately the web service has failed.' in command.stdout:
             logger.warning('The local lookup webservice was not reachable by InterProScan!')
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed for InterProScan (Exit code: {})".format(self._command.returncode))
+        if command.exit_code != 0:
+            raise ToolExecutionError(
+                self.name, f"Command execution failed for InterProScan (Exit code: {command.exit_code})")
 
     def __build_options_string(self):
         """
@@ -124,6 +128,6 @@ class Interproscan(Tool):
         :return: String with command parameters
         """
         option_list = super(Interproscan, self)._build_options()
-        option_list.append('--output-dir {}'.format(self._folder))
-        option_list.append('--tempdir {}'.format(self.__get_temp_dir()))
+        option_list.append(f'--output-dir {self._folder}')
+        option_list.append(f'--tempdir {self.__get_temp_dir()}')
         return ' '.join(option_list)

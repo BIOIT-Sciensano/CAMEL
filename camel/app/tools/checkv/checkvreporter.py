@@ -1,13 +1,12 @@
 from pathlib import Path
 
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlexpandabletable import HtmlExpandableTable
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlexpandabletable import HtmlExpandableTable
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class CheckVReporter(Tool):
@@ -22,11 +21,12 @@ class CheckVReporter(Tool):
         {'key': 'quality_summary', 'name': 'Quality summary'}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
+        :return: None
         """
-        super().__init__('CheckV reporter', '0.1', camel)
+        super().__init__('CheckV reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -35,7 +35,7 @@ class CheckVReporter(Tool):
         """
         for output_file in CheckVReporter.OUTPUT_FILES:
             if f"TSV_{output_file['key']}" not in self._tool_inputs:
-                raise InvalidInputSpecificationError(f"TSV_{output_file['key']} input is required")
+                raise InvalidToolInputError(f"TSV_{output_file['key']} input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -43,7 +43,7 @@ class CheckVReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('CheckV')
+        section = HtmlReportSection('CheckV', subtitle=self._input_informs['checkv']['_name_full'])
 
         # Add overview output table
         for output_file in CheckVReporter.OUTPUT_FILES:
@@ -68,6 +68,8 @@ class CheckVReporter(Tool):
         :param value: Value
         :return: Formatted value
         """
+        if pd.isna(value):
+            return 'n/a'
         if type(value) == float:
             return f'{value:.2f}'
         return value

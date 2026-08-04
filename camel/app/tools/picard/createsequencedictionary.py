@@ -1,25 +1,23 @@
 from pathlib import Path
-from camel.app.camel import Camel
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.io.tooliofile import ToolIOFile
+
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
+
 from camel.app.loggers import logger
 from camel.app.tools.picard.picard import Picard
 
 
 class CreateSequenceDictionary(Picard):
-
     """
     Class for Picard CreateSequenceDictionary function
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Picard CreateSequenceDictionary', '2.23.3', camel)
-
+        super().__init__('Picard CreateSequenceDictionary', '2.23.3')
         self._required_inputs = ['FASTA_REF']
         self._specific_parameters = ['output_ext', 'symlink']
         self._fasta_file = None
@@ -33,7 +31,7 @@ class CreateSequenceDictionary(Picard):
         index_file_name = Path(self._fasta_file.stem + self._parameters['output_ext'].value)
         # NOTE if dictionary file exists, it should be removed otherwise Picard run will fail
         if index_file_name.exists():
-            FileUtils.silent_remove(index_file_name)
+            fileutils.silent_remove(index_file_name)
         self._output_string = f' O={index_file_name}'
 
         self._tool_outputs['FASTA_REF'] = [ToolIOFile(self._fasta_file)]

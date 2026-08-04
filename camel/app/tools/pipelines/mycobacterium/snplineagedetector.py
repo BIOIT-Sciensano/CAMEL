@@ -1,21 +1,22 @@
 import datetime
 import re
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List, Union, Any
+from typing import Any, Union
 
 import pandas as pd
-import vcf
-# noinspection PyProtectedMember
-from vcf.model import _Record as VcfRecord
+from camelcore.app.utils import vcfutils
+from cyvcf2 import Variant
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
 
 
 @dataclass(frozen=True, unsafe_hash=True)
 class Lineage:
+    """
+    Represent a lineage.
+    """
     id_: str
     name: str
     main_spoligo: str
@@ -32,6 +33,9 @@ class Lineage:
 
 @dataclass
 class LineageSNP:
+    """
+    Represents a SNP that can be linked to a specific lineage.
+    """
     chrom: str
     start: int
     end: int
@@ -46,12 +50,11 @@ class SNPLineageDetector(Tool):
     This tool is used to assign a SNP lineage to Mycobacterium tuberculosis complex strains.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: SNP lineage detector', '0.1', camel)
+        super().__init__('Mycobacterium: SNP lineage detector', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -59,11 +62,11 @@ class SNPLineageDetector(Tool):
         :return: None
         """
         if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('VCF input is required')
+            raise InvalidToolInputError('VCF input is required')
         if 'VCF_filt' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Filtered VCF input is required ('VCF_filt')")
+            raise InvalidToolInputError("Filtered VCF input is required ('VCF_filt')")
         if 'BED' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BED input is required')
+            raise InvalidToolInputError('BED input is required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -72,9 +75,9 @@ class SNPLineageDetector(Tool):
         :return: None
         """
         lineage_snps = self.__parse_lineage_snps()
-        variants = SNPLineageDetector.__parse_vcf(self._tool_inputs['VCF'][0].path)
-        variants_filtered = SNPLineageDetector.__parse_vcf(self._tool_inputs['VCF_filt'][0].path)
-        logger.info(f"{len(variants_filtered)}/{len(variants)} (filtered) variants parsed.")
+        variants = vcfutils.parse_all_variants(self._tool_inputs['VCF'][0].path)
+        variants_filtered = vcfutils.parse_all_variants(self._tool_inputs['VCF_filt'][0].path)
+        logger.info(f"{len(variants_filtered):,}/{len(variants):,} (filtered) variants parsed.")
 
         # Check if variants are present in the database
         self._informs['detected_snps'] = self.__get_detected_snps(lineage_snps, variants, variants_filtered)
@@ -91,7 +94,7 @@ class SNPLineageDetector(Tool):
         # Get the database version
         self._informs['db_version'] = self.__get_db_version()
 
-    def __parse_lineage_snps(self) -> List[LineageSNP]:
+    def __parse_lineage_snps(self) -> list[LineageSNP]:
         """
         Parses the file with the lineages.
         :return: Map of the positions to the corresponding lineage SNPs, Map of the lineages by name
@@ -113,19 +116,8 @@ class SNPLineageDetector(Tool):
         logger.info(f"{len(lineage_snps)} lineage SNPs parsed")
         return lineage_snps
 
-    @staticmethod
-    def __parse_vcf(file_path: Path) -> List[VcfRecord]:
-        """
-        Parses the keys of the variants.
-        :param file_path: VCF file path
-        :return: Mapping of variants per position
-        """
-        with open(file_path) as handle:
-            vcf_reader = vcf.Reader(handle)
-            return list(vcf_reader)
-
-    def __get_detected_snps(self, snps: List[LineageSNP], variants: List[VcfRecord], variants_filt: List[VcfRecord]) \
-            -> List[LineageSNP]:
+    def __get_detected_snps(self, snps: list[LineageSNP], variants: list[Variant], variants_filt: list[Variant]) \
+            -> list[LineageSNP]:
         """
         Returns the SNP positions detected in the sample.
         :param snps: Lineage SNP positions
@@ -141,14 +133,13 @@ class SNPLineageDetector(Tool):
                 # Position needs to match reference
                 if snp.start not in variants_by_pos:
                     detected_snps.append(snp)
-            else:
-                # Position needs to match DB snp
-                if (snp.start in variants_by_pos) and (str(variants_by_pos[snp.start].ALT[0]) == snp.alt):
-                    detected_snps.append(snp)
-                    snp.passes_filtering = snp.start in variants_filt_by_pos
+            # Position needs to match DB snp
+            elif (snp.start in variants_by_pos) and (str(variants_by_pos[snp.start].ALT[0]) == snp.alt):
+                detected_snps.append(snp)
+                snp.passes_filtering = snp.start in variants_filt_by_pos
         return detected_snps
 
-    def __count_lineage_snps(self) -> Dict[Lineage, int]:
+    def __count_lineage_snps(self) -> dict[Lineage, int]:
         """
         Counts the number of SNPs for each lineage.
         :return: Dictionary of number of SNPs for each lineage
@@ -160,8 +151,8 @@ class SNPLineageDetector(Tool):
             counts_by_lineage[snp.lineage] += 1
         return counts_by_lineage
 
-    def __select_best_lineage_for_level(self, count_by_lineages: Dict[Lineage, int], level: int) \
-            -> Union[Dict[Any, int], None]:
+    def __select_best_lineage_for_level(self, count_by_lineages: dict[Lineage, int], level: int) \
+            -> Union[dict[Any, int], None]:
         """
         Selects the best lineage for the given level.
         :param count_by_lineages: Count by lineage
@@ -180,7 +171,7 @@ class SNPLineageDetector(Tool):
         """
         m = re.match(r'.*-(\d{4})_(\d{2})_(\d{2})\.bed', self._tool_inputs['BED'][0].path.name)
         if not m:
-            logger.warning(f'Cannot determine database version')
+            logger.warning('Cannot determine database version')
             return 'n/a'
         date = datetime.date(year=int(m.group(1)), month=int(m.group(2)), day=int(m.group(3)))
         return date.strftime('%d/%m/%Y')

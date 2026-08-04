@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from camel.resources.snakefile import trimming, trimming_illumina, quality_checks, \
+from camel.snakefiles import trimming, trimming_illumina, quality_checks, \
     contamination_check_kraken, gene_detection, sequence_typing, downsampling, confindr, quast, core, trimming_ont, \
     mobsuite, resfinder4, amrfinder, assembly, human_read_scrubbing, read_simulation
 from camel.scripts.yersiniapipeline.snakefile import species_determination
@@ -8,23 +8,23 @@ from camel.scripts.yersiniapipeline.snakefile import species_determination
 #######################
 # Included Snakefiles #
 #######################
-include: core.SNAKEFILE_CORE
-include: human_read_scrubbing.SNAKEFILE_SCRUBBING
-include: read_simulation.SNAKEFILE_READ_SIMULATION
-include: downsampling.SNAKEFILE_DOWNSAMPLING
-include: trimming_illumina.SNAKEFILE_TRIMMING_ILLUMINA
-include: trimming_ont.SNAKEFILE_TRIMMING_ONT
-include: assembly.SNAKEFILE_ASSEMBLY
-include: quast.SNAKEFILE_QUAST
-include: contamination_check_kraken.SNAKEFILE_CONTAMINATION_CHECK_KRAKEN
-include: confindr.SNAKEFILE_CONFINDR
-include: quality_checks.SNAKEFILE_QUALITY_CHECKS
-include: amrfinder.SNAKEFILE_AMRFINDER
-include: resfinder4.SNAKEFILE_RESFINDER4
-include: gene_detection.SNAKEFILE_GENE_DETECTION
-include: mobsuite.SNAKEFILE_MOB_SUITE
-include: sequence_typing.SNAKEFILE_SEQUENCE_TYPING
-include: species_determination.SNAKEFILE_SPECIES_DETERMINATION
+include: core.SNAKEFILE
+include: human_read_scrubbing.SNAKEFILE
+include: read_simulation.SNAKEFILE
+include: downsampling.SNAKEFILE
+include: trimming_illumina.SNAKEFILE
+include: trimming_ont.SNAKEFILE
+include: assembly.SNAKEFILE
+include: quast.SNAKEFILE
+include: contamination_check_kraken.SNAKEFILE
+include: confindr.SNAKEFILE
+include: quality_checks.SNAKEFILE
+include: amrfinder.SNAKEFILE
+include: resfinder4.SNAKEFILE
+include: gene_detection.SNAKEFILE
+include: mobsuite.SNAKEFILE
+include: sequence_typing.SNAKEFILE
+include: species_determination.SNAKEFILE
 
 #########
 # Rules #
@@ -34,8 +34,9 @@ rule all:
     This rule ensures that the required output files are generated.
     """
     input:
-        config['output_report'],
-        config['output_tabular']
+        config['output']['html'],
+        config['output']['tsv'],
+        config['output']['json'] if config['output'].get('json') is not None else []
 
 rule report_create_command_section:
     """
@@ -46,32 +47,31 @@ rule report_create_command_section:
         INFORMS_downsampling = downsampling.get_command_informs(config),
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_assembly = assembly.get_command_informs(config),
-        INFORMS_quast = Path(config['working_dir']) / quast.OUTPUT_QUAST_INFORMS,
-        INFORMS_busco = Path(config['working_dir']) / quast.OUTPUT_BUSCO_INFORMS,
+        INFORMS_quast = quast.OUTPUT_INFORMS,
+        INFORMS_busco = quast.OUTPUT_INFORMS_BUSCO,
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
         INFORMS_confindr = confindr.get_command_informs(config),
-        INFORMS_assembly_map = assembly.get_qc_informs(config, config['input_type']),
-        INFORMS_amrfinder = Path(config['working_dir']) / amrfinder.OUTPUT_AMRFINDER_INFORMS if 'amrfinder' in config['analyses'] else [],
-        INFORMS_resfinder4 = Path(config['working_dir']) / resfinder4.OUTPUT_RESFINDER4_INFORMS if 'resfinder4' in config[
-            'analyses'] else [],
-        INFORMS_mob_suite = Path(config['working_dir']) / mobsuite.OUTPUT_MOB_SUITE_INFORMS if 'mob_suite' in config['analyses'] else [],
-        INFORMS_vfdb_core = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_mlst = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='mlst') if 'mlst' in config['analyses'] else [],
-        INFORMS_mlst_mcnally = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='mlst_mcnally') if 'mlst_mcnally' in config['analyses'] else [],
-        INFORMS_amr = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='resistance_genes') if 'resistance_genes' in config['analyses'] else [],
-        INFORMS_ampc = Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_INFORMS).format(db='ampc') if 'ampc' in config['analyses'] else[],
-        INFORMS_cgmlst = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else [],
-        INFORMS_cgmlst_ye = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='cgmlst_ye') if 'cgmlst_ye' in config['analyses'] else [],
-        INFORMS_cgmlst_yp = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='cgmlst_yp') if 'cgmlst_yp' in config['analyses'] else [],
-        INFORMS_cgmlst_enterobase = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='cgmlst_enterobase') if 'cgmlst_enterobase' in config['analyses'] else [],
-        INFORMS_rmlst = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_INFORMS).format(scheme='rmlst') if 'rmlst' in config['analyses'] else []
+        INFORMS_assembly_map = assembly.get_qc_informs(config, config['input']['type']),
+        INFORMS_amrfinder = amrfinder.OUTPUT_INFORMS if 'amrfinder' in config['analyses_selected'] else [],
+        INFORMS_resfinder4 = resfinder4.OUTPUT_INFORMS if 'resfinder4' in config['analyses_selected'] else [],
+        INFORMS_mob_suite = mobsuite.OUTPUT_INFORMS if 'mob_suite' in config['analyses_selected'] else [],
+        INFORMS_vfdb_core = str(gene_detection.OUTPUT_INFORMS).format(db='vfdb_core') if 'vfdb_core' in config['analyses_selected'] else [],
+        INFORMS_mlst = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_achtman') if 'mlst_achtman' in config['analyses_selected'] else [],
+        INFORMS_mlst_mcnally = sequence_typing.OUTPUT_INFORMS.format(scheme='mlst_mcnally') if 'mlst_mcnally' in config['analyses_selected'] else [],
+        INFORMS_amr = sequence_typing.OUTPUT_INFORMS.format(scheme='resistance_genes') if 'resistance_genes' in config['analyses_selected'] else [],
+        INFORMS_ampc = str(gene_detection.OUTPUT_INFORMS).format(db='ampc') if 'ampc' in config['analyses_selected'] else[],
+        INFORMS_cgmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_yersinia_spp') if 'cgmlst_yersinia_spp' in config['analyses_selected'] else [],
+        INFORMS_cgmlst_ye = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_ye') if 'cgmlst_ye' in config['analyses_selected'] else [],
+        INFORMS_cgmlst_yp = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_yp') if 'cgmlst_yp' in config['analyses_selected'] else [],
+        INFORMS_cgmlst_enterobase = sequence_typing.OUTPUT_INFORMS.format(scheme='cgmlst_enterobase') if 'cgmlst_enterobase' in config['analyses_selected'] else [],
+        INFORMS_rmlst = sequence_typing.OUTPUT_INFORMS.format(scheme='rmlst') if 'rmlst' in config['analyses_selected'] else []
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-commands.io'
+        HTML = 'report/html-commands.iob'
     params:
         dir_ = config['working_dir']
     run:
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.dir_))
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.export_command_section(input, Path(output.HTML), params.dir_)
 
 rule combine_reports:
     """
@@ -81,70 +81,73 @@ rule combine_reports:
         reports_scrubbing = human_read_scrubbing.get_reports(config),
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
-        report_quast = Path(config['working_dir']) / quast.OUTPUT_QUAST_REPORT,
+        report_quast = quast.OUTPUT_REPORT,
         reports_contamination = contamination_check_kraken.get_reports(config),
         report_confindr = confindr.get_report(config),
-        report_adv_qc = Path(config['working_dir']) / str(quality_checks.OUTPUT_QUALITY_CHECKS_REPORT).format(
-            input_type=config['input_type']),
+        report_adv_qc = str(quality_checks.OUTPUT_REPORT).format(
+            input_type=config['input']['type']),
         # AMR detection
-        report_amrfinder = Path(config['working_dir']) / (amrfinder.OUTPUT_AMRFINDER_REPORT if 'amrfinder' in config['analyses'] else amrfinder.OUTPUT_AMRFINDER_REPORT_EMPTY),
-        report_resfinder4 = Path(config['working_dir']) / (resfinder4.OUTPUT_RESFINDER4_REPORT if 'resfinder4' in config['analyses'] else resfinder4.OUTPUT_RESFINDER4_REPORT_EMPTY),
+        report_amrfinder = amrfinder.OUTPUT_REPORT if 'amrfinder' in config['analyses_selected'] else amrfinder.OUTPUT_REPORT_EMPTY,
+        report_resfinder4 = resfinder4.OUTPUT_REPORT if 'resfinder4' in config['analyses_selected'] else resfinder4.OUTPUT_REPORT_EMPTY,
         report_ampc_amr = gene_detection.get_gene_detection_report('ampc', config),
         # Virulence gene detection
         report_vfdb_core = gene_detection.get_gene_detection_report('vfdb_core', config),
         # Genomic context investigation
-        report_mob_suite = Path(config['working_dir']) / (mobsuite.OUTPUT_MOB_SUITE_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_MOB_SUITE_REPORT_EMPTY),
-        report_genomic_context = Path(config['working_dir']) / (mobsuite.OUTPUT_MOB_SUITE_CONTEXT_REPORT if 'mob_suite' in config['analyses'] else mobsuite.OUTPUT_MOB_SUITE_CONTEXT_REPORT_EMPTY),
+        report_mob_suite = mobsuite.OUTPUT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_REPORT_EMPTY,
+        report_genomic_context = mobsuite.OUTPUT_CONTEXT_REPORT if 'mob_suite' in config['analyses_selected'] else mobsuite.OUTPUT_CONTEXT_REPORT_EMPTY,
         # Sequence typing
-        report_mlst = sequence_typing.get_sequence_typing_report('mlst', config),
+        report_mlst = sequence_typing.get_sequence_typing_report('mlst_achtman', config),
         report_mlst_mcnally = sequence_typing.get_sequence_typing_report('mlst_mcnally', config),
-        report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst', config),
+        report_cgmlst = sequence_typing.get_sequence_typing_report('cgmlst_yersinia_spp', config),
         report_cgmlst_ye = sequence_typing.get_sequence_typing_report('cgmlst_ye', config),
         report_cgmlst_yp = sequence_typing.get_sequence_typing_report('cgmlst_yp', config),
         report_cgmlst_enterobase = sequence_typing.get_sequence_typing_report('cgmlst_enterobase', config),
         report_rmlst = sequence_typing.get_sequence_typing_report('rmlst', config),
         # Species determination
-        report_species = Path(config['working_dir']) / (species_determination.OUTPUT_SPECIES_DETERMINATION_REPORT if 'species' in config['analyses'] else species_determination.OUTPUT_SPECIES_DETERMINATION_REPORT_EMPTY),
+        report_species = species_determination.OUTPUT_REPORT if 'species_determination' in config['analyses_selected'] else species_determination.OUTPUT_REPORT_EMPTY,
         # Report
-        report_citations = Path(config['working_dir'], core.OUTPUT_HTML_CITATIONS),
+        report_citations = core.OUTPUT_HTML_CITATIONS,
         report_commands = rules.report_create_command_section.output.HTML
     output:
-        HTML = config['output_report']
+        HTML = config['output']['html']
     params:
-        sample_name = config['sample_name'],
-        output_dir = config['output_dir'],
-        pipeline_info = config['pipeline'],
+        output_dir = config['output']['dir'],
+        pipeline_info = config['script_info'],
         input_dict = config['input'],
-        input_type = config['input_type'],
         citation_keys = config['citations'],
-        detection_method = config['detection_method']
+        gene_detection_method = config['gene_detection']['options']['method'],
+        typing_method = config['sequence_typing']['options']['method']
     run:
         import datetime
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
+        from camel.app.scriptutils.basepipe import basepipeutils
+        from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 
         # Add the header section
-        report = SnakePipelineUtils.init_pipeline_report(
+        script_input = ScriptInput.from_dict(params.input_dict)
+        report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
-        report.add_html_object(SnakePipelineUtils.create_input_section(
-            sample_name=params.sample_name,
+        report.add_html_object(snakepipelineutils.create_input_section(
+            sample_name=script_input.name,
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
-            input_files=ReportPipeline.format_input_string(params.input_dict),
-            input_type=params.input_type,
-            key_citation=params.citation_keys['main'],
-            detection_method=params.detection_method
+            input_files=script_input.input_str,
+            input_type=script_input.type_.value,
+            extra_data=[
+                ('Gene detection method', params.gene_detection_method),
+                ('Typing method', params.typing_method),
+            ]
         ))
 
         # Set up the report content structure
         report_structure = []
-        ReportPipeline.add_content_scrubbing(
-            report_structure, params.input_type, input.reports_scrubbing)
-        ReportPipeline.add_content_trim_basic_qc(
-            report_structure, params.input_type, input.reports_downsampling, input.reports_trimming)
+        basepipeutils.add_content_scrubbing(
+            report_structure, script_input.type_.value, input.reports_scrubbing)
+        basepipeutils.add_content_trim_basic_qc(
+            report_structure, script_input.type_.value, input.reports_downsampling, input.reports_trimming)
         report_structure.append(('Assembly', 'assembly', [Path(input.report_quast)]))
-        ReportPipeline.add_content_contamination_check(
-            report_structure, params.input_type, input.reports_contamination, input.report_confindr)
+        basepipeutils.add_content_contamination_check(
+            report_structure, script_input.type_.value, input.reports_contamination, input.report_confindr)
         report_structure.extend([
             ('Advanced QC', 'adv_qc', [Path(input.report_adv_qc)]),
             ('Species identification', 'species_id', [Path(input.report_rmlst)]),
@@ -160,7 +163,7 @@ rule combine_reports:
             ('Citations', 'citations', [Path(input.report_citations)]),
             ('Commands', 'commands', [Path(input.report_commands)])
         ])
-        SnakePipelineUtils.add_report_content(report, report_structure)
+        snakepipelineutils.add_report_content(report, report_structure)
 
 
 rule combine_summary_files:
@@ -168,36 +171,36 @@ rule combine_summary_files:
     In this rule all summary files are combined into a complete summary output file.
     """
     input:
-        Path(config['working_dir'], core.OUTPUT_TSV_SUMMARY_INIT),
-        human_read_scrubbing.get_summaries(config),
-        downsampling.get_summaries(config),
+        core.OUTPUT_SUMMARY_INIT,
+        lambda wildcards: human_read_scrubbing.get_summaries(config, wildcards.ext),
+        lambda wildcards: downsampling.get_summaries(config, wildcards.ext),
         trimming.get_summaries(config),
-        Path(config['working_dir']) / quast.OUTPUT_QUAST_SUMMARY,
-        Path(config['working_dir']) / quality_checks.OUTPUT_QUALITY_CHECKS_SUMMARY,
-        contamination_check_kraken.get_summaries(config),
+        quast.OUTPUT_SUMMARY,
+        quality_checks.OUTPUT_SUMMARY,
+        lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
         confindr.get_summary(config),
-        Path(config['working_dir']) / amrfinder.OUTPUT_AMRFINDER_SUMMARY if 'amrfinder' in config['analyses'] else [],
-        Path(config['working_dir']) / resfinder4.OUTPUT_RESFINDER4_SUMMARY if 'resfinder4' in config['analyses'] else [],
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='ampc') if 'ampc' in config['analyses'] else [],
-        Path(config['working_dir']) / mobsuite.OUTPUT_MOB_SUITE_SUMMARY if 'mob_suite' in config['analyses'] else [],
+        amrfinder.OUTPUT_SUMMARY if 'amrfinder' in config['analyses_selected'] else [],
+        resfinder4.OUTPUT_SUMMARY if 'resfinder4' in config['analyses_selected'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='ampc', ext=wildcards.ext) if 'ampc' in config['analyses_selected'] else [],
+        mobsuite.OUTPUT_SUMMARY if 'mob_suite' in config['analyses_selected'] else [],
         # Virulence detection
-        Path(config['working_dir']) / str(gene_detection.OUTPUT_GENE_DETECTION_SUMMARY).format(db='vfdb_core') if 'vfdb_core' in config['analyses'] else [],
+        lambda wildcards: str(gene_detection.OUTPUT_SUMMARY).format(db='vfdb_core', ext=wildcards.ext) if 'vfdb_core' in config['analyses_selected'] else [],
         # Sequence typing
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='mlst') if 'mlst' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='mlst_mcnally') if 'mlst_mcnally' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='cgmlst') if 'cgmlst' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='cgmlst_ye') if 'cgmlst_ye' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='cgmlst_yp') if 'cgmlst_yp' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='cgmlst_enterobase') if 'cgmlst_enterobase' in config['analyses'] else [],
-        Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_SUMMARY).format(scheme='rmlst') if 'rmlst' in config['analyses'] else [],
-        Path(config['working_dir']) / species_determination.OUTPUT_SPECIES_DETERMINATION_SUMMARY if 'species' in config['analyses'] else []
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_achtman', ext=wildcards.ext) if 'mlst_achtman' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='mlst_mcnally', ext=wildcards.ext) if 'mlst_mcnally' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_yersinia_spp', ext=wildcards.ext) if 'cgmlst_yersinia_spp' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_ye', ext=wildcards.ext) if 'cgmlst_ye' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_yp', ext=wildcards.ext) if 'cgmlst_yp' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_enterobase', ext=wildcards.ext) if 'cgmlst_enterobase' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='rmlst', ext=wildcards.ext) if 'rmlst' in config['analyses_selected'] else [],
+        species_determination.OUTPUT_SUMMARY if 'species_determination' in config['analyses_selected'] else []
     output:
-        TSV = config.get('output_tabular')
+        FILE = 'summary/output.{ext}'
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        with open(output.TSV, 'w') as handle_out:
-            for summary_input in input:
-                with open(summary_input) as handle_in:
-                    handle_out.write(handle_in.read())
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.combine_summary_data(input, Path(output.FILE), str(params.ext))
 
 rule link_genomic_context:
     """
@@ -205,13 +208,13 @@ rule link_genomic_context:
     """
     input:
         # AMR
-        TSV_amrfinder = Path(config['working_dir']) / 'amrfinder' / 'tsv.io' if 'amrfinder' in config['analyses'] else [],
+        TSV_amrfinder = amrfinder.OUTPUT_TSV if 'amrfinder' in config['analyses_selected'] else [],
         # Virulence
-        TSV_gd_vfdb = Path(config['working_dir']) / 'gene_detection' / 'vfdb_core' / 'metadata' / 'tsv.io' if 'vfdb_core' in config['analyses'] else [],
-        INFORMS_gd_vfdb = Path(config['working_dir']) / 'gene_detection' / 'vfdb_core' / 'db_manager' / 'informs.io' if 'vfdb_core' in config['analyses'] else []
+        TSV_gd_vfdb = 'gene_detection/vfdb_core/metadata/tsv.io' if 'vfdb_core' in config['analyses_selected'] else [],
+        INFORMS_gd_vfdb = gene_detection.OUTPUT_DB_INFORMS.format(db='vfdb_core') if 'vfdb_core' in config['analyses_selected'] else []
     output:
-        TSV = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'input' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'mob_suite' / 'genomic_context' / 'input' / 'informs.io'
+        TSV = 'mob_suite/genomic_context/input/tsv.io',
+        INFORMS = 'mob_suite/genomic_context/input/informs.io'
     run:
         mobsuite.collect_genomic_context_input(input, Path(output.TSV), Path(output.INFORMS))
 
@@ -220,15 +223,14 @@ rule link_species:
     Links the cgST profile matches to the species determination tool.
     """
     input:
-        TSV = Path(config['working_dir']) / 'typing' / 'cgmlst' / 'detect_st' / 'tsv.io'
+        TSV = 'typing/cgmlst_yersinia_spp/detect_st/tsv.io'
     output:
-        TSV_profile_matches = Path(config['working_dir']) / 'species_determination' / 'input' / 'tsv_profile_matches.io',
-        TSV_taxonomic = Path(config['working_dir']) / 'species_determination' / 'input' / 'tsv_taxonomic.io'
+        TSV_profile_matches = 'species_determination/input/tsv_profile_matches.io',
+        TSV_taxonomic = 'species_determination/input/tsv_taxonomic.io'
     params:
         TSV = Path(config['species_determination']['tsv'])
     run:
         import shutil
-        from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-        from camel.app.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         shutil.copyfile(input.TSV, output.TSV_profile_matches)
-        SnakemakeUtils.dump_object([ToolIOFile(params.TSV)], Path(output.TSV_taxonomic))
+        snakemakeutils.dump_object([ToolIOFile(params.TSV)], Path(output.TSV_taxonomic))

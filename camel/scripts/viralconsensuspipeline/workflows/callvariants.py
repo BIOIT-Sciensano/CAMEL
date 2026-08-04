@@ -1,14 +1,16 @@
 import dataclasses
 import logging
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
-import vcf
+from camelcore.app.io.tooliofile import ToolIOFile
+from cyvcf2 import VCF, Variant
 
-from camel.app.camel import Camel
-from camel.app.command.command import Command
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.piping import pipeutils
+from camel.app.tools.bcftools.bcftoolscall import BcftoolsCall
+from camel.app.tools.bcftools.bcftoolsmpileup import BcftoolsMpileup
 from camel.app.tools.clair3.clair3 import Clair3
+from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
 
 
 @dataclasses.dataclass
@@ -17,11 +19,11 @@ class CallVariantsOutput:
     Holder for the output of the variant calling output.
     """
     path_vcf: Path
-    stats: Dict[str, Any]
-    informs: List[Dict]
+    stats: dict[str, Any]
+    informs: list[dict]
 
 
-class CallVariants(object):
+class CallVariants:
     """
     Wrapper around the variant callers for the viral consensus pipeline.
     """
@@ -38,7 +40,7 @@ class CallVariants(object):
             self._dir.mkdir(parents=True)
         self._informs = []
 
-    def run(self, bam_in: Path, fasta_ref: Path, input_type: str, caller: str, params: Dict[str, Any],
+    def run(self, bam_in: Path, fasta_ref: Path, input_type: str, caller: str, params: dict[str, Any],
             threads: int = 4) -> CallVariantsOutput:
         """
         Runs the variant caller.
@@ -72,22 +74,29 @@ class CallVariants(object):
         # Create working directory
         path_vcf_out = self._dir / 'variants.vcf'
 
-        # Config
-        config = 'illumina' if input_type == 'illumina' else 'ont'
+        # Pileup
+        bcftools_mpileup = BcftoolsMpileup()
+        bcftools_mpileup.add_input_files({
+            'BAM': [ToolIOFile(bam_in)],
+            'FASTA': [ToolIOFile(path_fasta)],
+        })
+        bcftools_mpileup.update_parameters(
+            output_type='v',
+            max_depth=max_depth,
+            config='illumina' if input_type == 'illumina' else 'ont',
+        )
 
-        # Collect input file
-        command = Command(' '.join([
-            'module load bcftools/1.17;',
-            'bcftools mpileup', f'-d {max_depth}', '--output-type v', f'--config {config}',
-            f'--fasta-ref {path_fasta}', str(bam_in), '|',
-            f'bcftools call --output {path_vcf_out} --output-type v --ploidy 1 --consensus-caller --variants-only'
-        ]))
-        command.run(self._dir)
-        if not command.returncode == 0:
-            raise RuntimeError(command.stderr)
-        self._informs.append({'_name': 'bcftools mpileup 1.17', '_version': '1.17', '_command': command.command})
-
-        # Save output file
+        # Variant calling
+        bcftools_call = BcftoolsCall()
+        bcftools_call.update_parameters(
+            calling_method='consensus',
+            output_type='v',
+            output_filename=str(path_vcf_out),
+            ploidy='1',
+            variants_only=True
+        )
+        pipeutils.run_as_pipe([bcftools_mpileup, bcftools_call], self._dir)
+        self._informs.extend([bcftools_mpileup.informs, bcftools_call.informs])
         return path_vcf_out
 
     def call_variants_clair3(
@@ -100,7 +109,7 @@ class CallVariants(object):
         :param path_model: Path to the Clair3 model
         :param threads: Number of threads
         """
-        clair3 = Clair3(Camel.get_instance())
+        clair3 = Clair3()
         clair3.add_input_files({'FASTA': [ToolIOFile(path_fasta)], 'BAM': [ToolIOFile(bam_in)]})
 
         # Check if the model exists
@@ -115,15 +124,17 @@ class CallVariants(object):
 
         # Run Clair3
         clair3.run(self._dir)
+        self._informs.append(clair3.informs)
         return clair3.tool_outputs['VCF'][0].path
 
-    def _extract_stats(self, path_vcf: Path) -> Dict[str, Any]:
+    def _extract_stats(self, path_vcf: Path) -> dict[str, Any]:
         """
         Extracts variant calling stats by parsing the output VCF file.
         :param path_vcf: Input VCF file
         :return: Variant calling statistics
         """
-        variants = list(vcf.Reader(filename=str(path_vcf)))
+        with VCF(str(path_vcf)) as vcf_reader:
+            variants: list[Variant] = list(vcf_reader)
         return {
             'nb_variants': len(variants),
             'nb_snps': sum(v.is_snp for v in variants),
@@ -144,9 +155,8 @@ class CallVariants(object):
             path_symlink.symlink_to(fasta_in)
 
         # Create FAI index
-        command = Command(f'module load samtools/1.17; samtools faidx {path_symlink};')
-        command.run(self._dir)
-        if not command.returncode == 0:
-            raise RuntimeError(f'Error creating FASTA index: {command.stderr}')
-        logging.info(f'Reference FASTA file indexed: {path_symlink.name}')
+        samtools_faidx = SamtoolsFastaIndex()
+        samtools_faidx.add_input_files({'FASTA': [ToolIOFile(path_symlink)]})
+        samtools_faidx.update_parameters(symlink_input=False)
+        samtools_faidx.run(path_symlink.parent)
         return path_symlink

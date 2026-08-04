@@ -1,6 +1,6 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.picard.picard import Picard
 
 
@@ -23,13 +23,12 @@ class IntervalListTools(Picard):
     'TXT_intervalListFiles' ToolIOFile object. One or more interval lists
 
     """
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Picard IntervalListTools', '2.23.3', camel)
+        super().__init__('Picard IntervalListTools', '2.23.3')
         self._required_inputs = ['TXT_intervals', 'VCF']
         self._output_type = 'TXT_intervalLists'
 
@@ -40,7 +39,7 @@ class IntervalListTools(Picard):
         """
         #  One or more input files possible - can be of type 'interval_list' or 'VCF'
         if ('TXT_intervals' in self._tool_inputs) and ('VCF' in self._tool_inputs):
-            raise InvalidInputSpecificationError()
+            raise InvalidToolInputError()
         elif 'VCF' in self._tool_inputs:
             self._required_inputs.remove('TXT_intervals')
         elif 'TXT_intervals' in self._tool_inputs:

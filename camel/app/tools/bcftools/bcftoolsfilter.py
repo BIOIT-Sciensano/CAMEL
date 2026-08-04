@@ -1,6 +1,6 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.bcftools.bcftoolsbase import BcftoolsBase
 
 
@@ -9,12 +9,12 @@ class BcftoolsFilter(BcftoolsBase):
     Filtering of VCF/BCF files using fixed thresholds.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('bcftools filter', '1.17', camel)
+        super().__init__('bcftools filter', '1.17')
 
     def _check_input(self) -> None:
         """
@@ -22,7 +22,7 @@ class BcftoolsFilter(BcftoolsBase):
         :return: None
         """
         if not any(x in self._tool_inputs for x in ('VCF', 'VCF_GZ')):
-            raise InvalidInputSpecificationError("VCF/VCF_GZ input is required")
+            raise InvalidToolInputError("VCF/VCF_GZ input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:

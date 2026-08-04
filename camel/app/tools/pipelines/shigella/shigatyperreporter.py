@@ -1,12 +1,11 @@
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.reports.htmltableformatter import FormatEntry, HtmlTableFormatter
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.html.htmltableformatter import HtmlTableFormatter
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class ShigaTyperReporter(Tool):
@@ -14,7 +13,7 @@ class ShigaTyperReporter(Tool):
     Creates an HTML output report for the ShigaTyper tool.
     """
 
-    COLS = [
+    COLS: list[FormatEntry] = [
         {'key': 'Hit', 'title': 'Hit'},
         {'key': 'Number of reads', 'title': 'Nb. of reads', 'fmt': HtmlTableFormatter.INT_FMT},
         {'key': 'Length Covered', 'title': 'Length covered', 'fmt': HtmlTableFormatter.INT_FMT},
@@ -24,11 +23,11 @@ class ShigaTyperReporter(Tool):
         {'key': '% accuracy', 'title': '% accuracy', 'fmt': HtmlTableFormatter.FLOAT_FMT}
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the reporter.
         """
-        super().__init__('ShigaTyper reporter', '0.1', camel)
+        super().__init__('ShigaTyper reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -36,9 +35,9 @@ class ShigaTyperReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("ShigaTyper tabular output is required ('TSV')")
+            raise InvalidToolInputError("ShigaTyper tabular output is required ('TSV')")
         if 'shigatyper' not in self._input_informs:
-            raise InvalidInputSpecificationError("ShigaTyper informs are required")
+            raise InvalidToolInputError("ShigaTyper informs are required")
         super()._check_input()
 
     def __add_main_output(self, section: HtmlReportSection) -> None:
@@ -48,7 +47,7 @@ class ShigaTyperReporter(Tool):
         :return: None
         """
         # Parse the input files
-        main_output = pd.read_table(self._tool_inputs['TSV'][0].path)
+        main_output = pd.read_table(self._tool_inputs['TSV'][0].path, dtype={'notes': str})
 
         # Remove the sample ID column
         main_output.pop('sample')
@@ -95,7 +94,7 @@ class ShigaTyperReporter(Tool):
         :return: None
         """
         # Create overview table with status
-        section = HtmlReportSection('ShigaTyper', subtitle=self._input_informs['shigatyper']['_name'])
+        section = HtmlReportSection('ShigaTyper', subtitle=self._input_informs['shigatyper']['_name_full'])
         species = self._input_informs['shigatyper']['species']
         section.add_table(
             [[HtmlTableCell(species)]], ['Serotyping'], [('class', 'data')])

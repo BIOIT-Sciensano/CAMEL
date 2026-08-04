@@ -1,9 +1,7 @@
-from camel.app.camel import Camel
 from camel.app.tools.picard.picard import Picard
 
 
 class SetNmMdAndUqTags(Picard):
-
     """
     ==============================
     Picard SetNmMdAndUqTags 2.23.3
@@ -20,12 +18,11 @@ class SetNmMdAndUqTags(Picard):
     'BAM'              ToolIOFile object. Fixed BAM file
     """
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Picard SetNmMdAndUqTags ', '2.23.3', camel)
+        super().__init__('Picard SetNmMdAndUqTags ', '2.23.3')
 
         self._required_inputs = ["BAM", "SAM", "FASTA_REF"]

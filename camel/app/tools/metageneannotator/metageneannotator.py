@@ -1,9 +1,12 @@
 import os
+from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class MetaGeneAnnotator(Tool):
@@ -11,13 +14,12 @@ class MetaGeneAnnotator(Tool):
     MetaGeneAnnotator is a gene-finding program for prokaryote and phage.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
-        :return: None
+                :return: None
         """
-        super().__init__('metageneannotator', '20080819', camel)
+        super().__init__('metageneannotator', '20080819')
 
     def _execute_tool(self):
         """
@@ -38,12 +40,12 @@ class MetaGeneAnnotator(Tool):
         """
         super(MetaGeneAnnotator, self)._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input keys given for MetaGeneAnnotator, '
-                                                 'only FASTA allowed: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid input keys given for MetaGeneAnnotator, '
+                                                 f'only FASTA allowed: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError('Only 1 input file allowed for MetaGeneAnnotator: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Only 1 input file allowed for MetaGeneAnnotator: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Only FASTA allowed as input key for MetaGeneAnnotator: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Only FASTA allowed as input key for MetaGeneAnnotator: {self._tool_inputs!r}')
 
     def __get_basename(self):
         """
@@ -57,7 +59,7 @@ class MetaGeneAnnotator(Tool):
         Sets the name of the output files, and fills the common stream object with them
         :return: None
         """
-        self._tool_outputs['TSV'] = [ToolIOFile(self.__get_basename() + '.out')]
+        self._tool_outputs['TSV'] = [ToolIOFile(Path(self.__get_basename() + '.out'))]
 
     def __build_command(self):
         """
@@ -67,12 +69,12 @@ class MetaGeneAnnotator(Tool):
         input_string = self._tool_inputs['FASTA'][0].path
         options_string = ' '.join(self._build_options())
         outfile = self.__get_basename() + '.out'
-        self._command.command = '{} {} {} > {}'.format(self._tool_command, input_string, options_string, outfile)
+        self._command.command = f'{self._tool_command} {input_string} {options_string} > {outfile}'
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        toolutils.check_tool_execution(self, command, exit_code=0)

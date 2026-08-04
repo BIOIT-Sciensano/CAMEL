@@ -1,8 +1,27 @@
-dependencies: [java/1.8.0, gatk/3.7]
+conda:
+  name: gatk
+  packages:
+    - gatk=3.7
+dependencies:
+  - java/1.8.0_172
+  - gatk/3.7
 parameters:
-  concatenate_sequence_segments: {default: false, mandatory: false, option: null,
-    p_index: 0, value: 'true'}
-  output: {default: true, mandatory: false, option: -o, p_index: 0, value: consensus_sequences.fa}
-  'useIUPACsample ': {default: false, mandatory: false, option: -IUPAC, p_index: 10,
-    value: null}
+  concatenate_sequence_segments:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: "true"
+  output:
+    default: true
+    mandatory: false
+    option: -o
+    p_index: 0
+    value: consensus_sequences.fa
+  'useIUPACsample ':
+    default: false
+    mandatory: false
+    option: -IUPAC
+    p_index: 10
+    value: null
 tool_command: run_gatk.sh -T FastaAlternateReferenceMaker

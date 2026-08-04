@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 import argparse
-
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence, Dict, Any
+from typing import Any, Optional
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.loggers import logger
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
+from camel.app.loggers import logger, initialize_logging
 from camel.app.tools.medaka.medakainference import MedakaInference
 from camel.app.tools.medaka.medakavcf import MedakaVcf
 from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
 
 
-class MainCallingMedaka(object):
+class MainCallingMedaka:
     """
     This class contains the main script for the Medaka variant calling tool.
     """
@@ -23,7 +22,6 @@ class MainCallingMedaka(object):
         Initializes the main script.
         """
         self._args = MainCallingMedaka._parse_arguments(args)
-        self._camel = Camel()
 
     @staticmethod
     def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -38,7 +36,6 @@ class MainCallingMedaka(object):
         argument_parser.add_argument('--output', help="Define custom output file in stead of default generated one")
         argument_parser.add_argument('--working-dir', help='Working directory', type=Path, default=Path.cwd())
         argument_parser.add_argument('--threads', type=int, default=4)
-
         return argument_parser.parse_args(args)
 
     def run(self) -> None:
@@ -50,12 +47,12 @@ class MainCallingMedaka(object):
 
         # Index BAM file
         logger.info('Using samtools to index input BAM file')
-        samtools_index = SamtoolsIndex(Camel.get_instance())
+        samtools_index = SamtoolsIndex()
         samtools_index.add_input_files(input_dict)
-        samtools_index.run(self._args.working_dir)
+        samtools_index.run(input_dict['BAM'][0].path.parent)
 
         # Run Medaka Inference
-        medaka_inference = MedakaInference(Camel.get_instance())
+        medaka_inference = MedakaInference()
         logger.info(f'Running {medaka_inference.name} to get hdf file')
         medaka_inference.add_input_files(input_dict)
         medaka_inference.update_parameters(threads=self._args.threads)
@@ -65,7 +62,7 @@ class MainCallingMedaka(object):
         medaka_inference.run(self._args.working_dir)
 
         # Run Medaka VCF
-        medaka_vcf = MedakaVcf(Camel.get_instance())
+        medaka_vcf = MedakaVcf()
         logger.info(f'Running {medaka_vcf.name} to call the variants based on reference fasta and hdf file')
         medaka_vcf.add_input_files({'HDF': [ToolIOFile(Path(hdf_file))], 'FASTA': input_dict['FASTA']})
         if self._args.output is not None:
@@ -76,23 +73,23 @@ class MainCallingMedaka(object):
             medaka_vcf.update_parameters(output=vcf_file)
         medaka_vcf.run(self._args.working_dir)
 
-    def __prepare_input(self) -> Dict[str, Any]:
+    def __prepare_input(self) -> dict[str, Any]:
         """
         Prepares the input for the Medaka variant tool.
         :return: Input dictionary
         """
         self._args.working_dir.mkdir(parents=True, exist_ok=True)
-        input_dict = {'BAM': None, 'FASTA': None}
+        input_dict: dict[str, None | list[ToolIOFile]] = {'BAM': None, 'FASTA': None}
 
         # input BAM file
         bam_file = Path(self._args.bam)
-        path_bam = self._args.working_dir / FileSystemHelper.make_valid(bam_file.name)
+        path_bam = self._args.working_dir / fileutils.make_valid(bam_file.name)
         path_bam.symlink_to(bam_file)
         input_dict['BAM'] = [ToolIOFile(path_bam)]
 
         # Reference genome
         reference_file = Path(self._args.reference)
-        path_ref = self._args.working_dir / FileSystemHelper.make_valid(reference_file.name)
+        path_ref = self._args.working_dir / fileutils.make_valid(reference_file.name)
         path_ref.symlink_to(reference_file)
         input_dict['FASTA'] = [ToolIOFile(path_ref)]
 
@@ -100,6 +97,6 @@ class MainCallingMedaka(object):
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainCallingMedaka()
     main.run()

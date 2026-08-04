@@ -1,24 +1,75 @@
-dependencies: [itsx/1.0.11, hmmer/3.1b2]
+dependencies:
+  - itsx/1.1.3
+  - hmmer/3.4
 parameters:
-  allow_reorder: {default: false, mandatory: false, option: --allow_reorder, p_index: 0,
-    value: F}
-  allow_single_domain: {default: false, mandatory: false, option: --allow_single_domain,
-    p_index: 0, value: '"1e-9,0"'}
-  anchor: {default: false, mandatory: false, option: --anchor, p_index: 0, value: '0'}
-  complement: {default: false, mandatory: false, option: --complement, p_index: 0,
-    value: T}
-  cpu: {default: false, mandatory: false, option: --cpu, p_index: 0, value: '1'}
-  e_cutoff: {default: false, mandatory: false, option: -E, p_index: 0, value: 1e-5}
-  heuristics: {default: false, mandatory: false, option: --heuristics, p_index: 0,
-    value: F}
-  min_domains: {default: false, mandatory: false, option: -N, p_index: 0, value: '2'}
-  organism_list: {default: true, mandatory: false, option: -t, p_index: 0, value: f}
-  preserve: {default: true, mandatory: false, option: --preserve, p_index: 0, value: T}
-  score_cutoff: {default: false, mandatory: false, option: -S, p_index: 0, value: '0'}
-  search_eval: {default: false, mandatory: false, option: --search_eval, p_index: 0,
-    value: '0.01'}
-  search_score: {default: false, mandatory: false, option: --search_score, p_index: 0,
-    value: 1e-5}
-  selection_priority: {default: false, mandatory: false, option: --selection_priority,
-    p_index: 0, value: sum}
+  allow_reorder:
+    default: false
+    mandatory: false
+    option: --allow_reorder
+    value: F
+  allow_single_domain:
+    default: false
+    mandatory: false
+    option: --allow_single_domain
+    value: '"1e-9,0"'
+  anchor:
+    default: false
+    mandatory: false
+    option: --anchor
+    value: '0'
+  complement:
+    default: false
+    mandatory: false
+    option: --complement
+    value: T
+  cpu:
+    default: false
+    mandatory: false
+    option: --cpu
+    value: '1'
+  e_cutoff:
+    default: false
+    mandatory: false
+    option: -E
+    value: 1e-5
+  heuristics:
+    default: false
+    mandatory: false
+    option: --heuristics
+    value: F
+  min_domains:
+    default: false
+    mandatory: false
+    option: -N
+    value: '2'
+  organism_list:
+    default: true
+    mandatory: false
+    option: -t
+    value: f
+  preserve:
+    default: true
+    mandatory: false
+    option: --preserve
+    value: T
+  score_cutoff:
+    default: false
+    mandatory: false
+    option: -S
+    value: '0'
+  search_eval:
+    default: false
+    mandatory: false
+    option: --search_eval
+    value: '0.01'
+  search_score:
+    default: false
+    mandatory: false
+    option: --search_score
+    value: 1e-5
+  selection_priority:
+    default: false
+    mandatory: false
+    option: --selection_priority
+    value: sum
 tool_command: ITSx

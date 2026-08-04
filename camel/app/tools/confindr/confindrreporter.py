@@ -1,11 +1,12 @@
+import re
 from datetime import date
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class ConFindrReporter(Tool):
@@ -13,13 +14,12 @@ class ConFindrReporter(Tool):
     Tool to generate reports for the ConFindr tool.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('ConFindr reporter', '0.1', camel)
+        super().__init__('ConFindr reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -27,7 +27,7 @@ class ConFindrReporter(Tool):
         :return: None
         """
         if 'confindr' not in self._input_informs:
-            raise InvalidInputSpecificationError('ConFindr informs are required')
+            raise InvalidToolInputError('ConFindr informs are required')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -35,12 +35,14 @@ class ConFindrReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('ConFindr', subtitle=self._input_informs['confindr']['_name'])
+        section = HtmlReportSection('ConFindr', subtitle=self._input_informs['confindr']['_name_full'])
 
         # Main table
         section.add_header('Output', 3)
         if self._input_informs['confindr']['Genus'] == 'Error processing sample':
             section.add_alert('Error processing sample, species might be missing from rMLST database', 'warning')
+        elif re.match(r'^\d+$', str(self._input_informs['confindr']['NumContamSNVs'])) is None:
+            section.add_alert('Error processing sample with ConFindr', 'warning')
         else:
             cell = HtmlTableCell('No', 'green') if \
                     self._input_informs['confindr']['NumContamSNVs'] < 20 else HtmlTableCell('Yes', 'red')

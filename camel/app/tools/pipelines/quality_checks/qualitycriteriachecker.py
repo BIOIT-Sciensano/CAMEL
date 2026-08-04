@@ -1,6 +1,6 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
 
 
 class QualityCriteriaChecker(Tool):
@@ -8,12 +8,11 @@ class QualityCriteriaChecker(Tool):
     Tools that checks if the quality of the data is sufficient to proceed.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Advanced QC: quality checker', '0.1', camel)
+        super().__init__('Advanced QC: quality checker', '0.1')
 
     def _check_input(self):
         """
@@ -21,13 +20,13 @@ class QualityCriteriaChecker(Tool):
         :return: None
         """
         if 'cgmlst' not in self._input_informs:
-            raise InvalidInputSpecificationError("No cgMLST information found")
+            raise InvalidToolInputError("No cgMLST information found")
         if 'coverage' not in self._input_informs:
-            raise InvalidInputSpecificationError("No coverage information found")
+            raise InvalidToolInputError("No coverage information found")
         if 'mapping' not in self._input_informs:
-            raise InvalidInputSpecificationError("No mapping information found")
+            raise InvalidToolInputError("No mapping information found")
         if 'fastqc_checks' not in self._input_informs:
-            raise InvalidInputSpecificationError("No FASTQC checks information found")
+            raise InvalidToolInputError("No FASTQC checks information found")
         super(QualityCriteriaChecker, self)._check_input()
 
     def _execute_tool(self):
@@ -52,10 +51,9 @@ class QualityCriteriaChecker(Tool):
         for input_file, index in zip(informs['samples'], list(range(0, len(informs['samples'])))):
             for test_name, state in informs['tests'].items():
                 if state[index] == 'Warn':
-                    self.informs['warnings'].append("'{}' had a warning for the '{}' test".format(
-                        input_file, test_name))
+                    self.informs['warnings'].append(f"'{input_file}' had a warning for the '{test_name}' test")
                 if state[index] == 'Fail':
-                    self.informs['fails'].append("'{}' does not pass '{}' test".format(input_file, test_name))
+                    self.informs['fails'].append(f"'{input_file}' does not pass '{test_name}' test")
 
     def __check_assembly_mapping_rate(self):
         """
@@ -92,6 +90,6 @@ class QualityCriteriaChecker(Tool):
         fraction_of_genes_detected = 100.0 * float(cgmlst_stats['hits_found']) / cgmlst_stats['nb_of_loci']
         min_fail = self._parameters['minimal_cgmlst_percentage_genes_fail'].value
         if fraction_of_genes_detected < float(min_fail):
-            self.informs['fails'].append('Not enough cgMLST genes detected ({}% required)'.format(min_fail))
+            self.informs['fails'].append(f'Not enough cgMLST genes detected ({min_fail}% required)')
         elif fraction_of_genes_detected < float(self._parameters['minimal_cgmlst_percentage_genes_warn'].value):
             self.informs['warnings'].append('Low amount of cgMLST genes detected')

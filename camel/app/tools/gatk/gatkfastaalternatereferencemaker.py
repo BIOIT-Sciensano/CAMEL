@@ -1,29 +1,24 @@
-import os
-from Bio import SeqIO
+from Bio import Alphabet, SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.components.files.fastautils import FastaUtils
-from camel.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
+from camel.app.tools.gatk import MASK_NT
 from camel.app.tools.gatk.gatk import GATK
-from camel.app.components.sequence_extraction import Alphabet
-from camel.app.components.sequence_extraction import MASK_NT
 
 
 class GATKFastaAlternateReferenceMaker(GATK):
-
     """
     Class for GATK FastaAlternateReferenceMaker function
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk FastaAlternateReferenceMaker', '3.7', camel)
+        super().__init__('gatk FastaAlternateReferenceMaker', '3.7')
         self._required_inputs = ['VCF']
         self._output_type = 'FASTA'
         self._specific_parameters = ['concatenate_sequence_segments']
@@ -39,7 +34,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         super(GATKFastaAlternateReferenceMaker, self)._execute_tool()
 
         if self._concatenate_sequence:
-            FastaUtils.write(self.__concatenate_sequence_segments(), self._fasta_concatenated)
+            fastautils.write(self.__concatenate_sequence_segments(), self._fasta_concatenated)  # noqa: F821
 
     def _check_parameters(self):
         """
@@ -86,7 +81,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         if self._concatenate_sequence:
             # when 'concatenate_sequence_segments' set, final FASTA output will be
             # generated from FastaAlternateReferenceMaker output
-            self._fasta_concatenated = os.path.join(self._folder, self._fasta_concatenated)
+            self._fasta_concatenated = self._folder / self._fasta_concatenated
             self._tool_outputs['FASTA_concatenated'] = [ToolIOFile(self._fasta_concatenated)]
         else:
             self._tool_outputs['FASTA_concatenated'] = []
@@ -119,7 +114,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
 
         refseq_ids = [x.id for x in list(SeqIO.parse(self._tool_inputs['FASTA_REF'][0], "fasta"))]
 
-        logger.debug("  refseq_ids: {}".format(refseq_ids))
+        logger.debug(f"  refseq_ids: {refseq_ids}")
 
         seq_intervals_ordered = []
         for seqid in refseq_ids:
@@ -134,7 +129,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         :return: segments concatenated sequences
         """
         extracted_seq_dict = FastaUtils.read_as_dict(self._fasta_extracted)
-        seq_intervals = [x.strip() for x in open(self._tool_inputs['TXT_intervals'][0].path, 'r')]
+        seq_intervals = [x.strip() for x in open(self._tool_inputs['TXT_intervals'][0].path)]
         seq_intervals_ordered = self.__rearrange_seq_intervals(seq_intervals)
 
         concatenated_seqs = []
@@ -152,8 +147,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
                 # from same sequence segament
                 # add (mask sequence (Ns) + new segment)
                 numb_padding = pos_start - last_end_pos - 1
-                logger.debug("number of padding: {}, seq_length {}, interval {}, seq_record {}".format(
-                    numb_padding, len(seq_record.seq), interval, str(seq_record)))
+                logger.debug(f"number of padding: {numb_padding}, seq_length {len(seq_record.seq)}, interval {interval}, seq_record {str(seq_record)}")
                 # noinspection PyTypeChecker
                 concatenate_seq += MASK_NT * numb_padding + str(seq_record.seq)
             else:
@@ -169,7 +163,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         # add the last sequence
         concatenated_seqs.append(SeqRecord(Seq(concatenate_seq, Alphabet), id=last_seq_id, description=last_seq_id))
         logger.debug(" concatenated seqs inform: {}".format(
-            ["{}/{}".format(x.id, len(x.seq)) for x in concatenated_seqs]))
+            [f"{x.id}/{len(x.seq)}" for x in concatenated_seqs]))
 
         # Note: seq_record in extracted_seq_dict has been updated with ids, now output into self._fasta_extracted with
         #       updated ids

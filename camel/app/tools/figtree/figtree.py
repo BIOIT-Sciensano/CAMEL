@@ -1,12 +1,13 @@
 from pathlib import Path
 
 from Bio import Phylo
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.config import config
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class FigTree(Tool):
@@ -14,11 +15,11 @@ class FigTree(Tool):
     FigTree is designed as a graphical viewer of phylogenetic trees.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
         """
-        super().__init__('FigTree', '1.4.4', camel)
+        super().__init__('FigTree', '1.4.4')
 
     def _check_input(self) -> None:
         """
@@ -26,8 +27,17 @@ class FigTree(Tool):
         :return: None
         """
         if 'NWK' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Newick input is required (NWK)')
+            raise InvalidToolInputError('Newick input is required (NWK)')
         super()._check_input()
+
+    def _get_tool_command(self) -> str:
+        """
+        Returns the tool command.
+        :return: String representing the command
+        """
+        if config.dependency_service == 'lmod':
+            return 'java -jar $JAR_FIGTREE'
+        return self._tool_command
 
     def _execute_tool(self) -> None:
         """
@@ -44,7 +54,7 @@ class FigTree(Tool):
 
         # Construct and execute command
         self._command.command = ' '.join([
-            self._tool_command,
+            self._get_tool_command(),
             '-graphic PNG',
             *self._build_options(excluded_parameters=['output_path']),
             str(input_file),
@@ -69,9 +79,10 @@ class FigTree(Tool):
             handle_out.write('\n')
         return path_nexus
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
+        :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)

@@ -1,5 +1,16 @@
-dependencies: [pharokka/1.7.3]
+dependencies:
+  - pharokka/1.7.3
 parameters:
-    outdir: {default: true, mandatory: true, option: --outdir, p_index: 0, value: 'pharokka/pharokka_plots'}
-    force: {default: true, mandatory: false, option: --force, p_index: 0, value: null}
+  outdir:
+    default: true
+    mandatory: true
+    option: --outdir
+    p_index: 0
+    value: pharokka/pharokka_plots
+  force:
+    default: true
+    mandatory: false
+    option: --force
+    p_index: 0
+    value: null
 tool_command: pharokka_multiplotter.py

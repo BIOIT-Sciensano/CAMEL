@@ -1,0 +1,298 @@
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  cgmlst:
+    dbs:
+      - typing_cgmlst
+  cgmlst_v2:
+    dbs:
+      - typing_cgmlst_v2
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
+  mlst:
+    dbs:
+      - typing_mlst
+  mob_suite:
+    dbs:
+      - mob_suite
+  pcr_serogroup:
+    dbs:
+      - typing_pcr_serogroup
+  plasmidfinder:
+    dbs:
+      - gene_detection_plasmidfinder
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - typing_rmlst
+  species_confirmation:
+    dbs:
+      - typing_species_confirmation
+  typing_amr:
+    dbs:
+      - typing_amr
+  typing_virulence:
+    dbs:
+      - typing_virulence
+  variant_calling:
+    dbs: []
+  vfdb_core:
+    dbs:
+      - gene_detection_vfdb_core
+  virulencefinder:
+    dbs:
+      - gene_detection_virulencefinder
+
+#############
+# Databases #
+#############
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gene_detection_ncbi_amr:
+    location: &db_gd_ncbi_amr {DB_ROOT}/gene_detection/NCBI_AMR
+    required: false
+    method: ftp
+  gene_detection_plasmidfinder:
+    location: &db_gd_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-gram_positive
+    required: false
+    method: ftp
+  gene_detection_vfdb_core:
+    location: &db_gd_vfdb_core {DB_ROOT}/gene_detection/VFDB_core
+    required: false
+    method: ftp
+  gene_detection_virulencefinder:
+    location: &db_gd_virulencefinder {DB_ROOT}/gene_detection/VirulenceFinder-Listeria
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mob_suite:
+    location: &db_mob_suite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Listeria_monocytogenes/NC_003210.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Listeria_monocytogenes/NC_003210.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  typing_amr:
+    location: &db_typing_amr {DB_ROOT}/sequence_typing/listeria/antibiotic_resistance
+    required: false
+    method: skip
+  typing_cgmlst:
+    location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/listeria/cgmlst
+    required: false
+    method: mist
+  typing_cgmlst_v2:
+    location: &db_typing_cgmlst_v2 {DB_ROOT}/sequence_typing/listeria/cgmlst_v2
+    required: false
+    method: mist
+  typing_mlst:
+    location: &db_typing_mlst {DB_ROOT}/sequence_typing/listeria/mlst
+    required: false
+    method: mist
+  typing_pcr_serogroup:
+    location: &db_typing_pcr_serogroup {DB_ROOT}/sequence_typing/listeria/serogroup
+    required: false
+    method: mist
+  typing_species_confirmation:
+    location: &db_typing_species_confirmation {DB_ROOT}/sequence_typing/listeria/species_confirmation
+    required: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+  typing_virulence:
+    location: &db_typing_virulence {DB_ROOT}/sequence_typing/listeria/virulence
+    required: false
+    method: mist
+
+#####################
+# Pipeline settings #
+#####################
+citations:
+  main: null
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Manni_2021-busco
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Li_2009-samtools
+    - Bogaerts_2025-mist
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Bortolaia_2020-resfinder_4.0
+    - Feldgarden_2019-ndaro
+    - Joensen_2014-virulencefinder
+    - Jaureguy_2008-pasteur
+    - Moura_2017-listeria_pasteur
+    - Jolley_2010-bigsdb
+
+####################
+# Reference genome #
+####################
+reference:
+  name: <i>Listeria monocytogenes</i> (NC_003210.1)
+  fasta: *ref_fasta
+  gff3: *ref_gff3
+  url: https://www.ncbi.nlm.nih.gov/nuccore/NC_003210.1
+  expected_gc: 38.0
+
+#########################
+# Tool-specific options #
+#########################
+amrfinder:
+  db: *db_amrfinder
+
+assembly:
+  spades:
+    cov_cutoff: 10
+  min_contig_length: 1000
+
+busco:
+  db: *db_busco
+
+confindr:
+  db: *db_confindr
+
+contamination_check:
+  db: *db_kraken2
+  expected_species: Listeria monocytogenes
+
+downsampling:
+  coverage_max: {COV_MAX}
+  expected_genome_size: 2_944_528
+
+mob_suite:
+  db: *db_mob_suite
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
+
+read_trimming: {{}}
+
+resfinder4:
+  db: *db_resfinder4
+  point: false
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering: {{}}
+
+############################
+# Gene detection databases #
+############################
+gene_detection:
+  dbs:
+    # AMR
+    ncbi_amr:
+      path: *db_gd_ncbi_amr
+      perc_identity_cutoff: 90
+      metadata:
+        name: Antibiotic(s)
+        key: subclass
+
+    # Virulence
+    virulencefinder:
+      path: *db_gd_virulencefinder
+      perc_identity_cutoff: 90
+      metadata:
+        name: Protein function
+        key: protein_function
+      hidden: true
+
+    vfdb_core:
+      path: *db_gd_vfdb_core
+      perc_identity_cutoff: 90
+      metadata:
+        name: Gene
+        key: gene
+      hidden: true
+
+    # Plasmid replicons
+    plasmidfinder:
+      path: *db_gd_plasmidfinder
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      metadata:
+        name: Notes
+        key: notes
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
+
+###################
+# Sequence typing #
+###################
+sequence_typing:
+  dbs:
+    cgmlst:
+      path: *db_typing_cgmlst
+    cgmlst_v2:
+      path: *db_typing_cgmlst_v2
+    mlst:
+      path: *db_typing_mlst
+    pcr_serogroup:
+      path: *db_typing_pcr_serogroup
+    rmlst:
+      path: *db_typing_rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info
+    species_confirmation:
+      path: *db_typing_species_confirmation
+    typing_amr:
+      path: *db_typing_amr
+    typing_virulence:
+      path: *db_typing_virulence

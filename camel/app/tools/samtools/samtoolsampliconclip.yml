@@ -1,0 +1,34 @@
+dependencies:
+  - samtools/1.17
+parameters:
+  both_ends:
+    default: false
+    mandatory: false
+    option: '--both-ends'
+    flag: true
+  clipped:
+    default: false
+    mandatory: false
+    option: '--clipped'
+    flag: true
+  output:
+    default: true
+    mandatory: true
+    option: '-o'
+    value: output.bam
+  hard_clip:
+    default: false
+    mandatory: false
+    option: '--hard-clip'
+    flag: true
+  soft_clip:
+    default: false
+    mandatory: false
+    option: '--soft-clip'
+    flag: true
+  stats:
+    default: false
+    mandatory: false
+    option: '-f'
+    value: null
+tool_command: samtools ampliconclip

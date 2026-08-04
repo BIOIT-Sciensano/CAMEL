@@ -1,1 +1,1 @@
-OUTPUT_FILTERING_ALL = 'variant_filtering_all.io'
+OUTPUT_FILTERING_ALL = 'variant_filtering_all.iob'

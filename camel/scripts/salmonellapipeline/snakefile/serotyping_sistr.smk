@@ -1,85 +1,73 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.resources.snakefile import assembly
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import assembly
 from camel.scripts.salmonellapipeline.snakefile import serotyping_sistr
 
-camel = Camel.get_instance()
 
 rule serotyping_sistr_run:
     """
-    This rule executes SISTR to obtain serotpying results using cgMLST.
+    Runs SISTR in cgMLST mode.
     """
     input:
-        FASTA = Path(config['working_dir']) / assembly.OUTPUT_ASSEMBLY_FASTA
+        FASTA = assembly.OUTPUT_FASTA
     output:
-        JSON = Path(config['working_dir']) / 'serotyping_sistr' / 'sistr_output.io',
-        INFORMS = Path(config['working_dir']) / 'serotyping_sistr' / 'informs.io'
+        JSON = 'serotyping/sistr/tool/json.io', # serotyping_sistr.OUTPUT_JSON
+        INFORMS = 'serotyping/sistr/tool/informs.io' # serotyping_sistr.OUTPUT_INFORMS
     params:
-        running_dir = Path(config['working_dir']) / 'serotyping_sistr',
-        db_path_sistr = config['serotyping']['sistr']['path']
+        dir_ = 'serotyping/sistr/tool',
+        db = config['serotyping']['sistr']['path']
     run:
         from camel.app.tools.pipelines.salmonella.sistr import Sistr
-
-        sistr_tool = Sistr(camel)
-        sistr_tool.add_input_files({'DIR': [ToolIODirectory(Path(str(params.db_path_sistr)))]})
-        SnakemakeUtils.add_pickle_input(sistr_tool, 'FASTA', Path(input.FASTA))
-        step = Step(str(rule), sistr_tool, camel, Path(str(params.running_dir)))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(sistr_tool, output)
+        sistr_tool = Sistr()
+        sistr_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db))]})
+        snakemakeutils.add_io_inputs(sistr_tool, input)
+        step = Step(rule_name=str(rule), tool=sistr_tool, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_io_outputs(sistr_tool, output)
 
 rule serotyping_sistr_dump_summary_info:
     """
-    This rule creates a simple output summary for the SISTR serotyping analysis.
+    Creates the summary output for SISTR.
     """
     input:
-        JSON_sistr = rules.serotyping_sistr_run.output.JSON,
-        INFORMS_sistr = Path(config['working_dir']) / serotyping_sistr.OUTPUT_SEROTYPE_SISTR_INFORMS
+        JSON = rules.serotyping_sistr_run.output.JSON,
+        INFORMS = rules.serotyping_sistr_run.output.INFORMS
     output:
-        VAL_TSV_sistr = Path(config['working_dir']) / 'serotyping_sistr'/ 'summary_out_sistr.tsv'
+        FILE = 'serotyping/sistr/summary/summary_out_sistr.{ext}' # serotyping_sistr.OUTPUT_SUMMARY
     params:
-        running_dir = Path(config['working_dir']) / 'serotyping_sistr'
+        ext = lambda wildcards: wildcards.ext
     run:
-        import copy
-
-        # parse SISTR output
-        with SnakemakeUtils.load_object(Path(str(input.JSON_sistr)))[0].path.open('r') as handle:
+        # Parse the SISTR output
+        with snakemakeutils.load_object(Path(input.JSON))[0].path.open('r') as handle:
             json_data = json.load(handle)[0]
-        header_locus = ['Locus', 'serotype_or_group', '% Identity', 'HSP/Locus length', 'Contig', 'Position in contig']
-        if json_data['qc_status'] == 'PASS':
-            hits_dict_tsv = {
-                'serotype_antigenic_formula':':'.join([
-                    str(json_data['o_antigen']), str(json_data['h1']), str(json_data['h2'])]),
-                'serotype_serogroup': json_data['serogroup'],
-                'serotype_consensus': json_data['serovar'],
-                'qc_status' : 'PASS'
-            }
-            hits_dict_json = copy.deepcopy(hits_dict_tsv)
-            serotyping_sistr.sistr_output_parser(json_data['h1_flic_prediction'], 'fliC', 'h1', hits_dict_tsv)
-            serotyping_sistr.sistr_output_parser(json_data['h2_fljb_prediction'], 'fljB', 'h2', hits_dict_tsv)
-            serotyping_sistr.sistr_output_parser(json_data['serogroup_prediction']['wzx_prediction'], 'wzx', 'o', hits_dict_tsv)
-            serotyping_sistr.sistr_output_parser(json_data['serogroup_prediction']['wzy_prediction'], 'wzy', 'o', hits_dict_tsv)
-        else:
-            hits_dict_tsv = {
-                'serotype_antigenic_formula': '-',
-                'serotype_serogroup': '-',
-                'serotype_consensus': '-',
-                'qc_status': 'FAIL'}
-            for variable in ['hits_serotype_h1_fliC', 'hits_serotype_h2_fljB', 'hits_serotype_o_wzx', 'hits_serotype_o_wzy']:
-                hits_dict_tsv[variable] = '-'
 
-        informs_sistr = SnakemakeUtils.load_object(Path(str(input.INFORMS_sistr)))
-        with Path(output.VAL_TSV_sistr).open('w') as handle:
-            for k, v in hits_dict_tsv.items():
-                line = f"sistr_{k}\t{v}\n"
-                handle.write(line)
-            handle.write(f"sistr_tool_version\t{informs_sistr['_name']}\n")
-            handle.write(f"sistr_db_version\t{informs_sistr['last_update_date']}\n")
+        # Reformat data
+        rows_out = [
+            ('qc_status', json_data['qc_status']),
+            ('serotype_antigenic_formula', ':'.join([str(json_data['o_antigen']), str(json_data['h1']), str(json_data['h2'])])),
+            ('serotype_serogroup', json_data['serogroup']),
+            ('serotype_consensus', json_data['serovar']),
+            ('cgmlst_subspecies', json_data['cgmlst_subspecies']),
+            ('cgmlst_serovar', json_data['serovar_cgmlst']),
+            ('hits_h1', serotyping_sistr.format_sistr_hit(json_data['h1_flic_prediction'],'fliC', 'h1')),
+            ('hits_h2', serotyping_sistr.format_sistr_hit(json_data['h2_fljb_prediction'],'fljB', 'h2')),
+            ('hits_wzx', serotyping_sistr.format_sistr_hit(json_data['serogroup_prediction']['wzx_prediction'],'wzx', 'o')),
+            ('hits_wzy', serotyping_sistr.format_sistr_hit(json_data['serogroup_prediction']['wzy_prediction'],'wzy', 'o')),
+        ]
+
+        # Tool information
+        informs_sistr = snakemakeutils.load_object(Path(str(input.INFORMS)))
+        rows_out.append((f'tool_version', informs_sistr['_name_full']))
+
+        # Add 'sistr_' prefix
+        rows_out = [(f'sistr_{k}', v) for k, v in rows_out]
+
+        # Create output
+        snakemakeutils.export_summary(rows_out, Path(output.FILE), str(params.ext), 'sistr')
 
 rule serotyping_sistr_report:
     """
@@ -89,29 +77,26 @@ rule serotyping_sistr_report:
         JSON_SISTR = rules.serotyping_sistr_run.output.JSON,
         INFORMS_serotyping_sistr = rules.serotyping_sistr_run.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / 'serotyping_sistr' / 'html_sistr.io'
+        VAL_HTML = 'serotyping/sistr/report/html.iob' # serotyping_sistr.OUTPUT_REPORT
     params:
-        running_dir = Path(config['working_dir']) / 'serotyping_sistr' ,
+        dir_ = 'serotyping/sistr/report' ,
         db_path_sistr = config['serotyping']['sistr']['path']
     run:
-        from camel.app.tools.pipelines.salmonella.sistrreporter import SistrReporter
-
-        reporter = SistrReporter(camel)
-        reporter.add_input_files({'DIR_sistr': [ToolIODirectory(Path(str(params.db_path_sistr)))]})
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step = Step(str(rule), reporter, camel, Path(str(params.running_dir)))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        from camel.app.tools.pipelines.salmonella.sistrreporter import SISTRReporter
+        reporter = SISTRReporter()
+        reporter.add_input_files({'DIR_sistr': [ToolIODirectory(Path(params.db_path_sistr))]})
+        snakemakeutils.add_io_inputs(reporter, input)
+        step = Step(str(rule), reporter, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule serotyping_sistr_report_empty:
     """
     Creates an empty HTML report for the SISTR serotyping analysis.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'serotyping_sistr' / 'html_sistr-empty.io'
-    params:
-        running_dir = Path(config['working_dir']) / 'serotyping_sistr'
+        VAL_HTML = 'serotyping/sistr/report/html-empty.iob' # serotyping_sistr.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        from camel.app.tools.pipelines.salmonella.sistrreporter import SistrReporter
-        SnakePipelineUtils.create_empty_report_section(SistrReporter.TITLE, Path(output.VAL_HTML))
+        from camel.app.core.snakemake import snakepipelineutils
+        from camel.app.tools.pipelines.salmonella.sistrreporter import SISTRReporter
+        snakepipelineutils.create_empty_report_section(SISTRReporter.TITLE, Path(output.VAL_HTML))

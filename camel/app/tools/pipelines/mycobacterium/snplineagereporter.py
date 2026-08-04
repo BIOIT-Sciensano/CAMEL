@@ -1,8 +1,8 @@
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class SNPLineageReporter(Tool):
@@ -12,12 +12,11 @@ class SNPLineageReporter(Tool):
 
     TITLE = 'SNP lineage'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL
         """
-        super().__init__('Mycobacterium: SNP lineage reporter', '0.1', camel)
+        super().__init__('Mycobacterium: SNP lineage reporter', '0.1')
         self._section = HtmlReportSection('SNP lineage')
 
     def _check_input(self) -> None:
@@ -26,7 +25,7 @@ class SNPLineageReporter(Tool):
         :return: None
         """
         if 'detection' not in self._input_informs:
-            raise InvalidInputSpecificationError("Linaege detection informs are required ('detection')")
+            raise InvalidToolInputError("Linaege detection informs are required ('detection')")
         super()._check_input()
 
     def _execute_tool(self) -> None:

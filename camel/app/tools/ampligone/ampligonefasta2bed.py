@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pandas as pd
 from Bio import SeqIO
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class AmpliGoneFasta2Bed(Tool):
@@ -17,12 +17,11 @@ class AmpliGoneFasta2Bed(Tool):
     corresponding coordinates.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('AmpliGone fasta2bed', '1.3.0', camel)
+        super().__init__('AmpliGone fasta2bed', '1.3.0')
 
     def _check_input(self) -> None:
         """
@@ -30,9 +29,9 @@ class AmpliGoneFasta2Bed(Tool):
         :return: None
         """
         if 'FASTA_primers' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA file with primers sequences is required")
+            raise InvalidToolInputError("FASTA file with primers sequences is required")
         if 'FASTA_ref' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Reference FASTA file is required")
+            raise InvalidToolInputError("Reference FASTA file is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -44,32 +43,40 @@ class AmpliGoneFasta2Bed(Tool):
         path_bed_out = self.folder / 'primer_locations.bed'
 
         # Create & execute command
-        self._command.command = ' '.join([
-            self._tool_command,
-            f"--reference {self._tool_inputs['FASTA_ref'][0].path}",
-            f"--primers {self._tool_inputs['FASTA_primers'][0].path}",
-            f"--output {path_bed_out}",
-            *self._build_options()
-        ])
+        self._command.command = ' '.join(
+            [
+                self._tool_command,
+                f"--reference {self._tool_inputs['FASTA_ref'][0].path}",
+                f"--primers {self._tool_inputs['FASTA_primers'][0].path}",
+                f"--output {path_bed_out}",
+                *self._build_options(),
+            ]
+        )
         self._execute_command()
 
         # Collect output
         self._tool_outputs['BED'] = [ToolIOFile(path_bed_out)]
 
         # Informs
-        self._collect_primer_stats(self._tool_inputs['FASTA_primers'][0].path, path_bed_out)
-        self._informs['primer_mismatch_rate'] = float(self._parameters['primer_mismatch_rate'].value)
+        self._collect_primer_stats(
+            self._tool_inputs['FASTA_primers'][0].path, path_bed_out
+        )
+        self._informs['primer_mismatch_rate'] = float(
+            self._parameters['primer_mismatch_rate'].value
+        )
         self._informs['fasta_primers'] = self._tool_inputs['FASTA_primers'][0].path.name
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
-    def _collect_primer_stats(self, path_fasta_primers: Path, path_bed_out: Path) -> None:
+    def _collect_primer_stats(
+        self, path_fasta_primers: Path, path_bed_out: Path
+    ) -> None:
         """
         Collects the informs from the stdout.
         :param path_fasta_primers: FASTA file with primer sequences
@@ -80,4 +87,6 @@ class AmpliGoneFasta2Bed(Tool):
             self._informs['primers_in'] = [s.id for s in SeqIO.parse(handle, 'fasta')]
         data_primers = pd.read_table(path_bed_out, usecols=[3], names=['primer'])
         count_by_primer = data_primers['primer'].value_counts().to_dict()
-        self._informs['primers_out'] = {p: count_by_primer.get(p, 0) for p in self._informs['primers_in']}
+        self._informs['primers_out'] = {
+            p: count_by_primer.get(p, 0) for p in self._informs['primers_in']
+        }

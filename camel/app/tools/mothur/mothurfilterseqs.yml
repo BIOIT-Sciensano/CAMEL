@@ -1,7 +1,29 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+    - mothur=1.48.0
+dependencies:
+  - mothur/1.48.0
 parameters:
-  processors: {default: true, mandatory: false, option: processors, p_index: 0, value: '1'}
-  soft: {default: false, mandatory: false, option: soft, p_index: 0, value: '50'}
-  trump: {default: false, mandatory: false, option: trump, p_index: 0, value: .}
-  vertical: {default: false, mandatory: false, option: vertical, p_index: 0, value: 'true'}
+  processors:
+    default: true
+    mandatory: false
+    option: processors
+    p_index: 0
+    value: '1'
+  soft:
+    default: false
+    mandatory: false
+    option: soft
+    value: '50'
+  trump:
+    default: false
+    mandatory: false
+    option: trump
+    value: .
+  vertical:
+    default: false
+    mandatory: false
+    option: vertical
+    value: 'true'
 tool_command: mothur "#filter.seqs({0}{1})"

@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class AmpliGoneFasta2BedReporter(Tool):
@@ -12,12 +12,11 @@ class AmpliGoneFasta2BedReporter(Tool):
     Reporting class for the AmpliGone FASTA to BED tool.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance.
         """
-        super().__init__('AmpliGone fasta2bed reporter', '0.1', camel)
+        super().__init__('AmpliGone fasta2bed reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -25,9 +24,9 @@ class AmpliGoneFasta2BedReporter(Tool):
         :return: None
         """
         if 'BED' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BED input is required')
+            raise InvalidToolInputError('BED input is required')
         if 'ampligone' not in self._input_informs:
-            raise InvalidInputSpecificationError("AmpliGone informs are required ('ampligone')")
+            raise InvalidToolInputError("AmpliGone informs are required ('ampligone')")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -36,7 +35,9 @@ class AmpliGoneFasta2BedReporter(Tool):
         :return: None
         """
         # Create report section
-        section = HtmlReportSection('Primer localization', 3, subtitle=self._input_informs['ampligone']['_name'])
+        section = HtmlReportSection(
+            'Primer localization', 3, subtitle=self._input_informs['ampligone']['_name_full']
+        )
 
         # Information table
         section.add_table([

@@ -1,3 +1,8 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+    - mothur=1.48.0
+dependencies:
+  - mothur/1.48.0
 parameters: {}
 tool_command: mothur "#unique.seqs({0})"

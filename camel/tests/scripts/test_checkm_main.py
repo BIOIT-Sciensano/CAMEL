@@ -1,0 +1,57 @@
+import unittest
+
+from camel.app.cli import cliutils
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.scripts.checkm.maincheckm import main
+from camel.tests import longRunningTest, resourceIntensiveTest
+
+
+class TestCheckMMain(CamelTestSuite):
+    """
+    Tests the CheckM main script.
+    """
+
+    # Input files
+    test_file_dir = CamelTestSuite.get_test_file_dir('checkm')
+    input_fasta = test_file_dir / 'contigs_neisseria.fasta'
+
+    @longRunningTest()
+    @resourceIntensiveTest(reason='RAM usage')
+    def test_checkm_main_script(self) -> None:
+        """
+        Tests the CheckM main script.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'report' / 'report.html'
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestCheckMMain.input_fasta),
+            '--working-dir', str(self.running_dir),
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--reduced-tree'
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    @longRunningTest()
+    @resourceIntensiveTest(reason='RAM usage')
+    def test_checkm_main_script_spaces_in_name(self) -> None:
+        """
+        Tests the CheckM main script, with spaces in the input file name (for Galaxy).
+        :return: None
+        """
+        path_report_out = self.running_dir / 'report' / 'report.html'
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestCheckMMain.input_fasta),
+            '--fasta-name', '"SPAdes on data 126 and data 125 - Contigs"',
+            '--working-dir', str(self.running_dir),
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--reduced-tree'
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+
+if __name__ == '__main__':
+    unittest.main()

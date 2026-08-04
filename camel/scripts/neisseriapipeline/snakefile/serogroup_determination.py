@@ -1,10 +1,15 @@
 from pathlib import Path
 
-SNAKEFILE_SEROGROUP_DETERMINATION = f'{Path(__file__).parent / Path(__file__).stem}.smk'
-_dir_serogroup = Path('serogroup_determination')
-OUTPUT_SEROGROUP_DETERMINATION_LEGACY_REPORT = _dir_serogroup / 'legacy' / 'html.io'
-OUTPUT_SEROGROUP_DETERMINATION_LEGACY_REPORT_EMPTY = _dir_serogroup / 'legacy' / 'html-empty.io'
-OUTPUT_SEROGROUP_DETERMINATION_REPORT = _dir_serogroup / 'capsule' / 'html.io'
-OUTPUT_SEROGROUP_DETERMINATION_INFORMS = _dir_serogroup / 'capsule' / 'informs.io'
-OUTPUT_SEROGROUP_DETERMINATION_REPORT_EMPTY = _dir_serogroup / 'capsule' / 'html-empty.io'
-OUTPUT_SEROGROUP_DETERMINATION_SUMMARY = _dir_serogroup / 'summary_out.tsv'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
+
+# Legacy detection
+OUTPUT_LEGACY_REPORT = 'serogroup_determination/legacy/report/html.iob'
+OUTPUT_LEGACY_REPORT_EMPTY = 'serogroup_determination/legacy/report/html-empty.iob'
+
+# Capsule typing tool
+OUTPUT_REPORT = 'serogroup_determination/capsule/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'serogroup_determination/capsule/report/html-empty.iob'
+OUTPUT_INFORMS = 'serogroup_determination/capsule/tool/informs.io'
+
+# Summary
+OUTPUT_SUMMARY = 'serogroup_determination/summary/summary_out.{ext}'

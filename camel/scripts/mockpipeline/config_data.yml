@@ -1,10 +1,57 @@
+analyses:
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  ncbi_amr:
+    dbs:
+      - gene_detection_ncbi_amr
+  kraken2:
+    dbs:
+      - kraken2
+  snpit:
+    dbs: []
+
+#############
+# Databases #
+#############
+dbs:
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+  gene_detection_ncbi_amr:
+    location: &db_gene_detection_ncbi_amr {DB_ROOT}/gene_detection/NCBI_AMR/
+    required: true
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Escherichia_coli/NC_002695.2.gff3
+    is_file: true
+    required: true
+    method: ftp
+
 ####################
 # Reference genome #
 ####################
 reference:
   name: NC_002695.2
-  fasta: /db/refgenomes/Escherichia_coli/NC_002695.2.fasta
-  gff3: /db/refgenomes/Escherichia_coli/NC_002695.2.gff
+  fasta: *ref_fasta
+  gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/nuccore/NC_002695.2/
   expected_size: 10_000
 
@@ -19,29 +66,42 @@ citations:
     - Gurevich_2013-quast
     - Wood_2019-kraken2
 
-downsampling:
-  coverage_max: {coverage_max}
-
-contamination_check:
-  db: /db/kraken2_microbial/latest
-  expected_species: Escherichia coli
-
-confindr:
-  db: /db/confindr/0.8.1
-
+##########
+# Assays #
+##########
 assembly:
   flye:
     min_overlap: 1000
+
+busco:
+  db: *db_busco
+
+confindr:
+  db: *db_confindr
+
+contamination_check:
+  db: *db_kraken2
+  expected_species: Escherichia coli
+
+downsampling:
+  coverage_max: {COV_MAX}
 
 quality_checks:
   typing_scheme: null
 
 gene_detection:
-  ncbi_amr:
-    path: /db/gene_detection/NCBI_AMR/
-    metadata:
-      name: Antibiotic(s)
-      key: subclass
+  dbs:
+    ncbi_amr:
+      path: *db_gene_detection_ncbi_amr
+      metadata:
+        name: Antibiotic(s)
+        key: subclass
+  options:
+    method: blast
+
+read_trimming: {{}}
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
 
 variant_calling:
   ploidy: 1

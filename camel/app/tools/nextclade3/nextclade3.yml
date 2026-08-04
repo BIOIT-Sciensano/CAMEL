@@ -1,4 +1,13 @@
-dependencies: [ nextclade/3.18.1 ]
+conda:
+  name: nextclade
+  packages:
+    - nextclade=3.18.1
+dependencies:
+  - nextclade/3.18.1
 parameters:
-  min_length: { default: false, mandatory: false, option: --min-length, value: 100 }
+  min_length:
+    default: false
+    mandatory: false
+    option: '--min-length'
+    value: 100
 tool_command: nextclade

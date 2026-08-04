@@ -1,0 +1,31 @@
+conda:
+  name: pypolca
+  packages:
+    - pypolca=0.4.0
+dependencies:
+  - pypolca/0.4.0
+  - bwa/0.7.17
+  - samtools/1.21
+  - freebayes/1.3.10
+parameters:
+  threads:
+    default: true
+    mandatory: false
+    option: '-t'
+    value: '4'
+  only_create_vcf:
+    default: false
+    mandatory: false
+    option: '-n'
+    flag: true
+  memory_per_thread:
+    default: false
+    mandatory: false
+    option: '-m'
+    value: null
+  careful:
+    default: true
+    mandatory: false
+    option: '--careful'
+    flag: true
+tool_command: pypolca run

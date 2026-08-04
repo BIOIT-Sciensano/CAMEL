@@ -3,13 +3,12 @@ import json
 import logging
 from pathlib import Path
 
-import vcf
 from Bio import SeqIO
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import vcfutils
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class CollectIterativeMappingStats(Tool):
@@ -17,24 +16,24 @@ class CollectIterativeMappingStats(Tool):
     Collects stats for the iterative mapping.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
         """
-        super().__init__('Collect iterative mapping stats', '0.1', camel)
+        super().__init__('Collect iterative mapping stats', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Consensus FASTA input is required ('FASTA')")
+            raise InvalidToolInputError("Consensus FASTA input is required ('FASTA')")
         if 'JSON_depth' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Depth information is required ('JSON_depth')")
+            raise InvalidToolInputError("Depth information is required ('JSON_depth')")
         if 'VCF_p1' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Phase 1 VCF input is required ('VCF_p1')")
+            raise InvalidToolInputError("Phase 1 VCF input is required ('VCF_p1')")
         if 'VCF_p2' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Phase 2 VCF input is required ('VCF_p2')")
+            raise InvalidToolInputError("Phase 2 VCF input is required ('VCF_p2')")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -109,8 +108,7 @@ class CollectIterativeMappingStats(Tool):
         :return: None
         """
         # Parse VCF input
-        with path_vcf.open() as handle:
-            variants = list(vcf.Reader(handle))
+        variants = vcfutils.parse_all_variants(path_vcf)
 
         # Group variants by seq id
         variants_by_seq_id = {seq_id: [] for seq_id in seq_ids}

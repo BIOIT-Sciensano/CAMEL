@@ -1,5 +1,13 @@
 dependencies: []
 parameters:
-  capitalize_segment_names: { default: false, mandatory: false, option: null, value: null }
-  name: { default: false, mandatory: true, option: null, value: sample }
+  capitalize_segment_names:
+    default: false
+    mandatory: false
+    option: null
+    value: null
+  name:
+    default: false
+    mandatory: true
+    option: null
+    value: sample
 tool_command: null

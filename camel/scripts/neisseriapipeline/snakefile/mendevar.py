@@ -1,9 +1,8 @@
 from pathlib import Path
 
 
-SNAKEFILE_MENDEVAR = f'{Path(__file__).parent / Path(__file__).stem}.smk'
+SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
-_dir_gmats = Path('mendevar')
-OUTPUT_MENDEVAR_REPORT = _dir_gmats / 'report' / 'html.io'
-OUTPUT_MENDEVAR_REPORT_EMPTY = _dir_gmats / 'report' / 'html-empty.io'
-OUTPUT_MENDEVAR_SUMMARY = _dir_gmats / 'summary' / 'summary_mendevar.tsv'
+OUTPUT_REPORT = 'mendevar/report/html.iob'
+OUTPUT_REPORT_EMPTY = 'mendevar/report/html-empty.iob'
+OUTPUT_SUMMARY = 'mendevar/summary/summary_mendevar.{ext}'

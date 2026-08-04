@@ -1,0 +1,25 @@
+{
+  "type_of_reference": "JOUR",
+  "primary_title": "A WGS workflow for identifying genetically modified and foodborne-pathogenic Bacillus isolates",
+  "first_authors": [
+    "Godfroid, Maxime",
+    "Van Uffelen, Alexander",
+    "Fraiture, Marie-Alice",
+    "De Keersmaecker, Sigrid C.J.",
+    "Vanneste, Kevin",
+    "Roosens, Nancy H.C.",
+    "Bogaerts, Bert"
+  ],
+  "publication_year": "2026/01//",
+  "keywords": [
+    "Surveillance",
+    "Genetically modified microorganism (GMM)",
+    "Bacillus cereus",
+    "Bacillus subtilis",
+    "Food safety",
+    "Bioinformatics workflow"
+  ],
+  "alternate_title3": "Food Chemistry: Molecular Sciences",
+  "volume": "12",
+  "doi": "10.1016/j.fochms.2025.100338"
+}

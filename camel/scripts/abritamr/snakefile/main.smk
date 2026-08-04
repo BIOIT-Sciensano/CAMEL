@@ -1,85 +1,88 @@
 from pathlib import Path
 
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import abritamr, assembly, core
+from camelcore.app.io.tooliovalue import ToolIOValue
+
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import abritamr, assembly, core
 
 #######################
 # Included Snakefiles #
 #######################
-include: core.SNAKEFILE_CORE
-include: abritamr.SNAKEFILE_ABRITAMR
-include: assembly.SNAKEFILE_ASSEMBLY
+include: core.SNAKEFILE
+include: abritamr.SNAKEFILE
+include: assembly.SNAKEFILE
 
 #########
 # Rules #
 #########
 rule all:
     input:
-        HTML = config['output_report'],
-        TSV = config['output_tabular']
-
+        HTML = config['output']['html'],
+        TSV = config['output']['tsv']
 
 rule report_pickle_citations:
     """
     This rule creates a pickle with a report section containing the citations.
     """
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-citations.io'
+        HTML = Path(config['working_dir']) / 'report' / 'html-citations.iob'
     params:
         citation_keys = config['citations']
     run:
-        section = SnakePipelineUtils.create_citations_section(
-            params.citation_keys['other'], params.citation_keys['main'])
-        SnakemakeUtils.dump_object([ToolIOValue(section)], Path(output.HTML))
+        from camel.resources import DIR_CITATIONS
+        from camelcore.app.utils import reportutils
+        section = reportutils.create_citations_section(
+            dir_=DIR_CITATIONS,
+            key_main=params.citation_keys['main'],
+            keys_other=params.citation_keys['other']
+        )
+        snakemakeutils.dump_object([ToolIOValue(section)], Path(output.HTML))
 
 rule report_command_section:
     """
     Creates the report section containing the tool commands.
     """
     input:
-        INFORMS_abritamr_run =  Path(config['working_dir']) / abritamr.OUTPUT_ABRITAMR_RUN_INFORMS,
-        INFORMS_abritamr_report = Path(config['working_dir']) / abritamr.OUTPUT_ABRITAMR_REPORT_REPORT_INFORMS
+        INFORMS_abritamr_run =  abritamr.OUTPUT_RUN_INFORMS,
+        INFORMS_abritamr_report = abritamr.OUTPUT_REPORT_REPORT_INFORMS
     output:
-        HTML = Path(config['working_dir']) / 'report' / 'html-commands.io'
+        HTML = 'report/html-commands.iob'
     params:
-        working_dir = config['working_dir']
+        dir_ = config['working_dir']
     run:
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
-        ReportPipeline.export_command_section(input, Path(output.HTML), Path(params.working_dir))
+        from camel.app.scriptutils.basepipe import basepipeutils
+        basepipeutils.export_command_section(input, Path(output.HTML), Path(params.dir_))
 
 rule report_combine_all:
     """
     Rule to combine report sections into a single output report.
     """
     input:
-        report_abritamr = Path(config['working_dir']) / abritamr.OUTPUT_ABRITAMR_REPORT,
+        report_abritamr = abritamr.OUTPUT_REPORT,
         report_citations = rules.report_pickle_citations.output.HTML,
         report_commands = rules.report_command_section.output.HTML
     output:
-        HTML = config['output_report']
+        HTML = config['output']['html']
     params:
-        sample_name = config['sample_name'],
+        sample_name = config['input']['sample_name'],
         input_dict = config['input'],
-        input_type = config['input_type'],
-        output_dir = config['output_dir'],
-        pipeline_info = config['pipeline'],
+        output_dir = config['output']['dir'],
+        pipeline_info = config['script_info'],
         citation_keys = config['citations']
     run:
         import datetime
-        from camel.app.components.pipelines.reportpipeline import ReportPipeline
+        from camel.app.scriptutils import model
 
         # Add header section
-        report = SnakePipelineUtils.init_pipeline_report(
+        report = snakepipelineutils.init_pipeline_report(
             Path(output.HTML), Path(params.output_dir), params.pipeline_info)
-        report.add_html_object(SnakePipelineUtils.create_input_section(
-            sample_name=params.sample_name,
+        report.add_html_object(snakepipelineutils.create_input_section(
+            sample_name=params.input_dict['sample_name'],
             date=datetime.datetime.now(),
             pipeline_version=params.pipeline_info['version'],
-            input_files=ReportPipeline.format_input_string(params.input_dict),
-            input_type=params.input_type,
-            key_citation=params.citation_keys['main']
+            input_files=params.input_dict['fasta']['name'],
+            input_type=model.InputType.FASTA.value,
         ))
 
         # Add report content
@@ -88,16 +91,16 @@ rule report_combine_all:
             ('Citations', 'citations', [Path(input.report_citations)]),
             ('Commands', 'commands', [Path(input.report_commands)])
         ]
-        SnakePipelineUtils.add_report_content(report, report_structure)
+        snakepipelineutils.add_report_content(report, report_structure)
 
 rule summary_combine_all:
     """
     This rule copies the resources output summary to the config output summary.
     """
     input:
-        TSV = Path(config['working_dir']) / abritamr.OUTPUT_ABRITAMR_SUMMARY
+        TSV = str(abritamr.OUTPUT_SUMMARY).format(ext='tsv')
     output:
-        TSV = config['output_tabular']
+        TSV = config['output']['tsv']
     shell:
         """
         cp {input.TSV} {output.TSV}

@@ -1,5 +1,24 @@
-dependencies: [samtools/1.17, bedtools/2.31.0, bwa/0.7.17, SPAdes/3.15.5, blast/2.14.0, seqtk/1.4, seqsero2/1.2.1]
+conda:
+  name: seqsero2
+  packages:
+    - seqsero2=1.3.2
+dependencies:
+  - samtools/1.17
+  - bedtools/2.31.0
+  - bwa/0.7.17
+  - SPAdes/3.15.5
+  - blast/2.14.0
+  - seqtk/1.4
+  - seqsero2/1.3.2
 parameters:
-  threads: {default: true, mandatory: false, option: -p, value: '1'}
-  mode: {default: false, mandatory: true, option: null, value: null}
+  threads:
+    default: true
+    mandatory: false
+    option: '-p'
+    value: '1'
+  mode:
+    default: false
+    mandatory: true
+    option: null
+    value: null
 tool_command: SeqSero2_package.py

@@ -1,7 +1,9 @@
 from pathlib import Path
 
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import ToolExecutionError
 from camel.app.tools.samtools.samtoolsbase import SamtoolsBase
 
 
@@ -10,12 +12,12 @@ class SamtoolsIndex(SamtoolsBase):
     Indexes sorted BAM files.
     """
 
-    def __init__(self, camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('samtools index', '1.17', camel)
+        super().__init__('samtools index', version=None)
 
     def _check_input(self) -> None:
         """
@@ -26,7 +28,7 @@ class SamtoolsIndex(SamtoolsBase):
             raise ValueError("No BAM input file found")
         if len(self._tool_inputs['BAM']) != 1:
             raise ValueError("Only one BAM input file is supported")
-        super(SamtoolsBase, self)._check_input()
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
@@ -36,7 +38,7 @@ class SamtoolsIndex(SamtoolsBase):
         input_file_path = self.__symlink_input()
         self.__build_command(input_file_path)
         self._execute_command()
-        self._check_stderr()
+        self._check_stderr(self._command)
         self._tool_outputs['BAM'] = [ToolIOFile(Path(input_file_path))]
 
     def __symlink_input(self) -> Path:
@@ -54,7 +56,7 @@ class SamtoolsIndex(SamtoolsBase):
             new_path.symlink_to(self._tool_inputs['BAM'][0].path)
         return new_path
 
-    def __build_command(self, input_file_path) -> None:
+    def __build_command(self, input_file_path: Path) -> None:
         """
         Builds the command for this tool.
         :param input_file_path: Path to the input file
@@ -62,14 +64,15 @@ class SamtoolsIndex(SamtoolsBase):
         """
         self._command.command = ' '.join([
             self._tool_command,
-            ' '.join(self._build_options(excluded_parameters=['output_filename'])),
+            *self._build_options(excluded_parameters=['output_filename']),
             str(input_file_path)])
 
-    def _check_stderr(self) -> None:
+    def _check_stderr(self, command: Command) -> None:
         """
         Validates the stderr.
+        :param command: Command to check
         :return: None
         """
-        if 'unsorted positions' in self.stderr:
-            raise ToolExecutionError('BAM file is not sorted.')
-        super(SamtoolsIndex, self)._check_stderr()
+        if 'unsorted positions' in command.stderr:
+            raise ToolExecutionError(self.name, 'BAM file is not sorted.')
+        super()._check_stderr(command)

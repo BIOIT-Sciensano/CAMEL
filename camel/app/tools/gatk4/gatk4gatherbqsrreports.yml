@@ -1,4 +1,15 @@
-dependencies: [java/1.8.0_172, gatk/4.1.9.0]
+conda:
+  name: java
+  packages:
+    - gatk4=4.1.9.0
+dependencies:
+  - java/1.8.0_172
+  - gatk/4.1.9.0
 parameters:
-  output: {default: true, mandatory: true, option: -O, p_index: 0, value: recalibrationData_gathered.tabl}
+  output:
+    default: true
+    mandatory: true
+    option: '-O'
+    p_index: 0
+    value: recalibrationData_gathered.tabl
 tool_command: GatherBQSRReports

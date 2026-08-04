@@ -1,3 +1,5 @@
-dependencies: [phymmbl/4.0, blast/2.6.0]
+dependencies:
+  - phymmbl/4.0
+  - blast/2.6.0
 parameters: {}
 tool_command: scoreReads.pl

@@ -1,5 +1,21 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  output_prefix: { default: true, mandatory: true, option: O, p_index: 0, value: variant_calling_metrics }
-  gvcf: {default: false, mandatory: false, option: GVCF_INPUT, p_index: 0, value: false}
+  output_prefix:
+    default: true
+    mandatory: true
+    option: O
+    p_index: 0
+    value: variant_calling_metrics
+  gvcf:
+    default: false
+    mandatory: false
+    option: GVCF_INPUT
+    p_index: 0
+    value: false
 tool_command: CollectVariantCallingMetrics

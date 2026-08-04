@@ -1,27 +1,101 @@
-dependencies: [java/1.8.0_172, picard/2.23.3, R/4.3.1]
+conda:
+  name: java
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
+  - R/4.3.1
 parameters:
-  reset_metrics: {default: false, mandatory: false, option: PROGRAM, p_index: 10, value: 'null'}
-  metrics_CollectAlignmentSummaryMetrics: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: CollectAlignmentSummaryMetrics}
-  metrics_CollectInsertSizeMetrics: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: CollectInsertSizeMetrics}
-  metrics_QualityScoreDistribution: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: QualityScoreDistribution}
-  metrics_MeanQualityByCycle: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: MeanQualityByCycle}
-  metrics_CollectBaseDistributionByCycle: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: CollectBaseDistributionByCycle}
-  metrics_CollectGcBiasMetrics: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: CollectGcBiasMetrics}
-  metrics_RnaSeqMetrics: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: RnaSeqMetrics}
-  metrics_CollectSequencingArtifactMetrics: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: CollectSequencingArtifactMetrics}
-  metrics_CollectQualityYieldMetrics: {default: false, mandatory: false, option: PROGRAM,
-                                p_index: 20, value: CollectQualityYieldMetrics}
-  output_prefix: {default: true, mandatory: true, option: O, p_index: 0, value: readmap_qc}
-  assume_sorted: {default: false, mandatory: false, option: AS, p_index: 10, value: true}
-  metric_accumulation_level_reset: {default: false, mandatory: false, option: LEVEL, p_index: 10, value: null}
-  metric_accumulation_level: {default: false, mandatory: false, option: LEVEL, p_index: 20, value: ALL_READS}
-  metric_accumulation_level_multi: {default: false, mandatory: false, option: LEVEL, p_index: 20, value: ALL_READS,SAMPLE}
+  reset_metrics:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 10
+    value: 'null'
+  metrics_CollectAlignmentSummaryMetrics:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: CollectAlignmentSummaryMetrics
+  metrics_CollectInsertSizeMetrics:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: CollectInsertSizeMetrics
+  metrics_QualityScoreDistribution:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: QualityScoreDistribution
+  metrics_MeanQualityByCycle:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: MeanQualityByCycle
+  metrics_CollectBaseDistributionByCycle:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: CollectBaseDistributionByCycle
+  metrics_CollectGcBiasMetrics:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: CollectGcBiasMetrics
+  metrics_RnaSeqMetrics:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: RnaSeqMetrics
+  metrics_CollectSequencingArtifactMetrics:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: CollectSequencingArtifactMetrics
+  metrics_CollectQualityYieldMetrics:
+    default: false
+    mandatory: false
+    option: PROGRAM
+    p_index: 20
+    value: CollectQualityYieldMetrics
+  output_prefix:
+    default: true
+    mandatory: true
+    option: O
+    p_index: 0
+    value: readmap_qc
+  assume_sorted:
+    default: false
+    mandatory: false
+    option: AS
+    p_index: 10
+    value: true
+  metric_accumulation_level_reset:
+    default: false
+    mandatory: false
+    option: LEVEL
+    p_index: 10
+    value: null
+  metric_accumulation_level:
+    default: false
+    mandatory: false
+    option: LEVEL
+    p_index: 20
+    value: ALL_READS
+  metric_accumulation_level_multi:
+    default: false
+    mandatory: false
+    option: LEVEL
+    p_index: 20
+    value: ALL_READS
+    SAMPLE: null
 tool_command: CollectMultipleMetrics

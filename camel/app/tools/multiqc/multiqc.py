@@ -1,9 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.tools.tool import Tool
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.tool import Tool
 
 
 class MultiQC(Tool):
@@ -41,13 +42,12 @@ class MultiQC(Tool):
 
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('multiqc', '1.11', camel)
+        super().__init__('multiqc', '1.11')
         self._input_string = ''
         self._specific_parameters = ["ignore"]
 
@@ -97,7 +97,7 @@ class MultiQC(Tool):
         Set informs of multiqc function
         :return: None
         """
-        for line in self.stderr.splitlines():
+        for line in self._command.stderr.splitlines():
             if line.startswith("|"):
                 empty, info, message = line.split("|")
                 if message.strip().startswith("Report"):
@@ -105,13 +105,13 @@ class MultiQC(Tool):
                 if message.strip().startswith("Data"):
                     self._informs["data_dir"] = message.split(":")[1].strip()
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks command output
         :return: None
         """
-        for line in self.stderr.splitlines():
+        for line in command.stderr.splitlines():
             if line.startswith("|"):
                 empty, info, message = line.split("|")
                 if message.strip().startswith("Error"):
-                    raise ToolExecutionError(f"Command execution failed (stderr: {message}).")
+                    raise ToolExecutionError(self.name, f"Command execution failed (stderr: {message}).")

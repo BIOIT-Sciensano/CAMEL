@@ -1,11 +1,11 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.tool import Tool
 
 
 class AbriTAMRRun(Tool):
@@ -15,13 +15,12 @@ class AbriTAMRRun(Tool):
     This is the first part of the AbriTAMR pipeline (run).
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
-        Initialize tool.
-        :param camel: Camel instance
+        Initializes tool.
         :return: None
         """
-        super().__init__('AbriTAMR run', '1.1.0', camel)
+        super().__init__('AbriTAMR run', '1.1.0')
 
     def _execute_tool(self) -> None:
         """
@@ -43,17 +42,17 @@ class AbriTAMRRun(Tool):
         """
         super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required")
+            raise InvalidToolInputError("FASTA input is required")
         if 'DIR_AMRF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database path needs to be specified (DIR_AMRF)")
+            raise InvalidToolInputError("Database path needs to be specified (DIR_AMRF)")
 
     def __set_output(self) -> None:
         """
         Collects the output files of interest.
         :return: None
         """
-        self._tool_outputs['TXT_MATCHES'] = [ToolIOFile(self.folder / 'summary_matches.txt')]
-        self._tool_outputs['TXT_PARTIALS'] = [ToolIOFile(self.folder / 'summary_partials.txt')]
+        self._tool_outputs['TXT_matches'] = [ToolIOFile(self.folder / 'summary_matches.txt')]
+        self._tool_outputs['TXT_partials'] = [ToolIOFile(self.folder / 'summary_partials.txt')]
 
     def __build_command(self) -> None:
         """
@@ -68,15 +67,16 @@ class AbriTAMRRun(Tool):
             *self._build_options()
         ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if 'error' in self.stderr.lower():
-            raise ToolExecutionError(f"Command execution failed (stderr: {self.stderr}).")
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        if 'error' in command.stderr.lower():
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        if self._command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {command.exit_code})")
 
     def __add_database_information(self, amrfinder_folder: Path) -> None:
         """

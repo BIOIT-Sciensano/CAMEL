@@ -1,49 +1,45 @@
-"""
-This Snakefile performs species/subspecies identification of Mycobacterium strains based on the hsp65 gene sequences.
-"""
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.scripts.mycobacteriumpipeline.snakefile import hsp65
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake.step import Step
+from camel.snakefiles import gene_detection
 
 rule hps65_report:
     """
     Creates a HTML report for the HSP65 (sub)species identification.
     """
     input:
-        INFORMS_hits = Path(config['working_dir']) / 'gene_detection' / 'hsp65' / 'hit_selection' / 'selected-hits.io',
-        INFORMS_columns = Path(config['working_dir']) / 'gene_detection' / 'hsp65' / 'report' / 'informs-columns.io',
-        FASTA_DB = Path(config['working_dir']) / 'gene_detection' / 'hsp65' / 'db_manager' / 'fasta.io'
+        INFORMS_hits = str(gene_detection.OUTPUT_ALL_HITS).format(db='hsp65'),
+        INFORMS_columns = str(gene_detection.OUTPUT_COLUMNS).format(db='hsp65'),
+        FASTA_DB = str(gene_detection.GENE_DETECTION_FASTA).format(db='hsp65')
     output:
-        VAL_HTML = Path(config['working_dir']) / hsp65.OUTPUT_HSP65_REPORT,
-        INFORMS = Path(config['working_dir']) / 'hsp65' /  'report' / 'informs.io'
+        VAL_HTML = 'hsp65/report/html.iob', # hsp65.OUTPUT_REPORT
+        INFORMS = 'hsp65/report/informs.io'
     params:
-        dir_ = Path(config['working_dir']) / 'hsp65',
-        hit_type = config['detection_method']
+        dir_ = 'hsp65/report',
+        hit_type = config['gene_detection']['options']['method']
     run:
         from camel.app.tools.pipelines.mycobacterium.hsp65reporter import Hsp65Reporter
-        reporter = Hsp65Reporter(Camel.get_instance())
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
+        reporter = Hsp65Reporter()
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(str(params.dir_)))
         reporter.update_parameters(hit_type=params.hit_type)
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        snakemakeutils.add_io_inputs(reporter, input)
+        step.run()
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule hps65_report_empty:
     """
     Creates an empty HTML report for the HSP65 (sub)species identification.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / hsp65.OUTPUT_HSP65_REPORT_EMPTY
+        VAL_HTML = 'hsp65/report/html-empty.iob' # hsp65.OUTPUT_REPORT_EMPTY
     params:
-        dir_ = Path(config['working_dir']) / 'contamination_check' / 'report'
+        dir_ = 'hsp65/report'
     run:
-        from camel.app.io.tooliovalue import ToolIOValue
+        from camelcore.app.io.tooliovalue import ToolIOValue
         from camel.app.tools.pipelines.mycobacterium.hsp65reporter import Hsp65Reporter
         section = Hsp65Reporter.generate_empty_section()
-        SnakemakeUtils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))
+        snakemakeutils.dump_object([ToolIOValue(section)], Path(output.VAL_HTML))
 
 rule hsp65_dump_summary_info:
     """
@@ -52,11 +48,10 @@ rule hsp65_dump_summary_info:
     input:
         INFORMS = rules.hps65_report.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / hsp65.OUTPUT_HSP65_SUMMARY
+        FILE = 'hsp65/summary/summary.{ext}' # hsp65.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS))
-        summary_data = [('hsp65_species', informs['hits']),]
-        with open(output.TSV, 'w') as handle:
-            for key, value in summary_data:
-                handle.write(f'{key}\t{value}')
-                handle.write('\n')
+        informs = snakemakeutils.load_object(Path(input.INFORMS))
+        data_summary = [('hsp65_species', informs['hits']),]
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'hsp65')

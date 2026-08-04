@@ -1,11 +1,56 @@
-dependencies: [bwa/0.7.17]
+conda:
+  name: bwa
+  packages:
+    - bwa=0.7.17
+dependencies:
+  - bwa/0.7.17
 parameters:
-  add_read_group: {default: false, mandatory: false, option: null, p_index: 0, value: null}
-  all_alns: {default: false, mandatory: false, option: -a, p_index: 40, value: null}
-  min_seed_len: {default: true, mandatory: false, option: -k, p_index: 20, value: '19'}
-  reseeding: {default: true, mandatory: false, option: -r, p_index: 30, value: '1.5'}
-  short_split_off: {default: true, mandatory: false, option: -M, p_index: 50, value: null}
-  threads: {default: true, mandatory: false, option: -t, p_index: 10, value: '6'}
-  deterministic_aln: { default: false, mandatory: false, option: -K, p_index: 0, value: '100000000' }
-  verbose: { default: false, mandatory: false, option: -v, p_index: 0, value: 3 }
+  add_read_group:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: null
+  all_alns:
+    default: false
+    mandatory: false
+    option: '-a'
+    p_index: 40
+    value: null
+  min_seed_len:
+    default: true
+    mandatory: false
+    option: '-k'
+    p_index: 20
+    value: '19'
+  reseeding:
+    default: true
+    mandatory: false
+    option: '-r'
+    p_index: 30
+    value: '1.5'
+  short_split_off:
+    default: true
+    mandatory: false
+    option: '-M'
+    p_index: 50
+    value: null
+  threads:
+    default: true
+    mandatory: false
+    option: '-t'
+    p_index: 10
+    value: '6'
+  deterministic_aln:
+    default: false
+    mandatory: false
+    option: '-K'
+    p_index: 0
+    value: '100000000'
+  verbose:
+    default: false
+    mandatory: false
+    option: '-v'
+    p_index: 0
+    value: 3
 tool_command: bwa mem

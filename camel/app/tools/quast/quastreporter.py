@@ -1,13 +1,13 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.utils import fileutils
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class QuastReporter(Tool):
@@ -15,13 +15,12 @@ class QuastReporter(Tool):
     Creates an output report for QUAST with additional modules.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize this tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('QUAST reporter', '5.2.0', camel)
+        super().__init__('QUAST reporter', '5.2.0')
 
     def _check_input(self) -> None:
         """
@@ -29,17 +28,17 @@ class QuastReporter(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTA input is required.")
+            raise InvalidToolInputError("FASTA input is required.")
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input is required.")
+            raise InvalidToolInputError("TSV input is required.")
         if 'HTML' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("HTML input is required.")
+            raise InvalidToolInputError("HTML input is required.")
         if 'DIR' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("DIR input is required.")
+            raise InvalidToolInputError("DIR input is required.")
         if 'quast' not in self._input_informs:
-            raise InvalidInputSpecificationError("QUAST informs are required.")
+            raise InvalidToolInputError("QUAST informs are required.")
         if 'assembler' not in self._input_informs:
-            raise InvalidInputSpecificationError("Assembler informs are required.")
+            raise InvalidToolInputError("Assembler informs are required.")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -47,7 +46,7 @@ class QuastReporter(Tool):
         Execute this tool.
         :return: None
         """
-        subtitle = ', '.join([self._input_informs['quast']['_name'], self._input_informs['busco']['_name']])
+        subtitle = ', '.join([self._input_informs['quast']['_name_full'], self._input_informs['busco']['_name_full']])
         section = HtmlReportSection('Assembly quality', subtitle=subtitle)
 
         # Parse QUAST input file
@@ -73,7 +72,7 @@ class QuastReporter(Tool):
         # Tool output
         self._tool_outputs['HTML'] = [ToolIOValue(section)]
 
-    def __add_section_basic_stats(self, section: HtmlReportSection, data_quast: Dict[str, Any]) -> None:
+    def __add_section_basic_stats(self, section: HtmlReportSection, data_quast: dict[str, Any]) -> None:
         """
         Adds the section with the basic statistics.
         :param section: Report section
@@ -90,7 +89,7 @@ class QuastReporter(Tool):
         section.add_paragraph(
             '<b>Note:</b> Contigs shorter than 500 bp are not considered for the calculation of these metrics.')
 
-    def __add_section_completeness(self, section: HtmlReportSection, data_quast: Dict[str, Any]) -> None:
+    def __add_section_completeness(self, section: HtmlReportSection, data_quast: dict[str, Any]) -> None:
         """
         Adds the section with the completeness statistics.
         :param section: Report section
@@ -110,7 +109,7 @@ class QuastReporter(Tool):
             ['Partial BUSCO:', f"{busco_stats.get('Fragmented'):.2f}%" if busco_stats else 'n/a'],
         ], None, [('class', 'information')])
 
-    def __add_section_coverage(self, section: HtmlReportSection, data_quast: Dict[str, Any]) -> None:
+    def __add_section_coverage(self, section: HtmlReportSection, data_quast: dict[str, Any]) -> None:
         """
         Adds the section with the coverage statistics.
         :param section: Report section
@@ -141,7 +140,7 @@ class QuastReporter(Tool):
         :return: None
         """
         section.add_header('Downloads', 3)
-        name_sanitized = FileSystemHelper.make_valid(self._parameters['name'].value)
+        name_sanitized = fileutils.make_valid(self._parameters['name'].value)
 
         # QUAST report
         relative_path_html = Path('assembly', 'quast', f'quast_{name_sanitized}.html')

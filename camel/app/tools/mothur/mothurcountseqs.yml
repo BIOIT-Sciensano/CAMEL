@@ -1,4 +1,18 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+    - mothur=1.48.0
+dependencies:
+  - mothur/1.48.0
 parameters:
-  groups: {default: false, mandatory: false, option: groups, p_index: 0, value: Group1-Group2}
+  compress:
+    default: false
+    mandatory: false
+    option: compress
+    value: 'true'
+  groups:
+    default: false
+    mandatory: false
+    option: groups
+    value: Group1-Group2
 tool_command: mothur "#count.seqs({0})"

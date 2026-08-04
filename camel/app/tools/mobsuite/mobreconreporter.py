@@ -2,15 +2,14 @@ import re
 from pathlib import Path
 
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class MOBReconReporter(Tool):
@@ -37,12 +36,11 @@ class MOBReconReporter(Tool):
         'gc': {'title': '% GC-content', 'fmt': lambda x: f'{x * 100:.2f}'}
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('MOB-recon reporter', '0.1', camel)
+        super().__init__('MOB-recon reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -50,13 +48,13 @@ class MOBReconReporter(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('TSV input is required')
+            raise InvalidToolInputError('TSV input is required')
         if 'TSV_contigs' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('TSV contigs input is required')
+            raise InvalidToolInputError('TSV contigs input is required')
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA input is required')
+            raise InvalidToolInputError('FASTA input is required')
         if 'mob_recon' not in self._input_informs:
-            raise InvalidInputSpecificationError("MOB-recon informs input is required")
+            raise InvalidToolInputError("MOB-recon informs input is required")
         super()._check_input()
 
     def _add_overview_table(self, section: HtmlReportSection) -> None:
@@ -123,7 +121,7 @@ class MOBReconReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('MOB-recon', subtitle=self._input_informs['mob_recon']['_name'])
+        section = HtmlReportSection('MOB-recon', subtitle=self._input_informs['mob_recon']['_name_full'])
         self._add_overview_table(section)
         if 'contig_report' in self._parameters:
             self._add_contig_report(section)

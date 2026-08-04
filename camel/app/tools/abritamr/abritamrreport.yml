@@ -1,4 +1,15 @@
-dependencies: [abritamr/1.1.0, blast/2.16.0, amrfinder/4.0.19]
+conda:
+  name: abritamr
+  packages:
+    - abritamr=1.1.0
+dependencies:
+  - abritamr/1.1.0
+  - blast/2.16.0
+  - amrfinder/4.0.19
 parameters:
-  output_filename: {default: true, mandatory: true, option: -r, value: report_abritamr}
+  output_filename:
+    default: true
+    mandatory: true
+    option: '-r'
+    value: report_abritamr
 tool_command: abritamr report

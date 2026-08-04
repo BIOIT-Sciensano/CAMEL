@@ -1,24 +1,34 @@
 from pathlib import Path
-from typing import Dict, Union, List
+from typing import Union
 
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class FastQC(Tool):
-
     """
-    FastQC tool.
+    A quality control tool for high throughput sequence data.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes FastQC.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('FastQC', '0.12.1', camel)
+        super().__init__('FastQC', None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _execute_tool(self) -> None:
         """
@@ -35,8 +45,8 @@ class FastQC(Tool):
         :return: None
         """
         if 'FASTQ' not in self._tool_inputs or len(self._tool_inputs['FASTQ']) == 0:
-            raise ValueError("Required FASTQ input file is missing for FastQC.")
-        super(FastQC, self)._check_input()
+            raise InvalidToolInputError("Required FASTQ input file is missing for FastQC.")
+        super()._check_input()
 
     def __build_command(self) -> None:
         """
@@ -45,17 +55,17 @@ class FastQC(Tool):
         """
         self._command.command = ' '.join([
             self._tool_command,
-            ' '.join(str(in_file) for in_file in self._tool_inputs['FASTQ']),
+            *(str(in_file) for in_file in self._tool_inputs['FASTQ']),
             '--outdir .',
-            ' '.join(self._build_options())])
+            *self._build_options()])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command output is valid.
+        :param command: Command to check
         :return: None
         """
-        if not self._command.returncode == 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     @staticmethod
     def __get_output_folder(execution_folder: Path, input_file: ToolIOFile) -> Path:
@@ -75,10 +85,10 @@ class FastQC(Tool):
                 full_path = execution_folder / sub_folder
                 if full_path.is_dir():
                     return full_path
-        raise IOError(f"No output directory for FastQC input {input_file} found.")
+        raise FileNotFoundError(f"No output directory for FastQC input {input_file} found.")
 
     @staticmethod
-    def _analyze_summary_file(summary_file: Path) -> Dict[str, Union[bool, List[str]]]:
+    def _analyze_summary_file(summary_file: Path) -> dict[str, Union[bool, list[str]]]:
         """
         Analyze fastqc output summary.txt (of a given input file)
         :param summary_file: FastQC summary file

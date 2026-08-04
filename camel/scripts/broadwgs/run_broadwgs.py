@@ -1,22 +1,28 @@
 #!/usr/bin/env python
 import argparse
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import yaml
 
-from camel.app.camel import Camel
 from camel.app.error.snakemakeexecutionerror import SnakemakeExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.loggers import logger
 from camel.app.pipeline.pipeline import Pipeline
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.scripts.broadwgs import SNAKEFILE_MAIN, CONFIG_DATA, REFERENCES, SLURM_SUBMIT, TOOL_DATA
+from camel.app.core.snakemake import snakepipelineutils
+from camel.scripts.broadwgs import (
+    CONFIG_DATA,
+    REFERENCES,
+    SLURM_SUBMIT,
+    SNAKEFILE_MAIN,
+    TOOL_DATA,
+)
 
 
-class MainBroadWGSPipeline(object):
+class MainBroadWGSPipeline:
     """
     Main class to run the GATK best practices workflow
     """
@@ -61,7 +67,7 @@ class MainBroadWGSPipeline(object):
             config_file = self._args.config
         else:
             config_file = self.__construct_config_file()
-        with open(config_file, 'r') as handle_in:
+        with open(config_file) as handle_in:
             config_data = yaml.load(handle_in.read(), Loader=yaml.SafeLoader)
 
         try:
@@ -174,7 +180,7 @@ class MainBroadWGSPipeline(object):
         config_data["rule_params"]["qc"]["picard_wgs_metrics"]["read_length"] = self._args.read_length
         config_data["rule_params"]["qc"]["picard_raw_wgs_metrics"]["read_length"] = self._args.read_length
 
-        return SnakePipelineUtils.generate_config_file(config_data, self._working_dir)
+        return snakepipelineutils.generate_config_file(config_data, self._working_dir)
 
     def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
         """
@@ -214,6 +220,6 @@ class MainBroadWGSPipeline(object):
 
 
 if __name__ == '__main__':
-    Camel.get_instance()
+    initialize_logging()
     main = MainBroadWGSPipeline()
     main.run()

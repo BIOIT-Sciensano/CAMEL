@@ -1,15 +1,14 @@
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
 from camel.app.tools.mobsuite.mobreconreporter import MOBReconReporter
-from camel.app.tools.tool import Tool
 
 
 class GenomicContext(Tool):
@@ -17,12 +16,11 @@ class GenomicContext(Tool):
     Tool to link detected genes to their genomic context (e.g. plasmid / chromosome).
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Genomic context', '0.1', camel)
+        super().__init__('Genomic context', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -30,7 +28,7 @@ class GenomicContext(Tool):
         :return: None
         """
         if 'dbs' not in self._input_informs:
-            raise InvalidInputSpecificationError('Database informs input is required')
+            raise InvalidToolInputError('Database informs input is required')
         super()._check_input()
 
     def _get_plasmid_status(self, contig_name: str, plasmids: list[str]) -> list[HtmlTableCell]:
@@ -56,7 +54,7 @@ class GenomicContext(Tool):
             self._input_informs['mob_recon']['contig_report'].values()) if x is not None))
 
         # Create the output report
-        section = HtmlReportSection('Genomic context', level=2)
+        section = HtmlReportSection('Genomic context', level=3)
 
         # Check if the detection method is BLAST
         if self._parameters['detection_method'].value != 'blast':
@@ -80,7 +78,7 @@ class GenomicContext(Tool):
                     continue
 
                 # Parse hits
-                data_hits = pd.read_table(self._tool_inputs['TSV'][db['idx']].path)
+                data_hits = pd.read_table(self._tool_inputs['TSV'][db['idx']].path, dtype={db['contig']: str})
                 if len(data_hits) == 0:
                     section.add_paragraph('No hits found.')
                     continue

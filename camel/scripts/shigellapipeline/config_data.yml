@@ -1,0 +1,268 @@
+analyses:
+  amrfinder:
+    dbs:
+      - amrfinder
+  cgmlst:
+    dbs:
+      - typing_cgmlst
+  confindr:
+    dbs:
+      - confindr
+  human_read_scrubbing:
+    dbs:
+      - ncbi_human_read_scrubber
+  kraken2:
+    dbs:
+      - kraken2
+  mlst_pasteur:
+    dbs:
+      - typing_mlst_pasteur
+  mlst_warwick:
+    dbs:
+      - typing_mlst_warwick
+  mob_suite:
+    dbs:
+      - mob_suite
+  mykrobe:
+    dbs:
+      - mykrobe
+  plasmidfinder:
+    dbs:
+      - gene_detection_plasmidfinder
+  resfinder4:
+    dbs:
+      - resfinder4
+  rmlst:
+    dbs:
+      - typing_rmlst
+  shigatyper:
+    dbs: []
+  shigeifinder:
+    dbs: []
+  variant_calling:
+    dbs: []
+  virulencefinder:
+    dbs:
+      - gene_detection_virulencefinder_ecoli
+      - gene_detection_virulencefinder_shiga
+
+#############
+# Databases #
+#############
+dbs:
+  amrfinder:
+    location: &db_amrfinder {DB_ROOT}/amrfinder/v4/latest
+    required: false
+    method: ftp
+  busco:
+    location: &db_busco {DB_ROOT}/busco/odb10
+    required: true
+    method: ftp
+  confindr:
+    location: &db_confindr {DB_ROOT}/confindr/0.8.1
+    required: false
+    method: skip
+  gene_detection_plasmidfinder:
+    location: &db_plasmidfinder {DB_ROOT}/gene_detection/PlasmidFinder-entero
+    required: false
+    method: ftp
+  gene_detection_virulencefinder_ecoli:
+    location: &db_gd_virulencefinder_ecoli {DB_ROOT}/gene_detection/VirulenceFinder-Ecoli
+    required: false
+    method: ftp
+  gene_detection_virulencefinder_shiga:
+    location: &db_gd_virulencefinder_shiga {DB_ROOT}/gene_detection/VirulenceFinder-Shiga
+    required: false
+    method: ftp
+  kraken2:
+    location: &db_kraken2 {DB_ROOT}/kraken2_microbial/latest
+    required: false
+    method: ftp
+  mob_suite:
+    location: &db_mobsuite {DB_ROOT}/mob_suite/latest
+    required: false
+    method: ftp
+  ncbi_human_read_scrubber:
+    location: &db_ncbi_human_read_scrubber {DB_ROOT}/ncbi_human_read_scrubber/human_filter.db
+    is_file: true
+    required: false
+    method: ftp
+  mykrobe:
+    location: &db_mykrobe {DB_ROOT}/mykrobe/latest
+    required: false
+    method: ftp
+  ref_fasta:
+    location: &ref_fasta {DB_ROOT}/refgenomes/Shigella_sonnei/GCA_000092525.1.fasta
+    is_file: true
+    required: true
+    method: ftp
+  ref_gff3:
+    location: &ref_gff3 {DB_ROOT}/refgenomes/Shigella_sonnei/GCA_000092525.1.gff3
+    is_file: true
+    required: true
+    method: ftp
+  resfinder4:
+    location: &db_resfinder4 {DB_ROOT}/resfinder4
+    required: false
+    method: ftp
+  typing_cgmlst:
+    location: &db_typing_cgmlst {DB_ROOT}/sequence_typing/ecoli/cgmlst
+    required: false
+    method: mist
+  typing_mlst_pasteur:
+    location: &db_typing_mlst_pasteur {DB_ROOT}/sequence_typing/ecoli/mlst_pasteur
+    required: false
+    method: mist
+  typing_mlst_warwick:
+    location: &db_typing_mlst_warwick {DB_ROOT}/sequence_typing/ecoli/mlst_warwick
+    required: false
+    method: mist
+  typing_rmlst:
+    location: &db_typing_rmlst {DB_ROOT}/sequence_typing/various/rmlst
+    required: false
+    method: skip
+
+####################
+# Pipeline options #
+####################
+citations:
+  main: Bogaerts_2021-shigella
+  other:
+    - Chen_2023-fastp
+    - Shen_2024-seqkit2
+    - Bankevich_2012-spades
+    - Kolmogorov_2019-flye
+    - Gurevich_2013-quast
+    - Wood_2019-kraken2
+    - Low_2019-confindr
+    - Manni_2021-busco
+    - Langmead_2012-bowtie2
+    - Li_2021-minimap2
+    - Li_2009-samtools
+    - Li_2011-bcftools
+    - Kaas_2014-csi_phylogeny
+    - Bogaerts_2025-mist
+    - Camacho_2009-blast
+    - Clausen_2018-kma
+    - Feldgarden_2019-ndaro
+    - Bortolaia_2020-resfinder_4.0
+    - Joensen_2014-virulencefinder
+    - Jaureguy_2008-pasteur
+    - Zhou_2020-enterobase
+    - Jolley_2010-bigsdb
+    - Zhang_2021-shigeifinder
+    - Wu_2019-shigatyper
+    - Wong_2016-genotyphi
+    - Bradley_2015-mykrobe
+
+####################
+# Reference genome #
+####################
+reference:
+  name: <i>Shigella sonnei</i> Ss046 (GCA_000092525.1)
+  fasta: *ref_fasta
+  gff3: *ref_gff3
+  url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_000092525.1/
+
+#########################
+# Tool-specific options #
+#########################
+amrfinder:
+  db: *db_amrfinder
+  species: Escherichia
+
+assembly:
+  spades:
+    cov_cutoff: 'off'
+  min_contig_length: 1000
+
+busco:
+  db: *db_busco
+
+confindr:
+  db: *db_confindr
+
+contamination_check:
+  db: *db_kraken2
+  expected_species: Shigella
+  allowed_species:
+    - Escherichia
+  level_of_depth: G
+
+downsampling:
+  coverage_max: {COV_MAX}
+  expected_genome_size: 4_762_774 # To check if needed (obtained from ref genome?)
+
+mob_suite:
+  db: *db_mobsuite
+
+mykrobe:
+  db: *db_mykrobe
+  species: sonnei
+  show_amr: false
+  title: Lineage determination of <i>S. sonnei</i>
+
+quality_checks:
+  typing_scheme: {QC_SCHEME}
+  expected_gc_content: 50.5
+
+read_trimming: {{}}
+
+read_scrubbing:
+  db: *db_ncbi_human_read_scrubber
+
+resfinder4:
+  db: *db_resfinder4
+  species: Escherichia coli
+
+variant_calling:
+  ploidy: 1
+  report_include_bam: {EXPORT_BAM}
+
+variant_filtering: {{}}
+
+############################
+# Gene detection databases #
+############################
+gene_detection:
+  dbs:
+    plasmidfinder:
+      path: *db_plasmidfinder
+      params:
+        blastn:
+          min_percent_identity: 95
+          min_coverage: 60
+      message:
+        content: The presence of a replicon does not mean that the corresponding plasmid is present.
+        category: warning
+    virulencefinder:
+      path: *db_gd_virulencefinder_ecoli
+      metadata:
+        name: Protein function
+        key: protein_function
+      hidden: true
+    virulencefinder_shiga:
+      path: *db_gd_virulencefinder_shiga
+      metadata:
+        name: stx variant
+        key: stx_variant
+
+###################
+# Sequence typing #
+###################
+sequence_typing:
+  dbs:
+    mlst_pasteur:
+      path: *db_typing_mlst_pasteur
+      hidden: true
+    mlst_warwick:
+      path: *db_typing_mlst_warwick
+    cgmlst:
+      path: *db_typing_cgmlst
+      detection_method: blast
+      blast_task: blastn
+    rmlst:
+      path: *db_typing_rmlst
+      message:
+        content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
+        category: info

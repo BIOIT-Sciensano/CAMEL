@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class SPIFinderReporter(Tool):
@@ -16,13 +16,12 @@ class SPIFinderReporter(Tool):
 
     TITLE = 'SPIFinder'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('SPIFinder Reporter', '0.1', camel)
+        super().__init__('SPIFinder Reporter', '0.1')
         self._section = None
         self._fastq_results_present = True
 
@@ -31,25 +30,25 @@ class SPIFinderReporter(Tool):
         Checks if the provided input is valid.
         :return: None
         """
-        super(SPIFinderReporter, self)._check_input()
+        super()._check_input()
         if 'spifinder_fastq' not in self._input_informs:
             self._fastq_results_present = False
         if self._fastq_results_present and 'JSON_FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTQ analysis results were found in the input informs; "
+            raise InvalidToolInputError("FASTQ analysis results were found in the input informs; "
                                                  "JSON_FASTQ is required as input for this tool.")
         if 'JSON_FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("JSON_FASTA is missing but always required as input for this tool.")
+            raise InvalidToolInputError("JSON_FASTA is missing but always required as input for this tool.")
         if 'TSV_documentation' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV_documentation is missing but always required as input for "
-                                                 "this tool.")
+            raise InvalidToolInputError(
+                "TSV_documentation is missing but always required as input for this tool.")
 
     def _execute_tool(self) -> None:
         """
         Executes this tool.
         :return: None
         """
-        self._section = HtmlReportSection(SPIFinderReporter.TITLE,
-                                          subtitle=self._input_informs['spifinder_fasta']['_name'])
+        self._section = HtmlReportSection(
+            SPIFinderReporter.TITLE, subtitle=self._input_informs['spifinder_fasta']['_name_full'])
         # Add FASTQ results 'section'
         self._section.add_header('HITS - KMA on raw reads (FASTQ)', 3)
         if self._fastq_results_present:
@@ -73,8 +72,9 @@ class SPIFinderReporter(Tool):
         :param mode: either fasta or fastq
         :return: None
         """
-        table_header = ['SPI', 'identity', 'HSP/locus length', 'Contig', 'Positions in contig', 'Accession',
-                        'Insertion site', 'Category function']
+        table_header = [
+            'SPI', 'identity', 'HSP/locus length', 'Contig', 'Positions in contig', 'Accession', 'Insertion site',
+            'Category function']
 
         # Fasta gives more meaningful output fields than Fastq; the not meaningful ones are filtered out
         if mode == 'fasta':
@@ -96,15 +96,16 @@ class SPIFinderReporter(Tool):
         table_data = []
         for hit in spi.keys():
             color = self.___assign_hit_color(spi[hit]['identity'])
-            hit_data = [spi[hit]['SPI'],  # SPI
-                          f"{spi[hit]['identity']:.2f}",  # identity
-                          f"{spi[hit]['HSP_length']}/{spi[hit]['template_length']}" if spi[hit].get('HSP_length')
-                          else spi[hit]['coverage'],  # coverage
-                          spi[hit].get('contig_name', ''),  # contig
-                          spi[hit].get('positions_in_contig', ''),  # positions in contig
-                          spi[hit]['accession'],  # accession
-                          spi[hit]['insertion_site'],  # insertion site
-                          spi[hit]['category_function']]  # category function
+            hit_data = [
+                spi[hit]['SPI'],  # SPI
+                f"{spi[hit]['identity']:.2f}",  # identity
+                f"{spi[hit]['HSP_length']}/{spi[hit]['template_length']}" if spi[hit].get('HSP_length') else spi[hit]['coverage'],  # coverage
+                spi[hit].get('contig_name', ''),  # contig
+                spi[hit].get('positions_in_contig', ''),  # positions in contig
+                spi[hit]['accession'],  # accession
+                spi[hit]['insertion_site'],  # insertion site
+                spi[hit]['category_function']  # category function
+            ]
 
             # Keep columns based on input mode
             hit_data = [hit_data[index] for index in column_to_keep]
@@ -113,9 +114,8 @@ class SPIFinderReporter(Tool):
             row = [HtmlTableCell(value, color) for value in hit_data]
 
             # Add a href (blue clickable url redirect) to the ncbi accession column by overwriting it
-            row[col_ncbi] = HtmlTableCell(hit_data[col_ncbi], color,
-                                          link=f'https://www.ncbi.nlm.nih.gov/nuccore/{hit_data[col_ncbi]}')
-
+            row[col_ncbi] = HtmlTableCell(
+                hit_data[col_ncbi], color, link=f'https://www.ncbi.nlm.nih.gov/nuccore/{hit_data[col_ncbi]}')
             table_data.append(row)
 
         self._section.add_table(table_data, [table_header[index] for index in column_to_keep], [('class', 'data')])

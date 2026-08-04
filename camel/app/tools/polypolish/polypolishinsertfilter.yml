@@ -1,6 +1,23 @@
-dependencies: [polypolish/0.6.0]
+conda:
+  name: polypolish
+  packages:
+    - polypolish=0.6.0
+dependencies:
+  - polypolish/0.6.0
 parameters:
-  orientation: {default: false, mandatory: false, option: --orientation, value: 'auto'}
-  low: {default: false, mandatory: false, option: --low, value: '0.1'}
-  high: {default: false, mandatory: false, option: --high, value: '0.99'}
+  orientation:
+    default: false
+    mandatory: false
+    option: '--orientation'
+    value: auto
+  low:
+    default: false
+    mandatory: false
+    option: '--low'
+    value: '0.1'
+  high:
+    default: false
+    mandatory: false
+    option: '--high'
+    value: '0.99'
 tool_command: polypolish filter

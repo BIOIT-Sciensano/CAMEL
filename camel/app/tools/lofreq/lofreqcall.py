@@ -1,23 +1,22 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.lofreq.lofreq import Lofreq
 
 
 class LofreqCall(Lofreq):
-
     """
     LoFreq is a fast and sensitive variant-caller for inferring SNVs and indels from next-generation sequencing data.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes Lofreq call.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('Lofreq call', '2.1.3.1', camel)
+        super().__init__('Lofreq call', None)
 
     def _check_input(self) -> None:
         """
@@ -25,11 +24,11 @@ class LofreqCall(Lofreq):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA reference is required')
+            raise InvalidToolInputError('FASTA reference is required')
         if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BAM alignment file is required')
+            raise InvalidToolInputError('BAM alignment file is required')
         if len(self._tool_inputs['BAM']) != 1:
-            raise ValueError("Exactly one BAM input file expected")
+            raise InvalidToolInputError("Exactly one BAM input file expected")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -61,5 +60,5 @@ class LofreqCall(Lofreq):
         Sets the output of Lofreq call.
         :return: None
         """
-        output_file_path = self.folder / self._parameters['output_filename'].value
+        output_file_path = self.folder / self.get_param_value('output_filename')
         self._tool_outputs['VCF'] = [ToolIOFile(output_file_path)]

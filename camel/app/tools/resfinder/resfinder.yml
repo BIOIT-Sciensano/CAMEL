@@ -1,20 +1,101 @@
-dependencies: [resfinder/4.7.2, blast/2.14.0, kma/1.4.12a]
+conda:
+  name: resfinder
+  packages:
+    - python=3.12
+    - resfinder=4.7.2
+dependencies:
+  - resfinder/4.7.2
+  - blast/2.14.0
+  - kma/1.4.12a
 parameters:
-  acquired: {default: false, mandatory: false, option: --acquired, value: ''}
-  blast_path: {default: false, mandatory: false, option: --blastPath, value: ''}
-  databases: {default: false, mandatory: false, option: --databases, value: ''}
-  dbpoint_path: {default: false, mandatory: false, option: --db_path_point, value: ''}
-  dbres_path: {default: false, mandatory: false, option: --db_path_res, value: ''}
-  dbres_kma_path: {default: false, mandatory: false, option: --db_path_res_kma, value: ''}
-  kma_path: {default: false, mandatory: false, option: --kmaPath, value: ''}
-  min_cov: {default: false, mandatory: false, option: --min_cov, value: ''}
-  min_cov_point: {default: false, mandatory: false, option: --min_cov_point, value: ''}
-  output_path: {default: true, mandatory: true, option: --outputPath, value: 'output_folder'}
-  point: {default: false, mandatory: false, option: --point, value: null}
-  species: {default: false, mandatory: false, option: --species, value: ''}
-  specific_genes: {default: false, mandatory: false, option: -g, value: ''}
-  threshold: {default: false, mandatory: false, option: --threshold, value: ''}
-  threshold_point: {default: false, mandatory: false, option: --threshold_point, value: ''}
-  unknown_mut: {default: false, mandatory: false, option: --unknown_mut, value: false}
-  acq_overlap: {default: false, mandatory: false, option: --acq_overlap, value: ''}
+  acquired:
+    default: false
+    mandatory: false
+    option: '--acquired'
+    flag: true
+  blast_path:
+    default: false
+    mandatory: false
+    option: '--blastPath'
+    value: ''
+  databases:
+    default: false
+    mandatory: false
+    option: '--databases'
+    value: ''
+  dbpoint_path:
+    default: false
+    mandatory: false
+    option: '--db_path_point'
+    value: ''
+  dbres_path:
+    default: false
+    mandatory: false
+    option: '--db_path_res'
+    value: ''
+  dbres_kma_path:
+    default: false
+    mandatory: false
+    option: '--db_path_res_kma'
+    value: ''
+  kma_path:
+    default: false
+    mandatory: false
+    option: '--kmaPath'
+    value: ''
+  kma_threads:
+    default: false
+    mandatory: false
+    option: '--kma_threads'
+    value: 4
+  min_cov:
+    default: false
+    mandatory: false
+    option: '--min_cov'
+    value: ''
+  min_cov_point:
+    default: false
+    mandatory: false
+    option: '--min_cov_point'
+    value: ''
+  output_path:
+    default: true
+    mandatory: true
+    option: '--outputPath'
+    value: output_folder
+  point:
+    default: false
+    mandatory: false
+    option: '--point'
+    flag: true
+  species:
+    default: false
+    mandatory: false
+    option: '--species'
+    value: ''
+  specific_genes:
+    default: false
+    mandatory: false
+    option: '-g'
+    value: ''
+  threshold:
+    default: false
+    mandatory: false
+    option: '--threshold'
+    value: ''
+  threshold_point:
+    default: false
+    mandatory: false
+    option: '--threshold_point'
+    value: ''
+  unknown_mut:
+    default: false
+    mandatory: false
+    option: '--unknown_mut'
+    value: false
+  acq_overlap:
+    default: false
+    mandatory: false
+    option: '--acq_overlap'
+    value: ''
 tool_command: python -m resfinder

@@ -1,6 +1,23 @@
-dependencies: [orphelia/74, java/1.6.0]
+dependencies:
+  - orphelia/74
+  - java/1.6.0
 parameters:
-  maxoverlap: {default: true, mandatory: false, option: -maxoverlap, p_index: 0, value: '60'}
-  model: {default: true, mandatory: false, option: -m, p_index: 0, value: Net700}
-  slots: {default: true, mandatory: false, option: -slots, p_index: 0, value: '1'}
+  maxoverlap:
+    default: true
+    mandatory: false
+    option: -maxoverlap
+    p_index: 0
+    value: "60"
+  model:
+    default: true
+    mandatory: false
+    option: -m
+    p_index: 0
+    value: Net700
+  slots:
+    default: true
+    mandatory: false
+    option: -slots
+    p_index: 0
+    value: "1"
 tool_command: orphelia

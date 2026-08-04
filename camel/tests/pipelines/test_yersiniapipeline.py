@@ -1,26 +1,24 @@
 import unittest
-from pathlib import Path
 
-import tempfile
-import yaml
-
-from camel.app.camel import Camel
-from camel.app.io.tooliodirectory import ToolIODirectory
+from camel.app.cli import cliutils
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.scriptutils.basepipe import basepipeutils
 from camel.scripts.yersiniapipeline import CONFIG_DATA
-from camel.scripts.yersiniapipeline.mainyersiniapipeline import MainYersiniaPipeline
+from camel.scripts.yersiniapipeline.mainyersiniapipeline import main
 from camel.tests import longRunningTest
 
+CUSTOM_ANALYSES = basepipeutils.get_custom_analyses(CONFIG_DATA)
 
-class TestYersiniaPipeline(unittest.TestCase):
+
+class TestYersiniaPipeline(CamelTestSuite):
     """
     Tests for the Yersinia pipeline.
     """
 
-    camel = Camel.get_instance()
     running_dir = None
 
     # Input files
-    test_file_dir = Path(camel.config['testing']['testfiles_dir'], 'pipelines')
+    test_file_dir = CamelTestSuite.get_test_file_dir('pipelines')
     input_enterocolitica_fastq_pe = [
         test_file_dir / 'Yersinia-enterocolitica-S23BD07911_NG_A0183-ds_1.fastq.gz',
         test_file_dir / 'Yersinia-enterocolitica-S23BD07911_NG_A0183-ds_2.fastq.gz'
@@ -34,303 +32,270 @@ class TestYersiniaPipeline(unittest.TestCase):
     input_enterocolitica_fasta = test_file_dir / 'Yersinia-enterocolitica-S23BD07911_NG_A0183-ds.fasta'
     input_pseudotuberculosis_fasta = test_file_dir / 'Yersinia_pseudotuberculosis-S23BD09896_NG_A0586-ds.fasta'
 
-    def setUp(self):
-        """
-        Sets up the resources before running the test.
-        :return: None
-        """
-        self.running_dir = Path(tempfile.mkdtemp(None, 'camel_', TestYersiniaPipeline.camel.config['temp_dir']))
-
-    def test_yersinia_pipeline_typing_db(self) -> None:
-        """
-        Checks if the databases for the sequence typing are available.
-        :return: None
-        """
-        from camel.app.tools.pipelines.sequence_typing.locussetmanager import LocusSetManager
-        with open(CONFIG_DATA) as handle_in:
-            config_data = yaml.safe_load(handle_in)
-
-        for key, scheme_data in config_data['sequence_typing'].items():
-            # Check if scheme exists
-            self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
-
-            # Check if metadata can be loaded
-            manager = LocusSetManager(Camel.get_instance())
-            manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
-            manager.run(self.running_dir)
-            self.assertGreater(len(manager.informs), 0)
-
     @longRunningTest()
-    def test_yersinia_pipeline_blast_with_downsampling(self) -> None:
+    def test_illumina_enterocolitica_blast_with_downsampling(self) -> None:
         """
-        Tests the Yersinia pipeline with all assays, except for cgMLST, with downsampling.
+        Tests the Yersinia pipeline with all assays except for cgMLST with downsampling.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]), str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]),
+            str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--cov-max', '5.0',
-        ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+            '--cov-max', '5',
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst')),
+            '--threads', '4',
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_blast(self) -> None:
+    def test_illumina_enterocolitica_blast(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]), str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_srst2(self) -> None:
-        """
-        Tests the Yersinia pipeline with all assays, except for cgMLST, with the detection method srst2.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]), str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]),
+            str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'srst2'
-        ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst')),
+            '--threads', '4'
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_kma(self) -> None:
+    def test_illumina_enterocolitica_kma(self) -> None:
         """
-        Tests the Neisseria pipeline with all assays, except for cgMLST,
-        with the kma detection method and the TruSeq2 library.
+        Tests the Yersinia pipeline with all assays except for cgMLST using kma as the detection method.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                '--fastq-pe', str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]),
-                str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
-                '--output-html', str(path_report_out),
-                '--output-dir', str(path_report_out.parent),
-                '--output-tsv', str(path_summary_out),
-                '--working-dir', str(self.running_dir),
-                '--detection-method', 'kma',
-                '--library', 'TruSeq2'
-            ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[0]),
+            str(TestYersiniaPipeline.input_enterocolitica_fastq_pe[1]),
+            '--input-type', 'illumina',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_blast(self) -> None:
+    def test_illumina_pseudotuberculosis_blast(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[0]), str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[1]),
-            '--output-html', str(path_report_out),
-            '--output-dir', str(path_report_out.parent),
-            '--output-tsv', str(path_summary_out),
-            '--working-dir', str(self.running_dir)
-        ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
-        self.assertGreater(path_report_out.stat().st_size, 0)
-
-    @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_srst2(self) -> None:
-        """
-        Tests the Yersinia pipeline with all assays, except for cgMLST,
-        with the detection method srst2.
-        :return: None
-        """
-        path_report_out = self.running_dir / 'out' / 'report.html'
-        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-            '--fastq-pe', str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[0]), str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[1]),
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[0]),
+            str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'srst2'
-        ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_kma(self) -> None:
+    def test_illumina_pseudotuberculosis_kma(self) -> None:
         """
-        Tests the Yersinia pipeline with all assays, except for cgMLST,
-        with the kma detection method and the TruSeq2 library.
+        Tests the Yersinia pipeline with all assays except for cgMLST using kma as the detection method.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                '--fastq-pe', str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[0]),
-                str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[1]),
-                '--output-html', str(path_report_out),
-                '--output-dir', str(path_report_out.parent),
-                '--output-tsv', str(path_summary_out),
-                '--working-dir', str(self.running_dir),
-                '--detection-method', 'kma',
-                '--library', 'TruSeq2'
-            ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[0]),
+            str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_pe[1]),
+            '--input-type', 'illumina',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_fasta(self) -> None:
+    def test_fasta_enterocolitica(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using FASTA as input.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fasta', str(TestYersiniaPipeline.input_enterocolitica_fasta),
-                   '--input-type', 'fasta',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir)
-               ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if
-                    not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestYersiniaPipeline.input_enterocolitica_fasta),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst')),
+            '--kraken2-small-db',
+            '--threads', '4'
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_fasta(self) -> None:
+    def test_fasta_pseudotuberculosis(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using FASTA as input.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fasta', str(TestYersiniaPipeline.input_pseudotuberculosis_fasta),
-                   '--input-type', 'fasta',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir)
-               ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if
-                    not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestYersiniaPipeline.input_pseudotuberculosis_fasta),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst')),
+            '--threads', '4'
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_ont(self) -> None:
+    def test_fasta_pseudotuberculosis_mist(self) -> None:
+        """
+        Tests the Yersinia pipeline with all assays using FASTA as input and mist as the detection method.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestYersiniaPipeline.input_pseudotuberculosis_fasta),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(CUSTOM_ANALYSES),
+            '--typing-method', 'mist',
+            '--threads', '4'
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+
+    @longRunningTest()
+    def test_ont_enterocolitica(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fastq-se', str(TestYersiniaPipeline.input_enterocolitica_fastq_se),
-                   '--input-type', 'ont',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir)
-               ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if
-                    not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-se', str(TestYersiniaPipeline.input_enterocolitica_fastq_se),
+            '--input-type', 'ont',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_ont(self) -> None:
+    def test_ont_pseudotuberculosis(self) -> None:
         """
         Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fastq-se', str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_se),
-                   '--input-type', 'ont',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir)
-               ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if
-                    not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-se', str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_se),
+            '--input-type', 'ont',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_enterocolitica_kma_ont(self) -> None:
+    def test_ont_enterocolitica_kma(self) -> None:
         """
-        Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma as detection
+        Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma as the detection method.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fastq-se', str(TestYersiniaPipeline.input_enterocolitica_fastq_se),
-                   '--input-type', 'ont',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir),
-                   '--detection-method', 'kma',
-               ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if
-                    not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-se', str(TestYersiniaPipeline.input_enterocolitica_fastq_se),
+            '--input-type', 'ont',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_yersinia_pipeline_pseudotuberculosis_kma_ont(self) -> None:
+    def test_ont_pseudotuberculosis_kma(self) -> None:
         """
-        Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma dectetion
+        Tests the Yersinia pipeline with all assays except for cgMLST using ONT as input and kma as the detection method.
         :return: None
         """
         path_report_out = self.running_dir / 'out' / 'report.html'
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
-        args = [
-                   '--fastq-se', str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_se),
-                   '--input-type', 'ont',
-                   '--output-html', str(path_report_out),
-                   '--output-dir', str(path_report_out.parent),
-                   '--output-tsv', str(path_summary_out),
-                   '--working-dir', str(self.running_dir),
-                   '--detection-method', 'kma',
-               ] + [f"--{a.replace('_', '-')}" for a in MainYersiniaPipeline.CUSTOM_ANALYSES if
-                    not a.startswith('cgmlst')]
-        main = MainYersiniaPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fastq-se', str(TestYersiniaPipeline.input_pseudotuberculosis_fastq_se),
+            '--input-type', 'ont',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--typing-method', 'kma',
+            '--gene-detection-method', 'kma',
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if not a.startswith('cgmlst'))
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

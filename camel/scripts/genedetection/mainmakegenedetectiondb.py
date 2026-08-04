@@ -1,66 +1,96 @@
 #!/usr/bin/env python
-import argparse
+import dataclasses
+import shutil
 from pathlib import Path
 
-import shutil
+import click
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.utils import fileutils, reportutils
 
-from typing import Optional, Sequence
+from camel.app.cli import cliutils
+from camel.app.loggers import initialize_logging
+from camel.app.scriptutils.basescript import basescriptutils
+from camel.app.scriptutils.basescript.basescript import BaseScript
+from camel.app.scriptutils.basescript.fastainput import FastaInput
+from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
+from camel.app.scriptutils.model import BaseOptions
+from camel.app.toolkits.genedetection.dbhelper import DBHelper
+from camel.app.toolkits.genedetection.genedetectionutils import GeneDetectionUtils
+from camel.app.tools.cdhit.cdhitest import Cluster
+from camel.version import __VERSION__
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.genedetection.dbhelper import DBHelper
-from camel.app.components.genedetection.genedetectionutils import GeneDetectionUtils
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources import CSS_STYLE
 
-
-class MainMakeGeneDetectionDB(object):
+@dataclasses.dataclass(frozen=True)
+class Options(BaseOptions):
     """
-    This class is used to create databases for the gene detection tool.
+    Options for the make DB script.
     """
 
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
-        """
-        Initializes this tool.
-        :param args: (Optional) arguments
-        """
-        self._args = MainMakeGeneDetectionDB.parse_arguments(args)
-        fasta_name = self._args.fasta_name if self._args.fasta_name is not None else self._args.fasta.name
-        self._db_name = FileSystemHelper.make_valid(Path(fasta_name).stem)
-        self._helper = DBHelper(self._db_name, self._args.working_dir)
-        self._clusters = None
-        self._new_name_by_header = None
+    working_dir: Path = dataclasses.field(
+        default=Path.cwd(), metadata={'help': 'Working directory'}
+    )
+    threads: int = dataclasses.field(
+        default=4, metadata={'help': 'Number of threads to use', 'show_default': True}
+    )
+    identity_cutoff: int = dataclasses.field(
+        default=80, metadata={'help': 'Identity cutoff for clustering'}
+    )
 
-    @staticmethod
-    def parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
-        """
-        Parses the command line arguments.
-        :return: Parsed arguments
-        """
-        argument_parser = argparse.ArgumentParser()
-        argument_parser.add_argument('--fasta', type=Path, required=True, help="Input FASTA file.")
-        argument_parser.add_argument('--fasta-name', help="Name of the input FASTA file (for Galaxy input).")
-        argument_parser.add_argument('--identity-cutoff', default=80, type=int)
-        argument_parser.add_argument('--output-html', type=Path, required=True)
-        argument_parser.add_argument('--output-dir', type=Path, required=True)
-        argument_parser.add_argument('--working-dir', default=Path.cwd(), type=Path)
-        argument_parser.add_argument('--threads', type=int, default=4, help='Number of threads to use')
-        return argument_parser.parse_args(args)
 
-    def run(self) -> None:
+class MainMakeGeneDetectionDB(BaseScript[FastaInput, ScriptOutput, Options]):
+    """
+    Creates databases for the gene detection tool.
+    """
+
+    def __init__(self, in_: FastaInput, out: ScriptOutput, opts: Options) -> None:
+        """
+        Initializes the main script.
+        :param in_: Script input
+        :param out: Script output
+        :param opts: Options
+        :return: None
+        """
+        super().__init__(
+            name='Gene detection: Make DB',
+            version=f'CAMEL_{__VERSION__}',
+            script_in=in_,
+            script_out=out,
+            script_opts=opts,
+        )
+        self._db_name = fileutils.make_valid(self._script_in.name)
+        self._helper = DBHelper(self._db_name, self._script_opts.working_dir)
+        self._clusters: list[Cluster] | None = None
+        self._new_name_by_header: dict[str, str] | None = None
+
+    def _execute(self) -> None:
         """
         Runs this tool.
         :return: None
         """
-        if not self._args.output_dir.exists():
-            self._args.output_dir.mkdir(parents=True)
-        input_fasta = self._helper.standardize_fasta_headers(self._args.fasta)
-        self.__export_blast_db(input_fasta, self._args.output_dir)
-        self.__export_srst2_db(input_fasta, self._args.output_dir)
-        self._helper.export_metadata(self._db_name, self._args.output_dir)
+        if not self._script_out.dir.exists():
+            self._script_out.dir.mkdir(parents=True)
+        input_fasta = self._helper.standardize_fasta_headers(self._script_in.fasta)
+        self.__export_blast_db(input_fasta, self._script_out.dir)
+        self._clusters = self.__cluster_fasta(input_fasta)
+        self._helper.export_metadata(self._db_name, self._script_out.dir)
         self.__export_report()
+
+    def __cluster_fasta(self, input_fasta: Path) -> list[Cluster]:
+        """
+        Clusters the input FASTA file.
+        :param input_fasta: Input FASTA file
+        :return: List of clusters
+        """
+        dir_clustering = self._helper.get_working_subdir('clustering')
+        fasta_seq_headers = dir_clustering / 'seq_headers.fasta'
+        self._new_name_by_header = self._helper.convert_fasta_headers_to_seq(
+            input_fasta, fasta_seq_headers
+        )
+        return self._helper.get_clusters_form_fasta(
+            fasta_seq_headers,
+            self._script_opts.identity_cutoff,
+            self._script_opts.threads,
+        )
 
     def __export_blast_db(self, input_fasta: Path, output_dir: Path) -> None:
         """
@@ -82,50 +112,24 @@ class MainMakeGeneDetectionDB(object):
         for f in dir_indexing.iterdir():
             shutil.copyfile(str(f), str(output_dir / f.name))
 
-    def __export_srst2_db(self, input_fasta: Path, output_dir: Path) -> None:
-        """
-        Exports a database for SRST2.
-        :param input_fasta: Input FASTA file
-        :param output_dir: Output directory
-        :return: None
-        """
-        # Cluster FASTA
-        dir_clustering = self._helper.get_working_subdir('clustering')
-        fasta_seq_headers = dir_clustering / 'seq_headers.fasta'
-        self._new_name_by_header = self._helper.convert_fasta_headers_to_seq(input_fasta, fasta_seq_headers)
-        self._clusters = self._helper.get_clusters_form_fasta(
-            fasta_seq_headers, self._args.identity_cutoff, self._args.threads)
-
-        # Create SRST2 FASTA
-        dir_indexing = self._helper.get_working_subdir('index_srst2')
-        fasta_srst2 = dir_indexing / f'{self._db_name}-clustered_{self._args.identity_cutoff}.fasta'
-        self._helper.create_srst2_fasta(fasta_seq_headers, fasta_srst2, self._clusters)
-
-        # Index
-        self._helper.index_samtools_faidx(fasta_srst2, dir_indexing)
-        self._helper.index_bowtie2(fasta_srst2, dir_indexing)
-        self._helper.index_blast(fasta_srst2, dir_indexing)
-        self._helper.index_kma(fasta_srst2, dir_indexing)
-
-        # Export files
-        self._helper.export_mapping(self._new_name_by_header, self._clusters, output_dir)
-        for f in dir_indexing.iterdir():
-            if f.is_file():
-                shutil.copyfile(str(f), str(output_dir / f.name))
-            elif f.is_dir():
-                shutil.copytree(str(f), str(output_dir / f.name))
-
     def __export_report(self) -> None:
         """
         Creates a report with some info on the database.
         :return: None
         """
-        self._report = HtmlReport(self._args.output_html, self._args.output_dir)
-        self._report.initialize('Gene detection database', CSS_STYLE)
+        self._report = reportutils.init_report(
+            path_out=self._script_out.html,
+            key='gene_detection',
+            title='Gene detection database',
+            dir_out=self._script_out.dir,
+        )
         self._report.add_html_object(self.__create_db_info_section())
         self._report.add_html_object(self.__create_clusters_section())
-        self._report.add_html_object(SnakePipelineUtils.create_commands_section(
-            self._helper.informs, self._args.working_dir))
+        self._report.add_html_object(
+            reportutils.create_commands_section(
+                self._helper.informs, self._script_opts.working_dir
+            )
+        )
         self._report.save()
 
     def __create_db_info_section(self) -> HtmlReportSection:
@@ -134,12 +138,16 @@ class MainMakeGeneDetectionDB(object):
         :return: HTML report section
         """
         section_db_info = HtmlReportSection('Database info')
-        section_db_info.add_table([
-            ['Name:', self._db_name],
-            ['Size:', sum(len(c.seq_ids) for c in self._clusters)],
-            ['Nb. clusters:', len(self._clusters)],
-            ['Clustering cutoff: ', f'{self._args.identity_cutoff}%']
-        ], table_attributes=[('class', 'information')])
+        section_db_info.add_table(
+            [
+                ['Name:', self._db_name],
+                ['Script version:', self._version],
+                ['Size:', sum(len(c.seq_ids) for c in self._clusters)],
+                ['Nb. clusters:', len(self._clusters)],
+                ['Clustering cutoff: ', f'{self._script_opts.identity_cutoff}%'],
+            ],
+            table_attributes=[('class', 'information')],
+        )
         return section_db_info
 
     def __create_clusters_section(self) -> HtmlReportSection:
@@ -149,17 +157,42 @@ class MainMakeGeneDetectionDB(object):
         """
         section_clusters = HtmlReportSection('Clusters')
         allele_by_seq_id = {
-            s: GeneDetectionUtils.parse_header(h)[1]['allele'] for s, h in self._new_name_by_header.items()}
-        table_data = [[
-            cluster.name,
-            len(cluster.seq_ids),
-            ', '.join([allele_by_seq_id[s] for s in cluster.seq_ids])
-        ] for cluster in self._clusters]
-        section_clusters.add_table(table_data, ['Cluster', 'Size', 'Sequence ids'], [('class', 'data')])
+            s: GeneDetectionUtils.parse_header(h)[1]['allele']
+            for s, h in self._new_name_by_header.items()
+        }
+        table_data = [
+            [
+                cluster.name,
+                len(cluster.seq_ids),
+                ', '.join([allele_by_seq_id[s] for s in cluster.seq_ids]),
+            ]
+            for cluster in self._clusters
+        ]
+        section_clusters.add_table(
+            table_data, ['Cluster', 'Size', 'Sequence ids'], [('class', 'data')]
+        )
         return section_clusters
 
 
+@click.command(
+    name='gene_detection_create_db',
+    short_help='Creates DBs for the gene detection script',
+)
+@cliutils.add_click_options_from_dataclass(FastaInput)
+@basescriptutils.add_output_opts
+@cliutils.add_click_options_from_dataclass(Options)
+def main(**kwargs) -> None:
+    """
+    Wrapper for NCBI AMRFinder+.
+    """
+    script = MainMakeGeneDetectionDB(
+        in_=FastaInput(**cliutils.from_kwargs(FastaInput, kwargs)),
+        out=basescriptutils.parse_script_output(kwargs),
+        opts=Options(**cliutils.from_kwargs(Options, kwargs)),
+    )
+    script.run()
+
+
 if __name__ == '__main__':
-    Camel.get_instance()
-    main = MainMakeGeneDetectionDB()
-    main.run()
+    initialize_logging()
+    main()

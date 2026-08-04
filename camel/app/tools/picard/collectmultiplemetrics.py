@@ -1,14 +1,13 @@
 import re
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.loggers import logger
 from camel.app.tools.picard.picard import Picard
 
 
 class CollectMultipleMetrics(Picard):
-
     """
     Class for Picard CollectMultipleMetrics function to calculate various QC metrics for read mapping
 
@@ -68,13 +67,12 @@ class CollectMultipleMetrics(Picard):
         'CollectQualityYieldMetrics': {'QualityYield': '.quality_yield_metrics'}
     }
 
-    def __init__(self, camel: Camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Picard CollectMultipleMetrics', '2.23.3', camel)
+        super().__init__('Picard CollectMultipleMetrics', '2.23.3')
 
         self._required_inputs = ['BAM', 'SAM']
         self._specific_parameters = ['metric_accumulation_level_multi']
@@ -97,7 +95,7 @@ class CollectMultipleMetrics(Picard):
                 except KeyError:
                     logger.warning(f'Picard CollectMultipleMetrics unsupported metrics {key}, its results will not be analyzed or returned.')
 
-    def _set_informs(self, stderr: Optional[str] = None) -> None:
+    def _set_informs(self, stderr: str | None = None) -> None:
         """
         Analyse the result of picard run and update tool.informs
         :return: None
@@ -139,7 +137,7 @@ class CollectMultipleMetrics(Picard):
         option_string = " ".join(build_options)
 
         self._command.command = " ".join([
-            "java", self._java_options, "-jar $PICARD_JAR", self._tool_command, self._java_options_temp_dir,
+            *self._get_base_command(), self._java_options_temp_dir,
             self._input_string, self._output_string, option_string
         ])
 
@@ -150,7 +148,7 @@ class CollectMultipleMetrics(Picard):
         """
         # Ref: http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics
         align_stats = {}
-        with open(self._tool_outputs['TXT_AlignmentSummary'][0].path, 'r') as inf:
+        with open(self._tool_outputs['TXT_AlignmentSummary'][0].path) as inf:
             col_nbs = None
             for line in inf:
                 if not line.startswith('#') and 'TOTAL_READS' in line and col_nbs is None:  # First line after comments is the header
@@ -182,7 +180,7 @@ class CollectMultipleMetrics(Picard):
         # Ref: http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics
         data_row = False
         self.informs['InsertSize_stats'] = {}
-        with open(self._tool_outputs['TXT_InsertSize'][0].path, 'r') as inf:
+        with open(self._tool_outputs['TXT_InsertSize'][0].path) as inf:
             for line in inf:
                 if re.match('MEDIAN_INSERT_SIZE', line):
                     data_row = True
@@ -209,7 +207,7 @@ class CollectMultipleMetrics(Picard):
         """
         # Only GC Bias summary is analyzed
         self.informs['GCBias_stats'] = {}
-        with open(self._tool_outputs['TXT_GcBiasSummary'][0].path, 'r') as inf:
+        with open(self._tool_outputs['TXT_GcBiasSummary'][0].path) as inf:
             for line in inf:
                 if re.match('All Reads', line):
                     informs = line.split("\t")

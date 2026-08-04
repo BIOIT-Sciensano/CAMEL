@@ -1,10 +1,10 @@
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.components.pubmlst.pubmlstparser import PubMLSTParser, PubMLSTParsingError
-from camel.app.io.tooliovalue import ToolIOValue
+from camelcore.app.io.tooliovalue import ToolIOValue
+
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.toolkits.pubmlst.pubmlstparser import PubMLSTParser, PubMLSTParsingError
 
 
 class ResistanceMetadataExtractor(Tool):
@@ -12,13 +12,12 @@ class ResistanceMetadataExtractor(Tool):
     This tool is used to extract metadata for resistance genes in the Neisseria pipeline.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the metadata extractor.
-        :param camel: CAMEL instance.
         :return: None
         """
-        super().__init__('Neisseria: resistance metadata extractor', '0.1', camel)
+        super().__init__('Neisseria: resistance metadata extractor', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -32,14 +31,14 @@ class ResistanceMetadataExtractor(Tool):
                 continue
             allele_url = self.__get_allele_url(h.value.locus, h.value.allele_id)
             if allele_url is None:
-                logger.warning("Cannot determine valid url for: {}_{}".format(h.value.locus, h.value.allele_id))
+                logger.warning(f"Cannot determine valid url for: {h.value.locus}_{h.value.allele_id}")
                 continue
             try:
                 key, value = PubMLSTParser.parse_linked_data(allele_url)
             except PubMLSTParsingError as err:
                 logger.warning(f"Cannot parse: {allele_url}: {err}")
                 continue
-            table_data.append(['{} ({}_{}):'.format(key, h.value.locus, h.value.allele_id), value])
+            table_data.append([f'{key} ({h.value.locus}_{h.value.allele_id}):', value])
 
         section = self._tool_inputs['VAL_HTML'][0].value
         section.add_table(table_data, table_attributes=[('class', 'information')])

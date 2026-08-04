@@ -1,19 +1,18 @@
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from Bio import SeqIO
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.utils import fileutils
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.sequencetyping.sequencetypinghitbase import SequenceTypingHitBase
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 
 
 class HtmlReporterTyping(Tool):
@@ -32,12 +31,11 @@ class HtmlReporterTyping(Tool):
     INFO_FILENAME = 'sequence_typing.json'
     NEW_ALLELES_FILENAME = 'new_alleles.fasta'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('HTML Reporter', '0.1', camel)
+        super().__init__('HTML Reporter', '0.1')
         self._report_section = None
         self._output_folder = None
         self._sub_folder = None
@@ -70,7 +68,7 @@ class HtmlReporterTyping(Tool):
         if 'message' in self._parameters:
             self._report_section.add_alert(
                 self._parameters['message'].value, self._parameters['message_category'].value)
-        
+
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._report_section)]
         self.__export_analysis_metadata()
 
@@ -80,7 +78,7 @@ class HtmlReporterTyping(Tool):
         :return: None
         """
         self._report_section = HtmlReportSection(self._input_informs['scheme']['title'], 3)
-        self._sub_folder = Path('sequence_typing', FileSystemHelper.make_valid(self._input_informs['scheme']['name']))
+        self._sub_folder = Path('sequence_typing', fileutils.make_valid(self._input_informs['scheme']['name']))
 
     def __add_sequence_type(self) -> None:
         """
@@ -104,7 +102,7 @@ class HtmlReporterTyping(Tool):
 
         self._report_section.add_table(table_data, header, table_attributes=[('class', 'data')])
 
-    def __add_output_table(self, output_tsv: Path, hits_io: List[ToolIOValue], sub_header: Optional[str]) -> None:
+    def __add_output_table(self, output_tsv: Path, hits_io: list[ToolIOValue], sub_header: Optional[str]) -> None:
         """
         Adds the output table with the detected alleles.
         :param output_tsv: Tabular output file
@@ -147,7 +145,7 @@ class HtmlReporterTyping(Tool):
         :return: None
         """
         if 'scheme' not in self._input_informs:
-            raise InvalidInputSpecificationError("Scheme information is required")
+            raise InvalidToolInputError("Scheme information is required")
         super()._check_input()
 
     def __export_analysis_metadata(self) -> None:
@@ -181,7 +179,7 @@ class HtmlReporterTyping(Tool):
             table_data[i] = (table_data[i][0], 'n/a')
         self._report_section.add_table(table_data, ['Field', 'Value'], [('class', 'data')])
 
-    def __generate_novel_allele_fasta(self, hits_novel: List[SequenceTypingHitBase]) -> Path:
+    def __generate_novel_allele_fasta(self, hits_novel: list[TypingHitBase]) -> Path:
         """
         Generates a FASTA file with the novel alleles.
         :param hits_novel: Hits with novel alleles
@@ -198,7 +196,7 @@ class HtmlReporterTyping(Tool):
 
         # Save in FASTA format
         basename = f"novel-{self._tool_inputs['VAL_SAMPLE'][0].value}-{self._input_informs['scheme']['name']}.fasta"
-        path_out = self.folder / FileSystemHelper.make_valid(basename)
+        path_out = self.folder / fileutils.make_valid(basename)
         with path_out.open('w') as handle:
             SeqIO.write(seqs_out, handle, 'fasta')
         return path_out

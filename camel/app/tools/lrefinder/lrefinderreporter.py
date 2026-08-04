@@ -1,12 +1,11 @@
 from typing import Union
 
 import pandas as pd
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class LREFinderReporter(Tool):
@@ -14,12 +13,11 @@ class LREFinderReporter(Tool):
     Tool to generate HTML output for the LRE-Finder tool.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('LRE-Finder reporter', '1.0', camel)
+        super().__init__('LRE-Finder reporter', '1.0')
 
     def _check_input(self) -> None:
         """
@@ -27,7 +25,7 @@ class LREFinderReporter(Tool):
         :return: None
         """
         if 'lrefinder' not in self._input_informs:
-            raise InvalidInputSpecificationError('LRE-Finder informs are required')
+            raise InvalidToolInputError('LRE-Finder informs are required')
         super()._check_input()
 
     @staticmethod
@@ -46,19 +44,19 @@ class LREFinderReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('LRE-Finder', subtitle=self._input_informs['lrefinder']['_name'])
+        section = HtmlReportSection('LRE-Finder', subtitle=self._input_informs['lrefinder']['_name_full'])
         informs = self._input_informs['lrefinder']
         section.add_paragraph(f"Detected species: <i>{informs['species']}</i>")
         data_genes = pd.DataFrame(informs['genes'])
         section.add_header('Detected genes', 3)
         section.add_table([
             [LREFinderReporter.__format_value(row[col]) for col in data_genes.columns] for
-            row in data_genes.to_dict('records')], data_genes.columns, [('class', 'data')])
+            row in data_genes.to_dict('records')], list(data_genes.columns), [('class', 'data')])
         section.add_header('Detected mutations', 3)
         data_mutations = pd.DataFrame(informs['mutations'])
         section.add_table([
             [LREFinderReporter.__format_value(row[col]) for col in data_mutations.columns] for
-            row in data_mutations.to_dict('records')], data_mutations.columns, [('class', 'data')])
+            row in data_mutations.to_dict('records')], list(data_mutations.columns), [('class', 'data')])
         if 'pseudo_reads' in self._parameters:
             section.add_warning_message("The tool is executed on simulated reads.")
         self._tool_outputs['HTML'] = [ToolIOValue(section)]

@@ -1,11 +1,12 @@
 import json
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class ResFinder(Tool):
@@ -13,13 +14,12 @@ class ResFinder(Tool):
     ResFinder identifies acquired antimicrobial resistance genes in total or partial sequenced isolates of bacteria.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('ResFinder', '4.7.2', camel)
+        super().__init__('ResFinder', '4.7.2')
 
     def _check_input(self) -> None:
         """
@@ -27,11 +27,11 @@ class ResFinder(Tool):
         :return: None
         """
         if any(key in self._tool_inputs for key in ('FASTA' or 'FASTQ_PE' or 'FASTQ_SE')):
-            raise InvalidInputSpecificationError('FASTA or FASTQ input is required')
+            raise InvalidToolInputError('FASTA or FASTQ input is required')
         if not ('acquired' or 'point' in self._tool_inputs):
-            raise InvalidInputSpecificationError('Either "acquired" or "point" is required')
+            raise InvalidToolInputError('Either "acquired" or "point" is required')
         if 'DIR' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Database input is required (DIR)")
+            raise InvalidToolInputError("Database input is required (DIR)")
         super()._check_input()
 
     def _build_command(self) -> None:
@@ -52,13 +52,13 @@ class ResFinder(Tool):
             self._tool_command, input_str, '-db_point', str(self._tool_inputs['DIR'][0].path / 'pointfinder'),
             '-db_res', str(self._tool_inputs['DIR'][0].path / 'resfinder'), *self._build_options()])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """

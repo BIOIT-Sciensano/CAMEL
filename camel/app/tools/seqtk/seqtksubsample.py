@@ -1,26 +1,23 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastqutils, fileutils
+
 from camel.app.loggers import logger
 from camel.app.tools.seqtk.seqtk import Seqtk
 
 
 class SeqtkSubsample(Seqtk):
-
     """
-    Class that subsamples fastq/fasta file(s) using seqkt
+    Class that subsamples fastq/fasta file(s) using seqtk.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize seqtk subsample
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Seqtk Subsample', '1.4', camel)
+        super().__init__('Seqtk Subsample', '1.4')
         self._supported_inputs = ['FASTA', 'FASTQ', 'FASTA_PE', 'FASTQ_PE']
         self._function_name = 'Subsample'
         self._specific_parameters = ['combine_output', 'output_prefix', 'fraction']
@@ -94,7 +91,7 @@ class SeqtkSubsample(Seqtk):
         if 'combine_output' in self._parameters:
             # Tag if set: combine outputs of individual PE reads into one file
             output_file = self.folder / (self._parameters['output_prefix'].value + self.__get_output_file_suffix())
-            FileUtils.concatenate_files(output_file, self._output_files)
+            fileutils.concatenate_files(output_file, self._output_files)
             self._tool_outputs[self.input_file_type] = [ToolIOFile(output_file)]
         else:
             self._tool_outputs[self.input_file_type + '_PE'] = [ToolIOFile(f) for f in self._output_files]
@@ -118,9 +115,9 @@ class SeqtkSubsample(Seqtk):
         """
         if self.input_mode == 'PE':
             if 'combine_output' in self._parameters:
-                self._informs['reads_count'] = FastqUtils.count_reads(self._tool_outputs[self.input_file_type][0].path)
+                self._informs['reads_count'] = fastqutils.count_reads(self._tool_outputs[self.input_file_type][0].path)
             else:
-                reads_count_per_file = [FastqUtils.count_reads(f.path) for f in self._tool_outputs[self.input_file_type+'_PE']]
+                reads_count_per_file = [fastqutils.count_reads(f.path) for f in self._tool_outputs[self.input_file_type+'_PE']]
                 self._informs['reads_count'] = sum(reads_count_per_file)
         elif self.input_mode == 'SE':
-            self._informs['reads_count'] = FastqUtils.count_reads(self._tool_outputs[self.input_file_type][0].path)
+            self._informs['reads_count'] = fastqutils.count_reads(self._tool_outputs[self.input_file_type][0].path)

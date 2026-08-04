@@ -1,9 +1,33 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  RG_name: {default: true, mandatory: false, option: READ_GROUP_NAME, p_index: 30,
-    value: ReadGroupNA}
-  RG_sample_name: {default: true, mandatory: false, option: SAMPLE_NAME, p_index: 20,
-    value: sampleNA}
-  output: {default: true, mandatory: false, option: O, p_index: 0, value: fastq.bam}
-  sort_order: {default: true, mandatory: false, option: SORT_ORDER, p_index: 10, value: queryname}
+  RG_name:
+    default: true
+    mandatory: false
+    option: READ_GROUP_NAME
+    p_index: 30
+    value: ReadGroupNA
+  RG_sample_name:
+    default: true
+    mandatory: false
+    option: SAMPLE_NAME
+    p_index: 20
+    value: sampleNA
+  output:
+    default: true
+    mandatory: false
+    option: O
+    p_index: 0
+    value: fastq.bam
+  sort_order:
+    default: true
+    mandatory: false
+    option: SORT_ORDER
+    p_index: 10
+    value: queryname
 tool_command: FastqToSam

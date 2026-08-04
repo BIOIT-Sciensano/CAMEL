@@ -1,8 +1,33 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+    - mothur=1.48.0
+dependencies:
+  - mothur/1.48.0
 parameters:
-  cutoff: {default: false, mandatory: false, option: cutoff, p_index: 0, value: '0.05'}
-  hard: {default: false, mandatory: false, option: hard, p_index: 0, value: 'true'}
-  method: {default: true, mandatory: true, option: method, p_index: 0, value: opti}
-  precision: {default: false, mandatory: false, option: precision, p_index: 0, value: '1000'}
-  sim: {default: false, mandatory: false, option: sim, p_index: 0, value: 'false'}
+  cutoff:
+    default: false
+    mandatory: false
+    option: cutoff
+    value: '0.05'
+  hard:
+    default: false
+    mandatory: false
+    option: hard
+    value: 'true'
+  method:
+    default: true
+    mandatory: true
+    option: method
+    value: opti
+  precision:
+    default: false
+    mandatory: false
+    option: precision
+    value: '1000'
+  sim:
+    default: false
+    mandatory: false
+    option: sim
+    value: 'false'
 tool_command: mothur "#cluster({0}{1})"

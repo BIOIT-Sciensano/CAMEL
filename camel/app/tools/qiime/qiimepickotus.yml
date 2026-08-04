@@ -1,89 +1,287 @@
-dependencies: [qiime/1.9.1, uclust/1.2.22, blast/2.2.22, ea-utils/27a4809]
+conda:
+  name: qiime
+  packages:
+    - qiime=1.9.1
+dependencies:
+  - qiime/1.9.1
+  - uclust/1.2.22
+  - blast/2.2.22
+  - ea-utils/27a4809
 parameters:
-  abundance_skew: {default: false, mandatory: false, option: --abundance_skew, p_index: 0,
-    value: '2.0'}
-  clustering_algorithm: {default: false, mandatory: false, option: --clustering_algorithm,
-    p_index: 0, value: furthest}
-  denovo_otu_id_prefix: {default: false, mandatory: false, option: --denovo_otu_id_prefix,
-    p_index: 0, value: denovo}
-  derep_fullseq: {default: false, mandatory: false, option: --derep_fullseq, p_index: 0,
-    value: 'False'}
-  enable_rev_strand_match: {default: false, mandatory: false, option: --enable_rev_strand_match,
-    p_index: 0, value: 'False'}
-  exact_uclust: {default: false, mandatory: false, option: --exact_uclust, p_index: 0,
-    value: 'False'}
-  max_accepts: {default: false, mandatory: false, option: --max_accepts, p_index: 0,
-    value: '1'}
-  max_cdhit_memory: {default: false, mandatory: false, option: --max_cdhit_memory,
-    p_index: 0, value: '400'}
-  max_e_value_blast: {default: false, mandatory: false, option: --max_e_value_blast,
-    p_index: 0, value: 1e-10}
-  max_rejects: {default: false, mandatory: false, option: --max_rejects, p_index: 0,
-    value: '8'}
-  min_aligned_percent: {default: false, mandatory: false, option: --min_aligned_percent,
-    p_index: 0, value: '0.5'}
-  minlen: {default: false, mandatory: false, option: --minlen, p_index: 0, value: '64'}
-  minsize: {default: false, mandatory: false, option: --minsize, p_index: 0, value: '4'}
-  non_chimeras_retention: {default: false, mandatory: false, option: --non_chimeras_retention,
-    p_index: 0, value: union}
-  optimal_uclust: {default: false, mandatory: false, option: --optimal_uclust, p_index: 0,
-    value: 'False'}
-  otu_picking_method: {default: false, mandatory: false, option: --otu_picking_method,
-    p_index: 0, value: uclust}
-  perc_id_blast: {default: false, mandatory: false, option: --perc_id_blast, p_index: 0,
-    value: '0.97'}
-  percent_id_err: {default: false, mandatory: false, option: --percent_id_err, p_index: 0,
-    value: '0.97'}
-  prefix_length: {default: false, mandatory: false, option: --prefix_length, p_index: 0,
-    value: '50'}
-  prefix_prefilter_length: {default: false, mandatory: false, option: --prefix_prefilter_length,
-    p_index: 0, value: null}
-  similarity: {default: false, mandatory: false, option: --similarity, p_index: 0,
-    value: '0.97'}
-  sizeorder: {default: false, mandatory: false, option: --sizeorder, p_index: 0, value: 'False'}
-  sortmerna_best_N_alignments: {default: false, mandatory: false, option: --sortmerna_best_N_alignments,
-    p_index: 0, value: '1'}
-  sortmerna_coverage: {default: false, mandatory: false, option: --sortmerna_coverage,
-    p_index: 0, value: '0.97'}
-  sortmerna_e_value: {default: false, mandatory: false, option: --sortmerna_e_value,
-    p_index: 0, value: '1'}
-  sortmerna_max_pos: {default: false, mandatory: false, option: --sortmerna_max_pos,
-    p_index: 0, value: '10000'}
-  sortmerna_tabular: {default: false, mandatory: false, option: --sortmerna_tabular,
-    p_index: 0, value: 'False'}
-  stepwords: {default: false, mandatory: false, option: --stepwords, p_index: 0, value: '8'}
-  suffix_length: {default: false, mandatory: false, option: --suffix_length, p_index: 0,
-    value: '50'}
-  sumaclust_exact: {default: false, mandatory: false, option: --sumaclust_exact, p_index: 0,
-    value: 'False'}
-  sumaclust_l: {default: false, mandatory: false, option: --sumaclust_l, p_index: 0,
-    value: 'True'}
-  suppress_cluster_size_filtering: {default: false, mandatory: false, option: --suppress_cluster_size_filtering,
-    p_index: 0, value: 'False'}
-  suppress_de_novo_chimera_detection: {default: false, mandatory: false, option: --suppress_de_novo_chimera_detection,
-    p_index: 0, value: 'False'}
-  suppress_new_clusters: {default: false, mandatory: false, option: --suppress_new_clusters,
-    p_index: 0, value: 'False'}
-  suppress_prefilter_exact_match: {default: false, mandatory: false, option: --suppress_prefilter_exact_match,
-    p_index: 0, value: 'False'}
-  suppress_presort_by_abundance_uclust: {default: false, mandatory: false, option: --suppress_presort_by_abundance_uclust,
-    p_index: 0, value: 'False'}
-  suppress_reference_chimera_detection: {default: false, mandatory: false, option: --suppress_reference_chimera_detection,
-    p_index: 0, value: 'False'}
-  suppress_uclust_stable_sort: {default: false, mandatory: false, option: --suppress_uclust_stable_sort,
-    p_index: 0, value: 'False'}
-  swarm_resolution: {default: false, mandatory: false, option: --swarm_resolution,
-    p_index: 0, value: '1'}
-  threads: {default: false, mandatory: false, option: --threads, p_index: 0, value: '1'}
-  trie_prefilter: {default: false, mandatory: false, option: --trie_prefilter, p_index: 0,
-    value: 'False'}
-  trie_reverse_seqs: {default: false, mandatory: false, option: --trie_reverse_seqs,
-    p_index: 0, value: 'False'}
-  usearch61_sort_method: {default: false, mandatory: false, option: --usearch61_sort_method,
-    p_index: 0, value: abundance}
-  usearch_fast_cluster: {default: false, mandatory: false, option: --usearch_fast_cluster,
-    p_index: 0, value: 'False'}
-  user_sort: {default: false, mandatory: false, option: --user_sort, p_index: 0, value: 'False'}
-  word_length: {default: false, mandatory: false, option: --word_length, p_index: 0,
-    value: '8'}
+  abundance_skew:
+    default: false
+    mandatory: false
+    option: --abundance_skew
+    p_index: 0
+    value: "2.0"
+  clustering_algorithm:
+    default: false
+    mandatory: false
+    option: --clustering_algorithm
+    p_index: 0
+    value: furthest
+  denovo_otu_id_prefix:
+    default: false
+    mandatory: false
+    option: --denovo_otu_id_prefix
+    p_index: 0
+    value: denovo
+  derep_fullseq:
+    default: false
+    mandatory: false
+    option: --derep_fullseq
+    p_index: 0
+    value: "False"
+  enable_rev_strand_match:
+    default: false
+    mandatory: false
+    option: --enable_rev_strand_match
+    p_index: 0
+    value: "False"
+  exact_uclust:
+    default: false
+    mandatory: false
+    option: --exact_uclust
+    p_index: 0
+    value: "False"
+  max_accepts:
+    default: false
+    mandatory: false
+    option: --max_accepts
+    p_index: 0
+    value: "1"
+  max_cdhit_memory:
+    default: false
+    mandatory: false
+    option: --max_cdhit_memory
+    p_index: 0
+    value: "400"
+  max_e_value_blast:
+    default: false
+    mandatory: false
+    option: --max_e_value_blast
+    p_index: 0
+    value: 1e-10
+  max_rejects:
+    default: false
+    mandatory: false
+    option: --max_rejects
+    p_index: 0
+    value: "8"
+  min_aligned_percent:
+    default: false
+    mandatory: false
+    option: --min_aligned_percent
+    p_index: 0
+    value: "0.5"
+  minlen:
+    default: false
+    mandatory: false
+    option: --minlen
+    p_index: 0
+    value: "64"
+  minsize:
+    default: false
+    mandatory: false
+    option: --minsize
+    p_index: 0
+    value: "4"
+  non_chimeras_retention:
+    default: false
+    mandatory: false
+    option: --non_chimeras_retention
+    p_index: 0
+    value: union
+  optimal_uclust:
+    default: false
+    mandatory: false
+    option: --optimal_uclust
+    p_index: 0
+    value: "False"
+  otu_picking_method:
+    default: false
+    mandatory: false
+    option: --otu_picking_method
+    p_index: 0
+    value: uclust
+  perc_id_blast:
+    default: false
+    mandatory: false
+    option: --perc_id_blast
+    p_index: 0
+    value: "0.97"
+  percent_id_err:
+    default: false
+    mandatory: false
+    option: --percent_id_err
+    p_index: 0
+    value: "0.97"
+  prefix_length:
+    default: false
+    mandatory: false
+    option: --prefix_length
+    p_index: 0
+    value: "50"
+  prefix_prefilter_length:
+    default: false
+    mandatory: false
+    option: --prefix_prefilter_length
+    p_index: 0
+    value: null
+  similarity:
+    default: false
+    mandatory: false
+    option: --similarity
+    p_index: 0
+    value: "0.97"
+  sizeorder:
+    default: false
+    mandatory: false
+    option: --sizeorder
+    p_index: 0
+    value: "False"
+  sortmerna_best_N_alignments:
+    default: false
+    mandatory: false
+    option: --sortmerna_best_N_alignments
+    p_index: 0
+    value: "1"
+  sortmerna_coverage:
+    default: false
+    mandatory: false
+    option: --sortmerna_coverage
+    p_index: 0
+    value: "0.97"
+  sortmerna_e_value:
+    default: false
+    mandatory: false
+    option: --sortmerna_e_value
+    p_index: 0
+    value: "1"
+  sortmerna_max_pos:
+    default: false
+    mandatory: false
+    option: --sortmerna_max_pos
+    p_index: 0
+    value: "10000"
+  sortmerna_tabular:
+    default: false
+    mandatory: false
+    option: --sortmerna_tabular
+    p_index: 0
+    value: "False"
+  stepwords:
+    default: false
+    mandatory: false
+    option: --stepwords
+    p_index: 0
+    value: "8"
+  suffix_length:
+    default: false
+    mandatory: false
+    option: --suffix_length
+    p_index: 0
+    value: "50"
+  sumaclust_exact:
+    default: false
+    mandatory: false
+    option: --sumaclust_exact
+    p_index: 0
+    value: "False"
+  sumaclust_l:
+    default: false
+    mandatory: false
+    option: --sumaclust_l
+    p_index: 0
+    value: "True"
+  suppress_cluster_size_filtering:
+    default: false
+    mandatory: false
+    option: --suppress_cluster_size_filtering
+    p_index: 0
+    value: "False"
+  suppress_de_novo_chimera_detection:
+    default: false
+    mandatory: false
+    option: --suppress_de_novo_chimera_detection
+    p_index: 0
+    value: "False"
+  suppress_new_clusters:
+    default: false
+    mandatory: false
+    option: --suppress_new_clusters
+    p_index: 0
+    value: "False"
+  suppress_prefilter_exact_match:
+    default: false
+    mandatory: false
+    option: --suppress_prefilter_exact_match
+    p_index: 0
+    value: "False"
+  suppress_presort_by_abundance_uclust:
+    default: false
+    mandatory: false
+    option: --suppress_presort_by_abundance_uclust
+    p_index: 0
+    value: "False"
+  suppress_reference_chimera_detection:
+    default: false
+    mandatory: false
+    option: --suppress_reference_chimera_detection
+    p_index: 0
+    value: "False"
+  suppress_uclust_stable_sort:
+    default: false
+    mandatory: false
+    option: --suppress_uclust_stable_sort
+    p_index: 0
+    value: "False"
+  swarm_resolution:
+    default: false
+    mandatory: false
+    option: --swarm_resolution
+    p_index: 0
+    value: "1"
+  threads:
+    default: false
+    mandatory: false
+    option: --threads
+    p_index: 0
+    value: "1"
+  trie_prefilter:
+    default: false
+    mandatory: false
+    option: --trie_prefilter
+    p_index: 0
+    value: "False"
+  trie_reverse_seqs:
+    default: false
+    mandatory: false
+    option: --trie_reverse_seqs
+    p_index: 0
+    value: "False"
+  usearch61_sort_method:
+    default: false
+    mandatory: false
+    option: --usearch61_sort_method
+    p_index: 0
+    value: abundance
+  usearch_fast_cluster:
+    default: false
+    mandatory: false
+    option: --usearch_fast_cluster
+    p_index: 0
+    value: "False"
+  user_sort:
+    default: false
+    mandatory: false
+    option: --user_sort
+    p_index: 0
+    value: "False"
+  word_length:
+    default: false
+    mandatory: false
+    option: --word_length
+    p_index: 0
+    value: "8"
 tool_command: pick_otus.py

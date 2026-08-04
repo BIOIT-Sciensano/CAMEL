@@ -3,18 +3,16 @@ from camel.app.tools.gatk.gatk import GATK
 
 
 class GATKIndelRealigner(GATK):
-
     """
     Class for GATK IndelRealigner function
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize a picard tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk IndelRealigner', '3.7', camel)
+        super().__init__('gatk IndelRealigner', '3.7')
 
         self._required_inputs = ['BAM', 'FASTA_REF', 'TXT_realign_intervals']
         self._output_type = 'BAM'
@@ -30,9 +28,9 @@ class GATKIndelRealigner(GATK):
         super(GATKIndelRealigner, self)._set_input()
 
         bam_file = self._tool_inputs['BAM'][0].path
-        self._input_string += "-I {} ".format(bam_file)
+        self._input_string += f"-I {bam_file} "
         interval_file = self._tool_inputs['TXT_realign_intervals'][0].path
-        self._input_string += "-targetIntervals {} ".format(interval_file)
+        self._input_string += f"-targetIntervals {interval_file} "
 
         # to work with only known regions from VCF_KNOWN
         if 'VCF_KNOWN' in self._tool_inputs:

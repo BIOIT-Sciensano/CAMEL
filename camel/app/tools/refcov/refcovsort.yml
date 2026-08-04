@@ -1,7 +1,21 @@
 dependencies: []
 parameters:
-  post_cov_cutoff: {default: false, mandatory: false, option: null, p_index: 0, value: '0'}
-  post_depth_cutoff: {default: false, mandatory: false, option: null, p_index: 0,
-    value: '0'}
-  post_sort_by: {default: false, mandatory: false, option: null, p_index: 0, value: coverage}
+  post_cov_cutoff:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: "0"
+  post_depth_cutoff:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: "0"
+  post_sort_by:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: coverage
 tool_command: null

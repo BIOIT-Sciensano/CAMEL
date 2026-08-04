@@ -1,16 +1,15 @@
 import json
-from distutils.util import strtobool
 from pathlib import Path
 from typing import Any
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.utils import fileutils
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class VariantCallingReporter(Tool):
@@ -20,12 +19,11 @@ class VariantCallingReporter(Tool):
 
     SUB_FOLDER = 'variant_calling'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__("Variant Calling Reporter", "0.1", camel)
+        super().__init__("Variant Calling Reporter", "0.1")
         self._section = None
 
     def _check_input(self) -> None:
@@ -34,17 +32,17 @@ class VariantCallingReporter(Tool):
         :return: None
         """
         if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("VCF input is required")
+            raise InvalidToolInputError("VCF input is required")
         if 'VCF_filt' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Filtered VCF input is required")
+            raise InvalidToolInputError("Filtered VCF input is required")
         if 'VAL_Sample' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Sample name is required")
+            raise InvalidToolInputError("Sample name is required")
         if 'reference' not in self._input_informs:
-            raise InvalidInputSpecificationError("Reference information is required")
+            raise InvalidToolInputError("Reference information is required")
         if 'mapping' not in self._input_informs:
-            raise InvalidInputSpecificationError("Mapping informs are required")
+            raise InvalidToolInputError("Mapping informs are required")
         if 'JSON' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("JSON output of variant filtering is required")
+            raise InvalidToolInputError("JSON output of variant filtering is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -53,7 +51,7 @@ class VariantCallingReporter(Tool):
         :return: None
         """
         tool_versions = ', '.join([
-            self._input_informs['mapping']['_name'], self._input_informs['calling']['_name']])
+            self._input_informs['mapping']['_name_full'], self._input_informs['calling']['_name_full']])
         self._section = HtmlReportSection("Variant calling", subtitle=tool_versions)
         self.__add_reference_link()
         self.__add_mapping_info()
@@ -140,9 +138,9 @@ class VariantCallingReporter(Tool):
             f"{self._input_informs['depth']['median_depth']:.0f}"
         ]]
         self._section.add_table(table_data, ['Mapping rate (%)', 'Median depth'], [('class', 'data')])
-        if bool(strtobool(self._parameters['export_bam'].value)) is True:
+        if self.get_param_value('export_bam') is True:
             relative_path = Path('variant_calling', 'alignment-{}.bam'.format(
-                FileSystemHelper.make_valid(self._tool_inputs['VAL_Sample'][0].value)))
+                fileutils.make_valid(self._tool_inputs['VAL_Sample'][0].value)))
             self._section.add_file(self._tool_inputs['BAM'][0].path, relative_path)
             self._section.add_link_to_file('Alignment (Sorted BAM)', relative_path)
         else:

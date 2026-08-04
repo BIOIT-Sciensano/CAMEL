@@ -1,0 +1,29 @@
+conda:
+  name: bbtools
+  packages:
+    - bbtools=38.44
+dependencies:
+  - java/18.0.1.1
+  - bbtools/38.44
+parameters:
+  out:
+    default: true
+    mandatory: true
+    option: 'out'
+    value: 'reads_%U.fastq'
+  delimiter:
+    default: true
+    mandatory: true
+    option: 'delimiter'
+    value: '/'
+  prefixmode:
+    default: true
+    mandatory: true
+    option: 'prefixmode'
+    value: 'f'
+  threads:
+    default: false
+    mandatory: false
+    option: 'threads'
+    value: null
+tool_command: demuxbyname.sh

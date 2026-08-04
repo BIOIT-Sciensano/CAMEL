@@ -1,6 +1,26 @@
-dependencies: [kleborate/2.4.1, blast/2.14.0, mash/2.3]
+conda:
+  name: kleborate
+  packages:
+    - kleborate=2.3.2
+    - setuptools
+dependencies:
+  - kleborate/2.4.1
+  - blast/2.14.0
+  - mash/2.3
 parameters:
-  all: {default: false, mandatory: false, option: --all, p_index: 0, value: null}
-  min_kaptive_confidence: {default: false, mandatory: false, option: --min_kaptive_confidence, p_index: 0, value: Good}
-  resistance: {default: false, mandatory: false, option: --resistance, p_index: 0, value: null}
+  all:
+    default: false
+    mandatory: false
+    option: '--all'
+    flag: true
+  min_kaptive_confidence:
+    default: false
+    mandatory: false
+    option: '--min_kaptive_confidence'
+    value: Good
+  resistance:
+    default: false
+    mandatory: false
+    option: '--resistance'
+    flag: true
 tool_command: kleborate

@@ -1,5 +1,0 @@
-dependencies: [snippy/4.6.0, samtools/1.17]
-parameters:
-  output_directory: {default: true, mandatory: true, option: --outdir, value: 'outdir'}
-  minimum_coverage: {default: false, mandatory: false, option: --mincov, value: 0}
-tool_command: snippy

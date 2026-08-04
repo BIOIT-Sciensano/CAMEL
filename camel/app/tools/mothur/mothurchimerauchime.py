@@ -1,6 +1,18 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+import re
+
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.loggers import logger
 from camel.app.tools.mothur.mothur import Mothur
+
+# When chimera.uchime is run with a grouped count table, mothur tries to open per-sample
+# split files (e.g. file.A.fasta / file.A.count_table) that don't exist separately.
+# These [ERROR] lines are non-fatal — mothur continues and produces correct output —
+# but they cause mothur to exit with a non-zero code, which would otherwise be treated
+# as a tool failure.
+_SPLIT_FILE_ERROR = re.compile(r'\[ERROR]: Could not open .+\.\w+\.(fasta|count_table)')
 
 
 class MothurChimeraUchime(Mothur):
@@ -8,15 +20,16 @@ class MothurChimeraUchime(Mothur):
     The chimera.uchime command reads a fasta file and reference file and outputs potentially chimeric sequences.
     """
 
-    def __init__(self, camel):
+    def __init__(self) -> None:
         """
-        Initialize tool
-        :param camel: Camel instance
+        Initializes this tool.
         :return: None
         """
-        super().__init__('mothur_chimera_uchime', '1.39.1', camel)
+        super().__init__('mothur_chimera_uchime')
+        self._required_input = ['FASTA']
+        self._optional_input = ['FASTA_Ref', 'TSV_Groups']
 
-    def _check_input(self):
+    def _check_input(self) -> None:
         """
         Checks whether the given inputs are valid:
         - FASTA key is required
@@ -26,46 +39,73 @@ class MothurChimeraUchime(Mothur):
         - The use of TSV_Names is not yet implemented (lack of documentation)
         :return: None
         """
-        super(MothurChimeraUchime, self)._check_input()
-        if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input files (keys) given for Mothur '
-                                                 'chimera.uchime: {!r}'.format(self._tool_inputs))
-        if 'TSV_Names' not in self._tool_inputs and 'TSV_Counts' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Missing input files (key) for Mothur '
-                                                 'chimera.uchime: {!r}'.format(self._tool_inputs))
-        for key, input_files in self._tool_inputs.items():
-            if key not in ['FASTA', 'TSV_Counts', 'TSV_Names', 'TSV_Groups', 'FASTA_Ref']:
-                raise InvalidInputSpecificationError('Invalid input key given for Mothur '
-                                                     'chimera.uchime: {!r}'.format(self._tool_inputs))
-            if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files in each key given for Mothur \
-                                                     chimera.uchime: {!r}'.format(self._tool_inputs))
+        if 'TSV_Counts' in self._tool_inputs:
+            self._required_input.append('TSV_Counts')
+        elif 'TSV_Names' in self._tool_inputs:
+            self._required_input.append('TSV_Names')
+        else:
+            raise InvalidToolInputError('Either TSV_Counts or TSV_Names is required')
+        super()._check_input()
 
-    def _build_input_string(self):
+    def _check_command_output(self, command: Command) -> None:
+        """
+        Checks command output, tolerating the non-fatal per-sample split-file errors that
+        chimera.uchime emits when a grouped count table is used but the per-sample FASTA /
+        count_table files do not exist separately on disk. All other non-zero exits raise
+        a ToolExecutionError.
+        :return: None
+        """
+        if command.exit_code == 0:
+            return
+        error_lines = [line for line in command.stdout.splitlines() if line.startswith('[ERROR]')]
+        if error_lines and all(_SPLIT_FILE_ERROR.search(line) for line in error_lines):
+            for line in error_lines:
+                logger.warning(f'Ignoring non-fatal per-sample split-file error: {line.strip()}')
+            return
+        raise ToolExecutionError(self.name, f"Error executing '{self.name}', exit code: {command.exit_code}")
+
+    def _build_input_string(self) -> str:
         """
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        items = ['fasta={}'.format(self._tool_inputs['FASTA'][0])]
+        items = [f"fasta={self._tool_inputs['FASTA'][0]}"]
         if 'TSV_Counts' in self._tool_inputs:
-            items.append('count={}'.format(self._tool_inputs['TSV_Counts'][0]))
+            items.append(f"count={self._tool_inputs['TSV_Counts'][0]}")
         elif 'TSV_Names' in self._tool_inputs:
-            items.append('name={}'.format(self._tool_inputs['TSV_Names'][0]))
+            items.append(f"name={self._tool_inputs['TSV_Names'][0]}")
         if 'TSV_Groups' in self._tool_inputs:
-            items.append('group={}'.format(self._tool_inputs['TSV_Groups'][0]))
+            items.append(f"group={self._tool_inputs['TSV_Groups'][0]}")
         if 'FASTA_Ref' in self._tool_inputs:
-            items.append('reference={}'.format(self._tool_inputs['FASTA_Ref'][0]))
-        items.append('outputdir={}'.format(self._folder))
+            items.append(f"reference={self._tool_inputs['FASTA_Ref'][0]}")
+        items.append(f'outputdir={self._folder}')
         return ', '.join(items)
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
-        Sets the name of the output files, and fills the common stream object with them
+        Sets the name of the output files, and fills the common stream object with them.
+        chimera.uchime always writes the non-chimeric sequences to .denovo.uchime.fasta and
+        .denovo.uchime.count_table directly in outputdir, regardless of the dereplicate setting.
+        When dereplicate=false mothur also runs remove.seqs internally which produces .pick.*
+        intermediates, but those are not guaranteed to land in outputdir and must not be used.
         :return: None
         """
-        basename = super(MothurChimeraUchime, self)._get_basename()
-        self._tool_outputs['TSV_Chimeras'] = [ToolIOFile(basename + '.denovo.uchime.chimeras')]
-        self._tool_outputs['TSV_Accnos'] = [ToolIOFile(basename + '.denovo.uchime.accnos')]
+        basename = self._get_basename()
+        self._tool_outputs['TSV_Chimeras'] = [
+            ToolIOFile(basename.with_suffix('.denovo.uchime.chimeras'))
+        ]
+        self._tool_outputs['TSV_Accnos'] = [
+            ToolIOFile(basename.with_suffix('.denovo.uchime.accnos'))
+        ]
+        self._tool_outputs['FASTA'] = [
+            ToolIOFile(basename.with_suffix('.denovo.uchime.fasta'))
+        ]
+        if 'TSV_Counts' in self._tool_inputs:
+            self._tool_outputs['TSV_Counts'] = [
+                ToolIOFile(basename.with_suffix('.denovo.uchime.count_table'))
+            ]
         if 'TSV_Names' in self._tool_inputs:
-            raise RuntimeError('The use of a names file is not yet implemented for chimera.uchime as the '
-                               'outputs are unknown!')
+            raise RuntimeError(
+                'The use of a names file is not yet implemented for chimera.uchime as the '
+                'outputs are unknown!'
+            )

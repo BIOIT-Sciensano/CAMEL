@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.files.fastautils import FastaUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastautils
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class Freebayes(Tool):
@@ -15,25 +16,20 @@ class Freebayes(Tool):
     (composite insertion and substitution events) smaller than the length of a short-read sequencing alignment.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Freebayes', '1.3.6', camel)
+        super().__init__('Freebayes', '1.3.6')
 
     def _check_input(self) -> None:
         """
         Checks whether the provided input files are valid.
         :return: None
         """
-        if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA reference is required')
-        if 'BAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BAM alignment file is required')
-
-        if not FastaUtils.is_indexed(self._tool_inputs['FASTA'][0].path):
-            raise InvalidInputSpecificationError('FASTA reference needs to be indexed')
+        toolutils.check_input(self, keys_required=['FASTA', 'BAM'])
+        if not fastautils.is_indexed(self._tool_inputs['FASTA'][0].path):
+            raise InvalidToolInputError('FASTA reference needs to be indexed')
         super()._check_input()
 
     def _build_command(self, fasta_input: Path, bam_input: Path) -> None:
@@ -44,13 +40,13 @@ class Freebayes(Tool):
         self._command.command = ' '.join([
             self._tool_command, f'--bam {bam_input}', f'--fasta-reference {fasta_input}', *self._build_options()])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self) -> None:
         """

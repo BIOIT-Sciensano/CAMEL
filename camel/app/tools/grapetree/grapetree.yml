@@ -1,5 +1,19 @@
-dependencies: [grapetree/2.2]
+conda:
+  name: grapetree
+  packages:
+    - grapetree=2.1
+    - python<3.12
+dependencies:
+  - grapetree/2.2
 parameters:
-  method: {default: true, mandatory: true, option: --method, value: 'MSTreeV2'}
-  output_path: {default: true, mandatory: true, option: null, value: 'grapetree.nwk'}
+  method:
+    default: true
+    mandatory: true
+    option: '--method'
+    value: MSTreeV2
+  output_path:
+    default: true
+    mandatory: true
+    option: null
+    value: grapetree.nwk
 tool_command: grapetree

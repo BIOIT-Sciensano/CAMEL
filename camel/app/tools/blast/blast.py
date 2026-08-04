@@ -1,7 +1,8 @@
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.tool import Tool
 
 
 class Blast(Tool):
@@ -13,14 +14,13 @@ class Blast(Tool):
     - Subject (FASTA_Subject / DB_BLAST): Either a FASTA file or a BLAST database with the subject sequences
     """
 
-    def __init__(self, tool_name: str, version: str, camel: Camel) -> None:
+    def __init__(self, tool_name: str, version: str) -> None:
         """
         Initializes this tool.
         :param tool_name: Tool name
         :param version: Tool version
-        :param camel: Camel instance
         """
-        super().__init__(tool_name, version, camel)
+        super().__init__(tool_name, version)
         self.__subject_key = None
 
     def _check_input(self) -> None:
@@ -30,7 +30,7 @@ class Blast(Tool):
         """
         if 'FASTA' not in self._tool_inputs:
             raise ValueError('No FASTA input found')
-        super(Blast, self)._check_input()
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
@@ -100,6 +100,7 @@ class Blast(Tool):
             return f"-subject {self._tool_inputs['FASTA_Subject'][0].path}"
         elif self.__subject_key == 'DB_BLAST':
             return f"-db {self._tool_inputs['DB_BLAST'][0].path}"
+        raise ValueError(f'Invalid subject key: {self.__subject_key}')
 
     def __get_output_filename(self) -> str:
         """
@@ -127,10 +128,11 @@ class Blast(Tool):
         output_filename = self.folder / self.__get_output_filename()
         self._tool_outputs[self.__get_output_key()] = [ToolIOFile(output_filename)]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output for errors.
+        :param command: Command to check
         :return: None
         """
-        if 'error' in self.stderr.lower() or self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing {self.name}: {self._command.stderr.strip()}")
+        if 'error' in command.stderr.lower() or command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Error executing {self.name}: {command.stderr.strip()}")

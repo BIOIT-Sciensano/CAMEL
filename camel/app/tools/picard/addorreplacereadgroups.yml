@@ -1,15 +1,69 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  RG_id: {default: true, mandatory: false, option: RGID, p_index: 10, value: ReadGroupNA}
-  RG_library: {default: true, mandatory: false, option: RGLB, p_index: 20, value: libraryNA}
-  RG_platform: {default: true, mandatory: false, option: RGPL, p_index: 30, value: ILLUMINA}
-  RG_platform_unit: {default: true, mandatory: false, option: RGPU, p_index: 40, value: PlatformUnitNA}
-  RG_sample_name: {default: true, mandatory: false, option: RGSM, p_index: 60, value: sampleNA}
-  RG_center_name: {default: false, mandatory: false, option: RGCN, p_index: 70, value: centernameNA}
-  create_index: {default: false, mandatory: false, option: CREATE_INDEX, p_index: 0,
-    value: 'true'}
-  output: {default: true, mandatory: false, option: O, p_index: 0, value: readgroup_updated.bam}
-  sort_order: {default: false, mandatory: false, option: SORT_ORDER, p_index: 50,
-    value: queryname}
-  max_records_in_ram: {default: false, mandatory: false, option: MAX_RECORDS_IN_RAM, p_index: 10, value: 500000}
+  RG_id:
+    default: true
+    mandatory: false
+    option: RGID
+    p_index: 10
+    value: ReadGroupNA
+  RG_library:
+    default: true
+    mandatory: false
+    option: RGLB
+    p_index: 20
+    value: libraryNA
+  RG_platform:
+    default: true
+    mandatory: false
+    option: RGPL
+    p_index: 30
+    value: ILLUMINA
+  RG_platform_unit:
+    default: true
+    mandatory: false
+    option: RGPU
+    p_index: 40
+    value: PlatformUnitNA
+  RG_sample_name:
+    default: true
+    mandatory: false
+    option: RGSM
+    p_index: 60
+    value: sampleNA
+  RG_center_name:
+    default: false
+    mandatory: false
+    option: RGCN
+    p_index: 70
+    value: centernameNA
+  create_index:
+    default: false
+    mandatory: false
+    option: CREATE_INDEX
+    p_index: 0
+    value: 'true'
+  output:
+    default: true
+    mandatory: false
+    option: O
+    p_index: 0
+    value: readgroup_updated.bam
+  sort_order:
+    default: false
+    mandatory: false
+    option: SORT_ORDER
+    p_index: 50
+    value: queryname
+  max_records_in_ram:
+    default: false
+    mandatory: false
+    option: MAX_RECORDS_IN_RAM
+    p_index: 10
+    value: 500000
 tool_command: AddOrReplaceReadGroups

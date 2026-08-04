@@ -1,8 +1,7 @@
-from camel.app.camel import Camel
-from camel.app.command.command import Command
-from camel.app.error.invalidparametererror import InvalidParameterError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidParameterError, ToolExecutionError
 from camel.app.tools.samtools.samtoolsbasepipeable import SamtoolsBasePipeable
 
 
@@ -11,12 +10,12 @@ class SamtoolsSort(SamtoolsBasePipeable):
     Sorts alignment files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('samtools sort', '1.17', camel)
+        super().__init__('samtools sort', version=None)
 
     def _check_input(self) -> None:
         """
@@ -34,7 +33,7 @@ class SamtoolsSort(SamtoolsBasePipeable):
         """
         if self._parameters['output_format'].value.upper() not in ('SAM', 'BAM'):
             raise InvalidParameterError("Invalid output format (BAM/SAM supported)")
-        super(SamtoolsSort, self)._check_parameters()
+        super()._check_parameters()
 
     def _execute_tool(self) -> None:
         """
@@ -44,7 +43,7 @@ class SamtoolsSort(SamtoolsBasePipeable):
         self.__build_command()
         self._execute_command()
         self.__set_output()
-        self._check_stderr()
+        self._check_stderr(self._command)
 
     def __build_command(self, pipe_in: bool = False, pipe_out: bool = False) -> None:
         """
@@ -74,17 +73,17 @@ class SamtoolsSort(SamtoolsBasePipeable):
         """
         output_path = self.folder / self._parameters['output_filename'].value
         if not output_path.is_file():
-            raise ToolExecutionError(f"Expected {self._name} output not generated")
+            raise ToolExecutionError(self.name, "Expected output not generated")
         output_key = self._parameters['output_format'].value.upper()
         self._tool_outputs[output_key] = [ToolIOFile(output_path)]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully. Supersedes that of Tool class as samtools prints warnings to stderr.
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        if command.exit_code != 0:
+            raise ToolExecutionError(self.name, f'Command execution failed (Exit code: {command.exit_code})')
 
     def _before_pipe(self, dir_, pipe_in: bool, pipe_out: bool) -> None:
         """

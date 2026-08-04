@@ -1,10 +1,9 @@
-import os
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.camel import Camel
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class Oncotator(Tool):
@@ -35,13 +34,12 @@ class Oncotator(Tool):
                     Default: None
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize Mutect1 tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Oncotator', '1.9.9.0', camel)
+        super().__init__('Oncotator', '1.9.9.0')
         self._required_inputs = ['IN_FILE']
 
     def _execute_tool(self) -> None:
@@ -58,43 +56,41 @@ class Oncotator(Tool):
         Checks that parameters are valid.
         :return: None
         """
-        super(Oncotator, self)._check_parameters()
+        super()._check_parameters()
 
     def _check_input(self) -> None:
         """
         Check that input is valid (super method) and that required parameters are present.
         :return: None
         """
-        super(Oncotator, self)._check_input()
+        super()._check_input()
 
         for input_key in self._required_inputs:
             if input_key not in self._tool_inputs:
-                raise InvalidInputSpecificationError(
-                    'Oncotator required {} input is missing in tool inputs!'.format(input_key))
+                raise InvalidToolInputError(f'Oncotator required {input_key} input is missing in tool inputs!')
 
     def __build_command(self) -> None:
         """
         Build the command to run the tool.
         :return:
         """
-        input_string = " {}".format(self._tool_inputs['IN_FILE'][0].path)
-        output_string = " {}".format(self._parameters['output_file_name'].value)
+        input_string = f" {self._tool_inputs['IN_FILE'][0].path}"
+        output_string = f" {self._parameters['output_file_name'].value}"
         options_string = " ".join(self._build_options(excluded_parameters=["output_file_name"]))
-
-        self._command.command = "{command} {options_string} {input_string} {output_string} hg19".format(command=self._tool_command, options_string=options_string, input_string=input_string, output_string=output_string)
+        self._command.command = f"{self._tool_command} {options_string} {input_string} {output_string} hg19"
 
     def __set_output(self) -> None:
         """
-        Set the output specifications in the Camel ouptut list:
+        Set the output specifications in the Camel output list.
         - output file
         :return: None
         """
-        self._tool_outputs['OUT_FILE'] = [ToolIOFile(os.path.join(self._folder, self._parameters['output_file_name'].value))]
+        self._tool_outputs['OUT_FILE'] = [ToolIOFile(self._folder / self.get_param_value('output_file_name'))]
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Check the result of tool run
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Oncotator failed to run with message: \n{}".format(self.stderr))
+        toolutils.check_tool_execution(self, command, exit_code=0)

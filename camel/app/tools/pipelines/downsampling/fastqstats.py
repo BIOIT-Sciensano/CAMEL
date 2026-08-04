@@ -1,7 +1,7 @@
-from camel.app.camel import Camel
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.tools.tool import Tool
+from camelcore.app.utils import fastqutils
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class FastqStats(Tool):
@@ -9,12 +9,11 @@ class FastqStats(Tool):
     Calculates statistics for input FASTQ files.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('FastqStats', '0.1', camel)
+        super().__init__('FastqStats', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -22,7 +21,7 @@ class FastqStats(Tool):
         :return: None
         """
         if 'FASTQ' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("FASTQ input is required")
+            raise InvalidToolInputError("FASTQ input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -34,6 +33,6 @@ class FastqStats(Tool):
         for fastq_file in self._tool_inputs['FASTQ']:
             self._informs['stats'].append({
                 'path': str(fastq_file.path),
-                'nb_of_sequences': FastqUtils.count_reads(fastq_file.path),
-                'nb_of_bases': FastqUtils.count_bases(fastq_file.path)
+                'nb_of_sequences': fastqutils.count_reads(fastq_file.path),
+                'nb_of_bases': fastqutils.count_bases(fastq_file.path)
             })

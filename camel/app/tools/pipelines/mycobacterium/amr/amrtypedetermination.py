@@ -1,9 +1,9 @@
 import json
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 DESCRIPTION_BY_RES_TYPE = {
     'NONE': 'No resistance',
@@ -20,12 +20,11 @@ class AMRTypeDetermination(Tool):
     Determines the type of AMR based on the predicted resistances.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Mycobacterium: AMR type determination', '0.1', camel)
+        super().__init__('Mycobacterium: AMR type determination', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -33,7 +32,7 @@ class AMRTypeDetermination(Tool):
         :return: None
         """
         if 'JSON' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Predicted resistance input is required (JSON)')
+            raise InvalidToolInputError('Predicted resistance input is required (JSON)')
         super()._check_input()
 
     def _execute_tool(self) -> None:

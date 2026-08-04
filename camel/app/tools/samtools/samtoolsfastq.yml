@@ -1,0 +1,38 @@
+conda:
+  name: samtools
+  packages:
+    - samtools=1.17
+dependencies:
+  - samtools/1.17
+parameters:
+  read_other:
+    default: false
+    mandatory: false
+    option: '-0'
+    value: read_other.fastq
+  read_1:
+    default: false
+    mandatory: false
+    option: '-1'
+    value: read_1.fastq
+  read_2:
+    default: false
+    mandatory: false
+    option: '-2'
+    value: read_2.fastq
+  singletons:
+    default: false
+    mandatory: false
+    option: -s
+    value: reads.fastq
+  output:
+    default: false
+    mandatory: false
+    option: '-o'
+    value: reads.fastq
+  append_suffix:
+    default: false
+    mandatory: false
+    option: -N
+    flag: true
+tool_command: samtools fastq

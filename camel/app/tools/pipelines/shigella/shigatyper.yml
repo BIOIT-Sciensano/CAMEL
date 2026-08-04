@@ -1,4 +1,13 @@
-dependencies: [shigatyper/2.0.5]
+conda:
+  name: shigatyper
+  packages:
+    - shigatyper=2.0.5
+dependencies:
+  - shigatyper/2.0.5
 parameters:
-  ont: {default: false, mandatory: false, option: --ont, value: null}
+  ont:
+    default: false
+    mandatory: false
+    option: '--ont'
+    flag: true
 tool_command: shigatyper

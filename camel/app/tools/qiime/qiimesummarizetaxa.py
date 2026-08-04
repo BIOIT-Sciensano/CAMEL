@@ -1,5 +1,6 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.qiime.qiime import Qiime
 
 
@@ -9,13 +10,12 @@ class QiimeSummarizeTaxa(Qiime):
     each sample.
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('qiime_summarize_taxa', '1.9.1', camel)
+        super().__init__('qiime_summarize_taxa', '1.9.1')
 
     def _check_input(self):
         """
@@ -26,10 +26,10 @@ class QiimeSummarizeTaxa(Qiime):
         :return: None
         """
         if 'BIOM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input files (keys) given for summarize_taxa: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid input files (keys) given for summarize_taxa: {self._tool_inputs!r}')
         if len(self._tool_inputs['BIOM']) != 1:
-            raise InvalidInputSpecificationError('Invalid number (!= 1) of files in each key given for \
-                                                 summarize_taxa: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (!= 1) of files in each key given for \
+                                                 summarize_taxa: {self._tool_inputs!r}')
 
     def _set_output(self):
         """
@@ -59,5 +59,5 @@ class QiimeSummarizeTaxa(Qiime):
         :return: String with the input parameters
         """
         input_string = '-i {}'.format(self._tool_inputs['BIOM'][0])
-        input_string += ' -o {}'.format(self._folder)
+        input_string += f' -o {self._folder}'
         return input_string

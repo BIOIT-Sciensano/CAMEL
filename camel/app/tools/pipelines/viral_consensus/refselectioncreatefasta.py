@@ -1,19 +1,17 @@
 import json
 import logging
 import math
-from collections import defaultdict
-from io import StringIO
 from pathlib import Path
-from typing import Union, Any
+from typing import Any
 
 import pandas as pd
 from Bio import SeqIO
+from camelcore.app.io.tooliofile import ToolIOFile
+from pysam.libcvcf import defaultdict
 
-from camel.app.camel import Camel
-from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core import toolutils
+from camel.app.core.tool import Tool
+from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
 
 
 class RefSelection(Tool):
@@ -21,20 +19,17 @@ class RefSelection(Tool):
     Parses the mash TSV output and selects the best matching reference sequence.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
         """
-        super().__init__('viral consensus: reference selection', '0.1', camel)
+        super().__init__('viral consensus: reference selection', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
-        if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('mash tabular input is required (TSV)')
-        if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Database input (DB) is required')
+        toolutils.check_input(self, keys_required=['TSV', 'DB'])
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -76,7 +71,7 @@ class RefSelection(Tool):
         self._tool_outputs['JSON'] = [ToolIOFile(path_out)]
 
     @staticmethod
-    def calc_score(row: pd.Series, max_len: int) -> float:
+    def calc_score(row: pd.Series) -> float:
         """
         Calculates the score for the mash output.
         It considers:
@@ -85,15 +80,15 @@ class RefSelection(Tool):
         - total hashes (otherwise shorter sequences are benefited)
         - percentage of hash matches
         :param row: Input row
-        :param max_len: Maximum sequence length
         :return: Score
         """
         # noinspection PyTypeChecker
         return (
-            (0.4 * 100 * row['identity']) +
-            (0.3 * row['hashes_pct'] * math.log(row['median_mult'])) +
-            (0.3 * 100 * row['length'] / max_len)
-        )
+            (0.3 * row['identity']) +
+            (0.2 * row['hashes_pct']) +
+            (0.2 * math.log2(int(row['median_mult']) + 1)) +
+            (0.2 * math.log2(int(row['length']) + 1))
+         )
 
     @staticmethod
     def _parse_mash_output(mash_output: list[Path], len_by_segment: dict[str, dict[str, int]]) -> dict[str, pd.DataFrame]:
@@ -104,7 +99,7 @@ class RefSelection(Tool):
         """
         mash_out_by_segment = {}
         for path_tsv in mash_output:
-            segment = path_tsv.parent.name
+            segment = path_tsv.parents[1].name
             data_mash = pd.read_table(
                 path_tsv, names=['identity', 'hashes', 'median_mult', 'p_val', 'ref_id', 'ref_comment'])
             mash_out_by_segment[segment] = data_mash
@@ -113,8 +108,7 @@ class RefSelection(Tool):
             data_mash['hashes_nb'] = data_mash['hashes'].apply(
                 lambda x: int(x.split('/')[1]))
             data_mash['length'] = data_mash['ref_id'].map(len_by_segment[segment])
-            data_mash['score_final'] = data_mash.apply(
-                lambda x: RefSelection.calc_score(x, data_mash['length'].max()), axis=1)
+            data_mash['score_final'] = data_mash.apply(RefSelection.calc_score, axis=1)
             data_mash.sort_values(by=['score_final'], inplace=True, ascending=False)
             data_mash['ref_id_fmt'] = data_mash['ref_id'].apply(lambda x: x.split('-')[0].replace('_', ' '))
         return mash_out_by_segment
@@ -158,7 +152,7 @@ class RefSelection(Tool):
         return path_out
 
     def _filter_mutually_exclusive_segments(
-            self, ref_by_segment: dict[str, Union[pd.Series, None]], mut_exclusive_segments: list[str]) -> None:
+            self, ref_by_segment: dict[str, pd.Series | None], mut_exclusive_segments: list[str]) -> None:
         """
         Filters the mutually exclusive segments.
         :param ref_by_segment: Reference by segment
@@ -188,20 +182,28 @@ class RefSelection(Tool):
             raise FileNotFoundError("Segment folder does not exist ('fasta_by_segment')")
 
         # Collect corresponding FASTA records
-        records_out = []
+        to_concat = []
         for segment, ref_info in ref_by_segment.items():
             if ref_info is None:
                 continue
             path_fasta = dir_db / 'fasta_by_segment' / f'{segment}.fasta'
-            command = Command(f"module load samtools; samtools faidx {path_fasta} {ref_info['ref_id']}")
-            command.run(self.folder, disable_logging=True)
-            if not command.returncode == 0:
-                raise RuntimeError(f'Error extracting sequence: {command.stderr}')
-            records_out.append(next(SeqIO.parse(StringIO(command.stdout), 'fasta')))
+            samtools_faidx = SamtoolsFastaIndex()
+            samtools_faidx.add_input_files({
+                'FASTA': [ToolIOFile(path_fasta)]
+            })
+            samtools_faidx.update_parameters(
+                regions=ref_info['ref_id'],
+                output_filename=f'{segment}.fasta',
+                symlink_input=False
+            )
+            samtools_faidx.run(self.folder.absolute())
+            to_concat.append(samtools_faidx.tool_outputs['FASTA'][0].path)
 
         # Save to merged FASTA file
         path_out = self.folder / 'merged_ref.fasta'
-        with path_out.open('w') as handle:
-            SeqIO.write(records_out, handle, 'fasta')
-        logging.info(f'Merged FASTA file created ({len(records_out)} sequences)')
+        with path_out.open('w') as handle_out:
+            for path in to_concat:
+                with path.open() as handle_in:
+                    SeqIO.write(SeqIO.parse(handle_in, 'fasta'), handle_out, 'fasta')
+        logging.info(f'Merged FASTA file created ({len(to_concat)} sequences)')
         return path_out

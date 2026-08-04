@@ -1,3 +1,4 @@
+conda: null
 dependencies: []
 parameters:
   sample_name: {default: false, mandatory: false, option: null, value: null}

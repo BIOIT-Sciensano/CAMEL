@@ -1,11 +1,13 @@
 import os
-from Bio import SeqIO
+from pathlib import Path
 
-from camel.app.components.files.fileutils import FileUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from Bio import SeqIO
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
+
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.tool import Tool
 
 
 class LegacyBlastx(Tool):
@@ -13,13 +15,12 @@ class LegacyBlastx(Tool):
     Map a nucleotide sequence against a protein sequence database
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('legacy_blastx', '2.2.22', camel)
+        super().__init__('legacy_blastx', '2.2.22')
         self._fasta = None
 
     def _execute_tool(self):
@@ -40,8 +41,9 @@ class LegacyBlastx(Tool):
         Concatenates the outputs of the split input file into one big output file
         :return: None
         """
-        FileUtils.concatenate_files(self._tool_outputs['BLASTX'][0].path,
-                                    [os.path.splitext(f.path)[0] + '.blastx' for f in self._fasta])
+        fileutils.concatenate_files(
+            self._tool_outputs['BLASTX'][0].path,
+            [os.path.splitext(f.path)[0] + '.blastx' for f in self._fasta])
         for infile in self._fasta:
             os.remove(infile.path)
             os.remove(os.path.splitext(infile.path)[0] + '.blastx')
@@ -54,26 +56,27 @@ class LegacyBlastx(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(LegacyBlastx, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs or 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA or DB input files missing from input for '
-                                                 'legacy blastx: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('FASTA or DB input files missing from input for '
+                                                 f'legacy blastx: {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) != 1 or len(self._tool_inputs['DB']) != 1:
-            raise InvalidInputSpecificationError('Invalid number (max = 1) of files per key given '
-                                                 'for legacy blastx: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid number (max = 1) of files per key given '
+                                                 f'for legacy blastx: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidInputSpecificationError('Too many input keys given for legacy blastx '
-                                                 '(only FASTA and DB allowed): {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Too many input keys given for legacy blastx '
+                                                 f'(only FASTA and DB allowed): {self._tool_inputs!r}')
 
-    def _check_command_output(self):
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command was executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if 'ERROR' in self.stderr:
-            raise ToolExecutionError("Command execution failed (stderr: {}).".format(self.stderr))
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution failed (Exit code: {})".format(self._command.returncode))
+        if 'ERROR' in command.stderr:
+            raise ToolExecutionError(self.name, f"Command execution failed (stderr: {command.stderr}).")
+        if self._command.exit_code != 0:
+            raise ToolExecutionError(self.name, f"Command execution failed (Exit code: {command.exit_code})")
 
     def __get_basename(self):
         """
@@ -89,7 +92,7 @@ class LegacyBlastx(Tool):
         :return: None
         """
         basename = self.__get_basename()
-        self._tool_outputs['BLASTX'] = [ToolIOFile(basename + '.blastx')]
+        self._tool_outputs['BLASTX'] = [ToolIOFile(Path(basename + '.blastx'))]
 
     def __build_input_string(self, infile):
         """
@@ -98,8 +101,8 @@ class LegacyBlastx(Tool):
         """
         items = ['-p blastx',
                  '-d {}'.format(self._tool_inputs['DB'][0].path),
-                 '-i {}'.format(infile.path),
-                 '-o {}.blastx'.format(os.path.join(self._folder, os.path.splitext(os.path.basename(infile.path))[0]))]
+                 f'-i {infile.path}',
+                 f'-o {os.path.join(self._folder, os.path.splitext(os.path.basename(infile.path))[0])}.blastx']
         return ' '.join(items)
 
     def __prepare_input_files(self):
@@ -120,7 +123,7 @@ class LegacyBlastx(Tool):
         """
         input_string = self.__build_input_string(infile)
         options_string = ' '.join(self._build_options())
-        self._command.command = '{} {} {}'.format(self._tool_command, input_string, options_string)
+        self._command.command = f'{self._tool_command} {input_string} {options_string}'
 
     def __is_large_fasta(self):
         """
@@ -165,6 +168,6 @@ class LegacyBlastx(Tool):
         self._fasta = []
         record_iter = SeqIO.parse(self._tool_inputs['FASTA'][0].path, 'fasta')
         for i, batch in enumerate(self.__create_iterator_batch(record_iter, 100)):
-            with open(os.path.join(self._folder, 'temp_{}.fasta'.format(i)), 'wb') as f:
+            with open(os.path.join(self._folder, f'temp_{i}.fasta'), 'wb') as f:
                 SeqIO.write(batch, f, 'fasta')
-                self._fasta.append(ToolIOFile(os.path.join(self._folder, 'temp_{}.fasta'.format(i))))
+                self._fasta.append(ToolIOFile(self._folder / f'temp_{i}.fasta'))

@@ -1,20 +1,16 @@
 import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pandas as pd
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+from camelcore.app.utils import reportutils
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlreport import HtmlReport
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.components.pipelines.reportpipeline import ReportPipeline
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.app.tools.tool import Tool
-from camel.resources import CSS_STYLE
-from camel.resources.javascript import JQUERY_SRC
+from camel.app.config import config
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class HybridAssemblyReporter(Tool):
@@ -32,12 +28,12 @@ class HybridAssemblyReporter(Tool):
         ['Citations', 'citations']
     ]
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('Hybrid assembly pipeline reporter', '0.1', camel)
+        super().__init__('Hybrid assembly pipeline reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -50,15 +46,15 @@ class HybridAssemblyReporter(Tool):
             'HTML_trim_ont', 'HTML_quast', 'WIGGLE_ale']
         for key in required_inputs:
             if key not in self._tool_inputs:
-                raise InvalidInputSpecificationError(f"Required tool input '{key}' is missing")
+                raise InvalidToolInputError(f"Required tool input '{key}' is missing")
 
         # Check informs
         required_informs = [
-            'quast', 'freebayes', 'clair3', 'mapping', 'sniffles', 'ale', 'sample_name', 'pipeline', 'input',
+            'quast', 'freebayes', 'clair3', 'mapping', 'sniffles', 'ale', 'sample_name', 'pipeline', 'input_str',
             'citations']
         for key in required_informs:
             if key not in self._input_informs:
-                raise InvalidInputSpecificationError(f"Required inform '{key}' is missing")
+                raise InvalidToolInputError(f"Required inform '{key}' is missing")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -69,9 +65,13 @@ class HybridAssemblyReporter(Tool):
         path_out = Path(self._parameters['output_filename'].value)
         self._output_dir = Path(self._parameters['output_dir'].value)
 
-        # Initialize report
-        self.report = HtmlReport(path_out, self._output_dir, [JQUERY_SRC])
-        self.report.initialize('Hybrid assembly pipeline - 0.1', CSS_STYLE)
+        # Initialize the report
+        self.report = reportutils.init_report(
+            path_out=path_out,
+            key='hybrid_assembly',
+            title='Hybrid assembly pipeline',
+            dir_out=self._output_dir,
+        )
         self.report.add_pipeline_header(HybridAssemblyReporter.TITLE)
 
         # Add content sections
@@ -108,12 +108,11 @@ class HybridAssemblyReporter(Tool):
         Adds the information about the input data.
         :return: None
         """
-        input_files = ReportPipeline.format_input_string(self._input_informs['input'])
         table_data = [
             ['Sample:', self._input_informs['sample_name']],
-            ['Analysis date:', datetime.datetime.now().strftime(SnakePipelineUtils.DATE_FORMAT)],
+            ['Analysis date:', datetime.datetime.now().strftime(config.date_fmt)],
             ['Pipeline version:', self._input_informs['pipeline']['version']],
-            ['Input files:', input_files]
+            ['Input files:', self._input_informs['input_str']]
         ]
         section = HtmlReportSection('Input')
         section.add_table(table_data, table_attributes=[('class', 'information')])
@@ -137,9 +136,9 @@ class HybridAssemblyReporter(Tool):
         # Add table with download links
         section.add_table(rows, column_names=['Assembly step', 'Download'], table_attributes=[('class', 'data')])
         section.add_paragraph(
-            "The hybrid assembly pipeline performs long-read first <i>de novo</i> assembly, according to the following " 
-            "steps: (1) Quality control and pre-processing of the long and short reads; (2) Long-reads assembly using "
-            "Flye; (3) polishing using Medaka (long-reads), followed by Polypolish and POLCA (short-reads); (4) "
+            "The hybrid assembly pipeline performs long-read first <i>de novo</i> assembly, according to the following"
+            " steps: (1) Quality control and pre-processing of the long and short reads; (2) Long-reads assembly using "
+            "Flye; (3) polishing using Medaka (long-reads), followed by Polypolish and Pypolca (short-reads); (4) "
             "Quality assessment using QUAST and several variant callers. An additional short-read first assembly is "
             "created using Unicycler (optional).")
         section.copy_files(self.report.output_dir)
@@ -155,23 +154,23 @@ class HybridAssemblyReporter(Tool):
         overview_list = HtmlElement('ul')
         for title, key in HybridAssemblyReporter.REPORT_STRUCTURE:
             list_item = HtmlElement('li')
-            list_item.add_html_object(HtmlElement('a', title, [('href', '#{}'.format(key))]))
+            list_item.add_html_object(HtmlElement('a', title, [('href', f'#{key}')]))
             overview_list.add_html_object(list_item)
         section.add_html_object(overview_list)
         self.report.add_html_object(section)
 
-    def __add_quast_section(self, path_tsv: Path, quast_informs: Dict[str, Any]) -> None:
+    def __add_quast_section(self, path_tsv: Path, quast_informs: dict[str, Any]) -> None:
         """
         Adds the summary QUAST table to the report.
         :param path_tsv: Path to the combined QUAST TSV file
         :param quast_informs: QUAST informs
         :return: None
         """
-        section = HtmlReportSection('QUAST statistics', subtitle=quast_informs['_name'])
+        section = HtmlReportSection('QUAST statistics', subtitle=quast_informs['_name_full'])
         data_quast = pd.read_table(path_tsv)
         section.add_table(
             list(data_quast.itertuples(index=False, name=None)),
-            column_names=data_quast.columns,
+            column_names=list(data_quast.columns),
             table_attributes=[('class', 'data')])
         relative_path = Path('quast', 'quast_all.html')
         section.add_file(self._tool_inputs['HTML_quast'][0].path, relative_path)
@@ -185,12 +184,12 @@ class HybridAssemblyReporter(Tool):
         :path: Path to the tsv containing variant calling statistics
         :return: None
         """
-        subtitle = ', '.join([self._input_informs[x]['_name'] for x in ('freebayes', 'clair3')])
+        subtitle = ', '.join([self._input_informs[x]['_name_full'] for x in ('freebayes', 'clair3')])
         section = HtmlReportSection('Variant calling', subtitle=subtitle)
         data_vc = pd.read_table(path_tsv)
         section.add_table(
             list(data_vc.itertuples(index=False, name=None)),
-            column_names=data_vc.columns,
+            column_names=list(data_vc.columns),
             table_attributes=[('class', 'data')])
         section.add_paragraph(
             'Freebayes and Clair3 call SNPs and (small) indels on the short- and long-reads, respectively.')
@@ -202,7 +201,7 @@ class HybridAssemblyReporter(Tool):
         :path: Path to the tsv containing variant calling from sniffles
         :return: None
         """
-        section = HtmlReportSection('Sniffles statistics', subtitle=self._input_informs['sniffles'][0]['_name'])
+        section = HtmlReportSection('Sniffles statistics', subtitle=self._input_informs['sniffles'][0]['_name_full'])
         data_sniffles = pd.read_table(path_tsv)
         vcf_files = []
         for io_vcf in self._tool_inputs['VCF_sniffles']:
@@ -213,11 +212,11 @@ class HybridAssemblyReporter(Tool):
         data_sniffles['Download (VCF)'] = vcf_files
         section.add_table(
             list(data_sniffles.itertuples(index=False, name=None)),
-            column_names=data_sniffles.columns,
+            column_names=list(data_sniffles.columns),
             table_attributes=[('class', 'data')])
         section.add_paragraph("""
-            Sniffles detect structural variation by mapping the long reads to the consensus sequence. Long deletions are 
-            listed in the indels column, and all other variants (inversions, duplications, breakpoints) are listed in 
+            Sniffles detect structural variation by mapping the long reads to the consensus sequence. Long deletions are
+            listed in the indels column, and all other variants (inversions, duplications, breakpoints) are listed in
             the structural variation column (SV).""")
         self.report.add_html_object(section)
         section.copy_files(self.report.output_dir)
@@ -228,11 +227,11 @@ class HybridAssemblyReporter(Tool):
         :path_tsv: Path to the tsv containing mapping statistics
         :return: None
         """
-        section = HtmlReportSection('Mapping statistics', subtitle=self._input_informs['mapping']['_name'])
+        section = HtmlReportSection('Mapping statistics', subtitle=self._input_informs['mapping']['_name_full'])
         data_mapping = pd.read_table(path_tsv)
         section.add_table(
             list(data_mapping.itertuples(index=False, name=None)),
-            column_names=data_mapping.columns,
+            column_names=list(data_mapping.columns),
             table_attributes=[('class', 'data')]
         )
         self.report.add_html_object(section)
@@ -242,14 +241,14 @@ class HybridAssemblyReporter(Tool):
         Adds the ALE score table, as well as downloadable Wiggle files to the report.
         :return: None
         """
-        section = HtmlReportSection('ALE scores', subtitle=self._input_informs['ale'][0]['_name'])
+        section = HtmlReportSection('ALE scores', subtitle=self._input_informs['ale'][0]['_name_full'])
         output_rows = []
 
         # Group input files
         wiggle_by_ale_key_by_assembly_key = {}
         for io_wiggle in self._tool_inputs['WIGGLE_ale']:
             ale_key = io_wiggle.path.stem.split('-')[-1]
-            assembly_key = io_wiggle.path.parents[1].name
+            assembly_key = io_wiggle.path.parents[2].name
             if assembly_key not in wiggle_by_ale_key_by_assembly_key:
                 wiggle_by_ale_key_by_assembly_key[assembly_key] = {}
             relative_path = Path('ale', f'{assembly_key}_{ale_key}.wig')
@@ -275,7 +274,7 @@ class HybridAssemblyReporter(Tool):
             table_attributes=[('class', 'data')]
         )
         section.add_paragraph("""
-            <b>Note:</b> The ALE score provides an indication of the overall quality of an assembly. Larger ALE scores 
+            <b>Note:</b> The ALE score provides an indication of the overall quality of an assembly. Larger ALE scores
             are better (ALE scores are always negative, which means that values closer to 0 are better)""")
         section.add_header('WIGGLE files', 4)
         section.add_table([

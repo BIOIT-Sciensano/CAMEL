@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.blast.alignmentextraction import AlignmentExtraction
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.genedetection.genedetectionblasthit import GeneDetectionBlastHit
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.toolkits.blast.alignmentextraction import AlignmentExtraction
+from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
 
 
 class AlignmentExtractor(Tool):
@@ -20,12 +20,11 @@ class AlignmentExtractor(Tool):
     - List of alignment files in the same order as the input ('TXT' key in the tool outputs)
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Gene Detection: Alignment Extractor', '0.1', camel)
+        super().__init__('Gene Detection: Alignment Extractor', '0.1')
 
     def _execute_tool(self) -> None:
         """
@@ -42,7 +41,7 @@ class AlignmentExtractor(Tool):
                 alignment = self.__save_alignment(hit, alignments[key])
                 self._tool_outputs['TXT'].append(ToolIOFile(alignment))
             else:
-                raise ValueError("No alignment found for: '{}'".format(key))
+                raise ValueError(f"No alignment found for: '{key}'")
 
     def _check_input(self) -> None:
         """
@@ -50,10 +49,10 @@ class AlignmentExtractor(Tool):
         :return: None
         """
         if 'TXT' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("No TXT input found.")
+            raise InvalidToolInputError("No TXT input found.")
         if 'VAL_Hits' not in self._tool_inputs:
             logger.warning("No blast hits input found")
-        super(AlignmentExtractor, self)._check_input()
+        super()._check_input()
 
     def __save_alignment(self, hit: GeneDetectionBlastHit, alignment: str) -> Path:
         """
@@ -62,7 +61,7 @@ class AlignmentExtractor(Tool):
         :param alignment: Alignment
         :return: Filename of the saved alignment
         """
-        path_out = self._folder / f'{FileSystemHelper.make_valid(hit.locus)}.txt'
+        path_out = self._folder / f'{fileutils.make_valid(hit.locus)}.txt'
         alignment = alignment.replace(hit.blast_stats.subject_id, hit.locus)
         alignment = alignment.replace('Query  ', 'Contig ').replace('Sbjct  ', 'Locus  ')
         with path_out.open('w') as output_handle:

@@ -1,22 +1,19 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
 from camel.app.tools.gatk4.gatk4 import GATK4
 
 
 class GATK4MarkDuplicatesSpark(GATK4):
-
     """
     Class for GATK MarkDuplicatesSpark function
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize a GATK MarkDuplicatesSpark tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('gatk4 MarkDuplicatesSpark', '4.1.9.0', camel)
+        super().__init__('gatk4 MarkDuplicatesSpark', '4.1.9.0')
 
         self._required_inputs = ['BAM']
         self._output_type = 'BAM'
@@ -27,8 +24,7 @@ class GATK4MarkDuplicatesSpark(GATK4):
         Set the input specification
         :return: None
         """
-        super(GATK4MarkDuplicatesSpark, self)._set_input()
-
+        super()._set_input()
         bam_file = self._tool_inputs['BAM'][0].path
         self._input_string += f"-I {bam_file} "
 
@@ -40,6 +36,6 @@ class GATK4MarkDuplicatesSpark(GATK4):
         """
         self._option_string = f'--conf \'spark.executor.cores={self._parameters["threads"].value}\' '
         if Path('/scratch').is_dir():
-            self._option_string += f'--conf \'spark.local.dir=/scratch\' '
+            self._option_string += '--conf \'spark.local.dir=/scratch\' '
         elif Path('/temp').is_dir():
-            self._option_string += f'--conf \'spark.local.dir=/temp\' '
+            self._option_string += '--conf \'spark.local.dir=/temp\' '

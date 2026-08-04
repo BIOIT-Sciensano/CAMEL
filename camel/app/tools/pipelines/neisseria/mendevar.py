@@ -1,12 +1,12 @@
-import pandas as pd
-
-from pathlib import Path
 from fractions import Fraction
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from pathlib import Path
+
+import pandas as pd
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
 
 
 class MenDeVAR(Tool):
@@ -15,12 +15,11 @@ class MenDeVAR(Tool):
     coverage for the Bexsero and Trumenba vaccines.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the Mendevar tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('MenDeVAR', '0.1', camel)
+        super().__init__('MenDeVAR', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -28,9 +27,9 @@ class MenDeVAR(Tool):
         :return: None
         """
         if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("MenDeVAR database is required")
+            raise InvalidToolInputError("MenDeVAR database is required")
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input is required")
+            raise InvalidToolInputError("TSV input is required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -72,6 +71,12 @@ class MenDeVAR(Tool):
         antigen_info['Trumenba status'] = '-'
         antigen_info.loc[antigen_info['Locus'] == 'fHbp_peptide', 'Trumenba status'] = trumenba_status
         self._informs['trumenba_status'] = trumenba_status
+
+        # Store the per-locus allele reactivity indexes
+        self._informs['bexsero_allele_status'] = list(
+            zip(antigen_info['Locus'], antigen_info['Bexsero allele status']))
+        self._informs['trumenba_allele_status'] = list(
+            zip(antigen_info['Locus'], antigen_info['Trumenba allele status']))
 
         # Get the output directory
         self.__create_output_file(antigen_info, sample_id)

@@ -1,9 +1,10 @@
 import os
+from pathlib import Path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class Itsx(Tool):
@@ -14,15 +15,14 @@ class Itsx(Tool):
     severely misleading results, ITSx identifies and extracts only the ITS regions themselves.
     """
 
-    def __init__(self, camel):
+    def __init__(self) -> None:
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('itsx', '1.0.11', camel)
+        super().__init__('itsx', '1.1.3')
 
-    def _execute_tool(self):
+    def _execute_tool(self) -> None:
         """
         Runs ITSx
         :return: None
@@ -31,7 +31,7 @@ class Itsx(Tool):
         self._execute_command()
         self.__set_output()
 
-    def _check_input(self):
+    def _check_input(self) -> None:
         """
         Checks whether the given inputs are valid:
         - FASTA key is required
@@ -39,49 +39,51 @@ class Itsx(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(Itsx, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Not enough valid input files given for ITSx (FASTA required): {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Not enough valid input files given for ITSx (FASTA required): {self._tool_inputs!r}')
         if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError('Invalid number (max = 1) of FASTA files given for ITSx: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Invalid number (max = 1) of FASTA files given for ITSx: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) > 2:
-            raise InvalidInputSpecificationError('Too many input keys given for ITSx (only FASTA allowed): {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError(f'Too many input keys given for ITSx (only FASTA allowed): {self._tool_inputs!r}')
 
-    def __get_basename(self):
+    def __get_basename(self) -> str:
         """
         Returns the prefix that will be used in the output.
         :return: String with the prefix used in the output
         """
         infile = self._tool_inputs['FASTA'][0].basename
-        return '{}_ITSx'.format(os.path.join(self._folder, os.path.splitext(infile)[0]))
+        return f'{os.path.join(self._folder, os.path.splitext(infile)[0])}_ITSx'
 
-    def __set_output(self):
+    def __set_output(self) -> None:
         """
         Sets the name of the output files
         :return: None
         """
         basename = self.__get_basename()
-        self._tool_outputs['TEXT_Summary'] = [ToolIOFile(basename + '.summary.txt')]
-        self._tool_outputs['TEXT_NoDetection'] = [ToolIOFile(basename + '_no_detections.fasta')]
-        self._tool_outputs['TEXT_Problematic'] = [ToolIOFile(basename + '.problematic.txt')]
-        self._tool_outputs['TSV_Positions'] = [ToolIOFile(basename + '.positions.txt')]
-        self._tool_outputs['GRAPH'] = [ToolIOFile(basename + '.graph')]
-        self._tool_outputs['FASTA_Full'] = [ToolIOFile(basename + '.full.fasta')]
-        self._tool_outputs['FASTA_ITS1'] = [ToolIOFile(basename + '.ITS1.fasta')]
-        self._tool_outputs['FASTA_ITS2'] = [ToolIOFile(basename + '.ITS2.fasta')]
-        self._tool_outputs['FASTA_NoDetection'] = [ToolIOFile(basename + '_no_detections.fasta')]
+        self._tool_outputs['TEXT_Summary'] = [ToolIOFile(Path(basename + '.summary.txt'))]
+        self._tool_outputs['TEXT_NoDetection'] = [ToolIOFile(Path(basename + '_no_detections.fasta'))]
+        self._tool_outputs['TEXT_Problematic'] = [ToolIOFile(Path(basename + '.problematic.txt'))]
+        self._tool_outputs['TSV_Positions'] = [ToolIOFile(Path(basename + '.positions.txt'))]
+        self._tool_outputs['GRAPH'] = [ToolIOFile(Path(basename + '.graph'))]
+        self._tool_outputs['FASTA_Full'] = [ToolIOFile(Path(basename + '.full.fasta'))]
+        self._tool_outputs['FASTA_ITS1'] = [ToolIOFile(Path(basename + '.ITS1.fasta'))]
+        self._tool_outputs['FASTA_ITS2'] = [ToolIOFile(Path(basename + '.ITS2.fasta'))]
+        self._tool_outputs['FASTA_NoDetection'] = [ToolIOFile(Path(basename + '_no_detections.fasta'))]
         if os.path.isfile(basename + '.chimeric.fasta'):
-            self._tool_outputs['FASTA_Chimeric'] = [ToolIOFile(basename + '.chimeric.fasta')]
+            self._tool_outputs['FASTA_Chimeric'] = [ToolIOFile(Path(basename + '.chimeric.fasta'))]
 
-    def __build_input_string(self):
+    def __build_input_string(self) -> str:
         """
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        return ' '.join(['-i {}'.format(self._tool_inputs['FASTA'][0]),
-                         '-o {}'.format(self.__get_basename())])
+        return ' '.join([
+            f"-i {self._tool_inputs['FASTA'][0].path}",
+            f'-o {self.__get_basename()}'
+        ])
 
-    def __build_command(self):
+    def __build_command(self) -> None:
         """
         Concatenates required parameters and options to build the command to run 'make.contigs'
         :return: None
@@ -89,11 +91,3 @@ class Itsx(Tool):
         input_string = self.__build_input_string()
         options_string = ' '.join(self._build_options())
         self._command.command = ' '.join([self._tool_command, input_string, options_string])
-
-    def _check_command_output(self):
-        """
-        Checks if the command was executed successfully.
-        :return: None
-        """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Command execution for ITSx failed (Exit code: {})".format(self._command.returncode))

@@ -1,31 +1,28 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.resources.snakefile import sequence_typing
-from camel.scripts.neisseriapipeline.snakefile import gmats
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.snakefiles import sequence_typing
+
 
 rule gmats_run:
     """
     Runs the gMATS assay.
     """
     input:
-        TSV = Path(config['working_dir']) / str(sequence_typing.OUTPUT_TYPING_TSV).format(
-            scheme='bast', locus_type='peptide')
+        TSV = sequence_typing.OUTPUT_TSV.format(scheme='bast', locus_type='peptide')
     output:
-        TSV = Path(config['working_dir']) / 'gmats' / 'tsv.io',
-        INFORMS = Path(config['working_dir']) / 'gmats' / 'informs.io'
+        TSV = 'gmats/tool/tsv.io',
+        INFORMS = 'gmats/tool/informs.io'
     params:
-        dir_ = Path(config['working_dir']) / 'gmats',
         db = config.get('gmats', {}).get('db')
     run:
-        from camel.app.io.tooliofile import ToolIOFile
+        from camelcore.app.io.tooliofile import ToolIOFile
         from camel.app.tools.pipelines.neisseria.gmats import GMats
 
-        gmats_ = GMats(Camel.get_instance())
-        step = Step(str(rule), gmats_, Camel.get_instance(), params.dir_)
-        SnakemakeUtils.add_pickle_inputs(gmats_,input)
+        gmats_ = GMats()
+        step = Step(rule_name=str(rule), tool=gmats_, dir_=snakemakeutils.get_rule_dir(output))
+        snakemakeutils.add_io_inputs(gmats_, input)
 
         # Add database
         if params.db is None:
@@ -36,8 +33,8 @@ rule gmats_run:
         gmats_.add_input_files({'DB': [ToolIOFile(path_db)]})
 
         # Run tool
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(gmats_, output)
+        step.run()
+        snakemakeutils.dump_io_outputs(gmats_, output)
 
 rule gmats_report:
     """
@@ -47,26 +44,24 @@ rule gmats_report:
         TSV = rules.gmats_run.output.TSV,
         INFORMS_gmats = rules.gmats_run.output.INFORMS
     output:
-        HTML = Path(config['working_dir']) / gmats.OUTPUT_GMATS_REPORT
-    params:
-        dir_ = Path(config['working_dir']) / 'gmats' / 'report'
+        HTML = 'gmats/report/html.iob' # gmats.OUTPUT_REPORT
     run:
         from camel.app.tools.pipelines.neisseria.gmatsreporter import GMatsReporter
-        reporter = GMatsReporter(Camel.get_instance())
-        step = Step(str(rule), reporter, Camel.get_instance(), params.dir_)
-        SnakemakeUtils.add_pickle_inputs(reporter, input)
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = GMatsReporter()
+        step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output))
+        snakemakeutils.add_io_inputs(reporter, input)
+        step.run()
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule gmats_report_empty:
     """
     Creates an empty gMATS report when the analysis is disabled.
     """
     output:
-        HTML = Path(config['working_dir']) / gmats.OUTPUT_GMATS_REPORT_EMPTY
+        HTML = 'gmats/report/html-empty.iob' # gmats.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-        SnakePipelineUtils.create_empty_report_section('gMATS', Path(output.HTML), 3)
+        from camel.app.core.snakemake import snakepipelineutils
+        snakepipelineutils.create_empty_report_section('gMATS', Path(output.HTML), 3)
 
 rule gmats_create_summary:
     """
@@ -75,12 +70,12 @@ rule gmats_create_summary:
     input:
         INFORMS_gmats = rules.gmats_run.output.INFORMS
     output:
-        TSV = Path(config['working_dir']) / gmats.OUTPUT_GMATS_SUMMARY
+        FILE = 'gmats/summary/summary_gmats.{ext}' # gmats.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
-        # Collect informs
-        informs = SnakemakeUtils.load_object(Path(input.INFORMS_gmats))
-
-        # Create TSV output
-        with open(output.TSV, 'w') as handle:
-            handle.write(f"gmats_status\t{informs['gMATS_status']}")
-            handle.write('\n')
+        informs = snakemakeutils.load_object(Path(input.INFORMS_gmats))
+        data_summary = [('gmats_status', informs['gMATS_status'])]
+        for locus, allele_status in informs['allele_status']:
+            data_summary.append((f'gmats_allele_status_{locus}', allele_status))
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'gmats')

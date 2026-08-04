@@ -1,9 +1,38 @@
-dependencies: [kma/1.4.12a]
+conda:
+  name: kma
+  packages:
+    - kma=1.4.14
+dependencies:
+  - kma/1.4.12a
 parameters:
-  output_basename: {default: true, mandatory: true, option: -o, value: kma_output}
-  bc_nano: {default: false, mandatory: false, option: -bcNano, value: null}
-  basecalls: {default: false, mandatory: false, option: -bc, value: 0.9}
-  ont: {default: false, mandatory: false, option: -ont, value: null}
-  apm: {default: false, mandatory: false, option: -apm, value: 'u'}
-  cge: {default: false, mandatory: false, option: -cge, value: null}
+  apm:
+    default: false
+    mandatory: false
+    option: '-apm'
+    value: u
+  basecalls:
+    default: false
+    mandatory: false
+    option: '-bc'
+    value: 0.9
+  bc_nano:
+    default: false
+    mandatory: false
+    option: '-bcNano'
+    flag: true
+  cge:
+    default: false
+    mandatory: false
+    option: '-cge'
+    value: null
+  output_basename:
+    default: true
+    mandatory: true
+    option: '-o'
+    value: kma_output
+  ont:
+    default: false
+    mandatory: false
+    option: '-ont'
+    flag: true
 tool_command: kma

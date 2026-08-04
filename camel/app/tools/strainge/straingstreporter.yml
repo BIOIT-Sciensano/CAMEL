@@ -1,5 +1,13 @@
 dependencies: []
 parameters:
-  sample_name: {default: false, mandatory: false, option: null, value: null}
-  suffix: {default: false, mandatory: false, option: null, value: 'illumina'}
+  sample_name:
+    default: false
+    mandatory: false
+    option: null
+    value: null
+  suffix:
+    default: false
+    mandatory: false
+    option: null
+    value: illumina
 tool_command: null

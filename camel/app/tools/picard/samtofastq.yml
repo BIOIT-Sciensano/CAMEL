@@ -1,7 +1,33 @@
-dependencies: [java/1.8.0_172, picard/2.23.3]
+conda:
+  name: picard
+  packages:
+    - picard=2.23.3
+dependencies:
+  - java/1.8.0_172
+  - picard/2.23.3
 parameters:
-  output: {default: true, mandatory: false, option: FASTQ, p_index: 0, value: output}
-  paired_end: {default: true, mandatory: false, option: None, p_index: 0, value: false}
-  non_pf: {default: false, mandatory: false, option: NON_PF, p_index: 0, value: false}
-  interleave: {default: false, mandatory: false, option: INTER, p_index: 0, value: false}
+  output:
+    default: true
+    mandatory: false
+    option: FASTQ
+    p_index: 0
+    value: output
+  paired_end:
+    default: true
+    mandatory: false
+    option: None
+    p_index: 0
+    value: false
+  non_pf:
+    default: false
+    mandatory: false
+    option: NON_PF
+    p_index: 0
+    value: false
+  interleave:
+    default: false
+    mandatory: false
+    option: INTER
+    p_index: 0
+    value: false
 tool_command: SamToFastq

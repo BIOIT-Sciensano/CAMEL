@@ -1,7 +1,28 @@
-dependencies: [mothur/1.39.1]
+conda:
+  name: mothur
+  packages:
+    - mothur=1.48.0
+dependencies:
+  - mothur/1.48.0
 parameters:
-  groups: {default: false, mandatory: false, option: groups, p_index: 0, value: group1-group2}
-  label: {default: false, mandatory: false, option: label, p_index: 0, value: unique-0.03}
-  persample: {default: false, mandatory: false, option: persample, p_index: 0, value: 'false'}
-  size: {default: false, mandatory: false, option: size, p_index: 0, value: '200'}
+  groups:
+    default: false
+    mandatory: false
+    option: groups
+    value: group1-group2
+  label:
+    default: false
+    mandatory: false
+    option: label
+    value: unique-0.03
+  persample:
+    default: false
+    mandatory: false
+    option: persample
+    value: 'false'
+  size:
+    default: false
+    mandatory: false
+    option: size
+    value: '200'
 tool_command: mothur "#sub.sample({0}{1})"

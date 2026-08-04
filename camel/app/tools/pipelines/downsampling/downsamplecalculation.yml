@@ -1,6 +1,18 @@
 dependencies: []
 parameters:
-  cov_target: {default: true, mandatory: true, option: null, value: 100}
-  is_paired: {default: false, mandatory: false, option: null, value: null}
-  size_ref_genome: {default: false, mandatory: true, option: null, value: 5000000}
+  cov_target:
+    default: true
+    mandatory: true
+    option: null
+    value: 100
+  is_paired:
+    default: false
+    mandatory: false
+    option: null
+    flag: true
+  size_ref_genome:
+    default: false
+    mandatory: true
+    option: null
+    value: 5000000
 tool_command: null

@@ -1,12 +1,13 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
 
 
 class ART(Tool):
@@ -14,13 +15,12 @@ class ART(Tool):
     A simulation tool to generate synthetic next-generation sequencing reads.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('ART', '2.5.8', camel)
+        super().__init__('ART', '2.5.8')
 
     def _execute_tool(self) -> None:
         """
@@ -31,8 +31,12 @@ class ART(Tool):
         self.__build_command()
         self._execute_command()
         # Compress the two output files
-        FileSystemHelper.gzip_file(self.__get_output_path('1'), Path(f"{self.__get_output_path('_1')}.gz"))
-        FileSystemHelper.gzip_file(self.__get_output_path('2'), Path(f"{self.__get_output_path('_2')}.gz"))
+        fileutils.gzip_compress(
+            self.__get_output_path('1'), Path(f"{self.__get_output_path('_1')}.gz")
+        )
+        fileutils.gzip_compress(
+            self.__get_output_path('2'), Path(f"{self.__get_output_path('_2')}.gz")
+        )
         # Remove the uncompressed FASTQ files
         self.__remove_file(self.__get_output_path('1'))
         self.__remove_file(self.__get_output_path('2'))
@@ -47,7 +51,7 @@ class ART(Tool):
         super()._check_input()
         if 'FASTA' in self._tool_inputs:
             if len(self._tool_inputs['FASTA']) != 1:
-                raise InvalidInputSpecificationError("FASTA input requires exactly 1 file.")
+                raise InvalidToolInputError("FASTA input requires exactly 1 file.")
         else:
             raise ValueError("FASTA input is required")
 
@@ -56,21 +60,25 @@ class ART(Tool):
         Builds the command.
         :return: None
         """
-        self._command.command = ' '.join([
-            self._tool_command,
-            f"-i {self._tool_inputs['FASTA'][0].path}",
-            *self._build_options()]
+        self._command.command = ' '.join(
+            [
+                self._tool_command,
+                f"-i {self._tool_inputs['FASTA'][0].path}",
+                *self._build_options(),
+            ]
         )
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks if the command was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if 'error' in self.stderr.lower():
-            raise ToolExecutionError(f"Command execution failed (stderr: {self.stderr}).")
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        if 'error' in command.stderr.lower():
+            raise ToolExecutionError(
+                self.name, f"Command execution failed (stderr: {command.stderr})."
+            )
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __get_output_path(self, suffix: str) -> Path:
         """
@@ -79,7 +87,7 @@ class ART(Tool):
         :return: Path to the generated reads
         """
         basename = self._parameters['out'].value
-        return self.folder / f"{FileSystemHelper.make_valid(basename)}{suffix}.fq"
+        return self.folder / f"{fileutils.make_valid(basename)}{suffix}.fq"
 
     def __set_output(self) -> None:
         """
@@ -87,7 +95,9 @@ class ART(Tool):
         :return: None
         """
         self._tool_outputs['FASTQ_PE'] = [
-            ToolIOFile(Path(f"{self.__get_output_path('_1')}.gz")), ToolIOFile(Path(f"{self.__get_output_path('_2')}.gz"))]
+            ToolIOFile(Path(f"{self.__get_output_path('_1')}.gz")),
+            ToolIOFile(Path(f"{self.__get_output_path('_2')}.gz")),
+        ]
 
     @staticmethod
     def __remove_file(input_file: Path) -> None:

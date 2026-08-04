@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.toolpipeable import ToolPipeable
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
+from camel.app.core.piping.toolpipeable import ToolPipeable
 
 
 class Minimap2Mapping(ToolPipeable):
@@ -12,12 +13,12 @@ class Minimap2Mapping(ToolPipeable):
     A versatile pairwise aligner for genomic and spliced nucleotide sequences.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('Minimap2', '2.26', camel)
+        super().__init__('Minimap2', '2.26')
 
     def _execute_tool(self) -> None:
         """
@@ -47,13 +48,13 @@ class Minimap2Mapping(ToolPipeable):
             parts.append(f'> {path_out}')
         self._command.command = ' '.join(parts)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the tool executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing {self.name}:\n{self.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def __set_output(self, path_out: Path) -> None:
         """

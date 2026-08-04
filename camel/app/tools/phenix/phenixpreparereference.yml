@@ -1,5 +1,12 @@
-dependencies: [java/jdk-1.8.0_172, bwa/0.7.15, bowtie2/2.3.0, picard/2.8.3, gatk/3.7, PHEnix/1.4.1
-  bcftools/1.9, samtools/1.9]
+dependencies:
+  - java/jdk-1.8.0_172
+  - bwa/0.7.15
+  - bowtie2/2.3.0
+  - picard/2.8.3
+  - gatk/3.7
+  - PHEnix/1.4.1
+  - bcftools/1.9
+  - samtools/1.9
 parameters:
   mapper: {default: true, mandatory: false, option: --mapper, value: bwa}
   reference_name: {default: false, mandatory: false, option: null, value: reference.fasta}

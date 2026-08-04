@@ -1,31 +1,29 @@
 import abc
 import re
 from pathlib import Path
-from typing import Optional
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.config import config
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.piping.toolpipeable import ToolPipeable
 from camel.app.loggers import logger
-from camel.app.tools.toolpipeable import ToolPipeable
 
 
 class Picard(ToolPipeable, metaclass=abc.ABCMeta):
-
     """
     Super class for Picard tools
     """
 
-    def __init__(self, tool_name: str, version: str, camel: Camel) -> None:
+    def __init__(self, tool_name: str, version: str) -> None:
         """
         Initialize a picard tool
         :param tool_name: tool name
         :param version: Tool version
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(tool_name, version, camel)
+        super().__init__(tool_name, version)
 
         self._function_name = None
         # parameters that should not be handled by self.build_options function
@@ -37,7 +35,7 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
         self._output_type = 'BAM'
         # Elements for building command
         self._java_options = '-mx8G -XX:+UseParallelGC -XX:ParallelGCThreads=1 -Dpicard.useLegacyParser=false'
-        self._java_options_temp_dir = f"TMP_DIR={camel.config['temp_dir']}"
+        self._java_options_temp_dir = f"TMP_DIR={config.dir_temp}"
 
     def update_java_options(self, java_options: str) -> None:
         """
@@ -65,7 +63,7 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
         """
         # BAM or SAM input required; mutually exclusive
         if ('SAM' in self._tool_inputs) and ('BAM' in self._tool_inputs):
-            raise InvalidInputSpecificationError()
+            raise InvalidToolInputError()
         elif 'SAM' in self._tool_inputs:
             self._main_input = 'SAM'
             self._required_inputs.remove('BAM')
@@ -75,10 +73,9 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
 
         for input_file in self._required_inputs:
             if input_file not in self._tool_inputs:
-                raise InvalidInputSpecificationError('Picard {!r} required {!r} input is missing in _tool_inputs!'.format(
-                    self._name, input_file))
-
-        super(Picard, self)._check_input()
+                raise InvalidToolInputError(
+                    f'Picard {self._name!r} required {input_file!r} input is missing in _tool_inputs!')
+        super()._check_input()
 
     def _set_input(self) -> None:
         """
@@ -103,6 +100,16 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
             ToolIOFile(Path(self._folder) / self._parameters['output'].value)
         ]
 
+    def _get_base_command(self) -> list[str]:
+        """
+        Returns the base command.
+        :return: Base command
+        """
+        # Init base command
+        if config.dependency_service == 'lmod':
+            return ["java", self._java_options, "-jar $PICARD_JAR", self._tool_command, self._java_options_temp_dir]
+        return ['picard', self._tool_command]
+
     def _build_command(self, pipe_in: bool = False, pipe_out: bool = False) -> None:
         """
         Build the command to run tool
@@ -110,8 +117,7 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
         :param pipe_out: Tool outputs to pipe
         :return: None
         """
-        #Init base command
-        command_parts = ["java", self._java_options, "-jar $PICARD_JAR", self._tool_command, self._java_options_temp_dir]
+        command_parts = self._get_base_command()
 
         #Set input cmd line option
         if pipe_in:
@@ -131,23 +137,24 @@ class Picard(ToolPipeable, metaclass=abc.ABCMeta):
 
         self._command.command = " ".join(command_parts)
 
-    def _set_informs(self, stderr: Optional[str] = None) -> None:
+    def _set_informs(self, stderr: str | None = None) -> None:
         """
         Analyse the result of picard run and update tool.informs, implement when necessary
         :return: None
         """
         pass
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Verify tool execution (return code) and stdout
+        Verify tool execution (return code) and stdout.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f'Picard {self._name,} fails to run, error msg: \n{self.stdout}')
+        if command.exit_code != 0:
+            raise ToolExecutionError(self.name, f'Picard {self._name,} fails to run, error msg: \n{command.stdout}')
 
         # log WARNINGs
-        for line in self.stdout.splitlines():
+        for line in command.stdout.splitlines():
             if re.match('WARNING', line):
                 logger.warning(f' Picard - {line}')
 

@@ -3,12 +3,13 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fileutils
 
-from camel.app.components.sequencetyping.sequencetypinghitbase import SequenceTypingHitBase
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
+from camel.app.toolkits.sequencetyping.typinghitbase import TypingHitBase
 
 
 @dataclass(frozen=True, unsafe_hash=True)
@@ -28,13 +29,12 @@ class SequenceTypeDetector(Tool):
 
     SYMBOL_NO_ST = 'ND'
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize this tool.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Typing: Sequence Type Detector', '0.1', camel)
+        super().__init__('Typing: Sequence Type Detector', '0.1')
         self._wildcards = None
         self._symbol_allele_absent = None
         self._metadata_columns = []
@@ -45,7 +45,7 @@ class SequenceTypeDetector(Tool):
         :return: None
         """
         # Parse input data
-        hit_by_locus = {hit.locus: hit for hit in [
+        hit_by_locus = {fileutils.make_valid(hit.locus): hit for hit in [
             io.value for io in self._tool_inputs['hits_nucl'] + self._tool_inputs['hits_pept']]}
         profiles = self.__parse_profiles(list(hit_by_locus.keys()))
 
@@ -80,9 +80,9 @@ class SequenceTypeDetector(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("Sequence type profiles ('TSV') are required.")
+            raise InvalidToolInputError("Sequence type profiles ('TSV') are required.")
         if len(self._tool_inputs['hits_nucl']) + len(self._tool_inputs['hits_pept']) == 0:
-            raise InvalidInputSpecificationError("Typing hits are required.")
+            raise InvalidToolInputError("Typing hits are required.")
         super()._check_input()
 
     def __parse_profiles(self, gene_names: list[str]) -> list[STProfile]:
@@ -93,23 +93,24 @@ class SequenceTypeDetector(Tool):
         """
         # Parse input data
         data_in = pd.read_table(self._tool_inputs['TSV'][0].path, dtype=str)
+        data_in.columns = [fileutils.make_valid(col) for col in data_in.columns]
         cols_metadata = [c for c in data_in.columns if c not in gene_names]
         logger.info(f'Metadata columns: {cols_metadata}')
-        cols_alleles = [c for c in data_in.columns if c in gene_names]
+        cols_alleles = [fileutils.make_valid(c) for c in data_in.columns if c in gene_names]
         logger.info(f'Gene columns: {cols_alleles}')
 
         # Construct the profiles
         profiles = []
         for row in data_in.fillna('n/a').to_dict('records'):
             profiles.append(STProfile(
-                name=row[data_in.columns[0]],
+                name=row[str(data_in.columns[0])],
                 alleles={c: row[c] for c in cols_alleles},
                 metadata=[(c, row[c] if not pd.isna(row[c]) else '-') for c in cols_metadata],
             ))
         logger.info(f'Parsed {len(profiles):,} profiles')
         return profiles
 
-    def __alleles_match(self, detected_hit: SequenceTypingHitBase, profile_allele: str) -> bool:
+    def __alleles_match(self, detected_hit: TypingHitBase, profile_allele: str) -> bool:
         """
         Checks whether two alleles match.
         :param detected_hit: Detected allele
@@ -123,7 +124,7 @@ class SequenceTypeDetector(Tool):
         return (detected_hit.is_perfect_hit()) and (detected_hit.allele_id == profile_allele)
 
     def __get_nb_matches_by_profile(
-            self, profiles: list[STProfile], hit_by_locus: dict[str, SequenceTypingHitBase]) -> dict:
+            self, profiles: list[STProfile], hit_by_locus: dict[str, TypingHitBase]) -> dict:
         """
         Returns the number of matches per profile.
         :param profiles: Sequence type profiles
@@ -133,8 +134,7 @@ class SequenceTypeDetector(Tool):
         if 'allele_absent_symbol' in self._parameters:
             self._symbol_allele_absent = self._parameters['allele_absent_symbol'].value
         self._wildcards = self._parameters['allele_wildcards'].value.split(',')
-        logger.debug("Wildcards: [{}]¸ Symbol allele absent: {}".format(
-            ', '.join(self._wildcards), self._symbol_allele_absent))
+        logger.debug(f"Wildcards: [{', '.join(self._wildcards)}]¸ Symbol allele absent: {self._symbol_allele_absent}")
 
         nb_matches_by_profile = {}
         for profile in profiles:

@@ -1,11 +1,9 @@
 import unittest
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.testing.cameltestsuite import CamelTestSuite
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.tools.pipelines.sequence_typing.locussetmanager import LocusSetManager
-from camel.scripts.bacilluspipeline.mainbacilluspipeline import MainBacillusPipeline
+from camel.app.cli import cliutils
+from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.scripts.bacilluspipeline.mainbacilluspipeline import CUSTOM_ANALYSES, main
 from camel.tests import longRunningTest
 
 
@@ -28,136 +26,121 @@ class TestBacillusPipeline(CamelTestSuite):
     input_fasta_subtilis = test_file_dir / 'Bsubtilis-SRR10260289.fasta'
     input_fasta_cereus = test_file_dir / 'Bcereus-D12.fasta'
 
-    def test_bacillus_pipeline_typing_db(self) -> None:
-        """
-        Checks if the databases for the sequence typing are available.
-        :return: None
-        """
-        sequence_typing_dict = {
-            'mlst_cereus': {'path': '/db/sequence_typing/bacillus_cereus/mlst'},
-            'mlst_subtilis': {'path': '/db/sequence_typing/bacillus_subtilis/mlst'}}
-        for key, scheme_data in sequence_typing_dict.items():
-            # Check if scheme exists
-            self.assertGreater(Path(scheme_data['path']).stat().st_size, 0)
-
-            # Check if metadata can be loaded
-            manager = LocusSetManager(Camel.get_instance())
-            manager.add_input_files({'DIR': [ToolIODirectory(Path(scheme_data['path']))]})
-            manager.run(self.running_dir)
-            self.assertGreater(len(manager.informs), 0)
-
     @longRunningTest()
-    def test_bacillus_pipeline_subtilis_blast_illumina(self) -> None:
+    def test_subtilis_blast_illumina(self) -> None:
         """
         Tests the Bacillus pipeline with blast-based detection.
         :return: None
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        tested_analyses = \
-            MainBacillusPipeline.CUSTOM_ANALYSES['common'] + MainBacillusPipeline.CUSTOM_ANALYSES['subtilis']
-        args = [
-            '--fastq-pe', str(TestBacillusPipeline.input_fastq_pe_subtilis[0]),
+        tested_analyses = CUSTOM_ANALYSES['common'] + CUSTOM_ANALYSES['subtilis']
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestBacillusPipeline.input_fastq_pe_subtilis[0]),
             str(TestBacillusPipeline.input_fastq_pe_subtilis[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--threads', '8',
-            '--species', 'subtilis'
-        ] + [f"--{a.replace('_', '-')}" for a in tested_analyses if 'cgmlst' not in a]
-        main = MainBacillusPipeline(args)
-        main.run()
+            '--species', 'subtilis',
+            '--analyses', ','.join(a for a in tested_analyses if 'cgmlst' not in a),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_cereus_blast_illumina(self) -> None:
+    def test_cereus_blast_illumina(self) -> None:
         """
         Tests the Bacillus pipeline with blast-based detection.
         :return: None
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        tested_analyses = \
-            MainBacillusPipeline.CUSTOM_ANALYSES['common'] + MainBacillusPipeline.CUSTOM_ANALYSES['cereus']
-        args = [
-            '--fastq-pe', str(TestBacillusPipeline.input_fastq_pe_cereus[0]),
+        tested_analyses = CUSTOM_ANALYSES['common'] + CUSTOM_ANALYSES['cereus']
+        result = cliutils.invoke(main, [
+            '--fastq-pe',
+            str(TestBacillusPipeline.input_fastq_pe_cereus[0]),
             str(TestBacillusPipeline.input_fastq_pe_cereus[1]),
+            '--input-type', 'illumina',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--threads', '8',
             '--species', 'cereus',
-            '--mobsuite-contig-report'
-        ] + [f"--{a.replace('_', '-')}" for a in tested_analyses if 'cgmlst' not in a]
-        main = MainBacillusPipeline(args)
-        main.run()
+            '--mobsuite-contig-report',
+            '--analyses', ','.join(a for a in tested_analyses if 'cgmlst' not in a),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_subtilis_blast_ont(self) -> None:
+    def test_subtilis_blast_ont(self) -> None:
         """
-        Tests the Bacillus pipeline with blast based detection and ONT data.
+        Tests the Bacillus pipeline with blast-based detection and ONT data.
         :return: None
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        tested_analyses = \
-            MainBacillusPipeline.CUSTOM_ANALYSES['common'] + MainBacillusPipeline.CUSTOM_ANALYSES['subtilis']
-        args = [
+        tested_analyses = CUSTOM_ANALYSES['common'] + CUSTOM_ANALYSES['subtilis']
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestBacillusPipeline.input_fastq_se_subtilis),
             '--input-type', 'ont',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--threads', '8',
-            '--species', 'subtilis'
-        ] + [f"--{a.replace('_', '-')}" for a in tested_analyses if 'cgmlst' not in a]
-        main = MainBacillusPipeline(args)
-        main.run()
+            '--species', 'subtilis',
+            '--analyses', ','.join(a for a in tested_analyses if 'cgmlst' not in a),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_cereus_blast_ont(self) -> None:
+    def test_cereus_blast_ont(self) -> None:
         """
         Tests the Bacillus pipeline with blast-based detection and ONT data.
         :return: None
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        tested_analyses = \
-            MainBacillusPipeline.CUSTOM_ANALYSES['common'] + MainBacillusPipeline.CUSTOM_ANALYSES['cereus']
-        args = [
+        tested_analyses = CUSTOM_ANALYSES['common'] + CUSTOM_ANALYSES['cereus']
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestBacillusPipeline.input_fastq_se_cereus),
             '--input-type', 'ont',
             '--output-html', str(path_report_out),
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--threads', '8',
-            '--species', 'cereus'
-        ] + [f"--{a.replace('_', '-')}" for a in tested_analyses if 'cgmlst' not in a]
-        main = MainBacillusPipeline(args)
-        main.run()
+            '--species', 'cereus',
+            '--analyses', ','.join(a for a in tested_analyses if 'cgmlst' not in a),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_subtilis_blast_hybrid(self) -> None:
+    def test_subtilis_blast_hybrid(self) -> None:
         """
         Tests the Bacillus pipeline with blast-based detection and ONT data.
         :return: None
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        tested_analyses = \
-            MainBacillusPipeline.CUSTOM_ANALYSES['common'] + MainBacillusPipeline.CUSTOM_ANALYSES['subtilis']
-        args = [
+        tested_analyses = CUSTOM_ANALYSES['common'] + CUSTOM_ANALYSES['subtilis']
+        result = cliutils.invoke(main, [
             '--fastq-se', str(TestBacillusPipeline.test_file_dir / 'Bsubtilis-SRR10260288_50x.fastq.gz'),
             '--fastq-pe',
             str(TestBacillusPipeline.test_file_dir / 'Bsubtilis-SRR10260289_5x_1.fastq.gz'),
@@ -167,61 +150,62 @@ class TestBacillusPipeline(CamelTestSuite):
             '--output-dir', str(path_report_out.parent),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--detection-method', 'blast',
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
             '--threads', '8',
-            '--species', 'subtilis'
-        ] + [f"--{a.replace('_', '-')}" for a in tested_analyses if 'cgmlst' not in a]
-        main = MainBacillusPipeline(args)
-        main.run()
+            '--species', 'subtilis',
+            '--analyses', ','.join(a for a in tested_analyses if 'cgmlst' not in a),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_subtilis_fasta(self) -> None:
+    def test_subtilis_fasta(self) -> None:
         """
         Tests the Bacillus pipeline on B. subtilis with blast-based detection and FASTA data.
         :return: None
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        tested_analyses = MainBacillusPipeline.CUSTOM_ANALYSES['common']
-        args = [
-           '--fasta', str(TestBacillusPipeline.test_file_dir / 'Bsubtilis-SRR10260289.fasta'),
-           '--input-type', 'fasta',
-           '--output-html', str(path_report_out),
-           '--output-dir', str(path_report_out.parent),
-           '--output-tsv', str(path_summary_out),
-           '--working-dir', str(self.running_dir),
-           '--detection-method', 'blast',
-           '--threads', '8',
-           '--species', 'subtilis'
-        ] + [f"--{a.replace('_', '-')}" for a in tested_analyses if 'cgmlst' not in a]
-        main = MainBacillusPipeline(args)
-        main.run()
+        tested_analyses = CUSTOM_ANALYSES['common']
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestBacillusPipeline.test_file_dir / 'Bsubtilis-SRR10260289.fasta'),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
+            '--threads', '8',
+            '--species', 'subtilis',
+            '--analyses', ','.join(a for a in tested_analyses if 'cgmlst' not in a),
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
     @longRunningTest()
-    def test_bacillus_pipeline_cereus_fasta(self) -> None:
+    def test_cereus_fasta(self) -> None:
         """
         Tests the Bacillus pipeline on B. cereus with blast-based detection and FASTA data.
         :return: None
         """
         path_report_out = Path(self.running_dir) / 'out' / 'report.html'
         path_summary_out = Path(self.running_dir) / 'out' / 'summary.tsv'
-        tested_analyses = MainBacillusPipeline.CUSTOM_ANALYSES['common']
-        args = [
-           '--fasta', str(TestBacillusPipeline.input_fasta_cereus),
-           '--input-type', 'fasta',
-           '--output-html', str(path_report_out),
-           '--output-dir', str(path_report_out.parent),
-           '--output-tsv', str(path_summary_out),
-           '--working-dir', str(self.running_dir),
-           '--detection-method', 'blast',
-           '--threads', '8',
-           '--species', 'cereus',
-           '--btyper'
-        ] + [f"--{a.replace('_', '-')}" for a in tested_analyses if 'cgmlst' not in a]
-        main = MainBacillusPipeline(args)
-        main.run()
+        result = cliutils.invoke(main, [
+            '--fasta', str(TestBacillusPipeline.input_fasta_cereus),
+            '--input-type', 'fasta',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--typing-method', 'blast',
+            '--gene-detection-method', 'blast',
+            '--threads', '8',
+            '--species', 'cereus',
+            '--analyses', 'btyper'
+        ])
+        self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
 

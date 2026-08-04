@@ -1,5 +1,5 @@
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.tools.mothur.mothur import Mothur
 
 
@@ -8,44 +8,25 @@ class MothurFilterSeqs(Mothur):
     filter.seqs removes columns from alignments based on a criteria defined by the user.
     """
 
-    def __init__(self, camel):
+    def __init__(self) -> None:
         """
-        Initialize tool
-        :param camel: Camel instance
+        Initializes this tool.
         :return: None
         """
-        super().__init__('mothur_filter_seqs', '1.39.1', camel)
+        super().__init__('mothur_filter_seqs')
+        self._required_input = ['FASTA']
 
-    def _check_input(self):
-        """
-        Checks whether the given inputs are valid:
-        - FASTA key is required
-        - Only one FASTA file allowed
-        - No other input keys allowed
-        :return: None
-        """
-        super(MothurFilterSeqs, self)._check_input()
-        if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('No valid input files given for Mothur filter.seqs: {!r}'.format(self._tool_inputs))
-        if len(self._tool_inputs['FASTA']) != 1:
-            raise InvalidInputSpecificationError('Invalid number (max = 1) of files given for Mothur \
-                                                 filter.seqs: {!r}'.format(self._tool_inputs))
-        if len(self._tool_inputs.keys()) != 1:
-            raise InvalidInputSpecificationError('Too many input keys given for Mothur filter.seqs: {!r}'.format(self._tool_inputs))
-
-    def _build_input_string(self):
+    def _build_input_string(self) -> str:
         """
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        items = ['fasta={}'.format(self._tool_inputs['FASTA'][0]),
-                 'outputdir={}'.format(self._folder)]
+        items = [f"fasta={self._tool_inputs['FASTA'][0]}", f'outputdir={self._folder}']
         return ', '.join(items)
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
         Sets the name of the output files, and fills the common stream object with them
         :return: None
         """
-        basename = super(MothurFilterSeqs, self)._get_basename()
-        self._tool_outputs['FASTA'] = [ToolIOFile(basename + '.filter.fasta')]
+        self._tool_outputs['FASTA'] = [ToolIOFile(self._get_basename().with_suffix('.filter.fasta'))]

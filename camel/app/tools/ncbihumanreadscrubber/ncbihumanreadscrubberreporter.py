@@ -1,11 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.pipelineexecutionerror import PipelineExecutionError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
+from camel.app.core.errors import InvalidToolInputError, PipelineExecutionError
+from camel.app.core.tool import Tool
 
 
 class NcbiHumanReadScrubberReporter(Tool):
@@ -13,12 +12,11 @@ class NcbiHumanReadScrubberReporter(Tool):
     Reporting class for the NCBI human read scrubber tool.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance.
         """
-        super().__init__('HRRT reporter', '0.1', camel)
+        super().__init__('HRRT reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -26,7 +24,7 @@ class NcbiHumanReadScrubberReporter(Tool):
         :return: None
         """
         if 'SCRUBBER' not in self._input_informs:
-            raise InvalidInputSpecificationError("The tool informs are required")
+            raise InvalidToolInputError("The tool informs are required")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -34,7 +32,7 @@ class NcbiHumanReadScrubberReporter(Tool):
         Executes this tool.
         :return: None
         """
-        section = HtmlReportSection('Human read removal', subtitle=self._input_informs['SCRUBBER']['_name'])
+        section = HtmlReportSection('Human read removal', subtitle=self._input_informs['SCRUBBER']['_name_full'])
         subject = 'read pairs' if self._parameters['input_format'].value == 'fastq_pe' else 'reads' if self._parameters['input_format'].value == 'fastq_se' else 'contigs'
         count_total = self._input_informs['SCRUBBER']['statistics']['count_total']
         count_removed = self._input_informs['SCRUBBER']['statistics']['count_removed']

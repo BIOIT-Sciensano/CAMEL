@@ -1,5 +1,21 @@
-dependencies: [abritamr/1.1.0, blast/2.16.0, amrfinder/4.0.19]
+conda:
+  name: abritamr
+  packages:
+    - abritamr=1.1.0
+dependencies:
+  - abritamr/1.1.0
+  - blast/2.16.0
+  - amrfinder/4.0.19
+  - mafft/7.490
 parameters:
-   jobs: {default: true, mandatory: false, option: --jobs, value: '1'}
-   species: {default: false, mandatory: true, option: --species, value: null}
+  jobs:
+    default: true
+    mandatory: false
+    option: '--jobs'
+    value: '1'
+  species:
+    default: false
+    mandatory: true
+    option: '--species'
+    value: null
 tool_command: abritamr run

@@ -1,15 +1,16 @@
 import json
 from pathlib import Path
-from typing import Tuple, Any
+from typing import Any
 
-from camel.app.camel import Camel
-from camel.app.command.command import Command
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.io.tooliovalue import ToolIOValue
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.utils import fileutils
+
+from camel.app.config import config
+from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
 
 
 class SpoTyping(Tool):
@@ -26,13 +27,37 @@ class SpoTyping(Tool):
         - VAL_type_octal: Octal spoligotype
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('SpoTyping', '2.1', camel)
-        self._input_key = None
+        super().__init__('SpoTyping', None)
+
+    @property
+    def _input_key(self) -> str:
+        """
+        Returns the input key.
+        :return: Input key
+        """
+        return 'FASTQ' if 'FASTQ' in self._tool_inputs else 'FASTA'
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._get_tool_command()} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.splitlines()[-1].split(' ')[0]
+
+    def _get_tool_command(self) -> str:
+        """
+        Returns the tool command.
+        :return: String representing the command
+        """
+        if config.dependency_service == 'lmod':
+            return self._tool_command.replace('.py', '')
+        return self._tool_command
 
     def _check_input(self) -> None:
         """
@@ -40,12 +65,14 @@ class SpoTyping(Tool):
         :return: None
         """
         if not any(key in self._tool_inputs for key in ('FASTA', 'FASTQ')):
-            raise InvalidInputSpecificationError('FASTA/Q input is required')
+            raise InvalidToolInputError('FASTA/Q input is required')
         for key, value in self._tool_inputs.items():
             if key == 'FASTQ' and not (0 < len(value) <= 2):
-                raise InvalidInputSpecificationError("Only 1 (SE) or 2 (PE) FASTQ inputs are supported")
+                raise InvalidToolInputError(
+                    "Only 1 (SE) or 2 (PE) FASTQ inputs are supported"
+                )
             if key == 'FASTA' and len(value) != 1:
-                raise InvalidInputSpecificationError("Only 1 FASTA input is supported")
+                raise InvalidToolInputError("Only 1 FASTA input is supported")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -54,52 +81,70 @@ class SpoTyping(Tool):
         :return: None
         """
         # Run command
-        self._input_key = 'FASTQ' if 'FASTQ' in self._tool_inputs else 'FASTA'
-        path_inputs = self._symlink_input()
-        self._command.command = ' '.join([
-            self._tool_command,
-            *[str(f) for f in path_inputs],
-            * self._build_options()
-        ])
+        input_key = self._input_key
+        command_parts = [self._get_tool_command(), *self._build_options()]
+        if input_key == 'FASTQ':
+            fq_in = []
+            for io in self._tool_inputs['FASTQ']:
+                if fileutils.is_gzipped(io.path):
+                    path_out = self.folder / io.path.name.replace('.gz', '')
+                    fileutils.gzip_extract(io.path, output_gz_file=path_out)
+                    fq_in.append(ToolIOFile(path_out))
+                else:
+                    fq_in.append(io)
+            command_parts.extend([str(io.path) for io in fq_in])
+        else:
+            io = self._tool_inputs['FASTA'][0]
+            path_link = self.folder / io.path.name
+            if path_link.is_symlink():
+                path_link.unlink()
+            path_link.symlink_to(io.path)
+            command_parts.append(str(path_link))
+        self._command.command = ' '.join(command_parts)
         self._execute_command()
 
         # Parse output
-        type_binary, type_octal = SpoTyping._parse_output_file(
-            Path(self._folder) / self._parameters['output_basename'].value)
+        type_binary, type_octal = self._parse_output_file(
+            self.folder / fileutils.make_valid(self.get_param_value('output_basename'))
+        )
 
         # Set output
         self._tool_outputs['VAL_type_binary'] = [ToolIOValue(type_binary)]
         self._tool_outputs['VAL_type_octal'] = [ToolIOValue(type_octal)]
-        self._tool_outputs['LOG'] = [ToolIOFile(Path(self._folder) / '{}.log'.format(
-            self._parameters['output_basename'].value))]
+        self._tool_outputs['LOG'] = [
+            ToolIOFile(
+                Path(self._folder) / f'{self.get_param_value("output_basename")}.log'
+            )
+        ]
         self._informs['metadata'] = self._extract_metadata(type_octal)
 
-    @staticmethod
-    def _parse_output_file(output_file: Path) -> Tuple[str, str]:
+    def _parse_output_file(self, output_file: Path) -> tuple[str, str]:
         """
         Parses the output file.
+        :param output_file: Path to output file
         :return: Spoligotype (Binary), Spoligotype (Octal)
         """
         if not output_file.exists():
-            raise ToolExecutionError("Output file not found")
+            raise ToolExecutionError(self.name, "Output file not found")
         with output_file.open('r') as handle:
             try:
                 _, type_binary, type_octal = handle.readlines()[-1].strip().split('\t')
+                logger.info(f'Detected spoligotype (octal): {type_octal}')
                 return type_binary, type_octal
-            except IndexError:
-                raise ToolExecutionError("Output file has an invalid format")
+            except (IndexError, ValueError):
+                raise ToolExecutionError(self.name, "Output file has an invalid format")
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output to check if the tool executed successfully.
         :return: None
         """
-        if self._command.returncode != 0:
-            last_line = self._command.stderr.splitlines()[-1]
+        if command.exit_code != 0:
+            last_line = command.stderr.splitlines()[-1]
             if last_line.startswith('urllib2.URLError'):
                 logger.warning('Could not contact SITVIT server')
             else:
-                raise ToolExecutionError(last_line)
+                raise ToolExecutionError(self.name, last_line)
 
     def _extract_metadata(self, type_octal: str) -> dict[str, Any]:
         """
@@ -108,7 +153,7 @@ class SpoTyping(Tool):
         """
         # Get location of metadata file
         command = Command(f'{self._build_dependencies()} echo $SPOTYPING_METADATA')
-        command.run(self._folder)
+        command.run(self.folder)
         metadata_path = command.stdout.strip()
         if not Path(metadata_path).exists():
             raise FileNotFoundError("No spoligotype metadata found")
@@ -123,15 +168,3 @@ class SpoTyping(Tool):
             return {k: metadata[type_octal][k] for k in keys}
         else:
             return {k: 'NA' for k in keys}
-
-    def _symlink_input(self) -> list[Path]:
-        """
-        Symlinks the input file(s).
-        :return: Paths to symlinked input files
-        """
-        path_inputs = [self._folder / f.path.name for f in self._tool_inputs[self._input_key]]
-        for path_new, path_old in zip(path_inputs, self._tool_inputs[self._input_key]):
-            if path_new.is_symlink():
-                path_new.unlink()
-            path_new.symlink_to(path_old.path)
-        return path_inputs

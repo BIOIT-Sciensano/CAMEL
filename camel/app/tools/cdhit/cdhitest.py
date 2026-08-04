@@ -1,12 +1,10 @@
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
 
-import re
+from camelcore.app.io.tooliofile import ToolIOFile
 
-from camel.app.camel import Camel
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camel.app.core.tool import Tool
 
 
 @dataclass
@@ -16,7 +14,7 @@ class Cluster:
     """
     name: str
     number: int
-    seq_ids: List[str] = field(default_factory=list)
+    seq_ids: list[str] = field(default_factory=list)
 
 
 class CDHitEst(Tool):
@@ -24,12 +22,12 @@ class CDHitEst(Tool):
     CD-HIT is a program used for clustering and comparing protein or nucleotide sequences.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
+        :return: None
         """
-        super().__init__('cd-hit-est', '4.6.8', camel)
+        super().__init__('cd-hit-est', '4.6.8')
 
     def _execute_tool(self) -> None:
         """
@@ -56,7 +54,7 @@ class CDHitEst(Tool):
         )
 
     @staticmethod
-    def __parse_clusters(path: Path) -> List[Cluster]:
+    def __parse_clusters(path: Path) -> list[Cluster]:
         """
         Parses a FASTA file and returns the clusters.
         :param path: Path to the clusters output file.
@@ -79,7 +77,7 @@ class CDHitEst(Tool):
         :param line: Input line
         :return: Sequence name
         """
-        match = re.match('\\d.+, >(seq_\\d+)\\.{3}.*', line)
+        match = re.match(r'\d.+, >(.+?)\.{3}.*', line)
         if not match:
             raise ValueError(f'Invalid cluster line: {line}')
         return match.group(1)

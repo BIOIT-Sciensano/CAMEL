@@ -1,4 +1,14 @@
-dependencies: [kraken2_remote/2.1.1, jellyfish/1.1.11]
+conda:
+  name: kraken2
+  packages:
+    - kraken2=2.1.1
+dependencies:
+  - kraken2_remote/2.1.1
+  - jellyfish/1.1.11
 parameters:
-  threads: {default: true, mandatory: false, option: --threads, value: '1'}
+  threads:
+    default: true
+    mandatory: false
+    option: '--threads'
+    value: '1'
 tool_command: kraken2

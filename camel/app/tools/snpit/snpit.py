@@ -1,34 +1,31 @@
 from io import StringIO
 
 import pandas as pd
+from camelcore.app.command import Command
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core import toolutils
+from camel.app.core.tool import Tool
 
 
 class Snpit(Tool):
     """
-    Whole genome SNP based identification of members of the Mycobacterium tuberculosis complex.
+    Whole genome SNP-based identification of members of the Mycobacterium tuberculosis complex.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Snpit', '1.0', camel)
+        super().__init__('Snpit', '1.0')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         :return: None
         """
-        if 'VCF' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('VCF input is required.')
+        toolutils.check_input(self, keys_required=['VCF'])
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -48,14 +45,12 @@ class Snpit(Tool):
         """
         self._command.command = ' '.join([
             self._tool_command,
-            '--input {}'.format(self._tool_inputs['VCF'][0].path)
+            f'--input {self._tool_inputs["VCF"][0].path}'
         ])
 
     def __set_informs(self) -> None:
         """
         Sets the informs for this tool.
-        SNPit uses the following format string to report the output:
-        %s\n%16s %16s %16s %.1f %%
         :return: None
         """
         # noinspection PyTypeChecker
@@ -73,18 +68,18 @@ class Snpit(Tool):
         """
         section = HtmlReportSection('Snpit', 3)
         table_data = [
-            ['Species:', '<i>{}</i>'.format(self._informs['species']) if self._informs['species'] != '' else 'NA'],
-            ['Lineage:', self._informs['lineage'] if self._informs['lineage'] != '' else 'NA'],
-            ['Sublineage:', self._informs['sublineage'] if self._informs['sublineage'] != '' else 'NA'],
+            ['Species:', '<i>{}</i>'.format(self._informs['species']) if self._informs['species'] != '' else 'n/a'],
+            ['Lineage:', self._informs['lineage'] if self._informs['lineage'] != '' else 'n/a'],
+            ['Sublineage:', self._informs['sublineage'] if self._informs['sublineage'] != '' else 'n/a'],
             ['Percent match:', '{:.2f}%'.format(self._informs['percent_matched'])]
         ]
         section.add_table(table_data, table_attributes=[('class', 'information')])
         return section
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the command executed successfully.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Error executing SNPit: {self._command.stderr}")
+        toolutils.check_tool_execution(self, command, exit_code=0)

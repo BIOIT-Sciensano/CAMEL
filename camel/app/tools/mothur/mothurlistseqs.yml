@@ -1,0 +1,8 @@
+conda:
+  name: mothur
+  packages:
+    - mothur=1.48.0
+dependencies:
+  - mothur/1.48.0
+parameters: {}
+tool_command: mothur "#list.seqs({0})"

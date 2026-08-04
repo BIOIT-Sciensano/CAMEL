@@ -1,1 +1,1 @@
-TRIMMING_ALL = 'trimming_all.io'
+TRIMMING_ALL = 'trimming_all.iob'

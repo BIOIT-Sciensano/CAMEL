@@ -1,28 +1,25 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.files.fastautils import FastaUtils
-from camel.app.components.files.fastqutils import FastqUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastautils, fastqutils
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class SeqtkSeq(Tool):
-
     """
     Seqtk seq perform common transformations of FASTA / FASTQ files.
     """
 
     INPUT_KEYS = ('FASTQ', 'FASTA')
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initialize seqtk seq.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Seqtk seq', '1.4', camel)
+        super().__init__('Seqtk seq', '1.4')
 
     def __get_input_key(self) -> str:
         """
@@ -37,7 +34,7 @@ class SeqtkSeq(Tool):
         :return: None
         """
         if not any(x in self._tool_inputs for x in SeqtkSeq.INPUT_KEYS):
-            raise InvalidInputSpecificationError('{} input is required.'.format(' or '.join(SeqtkSeq.INPUT_KEYS)))
+            raise InvalidToolInputError('{} input is required.'.format(' or '.join(SeqtkSeq.INPUT_KEYS)))
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -81,8 +78,8 @@ class SeqtkSeq(Tool):
         :return: None
         """
         if self.__get_input_key() == 'FASTQ':
-            self._informs['nb_seqs_in'] = FastqUtils.count_reads(self._tool_inputs['FASTQ'][0].path)
-            self._informs['nb_seqs_out'] = FastqUtils.count_reads(path_out)
+            self._informs['nb_seqs_in'] = fastqutils.count_reads(self._tool_inputs['FASTQ'][0].path)
+            self._informs['nb_seqs_out'] = fastqutils.count_reads(path_out)
         else:
-            self._informs['nb_seqs_in'] = FastaUtils.count_reads(self._tool_inputs['FASTA'][0].path)
-            self._informs['nb_seqs_out'] = FastaUtils.count_reads(path_out)
+            self._informs['nb_seqs_in'] = fastautils.count_reads(self._tool_inputs['FASTA'][0].path)
+            self._informs['nb_seqs_out'] = fastautils.count_reads(path_out)

@@ -1,8 +1,8 @@
 import abc
 
-from camel.app.camel import Camel
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.tools.tool import Tool
+from camel.app.core.command import Command
+from camel.app.core.errors import ToolExecutionError
+from camel.app.core.tool import Tool
 
 
 class Lofreq(Tool, metaclass=abc.ABCMeta):
@@ -10,15 +10,23 @@ class Lofreq(Tool, metaclass=abc.ABCMeta):
     Super class for Lofreq.
     """
 
-    def __init__(self, tool_name: str, version: str, camel: Camel) -> None:
+    def __init__(self, tool_name: str, version: str | None) -> None:
         """
         Initialize a Lofreq tool.
         :param tool_name: Tool name
         :param version: Tool version
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__(tool_name, version,  camel)
+        super().__init__(tool_name, version)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{str(self._tool_command).split()[0]} version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split('\n')[0].split(':')[1].strip()
 
     def _execute_tool(self) -> None:
         """
@@ -27,10 +35,11 @@ class Lofreq(Tool, metaclass=abc.ABCMeta):
         """
         super()._execute_tool()
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Validates if the program ran correctly by checking the standard error.
         :return: None
         """
-        if 'FATAL' in self._command.stderr:
-            raise ToolExecutionError(f"{self.name} failed: '{self._command.stderr}'")
+        if self._command.stderr:
+            if 'FATAL' in self._command.stderr:
+                raise ToolExecutionError(self.name, f"{self.name} failed: '{self._command.stderr}'")

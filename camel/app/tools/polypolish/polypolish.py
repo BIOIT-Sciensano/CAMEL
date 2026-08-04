@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import List
 
-from camel.app.camel import Camel
-from camel.app.components.files.fastautils import FastaUtils
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastautils
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class Polypolish(Tool):
@@ -22,13 +22,21 @@ class Polypolish(Tool):
     """
     OUTPUT_NAME = 'polished.fasta'
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes Polypolish.
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('Polypolish', '0.6.0', camel)
+        super().__init__('Polypolish', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f'{self._tool_command.split()[0]} --version')
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _execute_tool(self) -> None:
         """
@@ -48,17 +56,17 @@ class Polypolish(Tool):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA reference is required')
+            raise InvalidToolInputError('FASTA reference is required')
         if 'SAM' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('SAM alignment file is required')
+            raise InvalidToolInputError('SAM alignment file is required')
 
         if len(self._tool_inputs['SAM']) > 2:
-            raise InvalidInputSpecificationError('Please input at most two SAM alignment files')
-        if not FastaUtils.is_indexed(self._tool_inputs['FASTA'][0].path):
-            raise InvalidInputSpecificationError('FASTA reference needs to be indexed')
+            raise InvalidToolInputError('Please input at most two SAM alignment files')
+        if not fastautils.is_indexed(self._tool_inputs['FASTA'][0].path):
+            raise InvalidToolInputError('FASTA reference needs to be indexed')
         super()._check_input()
 
-    def _build_command(self, fasta_input: Path, sam_input: List[Path], fasta_output: Path) -> None:
+    def _build_command(self, fasta_input: Path, sam_input: list[Path], fasta_output: Path) -> None:
         """
         Builds the command to run Polypolish.
         :param fasta_input: Assembly to polish
@@ -71,15 +79,16 @@ class Polypolish(Tool):
             *self._build_options(),
             str(fasta_input),
             *[str(sam_file) for sam_file in sam_input],
-            f'> {fasta_output}'])
+            f'> {fasta_output}',
+        ])
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks command output.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f"Command execution failed (Exit code: {self._command.returncode})")
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _set_output(self, fasta_output: Path) -> None:
         """

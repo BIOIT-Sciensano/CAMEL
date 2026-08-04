@@ -1,8 +1,8 @@
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
+
+from camel.app.core.tool import Tool
 
 
 class SerogroupDeterminationReporter(Tool):
@@ -10,12 +10,11 @@ class SerogroupDeterminationReporter(Tool):
     This class is used to generate an output report for the serogroup determination.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('Neisseria: serogroup determination reporter', '0.1', camel)
+        super().__init__('Neisseria: serogroup determination reporter', '0.1')
         self._section = HtmlReportSection('Serogroup determination (Legacy)')
 
     def _execute_tool(self) -> None:

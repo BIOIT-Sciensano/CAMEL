@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.tool import Tool
 
 
 class MakeBlastDb(Tool):
@@ -11,12 +11,11 @@ class MakeBlastDb(Tool):
     It indexes a FASTA file in place.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         """
-        super().__init__('makeblastdb', '2.14.0', camel)
+        super().__init__('makeblastdb', '2.14.0')
 
     def _execute_tool(self) -> None:
         """

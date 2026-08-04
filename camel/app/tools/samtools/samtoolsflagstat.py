@@ -1,9 +1,9 @@
 import re
 from pathlib import Path
-from typing import Tuple
 
-from camel.app.camel import Camel
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.tools.samtools.samtoolsbasepipeable import SamtoolsBasePipeable
 
 
@@ -12,21 +12,20 @@ class SamtoolsFlagstat(SamtoolsBasePipeable):
     Calculates Simple BAM/SAM file statistics.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('samtools flagstat', '1.17', camel)
+        super().__init__('samtools flagstat', version=None)
 
     def _check_input(self) -> None:
         """
         Checks the input.
         :return: None
         """
-        if 'BAM' not in self._tool_inputs:
-            raise ValueError("No BAM input file found")
-        super(SamtoolsBasePipeable, self)._check_input()
+        toolutils.check_input(self, keys_required=['BAM'])
+        super()._check_input()
 
     def _execute_tool(self) -> None:
         """
@@ -36,7 +35,7 @@ class SamtoolsFlagstat(SamtoolsBasePipeable):
         self.__build_command()
         self._execute_command()
         self.__set_output()
-        self._check_stderr()
+        self._check_stderr(self._command)
 
     def __build_command(self, pipe_in: bool = False, pipe_out: bool = False) -> None:
         """
@@ -87,7 +86,7 @@ class SamtoolsFlagstat(SamtoolsBasePipeable):
                 self._informs['mapping_rate'] = None
 
     @staticmethod
-    def __parse_output_line(line: str) -> Tuple[int, int]:
+    def __parse_output_line(line: str) -> tuple[int, int]:
         """
         Parses a line of flagstat output
         :param line: Flagstat output line

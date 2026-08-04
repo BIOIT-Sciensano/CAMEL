@@ -1,9 +1,38 @@
-dependencies: [ filtlong/0.2.0 ]
+conda:
+  name: filtlong
+  packages:
+    - filtlong=0.2.0
+dependencies:
+  - filtlong/0.2.0
 parameters:
-  keep_percent: { default: false, mandatory: false, option: --keep_percent, value: 95}
-  min_length: { default: true, mandatory: false, option: --min_length, value: 1000 }
-  min_mean_q: { default: true, mandatory: false, option: --min_mean_q, value: 10 }
-  min_window_q: { default: false, mandatory: false, option: --min_window_q, value: 10 }
-  window_size: { default: false, mandatory: false, option: --window_size, value: 250 }
-  output_name: { default: true, mandatory: true, option: null, value: filtlong_out.fastq }
+  keep_percent:
+    default: false
+    mandatory: false
+    option: '--keep_percent'
+    value: 95
+  min_length:
+    default: true
+    mandatory: false
+    option: '--min_length'
+    value: 1000
+  min_mean_q:
+    default: true
+    mandatory: false
+    option: '--min_mean_q'
+    value: 10
+  min_window_q:
+    default: false
+    mandatory: false
+    option: '--min_window_q'
+    value: 10
+  window_size:
+    default: false
+    mandatory: false
+    option: '--window_size'
+    value: 250
+  output_name:
+    default: true
+    mandatory: true
+    option: null
+    value: filtlong_out.fastq
 tool_command: filtlong

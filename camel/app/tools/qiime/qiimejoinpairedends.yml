@@ -1,7 +1,23 @@
-dependencies: [qiime/1.9.1, uclust/1.2.22, blast/2.2.22, ea-utils/27a4809]
+conda:
+  name: qiime
+  packages:
+    - qiime=1.9.1
+dependencies:
+  - qiime/1.9.1
+  - uclust/1.2.22
+  - blast/2.2.22
+  - ea-utils/27a4809
 parameters:
-  min_overlap: {default: false, mandatory: false, option: --min_overlap, p_index: 0,
-    value: null}
-  perc_max_diff: {default: false, mandatory: false, option: --perc_max_diff, p_index: 0,
-    value: null}
+  min_overlap:
+    default: false
+    mandatory: false
+    option: --min_overlap
+    p_index: 0
+    value: null
+  perc_max_diff:
+    default: false
+    mandatory: false
+    option: --perc_max_diff
+    p_index: 0
+    value: null
 tool_command: join_paired_ends.py

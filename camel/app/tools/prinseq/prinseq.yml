@@ -1,11 +1,56 @@
-dependencies: [prinseq/0.20.4]
+conda:
+  name: prinseq
+  packages:
+    - prinseq=0.20.4
+dependencies:
+  - prinseq/0.20.4
 parameters:
-  derep: {default: false, mandatory: false, option: -derep, p_index: 0, value: '12345'}
-  max_gc: {default: false, mandatory: false, option: -max_gc, p_index: 0, value: '70'}
-  max_len: {default: true, mandatory: false, option: -max_len, p_index: 0, value: '150'}
-  min_gc: {default: false, mandatory: false, option: -min_gc, p_index: 0, value: '20'}
-  min_len: {default: false, mandatory: false, option: -min_len, p_index: 0, value: '10'}
-  ns_max_n: {default: true, mandatory: false, option: -ns_max_n, p_index: 0, value: '1'}
-  ns_max_p: {default: false, mandatory: false, option: -ns_max_p, p_index: 0, value: '0.1'}
-  phred64: {default: false, mandatory: false, option: -phred64, p_index: 0, value: null}
+  derep:
+    default: false
+    mandatory: false
+    option: -derep
+    p_index: 0
+    value: "12345"
+  max_gc:
+    default: false
+    mandatory: false
+    option: -max_gc
+    p_index: 0
+    value: "70"
+  max_len:
+    default: true
+    mandatory: false
+    option: -max_len
+    p_index: 0
+    value: "150"
+  min_gc:
+    default: false
+    mandatory: false
+    option: -min_gc
+    p_index: 0
+    value: "20"
+  min_len:
+    default: false
+    mandatory: false
+    option: -min_len
+    p_index: 0
+    value: "10"
+  ns_max_n:
+    default: true
+    mandatory: false
+    option: -ns_max_n
+    p_index: 0
+    value: "1"
+  ns_max_p:
+    default: false
+    mandatory: false
+    option: -ns_max_p
+    p_index: 0
+    value: "0.1"
+  phred64:
+    default: false
+    mandatory: false
+    option: -phred64
+    p_index: 0
+    value: null
 tool_command: prinseq-lite.pl

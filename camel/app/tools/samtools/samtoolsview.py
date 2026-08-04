@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.error.invalidparametererror import InvalidParameterError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidParameterError, ToolExecutionError
 from camel.app.tools.samtools.samtoolsbasepipeable import SamtoolsBasePipeable
 
 
@@ -13,12 +13,12 @@ class SamtoolsView(SamtoolsBasePipeable):
     SAM/BAM <-> CRAM
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
+        :return: None
         """
-        super().__init__('samtools view', '1.17', camel)
+        super().__init__('samtools view', version=None)
         self.__input_key = None
         self._input_string = ''
 
@@ -35,7 +35,7 @@ class SamtoolsView(SamtoolsBasePipeable):
             self.__input_key = 'CRAM'
         else:
             raise ValueError("No input file found")
-        super(SamtoolsBasePipeable, self)._check_input()
+        super()._check_input()
 
     def _check_parameters(self) -> None:
         """
@@ -44,7 +44,7 @@ class SamtoolsView(SamtoolsBasePipeable):
         """
         if self._parameters['output_format'].value.upper() not in ('SAM', 'BAM', 'CRAM'):
             raise InvalidParameterError("Invalid output format (BAM/SAM/CRAM supported)")
-        super(SamtoolsView, self)._check_parameters()
+        super()._check_parameters()
 
     def _execute_tool(self) -> None:
         """
@@ -55,7 +55,7 @@ class SamtoolsView(SamtoolsBasePipeable):
         self.__build_command()
         self._execute_command()
         self.__set_output()
-        self._check_stderr()
+        self._check_stderr(self._command)
 
     def __build_command(self, pipe_out: bool = False) -> None:
         """
@@ -99,18 +99,19 @@ class SamtoolsView(SamtoolsBasePipeable):
         """
         output_path = Path(self.folder) / self._parameters['output_filename'].value
         if not output_path.is_file:
-            raise ToolExecutionError(f"Expected {self._name} output not generated")
+            raise ToolExecutionError(self.name, f"Expected {self._name} output not generated")
         output_key = self._parameters['output_format'].value.upper()
         self._tool_outputs[output_key] = [ToolIOFile(output_path)]
 
-    def _check_stderr(self) -> None:
+    def _check_stderr(self, command: Command) -> None:
         """
         Validates the stderr.
+        :param command: Command to check
         :return: None
         """
-        if 'only works for indexed' in self.stderr:
-            raise ToolExecutionError("Can only extract regions from indexed BAM files")
-        super(SamtoolsView, self)._check_stderr()
+        if 'only works for indexed' in command.stderr:
+            raise ToolExecutionError(self.name, "Can only extract regions from indexed BAM files")
+        super()._check_stderr(command)
 
     def _before_pipe(self, dir_, pipe_in: bool, pipe_out: bool) -> None:
         """

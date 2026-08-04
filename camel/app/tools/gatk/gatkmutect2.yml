@@ -1,21 +1,74 @@
-dependencies: [gatk/3.7]
+conda:
+  name: gatk
+  packages:
+    - gatk=3.7
+dependencies:
+  - gatk/3.7
 parameters:
-  active_region_igv_file: {default: false, mandatory: false, option: --activeRegionOut,
-    p_index: 0, value: active_region_out.igv}
-  disable_optimizations: {default: false, mandatory: false, option: --disableOptimizations,
-    p_index: 0, value: 'False'}
-  downsampling_coverage_target: {default: true, mandatory: false, option: -maxReadsInRegionPerSample,
-    p_index: 0, value: '1000000'}
-  downsampling_type: {default: false, mandatory: false, option: -dt, p_index: 0, value: NONE}
-  force_active: {default: false, mandatory: false, option: --forceActive, p_index: 0,
-    value: 'False'}
-  output_active_region_igv: {default: false, mandatory: false, option: null, p_index: 0,
-    value: 'False'}
-  output_bam: {default: false, mandatory: false, option: null, p_index: 0, value: 'True'}
-  output_bam_file: {default: false, mandatory: false, option: --bamOutput, p_index: 0,
-    value: bamOutput.bam}
-  output_mode: {default: false, mandatory: false, option: --output_mode, p_index: 0,
-    value: EMIT_VARIANTS_ONLY}
-  output_vcf_file: {default: true, mandatory: true, option: -o, p_index: 0, value: variant_call.vcf}
-  threads: {default: false, mandatory: false, option: -nct, p_index: 0, value: '1'}
+  active_region_igv_file:
+    default: false
+    mandatory: false
+    option: --activeRegionOut
+    p_index: 0
+    value: active_region_out.igv
+  disable_optimizations:
+    default: false
+    mandatory: false
+    option: --disableOptimizations
+    p_index: 0
+    value: "False"
+  downsampling_coverage_target:
+    default: true
+    mandatory: false
+    option: -maxReadsInRegionPerSample
+    p_index: 0
+    value: "1000000"
+  downsampling_type:
+    default: false
+    mandatory: false
+    option: -dt
+    p_index: 0
+    value: NONE
+  force_active:
+    default: false
+    mandatory: false
+    option: --forceActive
+    p_index: 0
+    value: "False"
+  output_active_region_igv:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: "False"
+  output_bam:
+    default: false
+    mandatory: false
+    option: null
+    p_index: 0
+    value: "True"
+  output_bam_file:
+    default: false
+    mandatory: false
+    option: --bamOutput
+    p_index: 0
+    value: bamOutput.bam
+  output_mode:
+    default: false
+    mandatory: false
+    option: --output_mode
+    p_index: 0
+    value: EMIT_VARIANTS_ONLY
+  output_vcf_file:
+    default: true
+    mandatory: true
+    option: -o
+    p_index: 0
+    value: variant_call.vcf
+  threads:
+    default: false
+    mandatory: false
+    option: -nct
+    p_index: 0
+    value: "1"
 tool_command: run_gatk.sh -T MuTect2

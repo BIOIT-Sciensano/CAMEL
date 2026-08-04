@@ -1,7 +1,8 @@
 import os.path
 
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliofile import ToolIOFile
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.errors import InvalidToolInputError
 from camel.app.tools.qiime.qiime import Qiime
 
 
@@ -10,13 +11,12 @@ class QiimePickOpenReferenceOtus(Qiime):
     Perform open-reference OTU picking
     """
 
-    def __init__(self, camel):
+    def __init__(self):
         """
         Initialize tool
-        :param camel: Camel instance
         :return: None
         """
-        super().__init__('qiime_pick_open_reference_otus', '1.9.1', camel)
+        super().__init__('qiime_pick_open_reference_otus', '1.9.1')
 
     def _check_input(self):
         """
@@ -27,24 +27,24 @@ class QiimePickOpenReferenceOtus(Qiime):
         :return: None
         """
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Invalid input files (keys) given for '
-                                                 'pick_open_reference_otus: {!r}'.format(self._tool_inputs))
+            raise InvalidToolInputError('Invalid input files (keys) given for '
+                                                 f'pick_open_reference_otus: {self._tool_inputs!r}')
         for key, input_files in self._tool_inputs.items():
             if key not in ['FASTA', 'FASTA_REF', 'TSV_Taxonomy']:
-                raise InvalidInputSpecificationError('Invalid input key given for pick_open_reference_otus: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid input key given for pick_open_reference_otus: {self._tool_inputs!r}')
             if len(input_files) != 1:
-                raise InvalidInputSpecificationError('Invalid number (max = 1) of files in each key given for \
-                                                     pick_open_reference_otus: {!r}'.format(self._tool_inputs))
+                raise InvalidToolInputError(f'Invalid number (max = 1) of files in each key given for \
+                                                     pick_open_reference_otus: {self._tool_inputs!r}')
 
     def _set_output(self):
         """
         Sets the name of the output files
         :return: None
         """
-        self._tool_outputs['TSV_Otu'] = [ToolIOFile(os.path.join(self._folder, self.__get_otu_filename()))]
-        self._tool_outputs['BIOM'] = [ToolIOFile(os.path.join(self._folder, self.__get_otu_table_filename()))]
-        self._tool_outputs['FASTA_Ref'] = [ToolIOFile(os.path.join(self._folder, 'new_refseqs.fna'))]
-        self._tool_outputs['FASTA'] = [ToolIOFile(os.path.join(self._folder, 'rep_set.fna'))]
+        self._tool_outputs['TSV_Otu'] = [ToolIOFile(self._folder / self.__get_otu_filename())]
+        self._tool_outputs['BIOM'] = [ToolIOFile(self._folder / self.__get_otu_table_filename())]
+        self._tool_outputs['FASTA_Ref'] = [ToolIOFile(self._folder / 'new_refseqs.fna')]
+        self._tool_outputs['FASTA'] = [ToolIOFile(self._folder / 'rep_set.fna')]
 
     def __get_otu_filename(self):
         """
@@ -82,10 +82,10 @@ class QiimePickOpenReferenceOtus(Qiime):
         """
         input_string = '-i {}'.format(self._tool_inputs['FASTA'][0])
         if os.path.isfile(os.path.join(self._folder, 'parameters.txt')):
-            input_string += ' -p {}'.format(os.path.join(self._folder, self._parameter_file))
+            input_string += f' -p {os.path.join(self._folder, self._parameter_file)}'
         if 'FASTA_Ref' in self._tool_inputs:
             input_string += ' -r {}'.format(self._tool_inputs['FASTA_Ref'][0])
-        input_string += ' -o {}'.format(self._folder)
+        input_string += f' -o {self._folder}'
         return input_string
 
     def _build_command(self):
@@ -95,4 +95,4 @@ class QiimePickOpenReferenceOtus(Qiime):
         """
         options_string = self._build_options()
         options_string += ' --force'
-        self._command.command = '{} {} {}'.format(self._tool_command, self._build_input_string(), options_string)
+        self._command.command = f'{self._tool_command} {self._build_input_string()} {options_string}'

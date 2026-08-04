@@ -1,8 +1,9 @@
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.tools.tool import Tool
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class Krona(Tool):
@@ -16,11 +17,11 @@ class Krona(Tool):
         HTML: Interactive HTML report with a pie chart containing the detected taxonomies.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
         """
-        super().__init__('Krona', '2.7', camel)
+        super().__init__('Krona', '2.7')
 
     def _execute_tool(self) -> None:
         """
@@ -28,8 +29,17 @@ class Krona(Tool):
         :return: None
         """
         output_path = self.folder / 'krona_out.html'
-        self._command.command = 'cut -f2,3 {} | {} {} -o {} -'.format(
-            self._tool_inputs['TSV'][0].path, self._tool_command, ' '.join(self._build_options()), str(output_path))
+        parts = [
+            f'cut -f2,3 {self._tool_inputs["TSV"][0].path}',
+            '|',
+            self._tool_command,
+            *self._build_options(),
+            f'-o {output_path}',
+            '-'
+        ]
+        if 'DB' in self._tool_inputs:
+            parts.append(f'-tax {self._tool_inputs["DB"][0].path}')
+        self._command.command = ' '.join(parts)
         self._execute_command()
         self._tool_outputs['HTML'] = [ToolIOFile(output_path)]
 
@@ -39,15 +49,15 @@ class Krona(Tool):
         :return: None
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError("TSV input is required")
+            raise InvalidToolInputError("TSV input is required")
         if len(self._tool_inputs['TSV']) != 1:
-            raise InvalidInputSpecificationError("Exactly one TSV input is required")
+            raise InvalidToolInputError("Exactly one TSV input is required")
         super()._check_input()
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
-        Checks if the program executed correctly.
+        Checks if the tool was executed successfully.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError("Error executing krona: {}".format(self._command.stderr))
+        toolutils.check_tool_execution(self, command, exit_code=0)

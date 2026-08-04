@@ -1,4 +1,9 @@
+conda: null
 dependencies: []
 parameters:
-  export_fastq: {default: false, mandatory: false, option: null, value: 'false'}
+  export_fastq:
+    default: true
+    mandatory: false
+    option: null
+    flag: true
 tool_command: null

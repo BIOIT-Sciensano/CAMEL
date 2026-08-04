@@ -1,4 +1,14 @@
-dependencies: [bwa/0.7.17]
+conda:
+  name: bwa
+  packages:
+    - bwa=0.7.17
+dependencies:
+  - bwa/0.7.17
 parameters:
-  algorithm: {default: true, mandatory: false, option: -a, p_index: 10, value: is}
+  algorithm:
+    default: true
+    mandatory: false
+    option: '-a'
+    p_index: 10
+    value: is
 tool_command: bwa index

@@ -1,23 +1,25 @@
 import logging
+
+from camelcore.app.utils import fileutils
+
 # Disable logging for matplotlib
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 import matplotlib
+
 # Disable interactive plots
 matplotlib.use('agg')
 from pathlib import Path
 
 import pandas as pd
 import plotnine
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlelement import HtmlElement
+from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+from camelcore.app.reports.htmltablecell import HtmlTableCell
 
-from camel.app.camel import Camel
-from camel.app.components.filesystemhelper import FileSystemHelper
-from camel.app.components.html.htmlelement import HtmlElement
-from camel.app.components.html.htmlexpandablediv import HtmlExpandableDiv
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.components.html.htmltablecell import HtmlTableCell
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class ReporterSegmentDownsampling(Tool):
@@ -38,21 +40,20 @@ class ReporterSegmentDownsampling(Tool):
             'fmt': lambda x: f'{100 * x:.2f}'}
     }
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: Camel instance
         """
-        super().__init__('Reporter: Segment downsampling', '0.1', camel)
+        super().__init__('Reporter: Segment downsampling', '0.1')
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         """
         if 'TSV' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Stats input file is required (TSV)')
+            raise InvalidToolInputError('Stats input file is required (TSV)')
         if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Reference genome input file is required (FASTA)')
+            raise InvalidToolInputError('Reference genome input file is required (FASTA)')
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -157,7 +158,7 @@ class ReporterSegmentDownsampling(Tool):
         section.add_file(self._tool_inputs['FASTA'][0].path, relative_path_fasta)
 
         # BAM File
-        relative_path_bam = Path('preprocess', f"{FileSystemHelper.make_valid(self._parameters['name'].value)}.bam")
+        relative_path_bam = Path('preprocess', f"{fileutils.make_valid(self._parameters['name'].value)}.bam")
         section.add_file(self._tool_inputs['BAM'][0].path, relative_path_bam)
         path_bam_idx = next(self._tool_inputs['BAM'][0].path.parent.glob('*.bai'))
         relative_path_bai = relative_path_bam.parent / f'{relative_path_bam.name}.bai'

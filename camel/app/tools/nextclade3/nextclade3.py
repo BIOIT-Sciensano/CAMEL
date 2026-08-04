@@ -3,14 +3,13 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from camelcore.app.command import Command
+from camelcore.app.io.tooliofile import ToolIOFile
 from pandas.errors import EmptyDataError
 
-from camel.app.camel import Camel
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.error.toolexecutionerror import ToolExecutionError
-from camel.app.io.tooliofile import ToolIOFile
+from camel.app.core import toolutils
+from camel.app.core.tool import Tool
 from camel.app.loggers import logger
-from camel.app.tools.tool import Tool
 
 
 class Nextclade3(Tool):
@@ -21,23 +20,28 @@ class Nextclade3(Tool):
     to a set of sequences.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes this tool.
-        :param camel: CAMEL instance
         :return: None
         """
-        super().__init__('Nextclade', '3.18.1', camel)
+        super().__init__('Nextclade', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(f"{self._tool_command} --version")
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _check_input(self) -> None:
         """
         Checks if the provided input is valid.
         :return: None
         """
-        if 'FASTA' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('FASTA input is required')
-        if 'DB' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('Database input is required')
+        toolutils.check_input(self, keys_required=['FASTA', 'DB'])
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -59,13 +63,13 @@ class Nextclade3(Tool):
         self._tool_outputs['TSV'] = [ToolIOFile(path_tsv_out)]
         self._informs['db'] = Nextclade3._get_database_info(self._tool_inputs['DB'][0].path)
 
-    def _check_command_output(self) -> None:
+    def _check_command_output(self, command: Command) -> None:
         """
         Checks the command output.
+        :param command: Command to check
         :return: None
         """
-        if self._command.returncode != 0:
-            raise ToolExecutionError(f'Error executing {self.name}: {self._command.stderr}')
+        toolutils.check_tool_execution(self, command, exit_code=0)
 
     def _parse_output_tsv(self, path_tsv: Path) -> None:
         """

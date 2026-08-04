@@ -1,15 +1,11 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.io.tooliodirectory import ToolIODirectory
-from camel.app.io.tooliofile import ToolIOFile
-from camel.app.pipeline.step import Step
-from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
-from camel.resources.snakefile import assembly
-from camel.scripts.salmonellapipeline.snakefile import serotyping_seqsero2
+from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camel.app.core.snakemake.step import Step
+from camel.app.core.snakemake import snakemakeutils
+from camel.app.core.snakemake import snakepipelineutils
+from camel.snakefiles import assembly, read_simulation
 
-camel = Camel.get_instance()
 
 rule serotyping_seqsero2_run_fasta:
     """
@@ -17,24 +13,42 @@ rule serotyping_seqsero2_run_fasta:
     Note: The detection method is always (genome assembly) 'kmer' for FASTA input.
     """
     input:
-        FASTA = Path(config['working_dir']) / assembly.OUTPUT_ASSEMBLY_FASTA
+        FASTA = assembly.OUTPUT_FASTA
     output:
-        TXT = Path(config['working_dir']) / 'serotyping_seqsero2' / 'serotyping_seqsero2_kmer' / 'SeqSero2_result.io',
-        INFORMS = Path(config['working_dir']) / 'serotyping_seqsero2' / 'serotyping_seqsero2_kmer' / 'informs.io'
+        TXT = 'serotyping/seqsero2/kmer/txt.io',
+        INFORMS = 'serotyping/seqsero2/kmer/informs.io' # serotyping_seqsero2.OUTPUT_KMER_INFORMS
     params:
         mode = 'kmer',
-        running_dir = Path(config['working_dir']) / 'serotyping_seqsero2' / f'serotyping_seqsero2_kmer',
+        dir_ = 'serotyping/seqsero2/kmer',
         db_path_seqsero2 = config['serotyping']['seqsero2']['path']
     run:
         from camel.app.tools.pipelines.salmonella.seqsero2 import SeqSero2
 
-        seqsero_tool = SeqSero2(camel)
-        seqsero_tool.add_input_files({'DIR': [ToolIODirectory(Path(str(params.db_path_seqsero2)))]})
-        SnakemakeUtils.add_pickle_input(seqsero_tool, 'FASTA', Path(input.FASTA))
-        seqsero_tool.update_parameters(mode=str(params.mode))
-        step = Step(str(rule), seqsero_tool, camel, Path(str(params.running_dir)))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(seqsero_tool, output)
+        seqsero_tool = SeqSero2()
+        seqsero_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db_path_seqsero2))]})
+        snakemakeutils.add_io_input(seqsero_tool,'FASTA', Path(input.FASTA))
+        seqsero_tool.update_parameters(mode=params.mode)
+        step = Step(rule_name=str(rule), tool=seqsero_tool, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_io_outputs(seqsero_tool, output)
+
+def get_fastq_input(wildcards, input_type: str) -> tuple[str, bool]:
+    """
+    Returns the FASTQ input for SeqSero2.
+    :param wildcards: Snakemake wildcards
+    :param input_type: Input type
+    :return: Path to input
+    """
+    if input_type == 'ont':
+        if wildcards.mode == 'kmerread':
+            return 'fq_dict.io', False
+        return read_simulation.OUTPUT_FASTQ, True
+
+    if input_type == 'fasta':
+        return read_simulation.OUTPUT_FASTQ, True
+
+    # Default case (e.g., illumina)
+    return 'fq_dict.io', False
 
 rule serotyping_seqsero2_run_fastq:
     """
@@ -42,65 +56,79 @@ rule serotyping_seqsero2_run_fastq:
     Note: The detection method can be 'allele' or 'kmerread' for FASTQ input.
     """
     input:
-        IO = Path(config['working_dir']) / 'fq_dict.io'
+        IO = lambda wildcards: get_fastq_input(wildcards, config['input']['type'])[0]
     output:
-        TXT = Path(config['working_dir']) / 'serotyping_seqsero2' / 'serotyping_seqsero2_{mode}' / 'SeqSero2_result.io',
-        INFORMS = Path(config['working_dir']) / 'serotyping_seqsero2' / 'serotyping_seqsero2_{mode}' / 'informs.io'
+        TXT = 'serotyping/seqsero2/{mode}/txt.io',
+        INFORMS = 'serotyping/seqsero2/{mode}/informs.io'
     params:
         mode = lambda wildcards: wildcards.mode,
-        running_dir = lambda wildcards: Path(config['working_dir']) / 'serotyping_seqsero2' / f'serotyping_seqsero2_{wildcards.mode}',
-        db_path_seqsero2 = config['serotyping']['seqsero2']['path']
+        dir_ = lambda wildcards: f'serotyping/seqsero2/{wildcards.mode}',
+        db_path_seqsero2 = config['serotyping']['seqsero2']['path'],
+        input_type = config['input']['type'],
+        reads_simulated = lambda wildcards: get_fastq_input(wildcards, config['input']['type'])[1]
     run:
         from camel.app.tools.pipelines.salmonella.seqsero2 import SeqSero2
 
-        seqsero_tool = SeqSero2(camel)
-        seqsero_tool.add_input_files({'DIR': [ToolIODirectory(Path(str(params.db_path_seqsero2)))]})
-        if config['input_type'] == 'illumina':
-            seqsero_tool.add_input_files(SnakePipelineUtils.extracts_fq_input(Path(input.IO), key_pe='FASTQ_PE'))
-        elif config['input_type'] == 'ont':
-            seqsero_tool.add_input_files(SnakePipelineUtils.extracts_fq_input(
-                Path(input.IO), key_se='FASTQ_ONT', read_type='SE'))
+        seqsero_tool = SeqSero2()
+        seqsero_tool.add_input_files({'DIR': [ToolIODirectory(Path(params.db_path_seqsero2))]})
+
+        # Add FASTQ input
+        input_path = Path(str(input.IO))
+        if params.input_type == 'illumina':
+            seqsero_tool.add_input_files(snakepipelineutils.extract_fq_input(input_path, key_pe='FASTQ_PE'))
+        elif params.reads_simulated:
+            seqsero_tool.add_input_files({'FASTQ_PE': snakemakeutils.load_object(input_path)})
+        else:
+            seqsero_tool.add_input_files(snakepipelineutils.extract_fq_input(
+                input_path, key_se='FASTQ_ONT', read_type='SE'))
+
+        # Update parameters and run tool
         seqsero_tool.update_parameters(mode=str(params.mode))
-        step = Step(str(rule), seqsero_tool, camel, Path(str(params.running_dir)))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(seqsero_tool, output)
+        step = Step(rule_name=str(rule), tool=seqsero_tool, dir_=Path(str(params.dir_)))
+        step.run()
+
+        # Update and store the informs
+        seqsero_tool.informs['simulated'] = params.reads_simulated
+        snakemakeutils.dump_io_outputs(seqsero_tool, output)
 
 rule serotyping_seqsero2_dump_summary_info:
     """
-    This rule creates a simple output summary for the SeqSero2 serotyping analysis.
+    Creates the summary output for SeqSero2.
     """
     input:
         TXT_seqsero2_kmer = rules.serotyping_seqsero2_run_fasta.output.TXT,
         INFORMS_seqsero2_kmer = rules.serotyping_seqsero2_run_fasta.output.INFORMS,
-        TXT_seqsero2_allele = lambda wildcards: str(rules.serotyping_seqsero2_run_fastq.output.TXT).format(mode='allele') if config['input_type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
-        INFORMS_seqsero2_allele = lambda wildcards: str(rules.serotyping_seqsero2_run_fastq.output.INFORMS).format(mode='allele') if config['input_type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
-        TXT_seqsero2_kmerread = lambda wildcards: str(rules.serotyping_seqsero2_run_fastq.output.TXT).format(mode='kmerread') if config['input_type'] in ('ont', 'illumina') else [],
-        INFORMS_seqsero2_kmerread = lambda wildcards: str(rules.serotyping_seqsero2_run_fastq.output.INFORMS).format(mode='kmerread') if config['input_type'] in ('ont', 'illumina') else []
+        TXT_seqsero2_allele = rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='allele'),
+        TXT_seqsero2_kmerread = rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='kmerread') if config['input']['type'] in ('ont', 'illumina') else []
     output:
-        VAL_TSV_seqsero2 = Path(config['working_dir']) / 'serotyping_seqsero2' / 'summary_out_seqsero2.tsv'
+        FILE = 'serotyping/seqsero2/summary/summary_seqsero2.{ext}' # serotyping_seqsero2.OUTPUT_SUMMARY
     params:
-        running_dir = Path(config['working_dir']) / 'serotyping_seqsero2'
+        dir_ = 'serotyping_seqsero2/summary',
+        ext = lambda wildcards: wildcards.ext
     run:
-        # parse obligate SeqSero2 output
-        informs_seqsero2_kmer = SnakemakeUtils.load_object(Path(str(input.INFORMS_seqsero2_kmer)))
-        tsv_results = serotyping_seqsero2.seqsero2_output_parser(SnakemakeUtils.load_object(Path(str(input.TXT_seqsero2_kmer)))[0].path, 'seqsero2_kmer')
-        with Path(output.VAL_TSV_seqsero2).open('w') as handle:
-            handle.writelines(item + '\n' for item in tsv_results)
+        from camel.app.tools.pipelines.salmonella.seqsero2reporter import SeqSero2Reporter
 
-        # parse facultative SeqSero2 output
-        if input.TXT_seqsero2_allele:
-            files = [(SnakemakeUtils.load_object(Path(str(input.TXT_seqsero2_allele)))[0].path, 'seqsero2_allele')]
-            if input.TXT_seqsero2_kmerread:  # kmerread output can only be present if allele output is present
-                files.append((SnakemakeUtils.load_object(Path(str(input.TXT_seqsero2_kmerread)))[0].path, 'seqsero2_kmerread'))
-            for args_tuple in files:
-                tsv_results = serotyping_seqsero2.seqsero2_output_parser(*args_tuple)
-                with Path(output.VAL_TSV_seqsero2).open('a') as handle:
-                    for item in tsv_results:
-                        handle.write(item + '\n')
+        # Parse required SeqSero2 output
+        summary_data = []
+        for key_file, path in input.items():
+            if not key_file.startswith('TXT') or len(path) == 0:
+                continue
+            path_tsv = snakemakeutils.load_object(Path(path))[0].path
+            seqsero2_out = SeqSero2Reporter.parse_seqsero_output(path_tsv)
+            mode = key_file.split('_')[-1]
+            for column in SeqSero2Reporter.COLS:
+                col_key = column['key']
+                short_name = column['name_short'].lower()
+                summary_data.append((f"seqsero2_{mode}_{short_name}", seqsero2_out.get(col_key, '')))
+            summary_data.append((f'seqsero2_{mode}_note', seqsero2_out.get('Note', 'n/a')))
 
-        with Path(output.VAL_TSV_seqsero2).open('a') as handle:
-            handle.write(f"seqsero2_tool_version\t{informs_seqsero2_kmer['_name']}\n")
-            handle.write(f"seqsero2_db_version\t{informs_seqsero2_kmer['last_update_date']}\n")
+        # Add tool information
+        informs = snakemakeutils.load_object(Path(input.INFORMS_seqsero2_kmer))
+        summary_data.extend([
+            ('seqsero2_tool_version', informs['_name_full']),
+            ('seqsero2_db_version', informs['last_update_date'])
+        ])
+        snakemakeutils.export_summary(summary_data, Path(output.FILE), str(params.ext), 'seqsero2')
 
 rule serotyping_seqsero2_report:
     """
@@ -112,37 +140,33 @@ rule serotyping_seqsero2_report:
     """
     input:
         TXT_seqsero2_kmer = rules.serotyping_seqsero2_run_fasta.output.TXT,
-        TXT_seqsero2_allele = lambda wildcards: str(rules.serotyping_seqsero2_run_fastq.output.TXT).format(mode='allele') if config['input_type'] == 'illumina' else [],  # exclude fasta, ONT & hybrid
-        TXT_seqsero2_kmerread = lambda wildcards: str(rules.serotyping_seqsero2_run_fastq.output.TXT).format(mode='kmerread') if config['input_type'] in ('ont', 'illumina') else [],
+        INFORMS_seqsero2_kmer = rules.serotyping_seqsero2_run_fasta.output.INFORMS,
+        TXT_seqsero2_allele = lambda wildcards: rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='allele'),
+        INFORMS_seqsero2_allele = lambda wildcards: rules.serotyping_seqsero2_run_fastq.output.INFORMS.format(mode='allele'),
+        TXT_seqsero2_kmerread = lambda wildcards: rules.serotyping_seqsero2_run_fastq.output.TXT.format(mode='kmerread') if config['input']['type'] in ('ont', 'illumina') else [],
         INFORMS_serotyping_seqsero2 = rules.serotyping_seqsero2_run_fasta.output.INFORMS
     output:
-        VAL_HTML = Path(config['working_dir']) / 'serotyping_seqsero2' / 'html_seqsero2.io'
+        VAL_HTML = 'serotyping/seqsero2/report/html.iob' # serotyping_seqsero2.OUTPUT_REPORT
     params:
-        running_dir = Path(config['working_dir']) / 'serotyping_seqsero2',
+        dir_ = 'serotyping/seqsero2/report',
         db_path_seqsero2 = config['serotyping']['seqsero2']['path']
     run:
         from camel.app.tools.pipelines.salmonella.seqsero2reporter import SeqSero2Reporter
 
-        reporter = SeqSero2Reporter(camel)
-        reporter.add_input_files({'DIR_seqsero2': [ToolIODirectory(Path(str(params.db_path_seqsero2)))]})
-        SnakemakeUtils.add_pickle_inputs(reporter, input, excluded_keys=['TXT_seqsero2_allele', 'TXT_seqsero2_kmerread'])
-        if input.TXT_seqsero2_allele:
-            SnakemakeUtils.add_pickle_input(reporter, 'TXT_seqsero2_allele', Path(str(input.TXT_seqsero2_allele)))
-        if input.TXT_seqsero2_kmerread:
-            SnakemakeUtils.add_pickle_input(reporter, 'TXT_seqsero2_kmerread', Path(str(input.TXT_seqsero2_kmerread)))
-        step = Step(str(rule), reporter, camel, Path(str(params.running_dir)))
-        step.run_step()
-        SnakemakeUtils.dump_tool_outputs(reporter, output)
+        reporter = SeqSero2Reporter()
+        reporter.add_input_files({'DIR_seqsero2': [ToolIODirectory(Path(params.db_path_seqsero2))]})
+        snakemakeutils.add_io_inputs(reporter, input, optionals=['TXT_seqsero2_kmerread', 'INFORMS_seqsero2_kmerread'])
+        step = Step(rule_name=str(rule), tool=reporter, dir_=Path(params.dir_))
+        step.run()
+        snakemakeutils.dump_io_outputs(reporter, output)
 
 rule serotyping_seqsero2_report_empty:
     """
     Creates an empty HTML report for the SeqSero2 serotyping analysis.
     """
     output:
-        VAL_HTML = Path(config['working_dir']) / 'serotyping_seqsero2' / 'html_seqsero2-empty.io'
-    params:
-        running_dir = Path(config['working_dir']) / 'serotyping_seqsero2'
+        VAL_HTML = 'serotyping/seqsero2/report/html-empty.iob' # serotyping_seqsero2.OUTPUT_REPORT_EMPTY
     run:
-        from camel.app.snakemake.snakepipelineutils import SnakePipelineUtils
+        from camel.app.core.snakemake import snakepipelineutils
         from camel.app.tools.pipelines.salmonella.seqsero2reporter import SeqSero2Reporter
-        SnakePipelineUtils.create_empty_report_section(SeqSero2Reporter.TITLE, Path(output.VAL_HTML))
+        snakepipelineutils.create_empty_report_section(SeqSero2Reporter.TITLE, Path(output.VAL_HTML))

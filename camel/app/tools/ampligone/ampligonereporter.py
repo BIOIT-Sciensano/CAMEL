@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from camel.app.camel import Camel
-from camel.app.components.html.htmlreportsection import HtmlReportSection
-from camel.app.error.invalidinputspecificationerror import InvalidInputSpecificationError
-from camel.app.io.tooliovalue import ToolIOValue
-from camel.app.tools.tool import Tool
+from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlreportsection import HtmlReportSection
+
+from camel.app.core.errors import InvalidToolInputError
+from camel.app.core.tool import Tool
 
 
 class AmpliGoneReporter(Tool):
@@ -12,12 +12,11 @@ class AmpliGoneReporter(Tool):
     Reporting class for the AmpliGone tool.
     """
 
-    def __init__(self, camel: Camel) -> None:
+    def __init__(self) -> None:
         """
         Initializes the tool.
-        :param camel: CAMEL instance.
         """
-        super().__init__('AmpliGone reporter', '0.1', camel)
+        super().__init__('AmpliGone reporter', '0.1')
 
     def _check_input(self) -> None:
         """
@@ -25,9 +24,9 @@ class AmpliGoneReporter(Tool):
         :return: None
         """
         if 'BED' not in self._tool_inputs:
-            raise InvalidInputSpecificationError('BED input is required')
+            raise InvalidToolInputError('BED input is required')
         if 'ampligone' not in self._input_informs:
-            raise InvalidInputSpecificationError("AmpliGone informs are required ('ampligone')")
+            raise InvalidToolInputError("AmpliGone informs are required ('ampligone')")
         super()._check_input()
 
     def _execute_tool(self) -> None:
@@ -36,23 +35,41 @@ class AmpliGoneReporter(Tool):
         :return: None
         """
         # Combine informs into a list
-        informs_combined = [self._input_informs['ampligone']] if isinstance(self._input_informs['ampligone'], dict) \
+        informs_combined = (
+            [self._input_informs['ampligone']]
+            if isinstance(self._input_informs['ampligone'], dict)
             else self._input_informs['ampligone']
+        )
 
         # Create report section
-        section = HtmlReportSection('Primer removal', subtitle=informs_combined[0]['_name'])
+        section = HtmlReportSection(
+            'Primer removal', subtitle=informs_combined[0]['_name']
+        )
 
         # Information table
-        section.add_table([
-            ['Primers file:', informs_combined[0]['fasta_primers']],
-            ['Error rate:', informs_combined[0]['error_rate']],
-        ])
+        section.add_table(
+            [
+                ['Primers file:', informs_combined[0]['fasta_primers']],
+                ['Error rate:', informs_combined[0]['error_rate']],
+            ]
+        )
 
         # Stats table
-        section.add_table([[
-            f"{inf['nucleotides_removed']:,}" if inf['nucleotides_removed'] is not None else '-',
-            f"{inf['percentage_removed']:.2f}" if inf['percentage_removed'] is not None else '-'
-        ] for inf in informs_combined], ['Nucleotides removed', '% removed'], [('class', 'data')])
+        section.add_table(
+            [
+                [
+                    f"{inf['nucleotides_removed']:,}"
+                    if inf['nucleotides_removed'] is not None
+                    else '-',
+                    f"{inf['percentage_removed']:.2f}"
+                    if inf['percentage_removed'] is not None
+                    else '-',
+                ]
+                for inf in informs_combined
+            ],
+            ['Nucleotides removed', '% removed'],
+            [('class', 'data')],
+        )
 
         # Output and info section
         relative_path = Path('preprocess', 'primer_locations.bed')
