@@ -27,10 +27,11 @@ class PharokkaMultiplotter(Tool):
 
     def get_version(self) -> str:
         """
-        Retrieves the tool version.
+        Retrieves the tool version. pharokka_multiplotter.py itself has no --version flag, but it ships as part of
+        the pharokka package, so the version is retrieved via the main pharokka.py entry point instead.
         :return: Tool version
         """
-        command = Command(f'{self._tool_command} --version')
+        command = Command('pharokka.py --version')
         self._execute_command(command, is_version_cmd=True)
         return command.stdout.strip()
 
