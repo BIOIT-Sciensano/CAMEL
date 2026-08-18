@@ -70,6 +70,7 @@ class MiSTLincode(Tool):
             data = json.load(handle)
         required_keys = ['fields', 'lincode_full', 'lincode_partial', 'st', 'nb_loci', 'nb_matches']
         for key in required_keys:
-            if not key in data:
+            if key not in data:
                 raise ValueError(f"The output file does not contain the field: {key}")
         self.informs.update(data)
+        self.informs['lincode_partial_str'] = '_'.join(str(x) if x is not None else '*' for x in data['lincode_partial'])

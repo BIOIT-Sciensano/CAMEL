@@ -65,7 +65,7 @@ class TestMiST(CamelTestSuite):
         })
         mist_lincode.run(self.running_dir)
         self.verify_output_files(mist_lincode, 'JSON')
-        for key in ('lincode_full', 'lincode_partial', 'thresholds'):
+        for key in ('lincode_full', 'lincode_partial', 'lincode_partial_str', 'thresholds', ):
             self.assertIn(key, mist_lincode.informs)
 
 
