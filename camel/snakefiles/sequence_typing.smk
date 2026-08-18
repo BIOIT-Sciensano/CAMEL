@@ -121,7 +121,7 @@ rule typing_mist:
         FASTA = sequence_typing.INPUT_FASTA,
         DIR = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]['path']
     output:
-        JSON = 'typing/{scheme}/mist/DNA/json.io',
+        JSON = 'typing/{scheme}/mist/DNA/json.io', # TO DO CHANGE INTO CALL
         INFORMS = 'typing/{scheme}/mist/DNA/informs.io'
     threads: 4
     run:
@@ -136,6 +136,26 @@ rule typing_mist:
         step = Step(str(rule), mist_call, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
         snakemakeutils.dump_io_outputs(mist_call, output)
+
+rule typing_mist_lincode:
+    """
+    Extract the LIN-code based on the MiST cgMLST calls. 
+    """
+    input:
+        JSON = rules.typing_mist.output.JSON,
+        DB = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]['path']
+    output:
+        JSON = 'typing/{scheme}/mist/lincode/json.io',
+        INFORMS = 'typing/{scheme}/mist/lincode/informs.io'
+    run:
+        from camelcore.app.io.tooliodirectory import ToolIODirectory
+        from camel.app.tools.mist.mistlincode import MiSTLincode
+        mist_lincode = MiSTLincode()
+        snakemakeutils.add_io_input(mist_lincode, 'JSON', Path(input.JSON))
+        mist_lincode.add_input_files({'DB': [ToolIODirectory(Path(str(input.DB), 'mist'))]})
+        step = Step(str(rule), mist_lincode, dir_=snakemakeutils.get_rule_dir(output))
+        step.run()
+        snakemakeutils.dump_io_outputs(mist_lincode, output)
 
 rule typing_mist_extract_hits:
     """
@@ -305,7 +325,8 @@ rule typing_create_report:
         INFORMS_scheme = rules.typing_extract_schema_info.output.INFORMS,
         INFORMS_ST = rules.typing_detect_sequence_type.output.INFORMS,
         hits_nucl = rules.typing_add_allele_page_url.output.IO.format(locus_type='DNA', scheme='{scheme}'),
-        hits_pept = rules.typing_add_allele_page_url.output.IO.format(locus_type='peptide', scheme='{scheme}')
+        hits_pept = rules.typing_add_allele_page_url.output.IO.format(locus_type='peptide', scheme='{scheme}'),
+        INFORMS_lincode = lambda wc: rules.typing_mist_lincode.output.INFORMS if sequence_typing.has_lincodes(wc.scheme, config) else []
     output:
         VAL_HTML = 'typing/{scheme}/report/html.iob' # sequence_typing.OUTPUT_REPORT
     params:
@@ -323,8 +344,13 @@ rule typing_create_report:
             reporter.add_input_informs({'ST': snakemakeutils.load_object(Path(str(input.INFORMS_ST)))})
 
         # Add other inputs and parameters
-        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['INFORMS_ST'])
+        snakemakeutils.add_io_inputs(reporter, input, excluded_keys=['INFORMS_ST', 'INFORMS_lincode'])
         reporter.add_input_files({'VAL_SAMPLE': [ToolIOValue(params.sample_name)]})
+
+        if len(input.INFORMS_lincode) > 0:
+            reporter.add_input_informs({'lincode': snakemakeutils.load_object(Path(str(input.INFORMS_lincode)))})
+
+
         if params.detection_method != config['sequence_typing']['options']['method']:
             reporter.update_parameters(forced_detection_method=str(params.detection_method))
         # noinspection PyUnresolvedReferences
@@ -362,7 +388,8 @@ rule typing_dump_summary_info:
     input:
         HITS_NUCL = lambda wildcards: str(rules.typing_add_allele_page_url.output.IO).format(scheme=wildcards.scheme, locus_type='DNA'),
         HITS_PEPT = lambda wildcards: str(rules.typing_add_allele_page_url.output.IO).format(scheme=wildcards.scheme, locus_type='peptide'),
-        INFORMS_ST = rules.typing_detect_sequence_type.output.INFORMS
+        INFORMS_ST = rules.typing_detect_sequence_type.output.INFORMS,
+        INFORMS_lincode = lambda wc: rules.typing_mist_lincode.output.INFORMS if sequence_typing.has_lincodes(wc.scheme, config) else []
     output:
         FILE = 'typing/{scheme}/summary/summary_out.{ext}' # sequence_typing.OUTPUT_SUMMARY
     params:
@@ -383,6 +410,15 @@ rule typing_dump_summary_info:
             st_metadata.append(('percent_detected', data_st['percent_detected']))
         for k, v in st_metadata:
             summary_data.append((f'{params.scheme_name}-{k}', v))
+
+        #############
+        # LIN-codes #
+        #############
+        if len(input.INFORMS_lincode) > 0:
+            lincode_info = snakemakeutils.load_object(Path(str(input.INFORMS_lincode)))
+            summary_data.append(
+                (f'{params.scheme_name}_lincode_partial', lincode_info['lincode_partial_str'])
+            )
 
         ########
         # Loci #
