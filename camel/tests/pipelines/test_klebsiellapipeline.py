@@ -126,7 +126,7 @@ class TestKlebsiellaPipeline(CamelTestSuite):
                 '--working-dir',
                 str(self.running_dir),
                 '--typing-method',
-                'blast',
+                'mist',
                 '--gene-detection-method',
                 'blast',
                 '--analyses',
