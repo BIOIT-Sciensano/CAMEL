@@ -1,0 +1,13 @@
+conda:
+  name: mist
+  packages:
+    - mist_typing=1.4.0
+dependencies:
+  - mist/1.4.0
+parameters:
+  output:
+    default: true
+    mandatory: true
+    option: --output
+    value: 'lincode.json'
+tool_command: mist lincode
