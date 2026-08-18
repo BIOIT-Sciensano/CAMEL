@@ -43,7 +43,7 @@ class MiSTLincode(Tool):
         """
         path_out = self._folder / self.get_param_value('output')
         self._command.command = ' '.join([
-            self._tool_command, 'lincode',
+            self._tool_command,
             str(self._tool_inputs['JSON'][0].path),
             '--db', str(self._tool_inputs['DB'][0].path),
             *self._build_options()
