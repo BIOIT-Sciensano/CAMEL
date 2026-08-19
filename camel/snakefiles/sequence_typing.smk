@@ -121,7 +121,7 @@ rule typing_mist:
         FASTA = sequence_typing.INPUT_FASTA,
         DIR = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme]['path']
     output:
-        JSON = 'typing/{scheme}/mist/DNA/json.io', # TO DO CHANGE INTO CALL
+        JSON = 'typing/{scheme}/mist/DNA/json.io',
         INFORMS = 'typing/{scheme}/mist/DNA/informs.io'
     threads: 4
     run:
