@@ -40,3 +40,12 @@ def get_sequence_typing_report(scheme_key: str, config: dict[str, Any], analysis
     if search_key not in config['analyses_selected']:
         return OUTPUT_REPORT_EMPTY.format(scheme=scheme_key)
     return OUTPUT_REPORT.format(scheme=scheme_key)
+
+def has_lincodes(scheme_key: str, config: dict[str, Any]) -> bool:
+    """
+    Checks if the corresponding scheme has LIN-codes.
+    :param scheme_key: Scheme key
+    :param config: Pipeline config
+    :return: True if LIN-codes should be reported, False otherwise
+    """
+    return config['sequence_typing']['dbs'][scheme_key].get('report_lincodes', False)

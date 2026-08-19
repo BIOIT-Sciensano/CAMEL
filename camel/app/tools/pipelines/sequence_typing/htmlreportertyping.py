@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
-from typing import Optional
 
 from Bio import SeqIO
 from camelcore.app.io.tooliovalue import ToolIOValue
+from camelcore.app.reports.htmlelement import HtmlElement
 from camelcore.app.reports.htmlexpandablediv import HtmlExpandableDiv
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
@@ -52,22 +52,33 @@ class HtmlReporterTyping(Tool):
         # Add tables with the detected hits
         add_subtitle = True if all(len(self._tool_inputs[f'hits_{key}']) > 1 for key in ('nucl', 'pept')) else False
         if len(self._tool_inputs['hits_nucl']) != 0:
-            self.__add_output_table(self._tool_inputs['TSV_nucl'][0].path, self._tool_inputs['hits_nucl'],
-                                    'Nucleotide loci' if add_subtitle else None)
+            self.__add_output_table(
+                self._tool_inputs['TSV_nucl'][0].path,
+                self._tool_inputs['hits_nucl'],
+                sub_header='Nucleotide loci' if add_subtitle else None,
+            )
         if len(self._tool_inputs['hits_pept']) != 0:
-            self.__add_output_table(self._tool_inputs['TSV_pept'][0].path, self._tool_inputs['hits_pept'],
-                                    'Peptide loci' if add_subtitle else None)
+            self.__add_output_table(
+                self._tool_inputs['TSV_pept'][0].path,
+                self._tool_inputs['hits_pept'],
+                sub_header='Peptide loci' if add_subtitle else None,
+            )
 
         if 'forced_detection_method' in self._parameters:
             self._report_section.add_alert(
-                f"Allele detection performed with <b>{self._parameters['forced_detection_method'].value}</b>.", 'info')
+                f"Allele detection performed with <b>{self._parameters['forced_detection_method'].value}</b>.", 'info'
+            )
+
+        if 'lincode' in self._input_informs:
+            self._add_lincodes_section()
         self._add_novel_alleles_section()
         self.add_scheme_info_section()
 
         # Add a custom message (if specified in the parameters)
         if 'message' in self._parameters:
             self._report_section.add_alert(
-                self._parameters['message'].value, self._parameters['message_category'].value)
+                self._parameters['message'].value, self._parameters['message_category'].value
+            )
 
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(self._report_section)]
         self.__export_analysis_metadata()
@@ -95,14 +106,17 @@ class HtmlReporterTyping(Tool):
         else:
             color = 'red'
         table_data = [
-            [f"{profile_data['nb_detected']}/{profile_data['nb_loci']}",
-             f"{profile_data['percent_detected']:.2f}%",
-             HtmlTableCell(profile_data['symbol'], color)] +
-            [value if value != '' else '-' for _, value in profile_data['metadata'][1:]]]
+            [
+                f"{profile_data['nb_detected']}/{profile_data['nb_loci']}",
+                f"{profile_data['percent_detected']:.2f}%",
+                HtmlTableCell(profile_data['symbol'], color),
+            ]
+            + [value if value != '' else '-' for _, value in profile_data['metadata'][1:]]
+        ]
 
         self._report_section.add_table(table_data, header, table_attributes=[('class', 'data')])
 
-    def __add_output_table(self, output_tsv: Path, hits_io: list[ToolIOValue], sub_header: Optional[str]) -> None:
+    def __add_output_table(self, output_tsv: Path, hits_io: list[ToolIOValue], sub_header: str | None) -> None:
         """
         Adds the output table with the detected alleles.
         :param output_tsv: Tabular output file
@@ -111,8 +125,10 @@ class HtmlReporterTyping(Tool):
         :return: None
         """
         table_header = hits_io[0].value.html_column_names()
-        table_data = [h.value.to_html_row(self._report_section, self._sub_folder) for h in sorted(
-            hits_io, key=lambda x: x.value.locus)]
+        table_data = [
+            h.value.to_html_row(self._report_section, self._sub_folder)
+            for h in sorted(hits_io, key=lambda x: x.value.locus)
+        ]
 
         if sub_header is not None:
             self._report_section.add_header(sub_header, 4)
@@ -120,8 +136,9 @@ class HtmlReporterTyping(Tool):
         # Add slider for big tables
         is_hidden = len(hits_io) > 12 or ('hidden' in self._parameters)
         if is_hidden:
-            div = HtmlExpandableDiv('table-{}'.format(
-                self._input_informs['scheme']['name'].lower()), f'alleles ({len(hits_io)})')
+            div = HtmlExpandableDiv(
+                'table-{}'.format(self._input_informs['scheme']['name'].lower()), f'alleles ({len(hits_io)})'
+            )
             div.add_table(table_data, table_header, [('class', 'data')])
             self._report_section.add_html_object(div)
         else:
@@ -156,10 +173,10 @@ class HtmlReporterTyping(Tool):
         """
         path = self.folder / HtmlReporterTyping.INFO_FILENAME
         with path.open('w') as handle:
-            json.dump({
-                'scheme': self._input_informs['scheme']['name'],
-                'sample': self._tool_inputs['VAL_SAMPLE'][0].value
-            }, handle)
+            json.dump(
+                {'scheme': self._input_informs['scheme']['name'], 'sample': self._tool_inputs['VAL_SAMPLE'][0].value},
+                handle,
+            )
         self._report_section.add_file(path, self._sub_folder / HtmlReporterTyping.INFO_FILENAME)
 
     def add_scheme_info_section(self) -> None:
@@ -188,11 +205,9 @@ class HtmlReporterTyping(Tool):
         # Collect sequences
         seqs_out = []
         for hit in hits_novel:
-            seqs_out.append(SeqIO.SeqRecord(
-                seq=hit.new_allele_sequence,
-                id=hit.locus,
-                description='potential novel allele'
-            ))
+            seqs_out.append(
+                SeqIO.SeqRecord(seq=hit.new_allele_sequence, id=hit.locus, description='potential novel allele')
+            )
 
         # Save in FASTA format
         basename = f"novel-{self._tool_inputs['VAL_SAMPLE'][0].value}-{self._input_informs['scheme']['name']}.fasta"
@@ -219,10 +234,63 @@ class HtmlReporterTyping(Tool):
 
         # Add the novel allele information
         self._report_section.add_header('Novel alleles (*)', level=4)
-        self._report_section.add_paragraph('Potentially novel alleles were detected for the following loci: {}'.format(
-            ', '.join(f'<b>{h.locus}</b>' for h in hits_novel_allele)))
+        self._report_section.add_paragraph(
+            'Potentially novel alleles were detected for the following loci: {}'.format(
+                ', '.join(f'<b>{h.locus}</b>' for h in hits_novel_allele)
+            )
+        )
         self._report_section.add_paragraph(
             'These allele sequences can be submitted to the corresponding database after verification (intact open-'
-            'reading frames, etc). Note that not all novel alleles might have been detected by this screening.')
+            'reading frames, etc). Note that not all novel alleles might have been detected by this screening.'
+        )
         self._report_section.add_file(path_fasta, relative_path)
         self._report_section.add_link_to_file('Download consensus sequence(s) (FASTA)', relative_path)
+
+    def _add_lincodes_section(self) -> None:
+        """
+        Adds the section with the detected LIN-code.
+        :return: None
+        """
+        self._report_section.add_header('LIN-codes', '4')
+
+        # Determine the LIN-code string
+        self._report_section.add_paragraph(f"LIN-code: {self._input_informs['lincode']['lincode_partial_str']}")
+
+        # cgST table
+        self._report_section.add_table(
+            [
+                [
+                    self._input_informs['lincode']['st'],
+                    f"{self._input_informs['lincode']['nb_loci']:,}",
+                    f"{self._input_informs['lincode']['nb_loci'] - self._input_informs['lincode']['nb_matches']:,}",
+                ]
+            ],
+            ['Best matching cgST', 'Total loci', 'Differences'],
+            [('class', 'data')],
+        )
+
+        # LIN-code table
+        self._report_section.add_table(
+            [
+                [
+                    HtmlElement('th', 'Input / cgST', attributes=[('rowspan', 2)]),
+                    HtmlElement(
+                        'th', 'Threshold (nb. alleles)', attributes=[('colspan', len(self._input_informs['lincode']['thresholds']))]
+                    ),
+                ],
+                [HtmlElement('th', f'{t:,}') for t in self._input_informs['lincode']['thresholds']],
+                ['sample']
+                + [
+                    HtmlTableCell(x, color='green') if x is not None else HtmlTableCell('*', color='red')
+                    for x in self._input_informs['lincode']['lincode_partial']
+                ],
+                [self._input_informs['lincode']['st']]
+                + [str(x) if x is not None else '*' for x in self._input_informs['lincode']['lincode_full']],
+            ],
+            column_names=None,
+            table_attributes=[('class', 'data')],
+        )
+        self._report_section.add_paragraph(
+            'LIN-codes are derived from the closest matching cgST. The number of differing loci is used to mask the '
+            'LIN-code (*) up to the level that can be reliably determined.'
+        )

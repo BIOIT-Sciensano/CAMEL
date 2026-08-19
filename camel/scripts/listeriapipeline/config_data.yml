@@ -281,6 +281,7 @@ sequence_typing:
       path: *db_typing_cgmlst
     cgmlst_v2:
       path: *db_typing_cgmlst_v2
+      report_lincodes: true
     mlst:
       path: *db_typing_mlst
     pcr_serogroup:

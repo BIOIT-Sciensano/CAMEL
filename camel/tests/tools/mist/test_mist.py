@@ -5,6 +5,7 @@ from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.tools.mist.mistcall import MiSTCall
+from camel.app.tools.mist.mistlincode import MiSTLincode
 
 
 class TestMiST(CamelTestSuite):
@@ -52,6 +53,20 @@ class TestMiST(CamelTestSuite):
         })
         mist_call.run(self.running_dir)
         self._verify_output(mist_call)
+
+    def test_mist_lincode(self) -> None:
+        """
+        Tests MiST lincode.
+        """
+        mist_lincode = MiSTLincode()
+        mist_lincode.add_input_files({
+            'JSON': [ToolIOFile(CamelTestSuite.get_test_file_dir('mist') / 'mist_out_klebsiella_scgmlst.json')],
+            'DB': [ToolIODirectory(CamelTestSuite.get_test_file_dir('mist') / 'dummy_db')],
+        })
+        mist_lincode.run(self.running_dir)
+        self.verify_output_files(mist_lincode, 'JSON')
+        for key in ('lincode_full', 'lincode_partial', 'lincode_partial_str', 'thresholds', ):
+            self.assertIn(key, mist_lincode.informs)
 
 
 if __name__ == '__main__':
