@@ -201,7 +201,8 @@ rule summary_combine_all:
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='typing_amr', ext=wildcards.ext) if 'typing_amr' in config['analyses_selected'] else [],
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='typing_virulence', ext=wildcards.ext) if 'typing_amr' in config['analyses_selected'] else [],
         lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='pcr_serogroup', ext=wildcards.ext) if 'pcr_serogroup' in config['analyses_selected'] else [],
-        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else []
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst', ext=wildcards.ext) if 'cgmlst' in config['analyses_selected'] else [],
+        lambda wildcards: str(sequence_typing.OUTPUT_SUMMARY).format(scheme='cgmlst_v2', ext=wildcards.ext) if 'cgmlst_v2' in config['analyses_selected'] else []
     output:
         FILE = 'summary/output.{ext}'
     params:
