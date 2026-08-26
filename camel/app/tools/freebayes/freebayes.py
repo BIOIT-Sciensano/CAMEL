@@ -20,7 +20,18 @@ class Freebayes(Tool):
         """
         Initializes this tool.
         """
-        super().__init__('Freebayes', '1.3.6')
+        super().__init__('Freebayes', version=None)
+
+    def get_version(self) -> str:
+        """
+        Retrieves the tool version.
+        :return: Tool version
+        """
+        command = Command(
+            f'{self._tool_command} --version',
+        )
+        self._execute_command(command, is_version_cmd=True)
+        return command.stdout.split(' ')[-1].strip()
 
     def _check_input(self) -> None:
         """
@@ -37,8 +48,9 @@ class Freebayes(Tool):
         Builds the command to run freebayes.
         :return: None
         """
-        self._command.command = ' '.join([
-            self._tool_command, f'--bam {bam_input}', f'--fasta-reference {fasta_input}', *self._build_options()])
+        self._command.command = ' '.join(
+            [self._tool_command, f'--bam {bam_input}', f'--fasta-reference {fasta_input}', *self._build_options()]
+        )
 
     def _check_command_output(self, command: Command) -> None:
         """
