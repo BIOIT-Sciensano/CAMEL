@@ -8,6 +8,7 @@ from typing import Any
 
 from camelcore.app.command import Command
 from camelcore.app.io.tooliodirectory import ToolIODirectory
+from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.utils import fileutils
 
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
@@ -115,12 +116,16 @@ def _directory_fingerprint(path: Path) -> str:
 def _input_fingerprint(item: 'ToolIO') -> str:  # noqa: F821
     """
     Returns a fingerprint for a tool input used to build the cache key. Directories use a cheap metadata-based
-    fingerprint, while other inputs use their own memoized hash.
+    fingerprint, while other inputs use their own memoized hash. File inputs also include their basename, since tool
+    output names can derive from it, identical content with a different filename must not collide on the same cache key.
+    Only the basename is used so the per-run working directory does not needlessly bust the cache.
     :param item: Tool input
     :return: Fingerprint string
     """
     if isinstance(item, ToolIODirectory):
         return _directory_fingerprint(item.path)
+    if isinstance(item, ToolIOFile):
+        return f'{item.path.name}:{item.hash}'
     return item.hash
 
 
