@@ -121,6 +121,7 @@ def compute_cache_key(tool: 'Tool') -> str:  # noqa: F821
     data = {
         'tool': tool.name_full,
         'source_hash': fileutils.hash_file(source_path),
+        'yaml_hash': fileutils.hash_file(tool.get_tool_data_path()),
         'params': {
             name: _normalize_param_value(param.value, tool.folder) for name, param in sorted(tool.params.items())
         },
