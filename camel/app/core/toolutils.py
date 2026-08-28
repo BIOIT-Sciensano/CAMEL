@@ -33,7 +33,7 @@ def check_input(tool: 'Tool', keys_required: list[str], keys_allowed: list[str] 
             raise InvalidToolInputError(f"'{key}' input is not allowed")
 
 
-def check_tool_execution(tool: 'Tool', command: Command, exit_code: int=0):  # noqa: F821
+def check_tool_execution(tool: 'Tool', command: Command, exit_code: int = 0):  # noqa: F821
     """
     Checks if the tool executed successfully.
     :param tool: Tool instance
@@ -92,7 +92,7 @@ def _normalize_param_value(value: Any, folder: Path) -> str:
     text = str(value)
     folder_text = str(folder)
     if folder_text and text.startswith(folder_text):
-        return '<WORKDIR>' + text[len(folder_text):]
+        return '<WORKDIR>' + text[len(folder_text) :]
     return text
 
 
@@ -106,7 +106,8 @@ def _directory_fingerprint(path: Path) -> str:
     real_path = path.resolve()
     entries = sorted(
         (str(f.relative_to(real_path)), f.stat().st_size, f.stat().st_mtime)
-        for f in real_path.rglob('*') if f.is_file()
+        for f in real_path.rglob('*')
+        if f.is_file()
     )
     return f'{real_path}:{entries}'
 
@@ -139,8 +140,7 @@ def compute_cache_key(tool: 'Tool') -> str:  # noqa: F821
             name: _normalize_param_value(param.value, tool.folder) for name, param in sorted(tool.params.items())
         },
         'inputs': {
-            key: [_input_fingerprint(item) for item in items]
-            for key, items in sorted(tool.tool_inputs.items())
+            key: [_input_fingerprint(item) for item in items] for key, items in sorted(tool.tool_inputs.items())
         },
     }
     encoded = json.dumps(data, sort_keys=True).encode('utf-8')
@@ -198,15 +198,19 @@ def load_from_cache(command: Command, dir_: Path, cache_root: Path, tool_name: s
     return True
 
 
-def save_to_cache(command: Command, dir_: Path, cache_root: Path, tool_name: str, cache_key: str) -> None:
+def save_to_cache(
+    command: Command, dir_: Path, cache_root: Path, tool_name: str, cache_key: str, files_before: dict[Path, float]
+) -> None:
     """
-    Stores the result of a real command execution into the test cache: every file in the working directory and the
-    command's stdout, stderr and exit code. The working directory is assumed be empty before the command ran.
+    Stores the result of a real command execution into the test cache: the working directory files the command created
+    or changed (relative to files_before) and the command's stdout, stderr and exit code. Only the delta is captured so
+    that caching stays correct when tools share a working directory.
     :param command: Command that was executed
     :param dir_: Working directory
     :param cache_root: Test cache root directory
     :param tool_name: Tool name
     :param cache_key: Cache key for this invocation
+    :param files_before: Snapshot of dir_ taken before the command ran (see snapshot_dir)
     :return: None
     """
     logger.debug(f"Saving to cache: '{tool_name}' ({cache_key})")
@@ -215,11 +219,12 @@ def save_to_cache(command: Command, dir_: Path, cache_root: Path, tool_name: str
         shutil.rmtree(entry_dir)
     entry_dir.mkdir(parents=True)
 
-    files = [f for f in dir_.rglob('*') if f.is_file()]
-    for src in files:
-        dest = entry_dir / 'workdir' / src.relative_to(dir_)
+    files_after = snapshot_dir(dir_)
+    changed = [rel for rel, mtime in files_after.items() if files_before.get(rel) != mtime]
+    for rel in changed:
+        dest = entry_dir / 'workdir' / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
-        _link_or_copy(src, dest)
+        _link_or_copy(dir_ / rel, dest)
         dest.chmod(0o444)
 
     meta = {'stdout': command.stdout, 'stderr': command.stderr, 'exit_code': command.exit_code}
@@ -227,4 +232,4 @@ def save_to_cache(command: Command, dir_: Path, cache_root: Path, tool_name: str
         json.dump(meta, handle)
 
     (entry_dir / '_SUCCESS').touch()
-    logger.info(f"Stored test cache for '{tool_name}' ({cache_key[:12]}, {len(files)} file(s))")
+    logger.info(f"Stored test cache for '{tool_name}' ({cache_key[:12]}, {len(changed)} file(s))")
