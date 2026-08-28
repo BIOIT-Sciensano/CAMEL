@@ -67,6 +67,19 @@ def get_test_cache_dir() -> Path | None:
     return Path(dir_cache) if dir_cache else None
 
 
+def snapshot_dir(dir_: Path) -> dict[Path, float]:
+    """
+    Snapshots the (relative path -> mtime) of all files in a directory. Taken before a command runs so that
+    save_to_cache can capture only the files the command created or changed, which keeps caching correct when tools
+    share a working directory.
+    :param dir_: Directory to snapshot
+    :return: Mapping of relative path to modification time
+    """
+    if not dir_.is_dir():
+        return {}
+    return {f.relative_to(dir_): f.stat().st_mtime for f in dir_.rglob('*') if f.is_file()}
+
+
 def _normalize_param_value(value: Any, folder: Path) -> str:
     """
     Returns a stable string representation of a parameter value for cache-key hashing. Paths inside the tool's working
@@ -147,17 +160,6 @@ def _link_or_copy(src: Path, dest: Path) -> None:
         shutil.copy2(src, dest)
 
 
-def snapshot_dir(dir_: Path) -> dict[Path, float]:
-    """
-    Snapshots the (relative path -> mtime) of all files in a directory.
-    :param dir_: Directory to snapshot
-    :return: Mapping of relative path to modification time
-    """
-    if not dir_.is_dir():
-        return {}
-    return {f.relative_to(dir_): f.stat().st_mtime for f in dir_.rglob('*') if f.is_file()}
-
-
 def load_from_cache(command: Command, dir_: Path, cache_root: Path, tool_name: str, cache_key: str) -> bool:
     """
     Attempts to restore a previous command execution from the test cache by repopulating the working directory and
@@ -196,18 +198,15 @@ def load_from_cache(command: Command, dir_: Path, cache_root: Path, tool_name: s
     return True
 
 
-def save_to_cache(
-        command: Command, dir_: Path, cache_root: Path, tool_name: str, cache_key: str,
-        files_before: dict[Path, float]) -> None:
+def save_to_cache(command: Command, dir_: Path, cache_root: Path, tool_name: str, cache_key: str) -> None:
     """
-    Stores the result of a real command execution into the test cache: the working directory's new/changed files and the
-    command's stdout, stderr and exit code.
+    Stores the result of a real command execution into the test cache: every file in the working directory and the
+    command's stdout, stderr and exit code. The working directory is assumed be empty before the command ran.
     :param command: Command that was executed
     :param dir_: Working directory
     :param cache_root: Test cache root directory
     :param tool_name: Tool name
     :param cache_key: Cache key for this invocation
-    :param files_before: Snapshot of dir_ taken before the command ran (see snapshot_dir)
     :return: None
     """
     logger.debug(f"Saving to cache: '{tool_name}' ({cache_key})")
@@ -216,12 +215,11 @@ def save_to_cache(
         shutil.rmtree(entry_dir)
     entry_dir.mkdir(parents=True)
 
-    files_after = snapshot_dir(dir_)
-    changed = [rel for rel, mtime in files_after.items() if files_before.get(rel) != mtime]
-    for rel in changed:
-        dest = entry_dir / 'workdir' / rel
+    files = [f for f in dir_.rglob('*') if f.is_file()]
+    for src in files:
+        dest = entry_dir / 'workdir' / src.relative_to(dir_)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        _link_or_copy(dir_ / rel, dest)
+        _link_or_copy(src, dest)
         dest.chmod(0o444)
 
     meta = {'stdout': command.stdout, 'stderr': command.stderr, 'exit_code': command.exit_code}
@@ -229,4 +227,4 @@ def save_to_cache(
         json.dump(meta, handle)
 
     (entry_dir / '_SUCCESS').touch()
-    logger.info(f"Stored test cache for '{tool_name}' ({cache_key[:12]}, {len(changed)} file(s))")
+    logger.info(f"Stored test cache for '{tool_name}' ({cache_key[:12]}, {len(files)} file(s))")
