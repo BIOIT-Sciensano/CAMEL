@@ -2,7 +2,7 @@ import abc
 import inspect
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import pydantic
 import yaml
@@ -47,15 +47,15 @@ class Tool(metaclass=abc.ABCMeta):
 
         # Command & directory
         self._command: Command = Command()
-        self._folder: Optional[Path] = None
+        self._folder: Path | None = None
 
         # Get the tool version
         self._version: str = version if version is not None else self.get_version()
 
         # Setup inputs / outputs
         logger.debug(f"Initializing tool: {self._name} {self._version}")
-        self._tool_inputs: dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
-        self._tool_outputs: dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]] = {}
+        self._tool_inputs: dict[str, list[ToolIOFile | ToolIOValue | ToolIODirectory | ToolIO]] = {}
+        self._tool_outputs: dict[str, list[ToolIOFile | ToolIOValue | ToolIODirectory | ToolIO]] = {}
         self._informs: dict[str, Any] = {
             '_name': self.name,
             '_version': self._version,
@@ -72,9 +72,7 @@ class Tool(metaclass=abc.ABCMeta):
         This method can be implemented by subclasses to dynamically retrieve the tool version.
         :return: Tool version (as a string)
         """
-        if self._version is None:
-            raise RuntimeError('get_version should be implemented when no version is provided')
-        return self._version
+        raise RuntimeError('get_version should be implemented when no version is provided')
 
     @property
     def _parameters(self) -> dict:
@@ -116,7 +114,7 @@ class Tool(metaclass=abc.ABCMeta):
         return self._version
 
     @property
-    def tool_outputs(self) -> dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]]:
+    def tool_outputs(self) -> dict[str, list[ToolIOFile | ToolIOValue | ToolIODirectory | ToolIO]]:
         """
         Returns the tool outputs.
         :return: Tool outputs
@@ -124,7 +122,7 @@ class Tool(metaclass=abc.ABCMeta):
         return self._tool_outputs
 
     @property
-    def tool_inputs(self) -> dict[str, list[Union[ToolIOFile, ToolIOValue, ToolIODirectory, ToolIO]]]:
+    def tool_inputs(self) -> dict[str, list[ToolIOFile | ToolIOValue | ToolIODirectory | ToolIO]]:
         """
         Returns the tool input.
         :return: Tool inputs
@@ -191,7 +189,7 @@ class Tool(metaclass=abc.ABCMeta):
         """
         self._input_informs.update(informs)
 
-    def update_parameters(self, **kwargs: Union[str, int, None, bool, float, dict[str, Union[str, int, None, bool, float]]]) -> None:
+    def update_parameters(self, **kwargs: str | int | None | bool | float | dict[str, str | int | None | bool | float]) -> None:
         """
         Updates the parameters for this tool.
         :param kwargs: Parameters in key value format
@@ -235,13 +233,13 @@ class Tool(metaclass=abc.ABCMeta):
         logger.info(f"Removing {len(self._params)} parameters")
         self._params.clear()
 
-    def run(self, folder: Path = Path.cwd()) -> None:
+    def run(self, folder: Path | None = None) -> None:
         """
         Runs this tool.
         :param folder: Folder to run the tool in.
         :return: None
         """
-        self._folder = folder
+        self._folder = folder if folder is not None else Path.cwd()
         logger.info(f'Running tool {self.name}')
         logger.info(f'Working directory: {self._folder}')
         logger.info(f'Tool parameters: {toolutils.show_parameters(self)}')
@@ -268,7 +266,7 @@ class Tool(metaclass=abc.ABCMeta):
         logger.warning('This method is deprecated, use the dependency service instead.')
         return '' if len(self._dependencies) == 0 else 'module load {}; '.format(' '.join(self._dependencies))
 
-    def _build_options(self, excluded_parameters: list[str] = None, delimiter: str = ' ') -> list[str]:
+    def _build_options(self, excluded_parameters: list[str] | None = None, delimiter: str = ' ') -> list[str]:
         """
         Builds the options string.
         :parameter delimiter: Delimiter between option and value
@@ -331,8 +329,20 @@ class Tool(metaclass=abc.ABCMeta):
         # Execute the command
         if not is_version_cmd:
             self._informs['_command'] = command.command
+        # Test cache: opt-in via CAMEL_TEST_CACHE_DIR, skips the actual subprocess call when an identical invocation
+        # (tool source + params + input hashes) was already run.
+        cache_root = None if is_version_cmd else toolutils.get_test_cache_dir()
+        cache_key = toolutils.compute_cache_key(self) if cache_root is not None else None
+        if cache_key is not None and toolutils.load_from_cache(command, dir_, cache_root, self.name, cache_key):
+            self._check_command_output(command)
+            logger.debug('Match found in cache - reloading working directory from disk')
+            return
+
+        files_before = toolutils.snapshot_dir(dir_) if cache_key is not None else None
         command.run(dir_, env=env)
         self._check_command_output(command)
+        if cache_key is not None:
+            toolutils.save_to_cache(command, dir_, cache_root, self.name, cache_key, files_before)
 
     def _check_command_output(self, command: Command) -> None:
         """
@@ -367,10 +377,10 @@ class Tool(metaclass=abc.ABCMeta):
         """
         for input_key, input_list in self._tool_inputs.items():
             for tool_input in input_list:
-                if not isinstance(tool_input, ToolIO):
-                    raise InvalidToolInputError(f"Tool input '{tool_input}' is not a ToolIO object")
                 if tool_input is None:
                     raise InvalidToolInputError(f"Tool input with key {input_key} is None")
+                if not isinstance(tool_input, ToolIO):
+                    raise InvalidToolInputError(f"Tool input '{tool_input}' is not a ToolIO object")
                 if not tool_input.is_valid():
                     raise InvalidToolInputError(f"Invalid tool input with key {input_key}: {tool_input}")
 
@@ -423,7 +433,7 @@ class Tool(metaclass=abc.ABCMeta):
                 raise err
         return param_dict
 
-    def get_param(self, key: str) -> Optional[Parameter]:
+    def get_param(self, key: str) -> Parameter | None:
         """
         Returns the parameter with the given key.
         :param key: Parameter key
