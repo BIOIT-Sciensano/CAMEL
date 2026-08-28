@@ -38,6 +38,14 @@ dbs:
     location: &db_nextclade_mash_influenza_b {DB_ROOT}/pipelines/viral_consensus/version_1.1/subtype_mash/influenza_b
     required: true
     method: ftp
+  db_nextclade_rsv_a:
+    location: &db_nextclade_rsv_a {DB_ROOT}/nextclade3/rsv_a
+    required: true
+    method: ftp
+  db_nextclade_rsv_b:
+    location: &db_nextclade_rsv_b {DB_ROOT}/nextclade3/rsv_b
+    required: true
+    method: ftp
   nextclade_sars_cov_2:
     location: &db_nextclade_sars_cov_2 {DB_ROOT}/nextclade3/sars-cov-2
     required: true
@@ -69,9 +77,21 @@ species:
     nextclade_dbs: null
     nextclade_mash_db: null
   rsv_a:
+    antivirals_species: null
+    name: null
     k2_name: Orthopneumovirus hominis
+    nextclade_capitalize: false
+    nextclade_dbs:
+      genome: *db_nextclade_rsv_a
+    nextclade_mash_db: null
   rsv_b:
+    antivirals_species: null
+    name: null
     k2_name: Orthopneumovirus hominis
+    nextclade_capitalize: false
+    nextclade_dbs:
+      genome: *db_nextclade_rsv_b
+    nextclade_mash_db: null
   sars_cov_2:
     antivirals_species: null
     nextclade_capitalize: false
