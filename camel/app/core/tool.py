@@ -72,9 +72,7 @@ class Tool(metaclass=abc.ABCMeta):
         This method can be implemented by subclasses to dynamically retrieve the tool version.
         :return: Tool version (as a string)
         """
-        if self._version is None:
-            raise RuntimeError('get_version should be implemented when no version is provided')
-        return self._version
+        raise RuntimeError('get_version should be implemented when no version is provided')
 
     @property
     def _parameters(self) -> dict:
@@ -235,13 +233,13 @@ class Tool(metaclass=abc.ABCMeta):
         logger.info(f"Removing {len(self._params)} parameters")
         self._params.clear()
 
-    def run(self, folder: Path = Path.cwd()) -> None:
+    def run(self, folder: Path | None = None) -> None:
         """
         Runs this tool.
         :param folder: Folder to run the tool in.
         :return: None
         """
-        self._folder = folder
+        self._folder = folder if folder is not None else Path.cwd()
         logger.info(f'Running tool {self.name}')
         logger.info(f'Working directory: {self._folder}')
         logger.info(f'Tool parameters: {toolutils.show_parameters(self)}')
@@ -268,7 +266,7 @@ class Tool(metaclass=abc.ABCMeta):
         logger.warning('This method is deprecated, use the dependency service instead.')
         return '' if len(self._dependencies) == 0 else 'module load {}; '.format(' '.join(self._dependencies))
 
-    def _build_options(self, excluded_parameters: list[str] = None, delimiter: str = ' ') -> list[str]:
+    def _build_options(self, excluded_parameters: list[str] | None = None, delimiter: str = ' ') -> list[str]:
         """
         Builds the options string.
         :parameter delimiter: Delimiter between option and value
@@ -379,10 +377,10 @@ class Tool(metaclass=abc.ABCMeta):
         """
         for input_key, input_list in self._tool_inputs.items():
             for tool_input in input_list:
-                if not isinstance(tool_input, ToolIO):
-                    raise InvalidToolInputError(f"Tool input '{tool_input}' is not a ToolIO object")
                 if tool_input is None:
                     raise InvalidToolInputError(f"Tool input with key {input_key} is None")
+                if not isinstance(tool_input, ToolIO):
+                    raise InvalidToolInputError(f"Tool input '{tool_input}' is not a ToolIO object")
                 if not tool_input.is_valid():
                     raise InvalidToolInputError(f"Invalid tool input with key {input_key}: {tool_input}")
 
