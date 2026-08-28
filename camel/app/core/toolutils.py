@@ -3,6 +3,7 @@ import inspect
 import json
 import os
 import shutil
+import stat
 from pathlib import Path
 from typing import Any
 
@@ -152,19 +153,6 @@ def compute_cache_key(tool: 'Tool') -> str:  # noqa: F821
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _link_or_copy(src: Path, dest: Path) -> None:
-    """
-    Hardlinks src to dest, falling back to a copy if they are on different filesystems.
-    :param src: Source file
-    :param dest: Destination file (must not already exist)
-    :return: None
-    """
-    try:
-        os.link(src, dest)
-    except OSError:
-        shutil.copy2(src, dest)
-
-
 def load_from_cache(command: Command, dir_: Path, cache_root: Path, tool_name: str, cache_key: str) -> bool:
     """
     Attempts to restore a previous command execution from the test cache by repopulating the working directory and
@@ -190,11 +178,9 @@ def load_from_cache(command: Command, dir_: Path, cache_root: Path, tool_name: s
             if not cached_file.is_file():
                 continue
             dest = dir_ / cached_file.relative_to(workdir_cache)
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            _link_or_copy(cached_file, dest)
-            # Restored files may share an inode with the cache entry (hardlink): keep them
-            # read-only so an accidental in-place write fails instead of silently corrupting the cache
-            dest.chmod(0o444)
+            shutil.copy2(cached_file, dest)
+            # Update permissions so the file is writable by owner (cache is read only)
+            dest.chmod(dest.stat().st_mode | stat.S_IWUSR)
 
     command._stdout = meta['stdout']
     command._stderr = meta['stderr']
@@ -229,7 +215,11 @@ def save_to_cache(
     for rel in changed:
         dest = entry_dir / 'workdir' / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
-        _link_or_copy(dir_ / rel, dest)
+        # Copy (not hardlink) so the cache entry is an independent inode from the live working file: a
+        # hardlink shares content and permissions, so marking the entry read-only would also make the live
+        # file read-only (breaking later in-place writes), and an in-place rewrite of the live file would
+        # corrupt the cached copy. The independent copy is safe to mark read-only to protect the cache.
+        shutil.copy2(dir_ / rel, dest)
         dest.chmod(0o444)
 
     meta = {'stdout': command.stdout, 'stderr': command.stderr, 'exit_code': command.exit_code}
