@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import dataclasses
-import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -109,10 +108,9 @@ class MainBTyper(BaseScript[FastaInput, Output, Options]):
         ))
         report.save()
 
-        # Copy the TSV output file when specified
+        # Write the modified TSV output file when specified
         if self._script_out.output_tsv is not None:
-            self.__add_fasta_name_to_tsv(btyper.tool_outputs['TSV'][0].path)
-            shutil.copyfile(btyper.tool_outputs['TSV'][0].path, self._script_out.output_tsv)
+            self.__add_fasta_name_to_tsv(btyper.tool_outputs['TSV'][0].path, self._script_out.output_tsv)
 
     def __run_btyper(self) -> BTyper:
         """
@@ -131,7 +129,7 @@ class MainBTyper(BaseScript[FastaInput, Output, Options]):
             btyper.update_parameters(panc='False')
         if not self._script_opts.mlst:
             btyper.update_parameters(mlst='False')
-        btyper.update_parameters(output_dir=self._script_out.output_dir)
+        btyper.update_parameters(output_dir=str(self._script_out.output_dir))
 
         # Run the tool
         btyper.run(self._script_opts.working_dir)
@@ -149,15 +147,16 @@ class MainBTyper(BaseScript[FastaInput, Output, Options]):
         reporter.run()
         return reporter.tool_outputs['HTML'][0].value
 
-    def __add_fasta_name_to_tsv(self, input_file: Path) -> None:
+    def __add_fasta_name_to_tsv(self, path_in: Path, path_out: Path) -> None:
         """
-        Modify the filename entry by the fasta file name. Important for Galaxy.
-        :param input_file: TSV output of BTyper
+        Adds the filename to the TSV output of BTyper.
+        :param path_in: Path to the TSV output of BTyper
+        :param path_out: Path to the updated output TSV file
         :return: None.
         """
-        data_in = pd.read_table(input_file)
+        data_in = pd.read_table(path_in)
         data_in['#filename'] = self._script_in.input_str
-        data_in.to_csv(input_file, sep='\t', header=True)
+        data_in.to_csv(path_out, sep='\t', header=True)
 
 
 @click.command(name='btyper', short_help='Wrapper for BTyper')
