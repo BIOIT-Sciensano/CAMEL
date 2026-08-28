@@ -104,6 +104,8 @@ class BasePipe(BaseScript[ScriptInput, ScriptOutput, ScriptOptions], metaclass=a
                 'min_length': self._script_opts.ont_min_len,
                 'min_qual': self._script_opts.ont_min_qual,
             }
+            if self._script_opts.ont_max_len is not None:
+                base_data['read_trimming']['ont']['max_length'] = self._script_opts.ont_max_len
         return base_data
 
     def run_snakefile(self, path_config: Path | str) -> None:

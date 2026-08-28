@@ -48,6 +48,14 @@ class ScriptOptions(BaseOptions):
             "type": click.IntRange(min=0),
         },
     )
+    ont_max_len: int | None = dataclasses.field(
+        default=None,
+        metadata={
+            "help": "Maximum length of ONT reads",
+            "show_default": True,
+            "type": click.IntRange(min=0),
+        },
+    )
     threads: int | None = dataclasses.field(
         default=4, metadata={"help": "Nb. of threads", "show_default": True}
     )

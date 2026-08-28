@@ -288,6 +288,7 @@ def parse_script_opts(kwargs) -> ScriptOptions:
         trimming_method=kwargs["trimming_method"],
         cov_max=kwargs["cov_max"],
         ont_min_len=kwargs["ont_min_len"],
+        ont_max_len=kwargs["ont_max_len"],
         ont_min_qual=kwargs["ont_min_qual"],
         threads=kwargs.get("threads", 1),
         include_bam=kwargs["include_bam"],
