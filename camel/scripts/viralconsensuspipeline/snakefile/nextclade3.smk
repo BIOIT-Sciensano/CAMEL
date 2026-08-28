@@ -38,6 +38,9 @@ rule nextclade3_detect_subtype_mash:
             mash_screen.add_input_files({'FASTQ': fq_all})
         else:
             mash_screen.add_input_files({'FASTA': snakemakeutils.load_object(Path(input.FASTA))})
+        if params.db is None:
+            raise ValueError(f'No Nextclade subtype DB specified')
+
         path_db = next(Path(params.db).glob('*.msh'))
         logging.info(f'Mash database found: {path_db}')
         mash_screen.add_input_files({'DB': [ToolIOFile(path_db)]})
