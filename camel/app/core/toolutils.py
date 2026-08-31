@@ -178,6 +178,7 @@ def load_from_cache(command: Command, dir_: Path, cache_root: Path, tool_name: s
             if not cached_file.is_file():
                 continue
             dest = dir_ / cached_file.relative_to(workdir_cache)
+            dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(cached_file, dest)
             # Update permissions so the file is writable by owner (cache is read only)
             dest.chmod(dest.stat().st_mode | stat.S_IWUSR)
