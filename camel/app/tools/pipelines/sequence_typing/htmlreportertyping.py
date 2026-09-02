@@ -1,5 +1,5 @@
+import fnmatch
 import json
-import re
 from pathlib import Path
 
 from Bio import SeqIO
@@ -99,12 +99,12 @@ class HtmlReporterTyping(Tool):
         """
         profile_data = self._input_informs['ST']
         if 'skip_metadata' in self._parameters:
-            compiled_reg = '|'.join(self._parameters['skip_metadata'].value)
-            pattern = re.compile(compiled_reg)
-            matching_patterns = [m for m, _ in profile_data['metadata'] if pattern.match(m)]
+            skip_patterns = self.get_param_value('skip_metadata')
+            is_skipped = lambda key: any(fnmatch.fnmatchcase(key, pattern) for pattern in skip_patterns)
+            matching_patterns = [m for m, _ in profile_data['metadata'] if is_skipped(m)]
             if not matching_patterns:
                 logger.warning('No matching patterns for metadata to skip.')
-            profile_data['metadata'] = [key for key in profile_data['metadata'] if not pattern.match(key[0])]
+            profile_data['metadata'] = [key for key in profile_data['metadata'] if not is_skipped(key[0])]
         header = ['Loci matched', '% matched'] + [key for key, _ in profile_data['metadata']]
         # Determine color for ST cell
         if profile_data['is_detected'] and profile_data['percent_detected'] == 100:
