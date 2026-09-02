@@ -109,13 +109,15 @@ class CollectIterativeMappingStats(Tool):
         """
         # Parse VCF input
         variants = vcfutils.parse_all_variants(path_vcf)
-
-        # Group variants by seq id
+        seq_id_by_segment = {seq_id.split('-')[-1]: seq_id for seq_id in seq_ids}
         variants_by_seq_id = {seq_id: [] for seq_id in seq_ids}
         for v in variants:
-            if v.CHROM not in variants_by_seq_id:
-                variants_by_seq_id[v.CHROM] = []
-            variants_by_seq_id[v.CHROM].append(v)
+            segment = v.CHROM.split('-')[-1]
+            if segment not in seq_id_by_segment:
+                logging.warning(
+                    f"Variant on '{v.CHROM}' does not match any consensus segment; skipping in per-segment stats")
+                continue
+            variants_by_seq_id[seq_id_by_segment[segment]].append(v)
 
         # Collect informs
         for k, v in CollectIterativeMappingStats._count_variant_types(variants).items():
