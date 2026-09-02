@@ -4,4 +4,5 @@ parameters:
   hidden: { default: false, mandatory: false, option: null, value: null }
   message: { default: false, mandatory: false, option: null, value: null }
   message_category: { default: true, mandatory: true, option: null, value: info }
+  skip_metadata: {default: false, mandatory: false, option: null, value: null }
 tool_command: ''

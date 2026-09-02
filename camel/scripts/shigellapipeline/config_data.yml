@@ -266,3 +266,4 @@ sequence_typing:
       message:
         content: rMLST is only available for noncommercial use, see <a href="https://pubmlst.org/species-id">PubMLST</a> for more info.
         category: info
+      skip_metadata: ['Bact_*']

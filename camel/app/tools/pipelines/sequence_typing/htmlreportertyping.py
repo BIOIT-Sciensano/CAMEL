@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from Bio import SeqIO
@@ -97,6 +98,13 @@ class HtmlReporterTyping(Tool):
         :return: None
         """
         profile_data = self._input_informs['ST']
+        if 'skip_metadata' in self._parameters:
+            compiled_reg = '|'.join(self._parameters['skip_metadata'].value)
+            pattern = re.compile(compiled_reg)
+            matching_patterns = [m for m, _ in profile_data['metadata'] if pattern.match(m)]
+            if not matching_patterns:
+                logger.warning('No matching patterns for metadata to skip.')
+            profile_data['metadata'] = [key for key in profile_data['metadata'] if not pattern.match(key[0])]
         header = ['Loci matched', '% matched'] + [key for key, _ in profile_data['metadata']]
         # Determine color for ST cell
         if profile_data['is_detected'] and profile_data['percent_detected'] == 100:

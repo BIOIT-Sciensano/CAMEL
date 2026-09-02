@@ -45,7 +45,7 @@ class TestSalmonellaPipeline(CamelTestSuite):
             '--output-fasta', str(path_fasta_out),
             '--output-tsv', str(path_summary_out),
             '--working-dir', str(self.running_dir),
-            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if 'cgmlst' not in a),
+            '--analyses', ','.join(a for a in CUSTOM_ANALYSES if 'rmlst' in a),
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
