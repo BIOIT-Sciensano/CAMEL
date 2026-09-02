@@ -50,7 +50,8 @@ rule qc_hybrid_parse_quast_output:
     Parses the quast output into a pickle.
     """
     input:
-        TSV = rules.qc_hybrid_quast.output.TSV
+        TSV = rules.qc_hybrid_quast.output.TSV,
+        INFORMS_quast = rules.qc_hybrid_quast.output.INFORMS
     output:
         INFORMS = 'qc_hybrid/{name}/quast/informs.io'
     params:
@@ -58,6 +59,7 @@ rule qc_hybrid_parse_quast_output:
     run:
         from camel.app.tools.quast.quastinformextractor import QuastInformExtractor
         quast_inform_extractor = QuastInformExtractor()
+        snakemakeutils.add_io_inputs(quast_inform_extractor, input, excluded_keys=['TSV'])
         quast_inform_extractor.add_input_files({'TSV': [ToolIOFile(Path(input.TSV))]})
         step = Step(str(rule), quast_inform_extractor, dir_=Path(str(params.dir_)))
         step.run()
