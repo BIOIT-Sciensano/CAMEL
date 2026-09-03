@@ -169,6 +169,7 @@ def main(**kwargs) -> None:
     script_opts = basescriptutils.parse_script_opts(kwargs)
     custom_opts = Options(**cliutils.from_kwargs(Options, kwargs))
     pipeline = MainHybridAssemblyPipeline(script_input, script_out, script_opts, custom_opts)
+    pipeline.prepare_input()
     pipeline.run()
 
 
