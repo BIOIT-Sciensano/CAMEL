@@ -362,6 +362,8 @@ rule typing_create_report:
             reporter.update_parameters(message=params.config_data['message']['content'])
         if ('message' in params.config_data) and ('category' in params.config_data['message']):
             reporter.update_parameters(message_category=params.config_data['message']['category'])
+        if 'skip_metadata' in params.config_data:
+            reporter.update_parameters(skip_metadata=params.config_data['skip_metadata'])
 
         # Run the reporter
         step = Step(rule_name=str(rule), tool=reporter, dir_=snakemakeutils.get_rule_dir(output), wildcards=wildcards)
