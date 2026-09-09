@@ -57,13 +57,13 @@ class GenomicContext(Tool):
         section = HtmlReportSection('Genomic context', level=3)
 
         # Check if the detection method is BLAST
-        if self._parameters['detection_method'].value != 'blast':
+        if self.get_param_value('detection_method') != 'blast':
             logger.warning('Genomic context can only be predicted with blast as detection method')
             section.add_paragraph('Predicting genomic context is only performed when the detection method is blast.')
         elif len(self._input_informs['dbs']) == 0:
             section.add_paragraph('No compatible databases selected.')
         else:
-            if self._parameters['input_type'] == 'illumina':
+            if self.get_param_value('input_type') == 'illumina':
                 section.add_warning_message(
                     'Predicting genomic context based solely on short-read data is error-prone and should only be '
                     'considered as an indication.')

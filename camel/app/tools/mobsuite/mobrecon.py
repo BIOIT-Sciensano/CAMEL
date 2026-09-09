@@ -94,7 +94,7 @@ class MOBRecon(Tool):
         """
         data_in = pd.read_table(path_out)
         self._informs['contig_report'] = {
-            ctg: cluster_id if cluster_id != '-' else None for
+            str(ctg).split()[0]: cluster_id if cluster_id != '-' else None for
             ctg, cluster_id in zip(data_in['contig_id'], data_in['primary_cluster_id'])}
 
     def _check_command_output(self, command: Command) -> None:
