@@ -4,7 +4,7 @@ conda:
     - medaka=2.0.0
     - setuptools<81
 dependencies:
-  - bcftools/1.17
+  - bcftools/1.21
   - samtools/1.21
   - htslib/1.21
   - minimap2/2.28
