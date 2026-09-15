@@ -57,6 +57,7 @@ dbs:
 species:
   influenza_a:
     antivirals_species: A
+    antivirals_subtype: null
     name: Influenza A
     k2_name: Alphainfluenzavirus influenzae
     nextclade_capitalize: true
@@ -64,6 +65,7 @@ species:
     nextclade_mash_db: *db_nextclade_mash_influenza_a
   influenza_b:
     antivirals_species: B
+    antivirals_subtype: null
     name: Influenza B
     k2_name: Betainfluenzavirus influenzae
     nextclade_capitalize: true
@@ -71,13 +73,15 @@ species:
     nextclade_mash_db: *db_nextclade_mash_influenza_b
   other:
     antivirals_species: null
+    antivirals_subtype: null
     name: null
     k2_name: null
     nextclade_capitalize: false
     nextclade_dbs: null
     nextclade_mash_db: null
   rsv_a:
-    antivirals_species: null
+    antivirals_species: RSV
+    antivirals_subtype: A
     name: null
     k2_name: Orthopneumovirus hominis
     nextclade_capitalize: false
@@ -85,7 +89,8 @@ species:
       genome: *db_nextclade_rsv_a
     nextclade_mash_db: null
   rsv_b:
-    antivirals_species: null
+    antivirals_species: RSV
+    antivirals_subtype: B
     name: null
     k2_name: Orthopneumovirus hominis
     nextclade_capitalize: false
@@ -94,6 +99,7 @@ species:
     nextclade_mash_db: null
   sars_cov_2:
     antivirals_species: null
+    antivirals_subtype: null
     nextclade_capitalize: false
     nextclade_dbs:
       genome: *db_nextclade_sars_cov_2
@@ -131,6 +137,9 @@ antivirals:
   species:
     resolve: species
     key: antivirals_species
+  subtype: # null: taken from the (mash) subtype determination
+    resolve: species
+    key: antivirals_subtype
 
 contamination_check:
   db: *db_kraken2
