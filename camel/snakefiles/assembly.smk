@@ -229,7 +229,9 @@ rule assembly_dump_summary_info:
     input:
         INFORMS_quast = rules.assembly_quast_extract_informs.output.INFORMS
     output:
-        TSV = assembly.OUTPUT_SUMMARY
+        FILE = 'assembly/summary/summary_out.{ext}' # assembly.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
         quast_informs = snakemakeutils.load_object(Path(input.INFORMS_quast))
         summary_data = [
@@ -237,7 +239,4 @@ rule assembly_dump_summary_info:
             ('assembly_nb_contigs', quast_informs['contig']['# contigs']),
             ('assembly_total_length', quast_informs['genome']['Total length'])
         ]
-        with open(output.TSV, 'w') as handle:
-            for key, value in summary_data:
-                handle.write(f'{key}\t{value}')
-                handle.write('\n')
+        snakemakeutils.export_summary(summary_data, Path(output.FILE), str(params.ext), 'assembly')

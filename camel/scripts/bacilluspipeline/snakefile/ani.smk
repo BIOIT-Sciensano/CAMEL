@@ -69,11 +69,13 @@ rule fastani_dump_summary_info:
     input:
         TSV = rules.fastani_run.output.TSV
     output:
-        TSV = 'ani/summary/summary_out.{ext}'
+        FILE = 'ani/summary/summary_out.{ext}' # ani.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
         import pandas as pd
         tsv_fastani = snakemakeutils.load_object(Path(input.TSV))[0].path
         fastani_table = pd.read_table(tsv_fastani, header=None)
-        with open(output.TSV, 'w') as handle:
-            handle.write('fastani_closest_species\t{}'.format([Path(fastani_table[1][0]).stem, str(fastani_table[2][0])+'%']))
-            handle.write('\n')
+        closest_species = str([Path(fastani_table[1][0]).stem, str(fastani_table[2][0]) + '%'])
+        data_summary = [('fastani_closest_species', closest_species)]
+        snakemakeutils.export_summary(data_summary, Path(output.FILE), str(params.ext), 'fastani')

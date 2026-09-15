@@ -6,7 +6,7 @@ SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 OUTPUT_INFORMS = 'bacmet/blastp/informs.io'
 OUTPUT_REPORT = 'bacmet/report/html.iob'
 OUTPUT_REPORT_EMPTY = 'bacmet/report/html-empty.iob'
-OUTPUT_SUMMARY = 'bacmet/summary_bacmet.tsv'
+OUTPUT_SUMMARY = 'bacmet/summary_bacmet.{ext}'
 
 # Prodigal
 OUTPUT_PRODIGAL_INFORMS = 'bacmet/prodigal/tool/informs.io'
