@@ -39,7 +39,8 @@ rule all:
     """
     input:
         HTML = config['output']['html'],
-        TSV = config['output']['tsv']
+        TSV = config['output']['tsv'],
+        JSON = config['output']['json'] if config['output'].get('json') is not None else[]
 
 rule report_command_section:
     """

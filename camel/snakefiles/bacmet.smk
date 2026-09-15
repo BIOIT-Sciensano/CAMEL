@@ -162,10 +162,13 @@ rule bacmet_create_summary:
     input:
         TSV = rules.bacmet_filter_blastp.output.TSV
     output:
-        TSV = 'bacmet/summary_bacmet.tsv' # bacmet.OUTPUT_SUMMARY
+        TSV = 'bacmet/summary_bacmet.{ext}' # bacmet.OUTPUT_SUMMARY
+    params:
+        ext = lambda wildcards: wildcards.ext
     run:
         path_tsv = snakemakeutils.load_object(Path(input.TSV))[0].path
         data_in = pd.read_table(path_tsv)
+        data_summary = []
         with open(output.TSV, 'w') as handle:
-            handle.write('\t'.join(['bacmet_genes', ', '.join(sorted(list(data_in['Gene_name'])))]))
-            handle.write('\n')
+            data_summary.append(('bacmet_genes', ', '.join(sorted(list(data_in['Gene_name'])))))
+        snakemakeutils.export_summary(data_summary, Path(output.TSV),str(params.ext),'bacmet')
