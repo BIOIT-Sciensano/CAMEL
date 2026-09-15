@@ -6,7 +6,7 @@ from camelcore.app.io.tooliodirectory import ToolIODirectory
 
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
-from camel.scripts.viralconsensuspipeline.snakefile import nextclade3
+from camel.scripts.viralconsensuspipeline.snakefile import nextclade3, antivirals
 
 
 rule antivirals_check_mutations:
@@ -15,11 +15,12 @@ rule antivirals_check_mutations:
     """
     input:
         TSV = lambda wildcards: nextclade3.get_nextclade_output(wildcards, checkpoints, 'TSV', config),
-        INFORMS_subtype = lambda wildcards: nextclade3.get_informs_subtype(wildcards, checkpoints)
+        INFORMS_subtype = lambda wildcards: antivirals.get_informs_subtype(wildcards, checkpoints, config)
     output:
         JSON = 'antivirals/check/json.io'
     params:
         species = config.get('antivirals', {}).get('species'),
+        subtype = config.get('antivirals', {}).get('subtype'),
         db = config.get('antivirals', {}).get('db')
     run:
         from camel.app.tools.pipelines.viral_consensus.antiviralsdetection import AntiviralsDetection
@@ -29,11 +30,13 @@ rule antivirals_check_mutations:
             'TSV': list(itertools.chain(*[snakemakeutils.load_object(Path(tsv)) for tsv in input.TSV]))
         })
 
-        # Check the subtypes
-        informs_subtype = snakemakeutils.load_object(Path(str(input.INFORMS_subtype)))
-        subtype = informs_subtype.get('subtype')
+        # Determine the subtype (configuration or subtype determination)
+        subtype = params.subtype
         if subtype is None:
-            raise RuntimeError(f'A subtype should be detected to detect antiviral mutations.')
+            informs_subtype = snakemakeutils.load_object(Path(str(input.INFORMS_subtype)))
+            subtype = informs_subtype.get('subtype')
+        if subtype is None:
+            raise RuntimeError('A subtype should be detected to detect antiviral mutations.')
         detection.update_parameters(species=params.species, subtype=subtype)
         step = Step(rule_name=str(rule), tool=detection, dir_=snakemakeutils.get_rule_dir(output))
         step.run()
