@@ -168,7 +168,5 @@ rule bacmet_create_summary:
     run:
         path_tsv = snakemakeutils.load_object(Path(input.TSV))[0].path
         data_in = pd.read_table(path_tsv)
-        data_summary = []
-        with open(output.TSV, 'w') as handle:
-            data_summary.append(('bacmet_genes', ', '.join(sorted(list(data_in['Gene_name'])))))
-        snakemakeutils.export_summary(data_summary, Path(output.TSV),str(params.ext),'bacmet')
+        data_summary = [('bacmet_genes', ', '.join(sorted(list(data_in['Gene_name']))))]
+        snakemakeutils.export_summary(data_summary, Path(output.TSV), str(params.ext), 'bacmet')

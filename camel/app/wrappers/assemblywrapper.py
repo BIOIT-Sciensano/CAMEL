@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 
@@ -14,12 +14,13 @@ class AssemblyOutput:
     """
     Holds the assembly output data.
     """
+
     report_section: HtmlReportSection
     tsv_summary: Path
     fasta_contigs: Path
-    log_file: Optional[Path]
+    log_file: Path | None
     informs: list[dict[str, Any]]
-    qc_stats: Optional[dict[str, Any]] = None
+    qc_stats: dict[str, Any] | None = None
 
 
 class AssemblyWrapper:
@@ -51,8 +52,15 @@ class AssemblyWrapper:
             return 'flye'
         raise ValueError(f'Invalid read type: {self._input_type}')
 
-    def run(self, name: str, fastq_in: FastqInput, min_ctg_len: Optional[int] = None,
-            assembler_opts: Optional[dict] = None, calc_qc_stats: bool = False, threads: int = 8) -> None:
+    def run(
+        self,
+        name: str,
+        fastq_in: FastqInput,
+        min_ctg_len: int | None = None,
+        assembler_opts: dict | None = None,
+        calc_qc_stats: bool = False,
+        threads: int = 8,
+    ) -> None:
         """
         Runs the assembly workflow for paired-end input.
         :param name: Dataset name
@@ -75,8 +83,13 @@ class AssemblyWrapper:
         self.__run_workflow(name, min_ctg_len, assembler_opts, calc_qc_stats, threads)
 
     def __run_workflow(
-            self, name: str, min_ctg_len: Optional[int] = None, assembler_opts: Optional[dict] = None,
-            calc_qc_stats: bool = False, threads: int = 8) -> None:
+        self,
+        name: str,
+        min_ctg_len: int | None = None,
+        assembler_opts: dict | None = None,
+        calc_qc_stats: bool = False,
+        threads: int = 8,
+    ) -> None:
         """
         Runs the underlying workflow.
         :return: None
@@ -92,11 +105,13 @@ class AssemblyWrapper:
         # Collect output files
         output_files = self.__get_output_files_dict(config_data, min_ctg_len, calc_qc_stats)
         snakepipelineutils.run_snakemake(
-            assembly.SNAKEFILE, config_file, list(output_files.values()), Path(self._working_dir), threads)
+            assembly.SNAKEFILE, config_file, list(output_files.values()), Path(self._working_dir), threads
+        )
         self.__set_output(output_files)
 
     def __get_output_files_dict(
-            self, config_data: dict[str, Any], min_ctg_len: Union[int, None], calc_qc_stats: bool) -> dict[str, Path]:
+        self, config_data: dict[str, Any], min_ctg_len: int | None, calc_qc_stats: bool
+    ) -> dict[str, Path]:
         """
         Returns the dictionary with output files.
         :param config_data: Configuration data
@@ -106,9 +121,9 @@ class AssemblyWrapper:
         """
         output_files: dict[str, str | Path] = {
             'HTML': assembly.OUTPUT_REPORT,
-            'TSV': assembly.OUTPUT_SUMMARY,
+            'TSV': assembly.OUTPUT_SUMMARY.format(ext='tsv'),
             'FASTA': assembly.OUTPUT_FASTA,
-            **{f'INFORMS_assembler_{idx}': p for idx, p in enumerate(assembly.get_command_informs(config_data))}
+            **{f'INFORMS_assembler_{idx}': p for idx, p in enumerate(assembly.get_command_informs(config_data))},
         }
         if min_ctg_len is not None:
             output_files['INFORMS_seqtk'] = assembly.OUTPUT_INFORMS_FILTERING
@@ -118,8 +133,9 @@ class AssemblyWrapper:
             output_files['INFORMS_depth'] = assembly.get_depth_inform(key_fq)
         return output_files
 
-    def __get_config_data(self, name: str, min_ctg_len: Union[int, None], assembler_opts: Optional[dict] = None) -> \
-            dict[str, Any]:
+    def __get_config_data(
+        self, name: str, min_ctg_len: int | None, assembler_opts: dict | None = None
+    ) -> dict[str, Any]:
         """
         Builds the configuration file to run the assembly workflow.
         :param name: Dataset name
@@ -130,10 +146,7 @@ class AssemblyWrapper:
         config_data: dict[str, Any] = {
             'working_dir': str(self._working_dir),
             'assembly': {self.assembler_key: {}},
-            'input': {
-                'type': self._input_type,
-                'sample_name': name
-            }
+            'input': {'type': self._input_type, 'sample_name': name},
         }
 
         # Assembler options
@@ -153,7 +166,8 @@ class AssemblyWrapper:
         log_file_path = self._working_dir / 'camel.log'
         informs = [
             snakemakeutils.load_object(self._working_dir / p)
-            for key, p in output_files.items() if key.startswith('INFORMS_assembler_')
+            for key, p in output_files.items()
+            if key.startswith('INFORMS_assembler_')
         ]
         if 'INFORMS_seqtk' in output_files:
             informs.append(snakemakeutils.load_object(self._working_dir / output_files['INFORMS_seqtk']))
@@ -165,12 +179,12 @@ class AssemblyWrapper:
         else:
             qc_stats = None
         self._output = AssemblyOutput(
-            report_section=snakemakeutils.load_object(self._working_dir/ output_files['HTML'])[0].value,
+            report_section=snakemakeutils.load_object(self._working_dir / output_files['HTML'])[0].value,
             tsv_summary=self._working_dir / output_files['TSV'],
             fasta_contigs=snakemakeutils.load_object(self._working_dir / output_files['FASTA'])[0].path,
             informs=informs,
             log_file=log_file_path if log_file_path.exists() else None,
-            qc_stats=qc_stats
+            qc_stats=qc_stats,
         )
 
     @property
