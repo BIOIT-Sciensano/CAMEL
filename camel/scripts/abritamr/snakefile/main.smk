@@ -95,13 +95,13 @@ rule report_combine_all:
 
 rule summary_combine_all:
     """
-    This rule copies the resources output summary to the config output summary.
+    This rule copies the abritAMR summary to the pipeline summary (TSV / JSON).
     """
     input:
-        TSV = str(abritamr.OUTPUT_SUMMARY).format(ext='tsv')
+        FILE = abritamr.OUTPUT_SUMMARY
     output:
-        TSV = config['output']['tsv']
+        FILE = 'summary/output.{ext}'
     shell:
         """
-        cp {input.TSV} {output.TSV}
+        cp {input.FILE} {output.FILE}
         """
