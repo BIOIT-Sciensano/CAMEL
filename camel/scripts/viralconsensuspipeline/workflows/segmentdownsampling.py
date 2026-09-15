@@ -3,11 +3,10 @@ import json
 import logging
 from importlib.resources import files
 from pathlib import Path
-from typing import Union, Optional
 
+from camel.app.core.snakemake import snakepipelineutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-from camel.app.core.snakemake import snakepipelineutils
 
 
 @dataclasses.dataclass
@@ -36,7 +35,7 @@ class SegmentDownsamplingWorkflow:
             self._dir.mkdir(parents=True)
 
     @staticmethod
-    def calculate_ratio(depth: int, max_depth: int) -> Union[float, None]:
+    def calculate_ratio(depth: int, max_depth: int) -> float | None:
         """
         Calculates the ratio for downsampling.
         :param depth: Sample depth
@@ -47,7 +46,7 @@ class SegmentDownsamplingWorkflow:
             return None
         return max_depth / depth
 
-    def run(self, bam_in: Path, input_type: str, json_mapping: Path, max_depth: int, bed_primers: Optional[Path] = None,
+    def run(self, bam_in: Path, input_type: str, json_mapping: Path, max_depth: int, bed_primers: Path | None = None,
             threads: int = 8) -> SegmentDownsamplingOutput:
         """
         Runs the read mapping workflow.

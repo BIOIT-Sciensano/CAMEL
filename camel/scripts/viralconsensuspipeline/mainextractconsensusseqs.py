@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 import dataclasses
 from pathlib import Path
-from typing import Union
 
 import click
 from Bio import SeqIO
 
 from camel.app.cli import cliutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils.basescript.basescript import BaseScript
-from camel.app.scriptutils.model import BaseInput, BaseOutput, BaseOptions
+from camel.app.scriptutils.model import BaseInput, BaseOptions, BaseOutput
 
 
 @dataclasses.dataclass(frozen=True)
@@ -85,7 +84,7 @@ class MainExtractConsensusSeqs(BaseScript[Input, Output, Options]):
         logger.info(f'Output file created: {self._script_out.output} ({len(sequences_out)} sequences)')
 
     @staticmethod
-    def _extract_seq_record(path_fasta: Path, segment: str) -> Union[SeqIO.SeqRecord, None]:
+    def _extract_seq_record(path_fasta: Path, segment: str) -> SeqIO.SeqRecord | None:
         """
         Extracts the sequence record
         :param path_fasta: Path to FASTA file
