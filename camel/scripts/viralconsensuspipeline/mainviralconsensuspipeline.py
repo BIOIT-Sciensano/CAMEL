@@ -128,6 +128,25 @@ class MainViralConsensusPipeline(BasePipe):
                 f"Invalid FASTA input, sequence '{seq.id}' does not match format ({{identifier}}-{{segment_name}})"
             )
 
+    def _validate_config_data(self, config_data: dict) -> bool:
+        """
+        Validates the config data. Unsupported analyses are removed from the selected analyses.
+        :param config_data: Config data
+        :return: True if valid, False otherwise
+        """
+        if 'antivirals' in config_data['analyses_selected']:
+            if config_data['antivirals']['species'] is None:
+                logger.warning(
+                    f'Antiviral resistance detection is not available for species: {self._opts_custom.species}')
+                config_data['analyses_selected'].remove('antivirals')
+            elif (config_data['antivirals']['subtype'] is None) and (config_data['nextclade']['db_mash'] is None):
+                logger.warning(
+                    f'Antiviral resistance detection requires a subtype, but no subtype is specified or can be '
+                    f'determined for species: {self._opts_custom.species}')
+                config_data['analyses_selected'].remove('antivirals')
+        self.check_dbs(config_data)
+        return True
+
     def _determine_genome_size(self) -> int:
         """
         Determines the genome size.
@@ -257,12 +276,6 @@ class MainViralConsensusPipeline(BasePipe):
 
         # Resolve species specific values
         config_data = basepipeutils.resolve_config(config_data, self._opts_custom.species)
-
-        # Antiviral resistance detection
-        if ('antivirals' in config_data['analyses_selected']) and (config_data['antivirals']['species'] is None):
-            logger.warning(f'Antiviral resistance detection is not available for species: {self._opts_custom.species}')
-            config_data['analyses_selected'].remove('antivirals')
-
         return config_data
 
     def prepare_input(self) -> None:
