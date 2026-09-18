@@ -249,10 +249,10 @@ rule nextclade3_create_summary:
         assay = 'nextclade'
         data_summary = []
 
-        # Add tool version
+        # Add tool version (informs are empty when no Nextclade dataset is available for the detected subtype)
         # noinspection PyUnresolvedReferences
         informs_first = snakemakeutils.load_object(Path(input.INFORMS_nextclade))
-        data_summary.append((f'{assay}_version', informs_first['_version']))
+        data_summary.append((f'{assay}_version', informs_first['_version'] if informs_first else '-'))
 
         # Add subtype determination informs (if available)
         if input.INFORMS_subtype_determination:
