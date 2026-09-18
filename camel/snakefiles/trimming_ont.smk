@@ -47,7 +47,7 @@ rule trimming_ont_seqkit:
         seqkit.update_parameters(
             min_length=params.min_length,
             min_qual=params.min_qual,
-            max_length=params.max_length,
+            max_length=params.max_length if params.max_length is not None else False,
             output_filename=f'{params.sample_name}-filtered.fastq',
             threads=threads
         )
