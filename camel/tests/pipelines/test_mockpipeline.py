@@ -181,7 +181,7 @@ class TestMockPipeline(CamelTestSuite):
             '--gene-detection-method', 'blast',
             '--analyses', 'ncbi_amr,human_read_scrubbing',
             '--ont-min-qual', '11',
-            '--ont-min-length', '750',
+            '--ont-min-len', '750',
             '--threads', '8',
         ])
         self.assertEqual(result.exit_code, 0)
