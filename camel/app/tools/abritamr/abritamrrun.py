@@ -15,6 +15,9 @@ class AbriTAMRRun(Tool):
     This is the first part of the AbriTAMR pipeline (run).
     """
 
+    # AbriTAMR uses the prefix verbatim as isolate ID, a short relative prefix keeps it independent of the working dir
+    PREFIX = 'sample'
+
     def __init__(self) -> None:
         """
         Initializes tool.
@@ -51,18 +54,19 @@ class AbriTAMRRun(Tool):
         Collects the output files of interest.
         :return: None
         """
-        self._tool_outputs['TXT_matches'] = [ToolIOFile(self.folder / 'summary_matches.txt')]
-        self._tool_outputs['TXT_partials'] = [ToolIOFile(self.folder / 'summary_partials.txt')]
+        self._tool_outputs['TXT_matches'] = [ToolIOFile(self.folder / AbriTAMRRun.PREFIX / 'summary_matches.txt')]
+        self._tool_outputs['TXT_partials'] = [ToolIOFile(self.folder / AbriTAMRRun.PREFIX / 'summary_partials.txt')]
 
     def __build_command(self) -> None:
         """
         Concatenates required parameters and options to build the command.
         :return: None
         """
+        (self.folder / AbriTAMRRun.PREFIX).mkdir(exist_ok=True)
         self._command.command = ' '.join([
             self._tool_command,
             '--contigs', str(self._tool_inputs['FASTA'][0]),
-            '--prefix', str(self.folder),
+            '--prefix', AbriTAMRRun.PREFIX,
             '--amrfinder_db', str(self._tool_inputs['DIR_AMRF'][0].path),
             *self._build_options()
         ])

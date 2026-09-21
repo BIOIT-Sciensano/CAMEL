@@ -34,8 +34,7 @@ rule abritamr_run:
 
 rule abritamr_generate_dummy_mdu_qc_file:
     """
-    This rule creates a dummy QC file required by AbriTAMR report in order to make it work as expected.
-    Note: The directory specified in the QC file must exactly match the output directory of the AbriTAMR run.
+    This rule creates the dummy QC file required by AbriTAMR report to function correctly.
     """
     input:
         TXT_partials = rules.abritamr_run.output.TXT_partials
@@ -45,15 +44,13 @@ rule abritamr_generate_dummy_mdu_qc_file:
         species = config['abritamr']['species'],
         dir_ = 'abritamr/dummy_qc'
     run:
-        # Extract the working directory of abritAMR
-        path_partials = snakemakeutils.load_object(Path(input.TXT_partials))[0].path
-        wd_partials = str(path_partials.parent)
+        from camel.app.tools.abritamr.abritamrrun import AbriTAMRRun
 
         # Create the dummy QC file
         species = params.species if not params.species == 'Salmonella' else 'Salmonella enterica'
         qc_file_txt = Path(params.dir_, 'qc_file.txt')
         with qc_file_txt.open('w') as handle:
-            handle.write(f'ISOLATE,SPECIES_EXP,SPECIES_OBS,TEST_QC\n{wd_partials},{species},{species},PASS\n')
+            handle.write(f'ISOLATE,SPECIES_EXP,SPECIES_OBS,TEST_QC\n{AbriTAMRRun.PREFIX},{species},{species},PASS\n')
         snakemakeutils.dump_object([ToolIOFile(qc_file_txt)], Path(output.TXT))
 
 rule abritamr_report_run:
