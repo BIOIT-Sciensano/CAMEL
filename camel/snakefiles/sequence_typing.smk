@@ -397,7 +397,6 @@ rule typing_dump_summary_info:
     params:
         scheme_name = lambda wildcards: wildcards.scheme,
         ext = lambda wildcards: wildcards.ext,
-        include_hashing = lambda wildcards: config['sequence_typing']['dbs'][wildcards.scheme].get('include_hashing')
     run:
         summary_data = []
 
@@ -435,7 +434,7 @@ rule typing_dump_summary_info:
                 summary_data.append((key, data_hit))
         elif params.ext == 'json':
             # JSON format: A list of loci with corresponding information as a dictionary
-            summary_data.append(('loci', [hit.to_dict(params.include_hashing) for hit in [io.value for io in hits]]))
+            summary_data.append(('loci', [hit.to_dict(include_hashing=True) for hit in [io.value for io in hits]]))
         else:
             raise ValueError(f'Invalid extension: {params.ext}')
 
