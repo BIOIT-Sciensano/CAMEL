@@ -20,7 +20,7 @@ class ResFinderReporter(Tool):
     TITLE = 'ResFinder'
     URL_NUCCORE = 'https://www.ncbi.nlm.nih.gov/nuccore/{id}'
     URL_PUBMED = 'https://pubmed.ncbi.nlm.nih.gov/{id}'
-    MATCH_COLORS = {0: None, 1: 'grey', 2: 'lightgreen', 3: 'green'}
+    MATCH_COLORS = {0: None, 1: 'red', 2: 'red', 3: 'red'}
 
     def __init__(self) -> None:
         """
