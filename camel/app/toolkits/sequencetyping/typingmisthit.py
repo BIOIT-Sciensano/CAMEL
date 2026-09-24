@@ -72,6 +72,21 @@ class TypingMiSTHit(TypingHitBase):
             self._closest_alleles_str(),
         ]
 
+    def to_dict(self, include_hashing: bool = False) -> dict[str, Any]:
+        """
+        Returns the hit as a dictionary.
+        :param include_hashing: Whether to include the hashing info if a new allele is found
+        :return: Hit dictionary
+        """
+        result = super().to_dict()
+        if include_hashing and self.is_new_allele():
+            result.update({
+                'New allele': True,
+                'Allele (hash)': self.new_allele_hash,
+                'Allele sequence': str(self.new_allele_sequence)
+            })
+        return result
+
     @staticmethod
     def html_column_names() -> list[str]:
         """
