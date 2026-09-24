@@ -1,9 +1,9 @@
 conda:
   name: mist
   packages:
-    - mist_typing=1.0.0
+    - mist_typing=1.5.0
 dependencies:
-  - mist/1.0.0
+  - mist/1.5.0
 parameters:
   debug:
     default: false
