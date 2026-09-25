@@ -50,7 +50,7 @@ class GATK(Tool, metaclass=abc.ABCMeta):
             if input_file not in self._tool_inputs:
                 raise InvalidToolInputError(f'GATK {self._name!r} required {input_file!r} input is missing in _tool_inputs!')
 
-        super(GATK, self)._check_input()
+        super()._check_input()
 
     def _set_input(self):
         """

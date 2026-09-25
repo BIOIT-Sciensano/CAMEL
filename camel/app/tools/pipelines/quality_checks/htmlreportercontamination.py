@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 from camelcore.app.io.tooliovalue import ToolIOValue
@@ -198,7 +198,7 @@ class HtmlReporterContamination(Tool):
                           self._input_informs['species']['contaminants_fail'])))
 
     @staticmethod
-    def generate_empty_section(suffix_title: Optional[str] = None) -> HtmlReportSection:
+    def generate_empty_section(suffix_title: str | None = None) -> HtmlReportSection:
         """
         Returns a report used when this analysis is disabled.
         :param suffix_title: (Optional) suffix for the title

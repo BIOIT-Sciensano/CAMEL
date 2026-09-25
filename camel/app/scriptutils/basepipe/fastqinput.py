@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from camelcore.app.io.tooliofile import ToolIOFile
 
@@ -13,10 +12,10 @@ class FastqInput:
     Dataclass used to store FASTQ input/output in a standardized format.
     """
     read_type: str
-    pe: Optional[list[ToolIOFile]] = None
-    se: Optional[list[ToolIOFile]] = None
-    se_fwd: Optional[list[ToolIOFile]] = None
-    se_rev: Optional[list[ToolIOFile]] = None
+    pe: list[ToolIOFile] | None = None
+    se: list[ToolIOFile] | None = None
+    se_fwd: list[ToolIOFile] | None = None
+    se_rev: list[ToolIOFile] | None = None
     is_trimmed: bool = False
     is_pe: bool = True
 

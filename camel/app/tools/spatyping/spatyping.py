@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.io.tooliovalue import ToolIOValue
 
@@ -109,7 +109,7 @@ class SpaTyping(Tool):
             if (not SpaTyping.__calculate_percent_covered(h) > 90) or (not h['pident'] > 90):
                 continue
             filtered_hits.append(h)
-        filtered_hits.sort(key=lambda x: self.__calculate_percent_covered(x), reverse=True)
+        filtered_hits.sort(key=self.__calculate_percent_covered, reverse=True)
         return filtered_hits
 
     def __convert_blast_output(self, blast_output: list[dict[str, Any]], profiles: dict[str, list[int]]) -> \
@@ -159,7 +159,7 @@ class SpaTyping(Tool):
         return min(100 * blast_data['length'] / blast_data['slen'], 100.0)
 
     @staticmethod
-    def __get_db_info(dir_db: Path) -> Optional[dict]:
+    def __get_db_info(dir_db: Path) -> dict | None:
         """
         Returns the date of the last database update.
         :param dir_db: Database directory

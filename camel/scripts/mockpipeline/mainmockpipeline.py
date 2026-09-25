@@ -15,7 +15,7 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
-from camel.scripts.mockpipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.mockpipeline import CONFIG_DATA, SNAKEFILE_MAIN
 
 
 @dataclasses.dataclass(frozen=True)

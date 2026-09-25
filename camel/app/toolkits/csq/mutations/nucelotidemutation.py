@@ -1,4 +1,3 @@
-from typing import Optional
 
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
@@ -11,7 +10,7 @@ class NucleotideMutation(BaseMutation):
     This class contains a mutation in a non coding region.
     """
 
-    def __init__(self, record: VcfRecord, pos_rel: Optional[int], locus_tabix: str) -> None:
+    def __init__(self, record: VcfRecord, pos_rel: int | None, locus_tabix: str) -> None:
         """
         Initializes a nucleotide mutation.
         :param record: VCF record

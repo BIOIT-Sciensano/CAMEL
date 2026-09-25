@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Optional
 
 from camel.app.core.errors import InvalidParameterError, InvalidToolInputError
 from camel.app.tools.picard.picard import Picard
@@ -48,7 +47,7 @@ class FastqToSam(Picard):
             raise InvalidParameterError("Picard FastqToSam: output file extension should be .bam or .sam")
         super()._set_output()
 
-    def _set_informs(self, stderr: Optional[str] = None) -> None:
+    def _set_informs(self, stderr: str | None = None) -> None:
         """
         Analyse the result of picard run and update tool.informs.
             - Quality encoding: Quality score format (depending on sequencing technology)

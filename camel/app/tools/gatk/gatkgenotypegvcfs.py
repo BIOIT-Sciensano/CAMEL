@@ -21,7 +21,7 @@ class GATKGenotypeGVCFs(GATK):
         Set the input specification
         :return: None
         """
-        super(GATKGenotypeGVCFs, self)._set_input()
+        super()._set_input()
 
         for f in self._tool_inputs['gVCF']:
             self._input_string += f"--variant {f.path} "

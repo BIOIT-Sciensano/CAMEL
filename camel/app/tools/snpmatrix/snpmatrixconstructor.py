@@ -122,15 +122,11 @@ class SnpMatrixConstructor(Tool):
         :return: None
         """
         seq_by_sample_name = {name: [] for name in sample_names}
-        if include_ref is True:
+        if include_ref:
             seq_by_sample_name['reference'] = []
-        for snp_pos, nucl_by_sample in sorted(
-            nucl_by_pos.items(), key=lambda x: x[0].position
-        ):
-            for name in seq_by_sample_name.keys():
-                seq_by_sample_name[name].append(
-                    nucl_by_sample.get(name, snp_pos.reference_base)
-                )
+        for snp_pos, nucl_by_sample in sorted(nucl_by_pos.items(), key=lambda x: x[0].position):
+            for name, seq in seq_by_sample_name.items():
+                seq.append(nucl_by_sample.get(name, snp_pos.reference_base))
 
         output_path = self.folder / 'snp_matrix.fasta'
         seqs = [

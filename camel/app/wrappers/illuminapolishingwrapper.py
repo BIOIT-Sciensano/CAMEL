@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from camelcore.app.io.tooliofile import ToolIOFile
 
@@ -19,7 +18,7 @@ class ShortReadPolishingWrapper:
         Class to store the polishing output.
         """
         fasta_contigs: Path
-        log_file: Optional[Path] = None
+        log_file: Path | None = None
 
     def __init__(self, working_dir: Path) -> None:
         """

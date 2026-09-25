@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
@@ -28,7 +28,7 @@ class TrimmingIlluminaWrapper:
         informs_trimming: dict[str, Any]
         fastq_reports_pre: list[ToolIOFile]
         fastq_reports_post: list[ToolIOFile]
-        log_file: Optional[Path] = None
+        log_file: Path | None = None
 
     def __init__(self, working_dir: Path) -> None:
         """
@@ -38,8 +38,8 @@ class TrimmingIlluminaWrapper:
         self._working_dir = Path(working_dir)
         self._output = None
 
-    def run(self, pe_reads: list[Path], adapter: Optional[str] = None, threads: int = 8, export_fastq: bool = False,
-            method: Optional[str] = None) -> None:
+    def run(self, pe_reads: list[Path], adapter: str | None = None, threads: int = 8, export_fastq: bool = False,
+            method: str | None = None) -> None:
         """
         Runs the read trimming workflow.
         :param pe_reads: Input PE FASTQ reads

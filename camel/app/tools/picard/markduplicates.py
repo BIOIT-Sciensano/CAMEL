@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from camelcore.app.io.tooliofile import ToolIOFile
 
@@ -42,7 +41,7 @@ class MarkDuplicates(Picard):
         # Run parent function for other inputs, e.g. FASTA_REF (optional)
         super()._set_input()
 
-    def _set_informs(self, stderr: Optional[str] = None) -> None:
+    def _set_informs(self, stderr: str | None = None) -> None:
         """
         Analyse the result of picard run and update tool.informs
         Total reads: Total no. or reads in the file

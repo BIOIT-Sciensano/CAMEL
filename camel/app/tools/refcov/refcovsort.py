@@ -40,7 +40,7 @@ class RefCovSort(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(RefCovSort, self)._check_input()
+        super()._check_input()
         if 'TSV' not in self._tool_inputs or len(self._tool_inputs['TSV']) > 1:
                 raise InvalidToolInputError(f'Invalid input given for RefCovSort (TSV and 1 file): {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:
@@ -78,12 +78,13 @@ class RefCovSort(Tool):
         else:
             sort_by = 'coverage'
         if 'post_cov_cutoff' in self._parameters and 'post_depth_cutoff' in self._parameters:
-            awk_cmd = "| awk '{{if($2>={0} && $6>={1})print;}}'".format(self._parameters['post_cov_cutoff'].value,
-                                                                        self._parameters['post_depth_cutoff'].value)
+            cov_cutoff = self._parameters['post_cov_cutoff'].value
+            depth_cutoff = self._parameters['post_depth_cutoff'].value
+            awk_cmd = f"| awk '{{if($2>={cov_cutoff} && $6>={depth_cutoff})print;}}'"
         elif 'post_cov_cutoff' in self._parameters:
-            awk_cmd = "| awk '{{if($2>={0})print;}}'".format(self._parameters['post_cov_cutoff'].value)
+            awk_cmd = f"| awk '{{if($2>={self._parameters['post_cov_cutoff'].value})print;}}'"
         elif 'post_depth_cutoff' in self._parameters:
-            awk_cmd = "| awk '{{if($6>={0})print;}}'".format(self._parameters['post_depth_cutoff'].value)
+            awk_cmd = f"| awk '{{if($6>={self._parameters['post_depth_cutoff'].value})print;}}'"
         else:
             awk_cmd = ''
         # Sort by coverage (default, column 2) then sort by read depth (column 6)

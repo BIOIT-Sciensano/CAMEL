@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
@@ -20,7 +20,7 @@ class Kraken2Output:
     tsv_summary: Path
     informs: dict[str, Any]
     informs_commands: list[dict[str, Any]]
-    log_file: Optional[Path]
+    log_file: Path | None
 
 
 class Kraken2Wrapper:
@@ -28,7 +28,7 @@ class Kraken2Wrapper:
     This class is used as a wrapper class around the Kraken2 contamination check workflow.
     """
 
-    def __init__(self, working_dir: Union[str, Path]) -> None:
+    def __init__(self, working_dir: str | Path) -> None:
         """
         Initializes the Kraken 2 wrapper.
         :param working_dir: Working directory

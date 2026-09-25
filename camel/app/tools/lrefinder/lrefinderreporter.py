@@ -1,4 +1,3 @@
-from typing import Union
 
 import pandas as pd
 from camelcore.app.io.tooliovalue import ToolIOValue
@@ -29,7 +28,7 @@ class LREFinderReporter(Tool):
         super()._check_input()
 
     @staticmethod
-    def __format_value(value: Union[str, float]) -> str:
+    def __format_value(value: str | float) -> str:
         """
         Formats a value for the output table.
         :param value: Input value

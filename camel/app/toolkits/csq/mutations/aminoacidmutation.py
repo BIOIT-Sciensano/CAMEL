@@ -1,5 +1,7 @@
 import re
+
 from Bio.PDB import Polypeptide
+
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
 

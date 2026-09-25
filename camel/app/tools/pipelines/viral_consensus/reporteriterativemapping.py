@@ -155,7 +155,7 @@ class ReporterIterativeMapping(Tool):
         :return: None
         """
         # Get the working directory
-        nb_iter = dir_iter_name.split('_')[-1]
+        nb_iter = dir_iter_name.rsplit('_', maxsplit=1)[-1]
 
         # Add files
         for row in ReporterIterativeMapping.REPORT_FILES:

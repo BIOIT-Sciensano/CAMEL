@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Union
 
 from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
@@ -88,7 +87,7 @@ class FastQC(Tool):
         raise FileNotFoundError(f"No output directory for FastQC input {input_file} found.")
 
     @staticmethod
-    def _analyze_summary_file(summary_file: Path) -> dict[str, Union[bool, list[str]]]:
+    def _analyze_summary_file(summary_file: Path) -> dict[str, bool | list[str]]:
         """
         Analyze fastqc output summary.txt (of a given input file)
         :param summary_file: FastQC summary file

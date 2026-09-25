@@ -2,12 +2,12 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union, Optional, Any
+from typing import Any
 
 from camel.app import loggers
 from camel.app.core import toolutils
-from camel.app.loggers import logger
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ class StepOutput:
     wildcards: Any | None = None
 
     @property
-    def wildcards_json(self) -> Union[None, str]:
+    def wildcards_json(self) -> None | str:
         """
         Returns the wildcards as a JSON string.
         :return: Wildcards as string
@@ -38,7 +38,7 @@ class Step:
     This class represents a step in a Snakemake pipeline. It executes a single tool.
     """
 
-    def __init__(self, rule_name: str, tool: Tool, wildcards: Any = None, dir_: Optional[Path]= None) -> None:
+    def __init__(self, rule_name: str, tool: Tool, wildcards: Any = None, dir_: Path | None= None) -> None:
         """
         Initializes a step.
         :param rule_name: Name of the rule in Snakemake.

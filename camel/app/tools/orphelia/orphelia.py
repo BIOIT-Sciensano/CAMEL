@@ -31,7 +31,7 @@ class Orphelia(Tool):
         self.__build_command()
         self.__create_orphelia_copy()
         self._command.command = self.__remove_lmod(self._build_dependencies()) + self._command.command
-        self._command.run_command(self.__get_working_folder())
+        self._execute_command()
         self._check_command_output(self._command)
         self.__clean_temp_directory()
         self.__set_output()
@@ -43,7 +43,7 @@ class Orphelia(Tool):
         - Only one input file allowed
         :return: None
         """
-        super(Orphelia, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs:
             raise InvalidToolInputError(f'Invalid input key given for Orphelia, only FASTA allowed: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 1:

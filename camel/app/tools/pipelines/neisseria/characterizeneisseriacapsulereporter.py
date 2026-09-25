@@ -81,8 +81,7 @@ class CharacterizeNeisseriaCapsuleReporter(Tool):
         if len(data_genes) == 0:
             section.add_paragraph('No capsule genes detected.')
         else:
-            data_genes['color'] = data_genes.apply(
-                lambda x: CharacterizeNeisseriaCapsuleReporter.__get_row_color(x), axis=1)
+            data_genes['color'] = data_genes.apply(CharacterizeNeisseriaCapsuleReporter.__get_row_color, axis=1)
             data_genes.sort_values(by='allele_name', inplace=True)
 
             # Add table with overview of the detected genes

@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 from camelcore.app.io.tooliovalue import ToolIOValue
@@ -96,7 +95,7 @@ class FastANIReporter(Tool):
 
     def __add_output_table(
             self, section: HtmlReportSection, header: list[str],
-            data: list[list[Union[str, HtmlTableCell]]]) -> None:
+            data: list[list[str | HtmlTableCell]]) -> None:
         """
         Adds an output table to the HTML report.
         :param section: Report section

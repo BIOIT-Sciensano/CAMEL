@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Optional
 
 from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
@@ -32,7 +31,7 @@ class Fastp(Tool):
             raise InvalidToolInputError('One or two FASTQ input files expected')
         super()._check_input()
 
-    def __get_output_path(self, orientation: Optional[str], compress: bool = True) -> Path:
+    def __get_output_path(self, orientation: str | None, compress: bool = True) -> Path:
         """
         Returns the output filename.
         :param orientation: Read orientation

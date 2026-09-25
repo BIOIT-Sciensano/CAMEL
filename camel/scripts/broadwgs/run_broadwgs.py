@@ -3,16 +3,15 @@ import argparse
 import shutil
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional
 
 import yaml
-
-from camel.app.error.snakemakeexecutionerror import SnakemakeExecutionError
 from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core.snakemake import snakepipelineutils
+from camel.app.error.snakemakeexecutionerror import SnakemakeExecutionError
 from camel.app.loggers import logger
 from camel.app.pipeline.pipeline import Pipeline
 from camel.app.snakemake.snakemakeutils import SnakemakeUtils
-from camel.app.core.snakemake import snakepipelineutils
 from camel.scripts.broadwgs import (
     CONFIG_DATA,
     REFERENCES,
@@ -27,7 +26,7 @@ class MainBroadWGSPipeline:
     Main class to run the GATK best practices workflow
     """
 
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(self, args: Sequence[str] | None = None) -> None:
         """
         Initializes the main class.
         :param args: Arguments (optional)
@@ -182,7 +181,7 @@ class MainBroadWGSPipeline:
 
         return snakepipelineutils.generate_config_file(config_data, self._working_dir)
 
-    def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
+    def _parse_arguments(args: Sequence[str] | None) -> argparse.Namespace:
         """
         Parses the command line arguments.
         :return: Arguments

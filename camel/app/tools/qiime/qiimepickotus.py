@@ -41,7 +41,7 @@ class QiimePickOtus(Qiime):
         Sets the name of the output files
         :return: None
         """
-        basename = super(QiimePickOtus, self)._get_basename()
+        basename = super()._get_basename()
         self._tool_outputs['TSV_Otu'] = [ToolIOFile(self._folder / basename + '_otus.txt')]
         self._tool_outputs['LOG'] = [ToolIOFile(self._folder / basename + '_otus.log')]
 

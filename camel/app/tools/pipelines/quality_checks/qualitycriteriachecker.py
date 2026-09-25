@@ -27,7 +27,7 @@ class QualityCriteriaChecker(Tool):
             raise InvalidToolInputError("No mapping information found")
         if 'fastqc_checks' not in self._input_informs:
             raise InvalidToolInputError("No FASTQC checks information found")
-        super(QualityCriteriaChecker, self)._check_input()
+        super()._check_input()
 
     def _execute_tool(self):
         """

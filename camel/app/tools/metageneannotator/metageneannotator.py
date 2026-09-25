@@ -38,7 +38,7 @@ class MetaGeneAnnotator(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(MetaGeneAnnotator, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs:
             raise InvalidToolInputError('Invalid input keys given for MetaGeneAnnotator, '
                                                  f'only FASTA allowed: {self._tool_inputs!r}')

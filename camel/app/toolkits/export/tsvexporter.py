@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.reports.htmlelement import HtmlElement
 
@@ -10,7 +10,7 @@ class TsvExporter:
     """
 
     @staticmethod
-    def export(output_data: list[list[Any]], header: Optional[list[str]], filename: str | Path,
+    def export(output_data: list[list[Any]], header: list[str] | None, filename: str | Path,
                drop_columns: list[int] = None) -> None:
         """
         Exports output data in TSV format.

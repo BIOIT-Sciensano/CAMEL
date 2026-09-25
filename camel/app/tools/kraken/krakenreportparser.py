@@ -85,7 +85,7 @@ class KrakenReportParser(Tool):
         perc_by_taxid = {tax_id: data['perc_corrected'].sum() for tax_id, data in data_raw.groupby('tax_id')}
 
         # Create column with the correct percentage in the report output
-        data_report['perc_corrected'] = data_report['tax_id'].apply(lambda x: perc_by_taxid.get(x))
+        data_report['perc_corrected'] = data_report['tax_id'].apply(perc_by_taxid.get)
 
         # Set the taxon level based on the indentation
         data_report['level'] = data_report['name'].apply(lambda x: len(re.search(r'^( *)', x).group(1)) // 2)

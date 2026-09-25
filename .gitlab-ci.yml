@@ -1,0 +1,15 @@
+stages:
+  - lint
+
+# Ensure the runner doesn't keep a massive cache of environments in the project folder
+variables:
+  UV_PROJECT_ENVIRONMENT: ".uv_cache"
+  GIT_CLEAN_FLAGS: -ffdx
+
+ruff-lint:
+  stage: lint
+  script:
+    - echo "Running Ruff check via uv..."
+    - uv run --no-project --with ruff ruff check . --config pyproject.toml
+  after_script:
+    - rm -rf .uv_cache

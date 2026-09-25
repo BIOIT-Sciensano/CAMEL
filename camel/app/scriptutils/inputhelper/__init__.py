@@ -1,19 +1,19 @@
 import dataclasses
-from typing import Callable
+from collections.abc import Callable
 
 from camel.app.cli import cliutils
 from camel.app.scriptutils import model
 from camel.app.scriptutils.inputhelper.fastahelper import FastaHelper
 from camel.app.scriptutils.inputhelper.illuminahelper import (
+    IlluminaAssemblyOpts,
     IlluminaHelper,
     IlluminaTrimmingOpts,
-    IlluminaAssemblyOpts,
 )
-from camel.app.scriptutils.inputhelper.inputhelperbase import TrimmingOpts, AssemblyOpts
+from camel.app.scriptutils.inputhelper.inputhelperbase import AssemblyOpts, TrimmingOpts
 from camel.app.scriptutils.inputhelper.onthelper import (
+    ONTAssemblyOpts,
     ONTHelper,
     ONTTrimmingOpts,
-    ONTAssemblyOpts,
 )
 
 helper_by_input_type = {

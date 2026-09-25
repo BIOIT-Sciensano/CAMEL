@@ -1,6 +1,6 @@
+from camel.app.loggers import logger
 from camel.app.toolkits.blasttyping.cluster import Cluster
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
-from camel.app.loggers import logger
 
 
 class BlastHitClustering:

@@ -75,7 +75,8 @@ class AMRAddText(Tool):
         :param img_height: Original img height
         :return: x, y coordinates by message
         """
-        height_by_msg = {msg: font.getsize(msg)[1] for msg, font, _ in messages}
+        # getbbox() returns (left, top, right, bottom); right / bottom match the removed getsize() width / height
+        height_by_msg = {msg: font.getbbox(msg)[3] for msg, font, _ in messages}
         spacing_by_msg = {msg: spacing for msg, _, spacing in messages}
         logger.info(f"Height per message: {height_by_msg} - spacing: {spacing_by_msg}")
         total_height = sum(height_by_msg.values()) + sum([spacing for _, _, spacing in messages])
@@ -90,5 +91,5 @@ class AMRAddText(Tool):
         logger.info(f"Calculated y-coordinates: {y_by_msg}")
 
         # Align horizontally
-        x_by_msg = {msg: 0.5 * (img_width - font.getsize(msg)[0]) for msg, font, _ in messages}
+        x_by_msg = {msg: 0.5 * (img_width - font.getbbox(msg)[2]) for msg, font, _ in messages}
         return x_by_msg, y_by_msg

@@ -15,6 +15,9 @@ class MenDeVAR(Tool):
     coverage for the Bexsero and Trumenba vaccines.
     """
 
+    # Maps the input loci to their locus name in the MenDeVAR database
+    BEXSERO_DB_LOCI = {'fHbp_peptide': 'fHbp', 'NHBA_peptide': 'NHBA', 'NadA_peptide': 'NadA'}
+
     def __init__(self) -> None:
         """
         Initializes the Mendevar tool.
@@ -117,10 +120,6 @@ class MenDeVAR(Tool):
         :param mendevar_db: Pandas DataFrame containing the vaccine coverage for the fHbp, NHBA, NadA and PorA_VR2 loci
         :return: Bexsero reactivity indexes
         """
-        fhbp_db = mendevar_db.loc[mendevar_db['Locus'] == 'fHbp']
-        nhba_db = mendevar_db.loc[mendevar_db['Locus'] == 'NHBA']
-        nada_db = mendevar_db.loc[mendevar_db['Locus'] == 'NadA']
-
         # Missing allele
         if allele == '-':
             return 'none'
@@ -129,26 +128,11 @@ class MenDeVAR(Tool):
         if allele == '?':
             return 'insufficient data'
 
-        # fHbp
-        if locus == 'fHbp_peptide':
-            if (fhbp_db.Allele == allele).any():
-                return fhbp_db.Bexsero_status.loc[fhbp_db['Allele'] == allele].iloc[0]
-            else:
-                return 'insufficient data'
-
-        # NHBA
-        if locus == 'NHBA_peptide':
-            if (nhba_db.Allele == allele).any():
-                return nhba_db.Bexsero_status.loc[nhba_db['Allele'] == allele].iloc[0]
-            else:
-                return 'insufficient data'
-
-        # NadA
-        if locus == 'NadA_peptide':
-            if (nada_db.Allele == allele).any():
-                return nada_db.Bexsero_status.loc[nada_db['Allele'] == allele].iloc[0]
-            else:
-                return 'insufficient data'
+        # fHbp, NHBA and NadA
+        if locus in self.BEXSERO_DB_LOCI:
+            locus_db = mendevar_db.loc[mendevar_db['Locus'] == self.BEXSERO_DB_LOCI[locus]]
+            status = locus_db.loc[locus_db['Allele'] == allele, 'Bexsero_status']
+            return status.iloc[0] if not status.empty else 'insufficient data'
 
         # PorA_VR2
         if locus == 'PorA_VR2':

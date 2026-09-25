@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Any
 
-from camel.app.loggers import logger
 from camel.app.core.snakemake import snakemakeutils
+from camel.app.loggers import logger
 
 DIR_MOB_SUITE = Path('mob_suite')
 SNAKEFILE = f'{Path(__file__).parent / Path(__file__).stem}.smk'

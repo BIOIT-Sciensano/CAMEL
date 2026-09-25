@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from camelcore.app.io.tooliofile import ToolIOFile
 

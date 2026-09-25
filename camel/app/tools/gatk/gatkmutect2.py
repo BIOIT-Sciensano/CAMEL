@@ -23,7 +23,7 @@ class GATKMuTect2(GATK):
     "BAM_NORMAL":       ToolIOFile object. BAM file with normal data for tumor-normal matching.
     "FASTA_REF":        ToolIOFile object. FASTA file containing the reference genome.
     "VCF_DBSNP":        ToolIOFile object. DbSNP reference vcf file location.
-    "TXT_intervals":    ToolIOFile object. Intervals list to restrict search by GATK. Accelerates analysis. Bed or GATK intervals list 
+    "TXT_intervals":    ToolIOFile object. Intervals list to restrict search by GATK. Accelerates analysis. Bed or GATK intervals list
 
     Output:
     -------
@@ -40,7 +40,7 @@ class GATKMuTect2(GATK):
         Initialize GATKMuTect2 tool.
         :return: None
         """
-        super(GATKMuTect2, self).__init__('gatk MuTect2', '3.7')
+        super().__init__('gatk MuTect2', '3.7')
 
         self._required_inputs = ['BAM_TUMOR', 'FASTA_REF']
         self._specific_parameters.extend(["output_bam", "output_active_region_igv"])

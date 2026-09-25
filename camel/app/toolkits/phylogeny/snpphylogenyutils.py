@@ -1,10 +1,11 @@
 import argparse
 import dataclasses
 import datetime
+from collections.abc import Callable
 from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import Any
 
 import click
 import pandas as pd
@@ -38,7 +39,7 @@ class CommonOptions(BaseOptions):
     Common options for the phylogeny pipelines.
     """
     missing_data: str = dataclasses.field()
-    site_cov_cutoff: Optional[int] = None
+    site_cov_cutoff: int | None = None
 
 
 @dataclass(frozen=True)
@@ -91,15 +92,15 @@ class MappingInput:
     This class contains the input for the read mapping step.
     """
     pe: list[ToolIOFile]
-    se_fwd: Optional[ToolIOFile] = None
-    se_rev: Optional[ToolIOFile] = None
+    se_fwd: ToolIOFile | None = None
+    se_rev: ToolIOFile | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """
         Return the mapping input as a dictionary
         :return: Mapping input in YAML format
         """
-        mapping_data: dict[str, Union[list[str], str]] = {'PE': [str(x.path) for x in self.pe]}
+        mapping_data: dict[str, list[str] | str] = {'PE': [str(x.path) for x in self.pe]}
         if self.se_fwd is not None:
             mapping_data['SE_FWD'] = str(self.se_fwd.path)
         if self.se_rev is not None:
@@ -320,7 +321,7 @@ def construct_snp_matrix(sample_names: list[str], vcf_files: list[ToolIOFile], w
     return snp_matrix_constructor.tool_outputs['FASTA'][0]
 
 def add_output_files_section(report: HtmlReport, column_names: list[str], output_files: dict[
-        Sample, list[Optional[Path]]], snp_matrix: Path) -> None:
+        Sample, list[Path | None]], snp_matrix: Path) -> None:
     """
     Adds the section with the output files.
     :param report: Report
@@ -343,7 +344,7 @@ def add_output_files_section(report: HtmlReport, column_names: list[str], output
     # Add other output files table
     table_data = []
     for sample, output in output_files.items():
-        row: list[Union[str, HtmlTableCell]] = [sample.name_full]
+        row: list[str | HtmlTableCell] = [sample.name_full]
         for file_ in output:
             if file_ is None:
                 row.append('Not available')
@@ -406,7 +407,7 @@ def check_snp_matrix_size(snp_matrix: Path, size_min: int = 10, size_max: int = 
             f'SNP matrix is too small ({snp_matrix_size}, min={size_min}) to perform model selection / tree building.')
 
 def add_model_selection_section(
-        report: HtmlReport, model_selection: Optional[ModelSelection] = None, error_message: Optional[str] = None) -> None:
+        report: HtmlReport, model_selection: ModelSelection | None = None, error_message: str | None = None) -> None:
     """
     Adds the section with the model selection results.
     :param report: Report
@@ -453,8 +454,8 @@ def run_model_selection(
     model_selection.run(working_dir)
     return model_selection
 
-def add_tree_building_section(report: HtmlReport, newick_path: Optional[Path] = None,
-                              error_message: Optional[str] = None) -> None:
+def add_tree_building_section(report: HtmlReport, newick_path: Path | None = None,
+                              error_message: str | None = None) -> None:
     """
     Adds the tree building section.
     :param report: Report

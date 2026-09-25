@@ -23,7 +23,7 @@ class GATKHaplotypeCaller(GATK):
         Set the input specification
         :return: None
         """
-        super(GATKHaplotypeCaller, self)._set_input()
+        super()._set_input()
 
         bam_file = self._tool_inputs['BAM'][0].path
         self._input_string += f"-I {bam_file} "
@@ -33,7 +33,7 @@ class GATKHaplotypeCaller(GATK):
         Set the output specification
         :return: None
         """
-        super(GATKHaplotypeCaller, self)._set_output()
+        super()._set_output()
 
         if 'bamOutput' in self._parameters:
             self._tool_outputs['BAM'] = [ToolIOFile(self._folder / self.get_param_value('bamOutput'))]

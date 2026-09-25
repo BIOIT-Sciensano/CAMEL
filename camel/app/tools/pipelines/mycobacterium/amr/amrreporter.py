@@ -2,7 +2,7 @@ import itertools
 import json
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.io.tooliovalue import ToolIOValue
 from camelcore.app.reports.htmlelement import HtmlElement
@@ -295,7 +295,7 @@ class AMRReporter(Tool):
             self._sub_folder, 'regions_resistance.bed'))
         self._section.add_link_to_file('Resistance regions (BED)', relative_path)
 
-    def __save_table(self, table_data: list[list[Any]], header: Optional[list[str]], filename: str) -> Path:
+    def __save_table(self, table_data: list[list[Any]], header: list[str] | None, filename: str) -> Path:
         """
         Saves the table to the report output.
         :param table_data: Table data

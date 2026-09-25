@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
@@ -25,7 +25,7 @@ class TrimmingONTWrapper:
         tsv_summary: Path
         trimmed_reads: list[ToolIOFile]
         informs_trimming: dict[str, Any]
-        log_file: Optional[Path] = None
+        log_file: Path | None = None
 
     def __init__(self, working_dir: Path) -> None:
         """
@@ -35,7 +35,7 @@ class TrimmingONTWrapper:
         self._working_dir = Path(working_dir)
         self._output = None
 
-    def run(self, se_reads: Path, export_fastq: bool = False, additional_opts: Union[dict, None] = None,
+    def run(self, se_reads: Path, export_fastq: bool = False, additional_opts: dict | None = None,
             threads: int = 8) -> None:
         """
         Runs the read trimming workflow.

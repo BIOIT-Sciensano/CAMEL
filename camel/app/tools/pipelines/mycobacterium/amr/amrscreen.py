@@ -2,7 +2,6 @@ import collections
 import json
 import re
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 from Bio.SeqUtils import seq3
@@ -50,7 +49,7 @@ class AMRScreen(Tool):
         super()._check_input()
 
     @staticmethod
-    def __get_matching_region(position: int, regions: pd.DataFrame) -> Union[dict, None]:
+    def __get_matching_region(position: int, regions: pd.DataFrame) -> dict | None:
         """
         Returns the region matching that covers the input position (if available).
         :param position: Genome position
@@ -119,7 +118,7 @@ class AMRScreen(Tool):
             self._informs['version'] = 'n/a'
 
     @staticmethod
-    def __parse_effect(vcf_record: Variant) -> Union[str, None]:
+    def __parse_effect(vcf_record: Variant) -> str | None:
         """
         Parses the mutation effect from the CSQ annotation.
         Note: only extracts it for protein coding regions
@@ -158,7 +157,7 @@ class AMRScreen(Tool):
         """
         af = vcf_record.INFO.get('AF')
         if af is not None:
-            return af[0] if isinstance(af, (tuple, list)) else af
+            return af[0] if isinstance(af, tuple | list) else af
 
         # Check for DP4 (Ref-forward, Ref-reverse, Alt-forward, Alt-reverse)
         dp4 = vcf_record.INFO.get('DP4')

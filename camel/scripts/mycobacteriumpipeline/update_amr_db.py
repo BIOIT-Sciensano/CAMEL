@@ -4,16 +4,15 @@ import re
 import shutil
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import pandas as pd
 from Bio import SeqIO
 from Bio.Data import CodonTable, IUPACData
 from Bio.Seq import Seq
 
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.toolkits.mycobacterium.amrutils import ConfidenceLevel
-
 
 # Example usage:
 # update_amr_db.py \
@@ -38,7 +37,7 @@ class UpdateAMRDB:
         '5) Not assoc w R': ConfidenceLevel.ASSOC_S
     }
 
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(self, args: Sequence[str] | None = None) -> None:
         """
         Initializes the updater.
         :param args: Command line arguments
@@ -54,7 +53,7 @@ class UpdateAMRDB:
         self._gff_by_locus_tag = {}
 
     @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]]) -> argparse.Namespace:
+    def _parse_arguments(args: Sequence[str] | None) -> argparse.Namespace:
         """
         Parses the command line arguments.
         :param args: Arguments (optional)
@@ -346,7 +345,7 @@ class UpdateAMRDB:
         return pd.DataFrame(records_out)
 
     @staticmethod
-    def __get_matching_region(position: int, regions: list[dict]) -> Union[str, None]:
+    def __get_matching_region(position: int, regions: list[dict]) -> str | None:
         """
         Returns the region matching that covers the input position (if available).
         :param position: Genome position

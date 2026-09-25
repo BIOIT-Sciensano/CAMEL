@@ -37,7 +37,7 @@ class Prinseq(Tool):
         - No other input keys are allowed
         :return: None
         """
-        super(Prinseq, self)._check_input()
+        super()._check_input()
         if len(self._tool_inputs.keys()) != 1:
             raise ValueError(f'Too many input keys given voor PRINSEQ: {self._tool_inputs!r}')
         if list(self._tool_inputs.keys())[0] not in ['FASTQ_PE', 'FASTA_PE', 'FASTQ_SE', 'FASTA_SE']:

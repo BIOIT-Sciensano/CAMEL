@@ -7,8 +7,8 @@ from typing import Any
 import click
 
 from camel.app.cli import cliutils
-from camel.app.core.snakemake import snakepipelineutils, snakemakeutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipeutils import dict_merge

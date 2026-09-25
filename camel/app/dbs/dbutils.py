@@ -7,12 +7,12 @@ from typing import Any
 import click
 import humanize
 import requests
+from camelcore.app.utils import fileutils
 from furl import furl
 from pydantic import BaseModel
 
 from camel.app.config import config
 from camel.app.core import cameltesthelper
-from camelcore.app.utils import fileutils
 from camel.app.dbs import typingdbdownload
 from camel.app.loggers import logger
 

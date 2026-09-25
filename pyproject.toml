@@ -25,7 +25,7 @@ classifiers = [
 ]
 
 dependencies = [
-  "Pillow==9.5.0",
+  "Pillow>=10.1",
   "PuLP==2.7.0",
   "biopython",
   "bs4",
@@ -79,6 +79,11 @@ version = {attr = "camel.version.__VERSION__"}
 
 [tool.ruff]
 line-length = 120
+extend-exclude = [
+    "camel/scripts/gatksomaticvariantcalling",
+    "camel/scripts/broadwgs",
+    "camel/app/tools/gatk"
+]
 
 [tool.ruff.lint]
 select = [
@@ -98,9 +103,11 @@ ignore = [
     "D400",
     "D401",
     "PLW1510",
+    "PLR0917",
     "PLR2004",
     "PLR0913",
-    "PLR0911"
+    "PLR0911",
+    "UP046"
 ]
 
 [tool.ruff.lint.pydocstyle]

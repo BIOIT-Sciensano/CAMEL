@@ -49,7 +49,7 @@ class Qiime(Tool):
                 file_params.append(name)
         if excluded_parameters is not None:
             file_params += excluded_parameters
-        return super(Qiime, self)._build_options(excluded_parameters=file_params, delimiter=separator)
+        return super()._build_options(excluded_parameters=file_params, delimiter=separator)
 
     def _build_command(self):
         """

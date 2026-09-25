@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Union
 
 from camelcore.app.io.tooliodirectory import ToolIODirectory
 from camelcore.app.io.tooliofile import ToolIOFile
@@ -73,7 +72,7 @@ class DBManager(Tool):
         self._informs.update(metadata)
         self._informs['mapping'] = self.__get_mapping(input_folder)
 
-    def __get_mapping(self, dir_in: Path) -> Union[Mapping, MappingJSON]:
+    def __get_mapping(self, dir_in: Path) -> Mapping | MappingJSON:
         """
         Returns the mapping of the standardized header to the original header.
         :param dir_in: Input folder

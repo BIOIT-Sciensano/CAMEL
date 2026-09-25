@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
@@ -30,7 +29,7 @@ class Minimap2Mapping(ToolPipeable):
         self._execute_command()
         self.__set_output(path_out)
 
-    def __build_command(self, path_out: Optional[Path], pipe_out: bool = False) -> None:
+    def __build_command(self, path_out: Path | None, pipe_out: bool = False) -> None:
         """
         Builds the command line call.
         :param path_out: Output filename

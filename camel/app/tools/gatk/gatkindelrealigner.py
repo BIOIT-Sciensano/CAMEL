@@ -25,7 +25,7 @@ class GATKIndelRealigner(GATK):
         Set the input specification
         :return: None
         """
-        super(GATKIndelRealigner, self)._set_input()
+        super()._set_input()
 
         bam_file = self._tool_inputs['BAM'][0].path
         self._input_string += f"-I {bam_file} "

@@ -1,4 +1,3 @@
-from typing import Optional, Union
 
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
@@ -11,7 +10,7 @@ class GeneDetectionSRST2Hit(GeneDetectionHitBase):
     This class represents a gene detection hit detected with BLAST.
     """
 
-    def __init__(self, cluster: str, locus: str, accession: Optional[str], length: int, mismatches: str,
+    def __init__(self, cluster: str, locus: str, accession: str | None, length: int, mismatches: str,
                  uncertainty: str, coverage: float, divergence: float, depth: float) -> None:
         """
         Initializes this hit.
@@ -82,7 +81,7 @@ class GeneDetectionSRST2Hit(GeneDetectionHitBase):
         return self.table_column_names[1:]
 
     def to_html_row(self, report_section: HtmlReportSection, sub_directory: str, colored: bool = True) \
-            -> list[Union[str, HtmlTableCell]]:
+            -> list[str | HtmlTableCell]:
         """
         Returns the hit as a HTML table row.
         :param report_section: Section is passed to save additional data

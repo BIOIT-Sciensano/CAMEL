@@ -43,7 +43,7 @@ class Interproscan(Tool):
         - Only one input file allowed per input key
         :return: None
         """
-        super(Interproscan, self)._check_input()
+        super()._check_input()
         if len(self._tool_inputs.keys()) != 1:
             raise InvalidToolInputError('Invalid number of input keys given for InterProScan, only FASTA_Nucl '
                                                  f'or FASTA_Prot allowed: {self._tool_inputs!r}')
@@ -127,7 +127,7 @@ class Interproscan(Tool):
         Creates the string with all the specified parameters
         :return: String with command parameters
         """
-        option_list = super(Interproscan, self)._build_options()
+        option_list = super()._build_options()
         option_list.append(f'--output-dir {self._folder}')
         option_list.append(f'--tempdir {self.__get_temp_dir()}')
         return ' '.join(option_list)

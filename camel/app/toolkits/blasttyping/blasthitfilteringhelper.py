@@ -1,8 +1,6 @@
-from typing import Union
-
+from camel.app.loggers import logger
 from camel.app.toolkits.genedetection.genedetectionblasthit import GeneDetectionBlastHit
 from camel.app.toolkits.sequencetyping.typingblasthit import TypingBlastHit
-from camel.app.loggers import logger
 
 
 class BlastHitFilteringHelper:
@@ -10,7 +8,7 @@ class BlastHitFilteringHelper:
     Class that filters list of BlastHit objects.
     """
 
-    BlastHit = Union[GeneDetectionBlastHit, TypingBlastHit]
+    BlastHit = GeneDetectionBlastHit | TypingBlastHit
 
     @staticmethod
     def detect_best_hits(hits: list[BlastHit]) -> list[BlastHit]:

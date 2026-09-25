@@ -94,7 +94,7 @@ class AMRFinderReporter(Tool):
 
         # Overview table
         if len(data_out) > 0:
-            data_out['row_color'] = data_out.apply(lambda x: AMRFinderReporter.__determine_row_color(x), axis=1)
+            data_out['row_color'] = data_out.apply(AMRFinderReporter.__determine_row_color, axis=1)
             section.add_header('Overview', level=3)
             data_out['Class'] = data_out['Class'].apply(lambda x: ', '.join([p.title() for p in x.split('/')]))
             data_out['Subclass'] = data_out['Subclass'].apply(lambda x: ', '.join([p.title() for p in x.split('/')]))

@@ -1,4 +1,3 @@
-
 from enum import Enum
 
 from camel.app.core.tool import Tool
@@ -6,6 +5,10 @@ from camel.app.toolkits.sequencetyping.typingblasthit import TypingBlastHit
 
 
 class DetectionCategory(Enum):
+    """
+    Represent categories of serogroup detection based on the hits.
+    """
+
     ALL_PERFECT = 1
     IMPERFECT_IDENTITY = 2
     IMPERFECT_ALL = 3

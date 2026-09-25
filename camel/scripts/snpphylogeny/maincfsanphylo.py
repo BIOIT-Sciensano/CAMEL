@@ -5,11 +5,11 @@ import shutil
 from pathlib import Path
 
 import click
-
-from camel.app.cli import cliutils
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.io.tooliovalue import ToolIOValue
 from camelcore.app.utils import reportutils
+
+from camel.app.cli import cliutils
 from camel.app.loggers import initialize_logging
 from camel.app.scriptutils.model import BaseOptions
 from camel.app.toolkits.phylogeny import snpphylogenyutils
