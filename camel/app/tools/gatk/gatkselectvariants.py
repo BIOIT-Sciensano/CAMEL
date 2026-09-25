@@ -1,5 +1,9 @@
 import re
+import shlex
 
+from camelcore.app.io.tooliofile import ToolIOFile
+
+from camel.app.core import toolutils
 from camel.app.core.errors import InvalidParameterError, InvalidToolInputError
 from camel.app.loggers import logger
 from camel.app.tools.gatk.gatk import GATK
@@ -7,92 +11,91 @@ from camel.app.tools.gatk.gatk import GATK
 
 class GATKSelectVariants(GATK):
     """
-    Class for GATK SelectVariants function
+    Selects a subset of variants from a VCF file.
+
+    Required inputs:
+    - VCF: Variants
+    - FASTA_REF: Reference genome
+
+    Optional inputs:
+    - SAMPLES: Names of the samples to include (ToolIOValue)
+    - XL_SAMPLES: Names of the samples to exclude (ToolIOValue)
+    - VCF_concordance: Only select the variants that are also present in this VCF file
+    - VCF_discordance: Only select the variants that are not present in this VCF file
+    - TXT_intervals: Intervals to restrict the analysis to
+
+    Outputs:
+    - VCF: Selected variants
     """
 
-    def __init__(self):
+    # Parameters that accept a comma separated list of values, passed to GATK as a repeated option
+    MULTI_VALUE_PARAMETERS = ['select_type_to_exclude', 'select_type_to_include']
+
+    def __init__(self) -> None:
         """
-        Initialize a picard tool
+        Initializes this tool.
         :return: None
         """
-        super().__init__('gatk SelectVariants', '3.7')
-        self._specific_parameters = ['selectTypeToExlcude', 'selectTypeToInclude', 'select']
-        self._required_inputs = ['VCF']
-        self._output_type = 'VCF'
+        super().__init__('gatk SelectVariants')
 
-    def _check_parameters(self):
+    def _check_parameters(self) -> None:
         """
-        Check the parameters set to run this tool
+        Checks if the parameters are valid.
         :return: None
         """
-        if 'select' in self._parameters:
-            select_exp = self._parameters['select'].value
-            if not select_exp:
-                raise InvalidParameterError(
-                    "Selection criterion of 'select' option is required.")
-            if re.search(r'\s', select_exp):
-                raise InvalidParameterError(
-                    f"No space in the 'select' option JEXL expression. e.g., 'DQ>100', not 'DQ > 100'. Expression specified {select_exp}.")
-        else:
-            logger.warning("GATK SelectVariants run without specify variant selection criterion.")
+        super()._check_parameters()
+        if 'select' not in self._parameters:
+            logger.warning("No variant selection criterion ('select') specified")
+        elif not self.get_param_value('select'):
+            raise InvalidParameterError("The 'select' parameter requires a JEXL expression")
+        # The GATK wrapper script does not quote its arguments, so an expression with whitespace would be split
+        elif re.search(r'\s', self.get_param_value('select')):
+            raise InvalidParameterError(
+                f"The 'select' JEXL expression cannot contain whitespace (e.g. 'DP>100', not 'DP > 100'): "
+                f"{self.get_param_value('select')}")
 
-    def _check_input(self):
+    def _check_input(self) -> None:
         """
-        Check input for a tool and prepare command line parameters for input
+        Checks if the provided input files are valid.
         :return: None
         """
-        super(GATKSelectVariants, self)._check_input()
+        toolutils.check_input(self, keys_required=['VCF', 'FASTA_REF'])
+        for key in ('VCF_concordance', 'VCF_discordance'):
+            if len(self._tool_inputs.get(key, [])) > 1:
+                raise InvalidToolInputError(f"Only one '{key}' input file is supported")
+        super()._check_input()
 
-        if 'VCF_concordance' in self._tool_inputs and len(self._tool_inputs['VCF_concordance']) > 1:
-            raise InvalidToolInputError('SelectVariant support only ONE concordance VCF file.')
-
-        if 'VCF_discordance' in self._tool_inputs and len(self._tool_inputs['VCF_discordance']) > 1:
-            raise InvalidToolInputError('SelectVariant support only ONE discordance VCF file.')
-
-    def _set_input(self):
+    def _get_input_options(self) -> list[str]:
         """
-        Set the input specification
-        :return: None
+        Returns the command line options for the input files.
+        :return: Input options
         """
-        super(GATKSelectVariants, self)._set_input()
-
-        # To extract only certain samples
-        if 'SAMPLES' in self._tool_inputs:
-            for sample_name in self._tool_inputs['SAMPLES']:
-                self._input_string += f'--sample_name {sample_name.value} '
-
-        # To exclude certain samples
-        if 'XL_SAMPLES' in self._tool_inputs:
-            for sample_name in self._tool_inputs['XL_SAMPLES']:
-                self._input_string += f'--exclude_sample_name {sample_name.value} '
-
-        # Variant comparison (with those reported in another VCF file)
-        # - concordance only
+        options = [*super()._get_input_options(), f"-V {self._tool_inputs['VCF'][0].path}"]
+        options.extend(f'--sample_name {sample.value}' for sample in self._tool_inputs.get('SAMPLES', []))
+        options.extend(f'--exclude_sample_name {sample.value}' for sample in self._tool_inputs.get('XL_SAMPLES', []))
         if 'VCF_concordance' in self._tool_inputs:
-            self._input_string += '--concordance {} '.format(self._tool_inputs['VCF_concordance'][0].path)
-        # - discordance only
+            options.append(f"--concordance {self._tool_inputs['VCF_concordance'][0].path}")
         if 'VCF_discordance' in self._tool_inputs:
-            self._input_string += '--discordance {} '.format(self._tool_inputs['VCF_discordance'][0].path)
+            options.append(f"--discordance {self._tool_inputs['VCF_discordance'][0].path}")
+        return options
 
-    def _set_specific_parameters(self):
+    def _get_parameter_options(self) -> list[str]:
         """
-        Set specific parameters that need special handling
+        Returns the command line options for the parameters.
+        :return: Parameter options
+        """
+        options = self._build_options(excluded_parameters=['select', *GATKSelectVariants.MULTI_VALUE_PARAMETERS])
+        for key in GATKSelectVariants.MULTI_VALUE_PARAMETERS:
+            if key in self._parameters:
+                option = self._parameters[key].option
+                options.extend(f'{option} {value}' for value in str(self.get_param_value(key)).split(','))
+        if 'select' in self._parameters:
+            options.append(f"{self._parameters['select'].option} {shlex.quote(self.get_param_value('select'))}")
+        return options
+
+    def _set_output(self) -> None:
+        """
+        Sets the output of this tool.
         :return: None
         """
-        if 'selectTypeToExclude' in self._parameters:
-            option = self._parameters['selectTypeToExclude'].option
-            value = self._parameters['selectTypeToExclude'].value
-            excluded_types = value.split(",")
-            for ex_type in excluded_types:
-                self._option_string += f"{option} {ex_type!r} "
-
-        if 'selectTypeToInclude' in self._parameters:
-            option = self._parameters['selectTypeToInclude'].option
-            value = self._parameters['selectTypeToInclude'].value
-            selected_types = value.split(",")
-            for se_type in selected_types:
-                self._option_string += f"{option} {se_type!r} "
-
-        if 'select' in self._parameters:
-            select_opt = self._parameters['select']
-            self._option_string += f"{select_opt.option} {select_opt.value!r} "
+        self._tool_outputs['VCF'] = [ToolIOFile(self.folder / self.get_param_value('output'))]
