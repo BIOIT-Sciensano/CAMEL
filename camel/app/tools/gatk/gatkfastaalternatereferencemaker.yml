@@ -10,18 +10,15 @@ parameters:
     default: false
     mandatory: false
     option: null
-    p_index: 0
-    value: "true"
+    flag: true
   output:
     default: true
     mandatory: false
-    option: -o
-    p_index: 0
+    option: '-o'
     value: consensus_sequences.fa
-  'useIUPACsample ':
+  use_iupac_sample:
     default: false
     mandatory: false
-    option: -IUPAC
-    p_index: 10
+    option: '-IUPAC'
     value: null
 tool_command: run_gatk.sh -T FastaAlternateReferenceMaker
