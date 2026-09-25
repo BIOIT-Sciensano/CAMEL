@@ -10,6 +10,6 @@ ruff-lint:
   stage: lint
   script:
     - echo "Running Ruff check via uv..."
-    - uv run --with ruff ruff check . --config pyproject.toml
+    - uv run --no-project --with ruff ruff check . --config pyproject.toml
   after_script:
     - rm -rf .uv_cache
