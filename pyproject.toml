@@ -81,8 +81,7 @@ version = {attr = "camel.version.__VERSION__"}
 line-length = 120
 extend-exclude = [
     "camel/scripts/gatksomaticvariantcalling",
-    "camel/scripts/broadwgs",
-    "camel/app/tools/gatk"
+    "camel/scripts/broadwgs"
 ]
 
 [tool.ruff.lint]
