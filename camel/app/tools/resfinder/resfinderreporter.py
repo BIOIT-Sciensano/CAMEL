@@ -179,7 +179,7 @@ class ResFinderReporter(Tool):
         if not data_genes.empty:
             data_genes['perc_cov'] = data_genes['Alignment Length/Gene Length'].apply(
                 lambda x: 100 * int(x.split('/')[0]) / int(x.split('/')[1]))
-            data_genes['color'] = data_genes.apply(lambda row: ResFinderReporter.__get_row_color(row), axis=1)
+            data_genes['color'] = data_genes.apply(ResFinderReporter.__get_row_color, axis=1)
 
             # Add table
             section.add_table([[

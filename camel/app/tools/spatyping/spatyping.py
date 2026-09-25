@@ -109,7 +109,7 @@ class SpaTyping(Tool):
             if (not SpaTyping.__calculate_percent_covered(h) > 90) or (not h['pident'] > 90):
                 continue
             filtered_hits.append(h)
-        filtered_hits.sort(key=lambda x: self.__calculate_percent_covered(x), reverse=True)
+        filtered_hits.sort(key=self.__calculate_percent_covered, reverse=True)
         return filtered_hits
 
     def __convert_blast_output(self, blast_output: list[dict[str, Any]], profiles: dict[str, list[int]]) -> \

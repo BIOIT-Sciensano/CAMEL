@@ -72,7 +72,7 @@ class ShigaTyperReporter(Tool):
         """
         # Parse the input files
         gene_hits = pd.read_table(self._tool_inputs['TSV_HITS'][0].path)
-        gene_hits['color'] = gene_hits.apply(lambda x: ShigaTyperReporter.get_color(x), axis=1)
+        gene_hits['color'] = gene_hits.apply(ShigaTyperReporter.get_color, axis=1)
 
         # Remove the sample ID column
         gene_hits.pop('Unnamed: 0')

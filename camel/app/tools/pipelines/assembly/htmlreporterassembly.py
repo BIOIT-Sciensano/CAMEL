@@ -27,9 +27,6 @@ class HtmlReporterAssembly(Tool):
         Executes this tool.
         :return: None
         """
-        import pprint
-        pprint.pprint(self._input_informs)
-        print('^ ^ ^' * 10)
         self._report_section = HtmlReportSection('Assembly', subtitle=self._input_informs['assembler'])
         self.__add_assembly_info()
         self.__add_assembly_download_link()

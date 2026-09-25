@@ -70,7 +70,7 @@ class MOBReconReporter(Tool):
             return
 
         data_overview['id'] = data_overview['sample_id'].apply(lambda x: re.search('.*:(.*)', x).group(1))
-        data_overview['id'] = data_overview['id'].apply(lambda x: MOBReconReporter.format_plasmid_id(x))
+        data_overview['id'] = data_overview['id'].apply(MOBReconReporter.format_plasmid_id)
         section.add_header('Overview', 3)
         table_data = [
             [d.get('fmt', lambda x: x)(row[col]) for
