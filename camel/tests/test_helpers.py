@@ -4,12 +4,12 @@ from pathlib import Path
 from typing import Any
 
 import click
+from camelcore.app.io.serialization import IOEncoder, io_hook
 from camelcore.app.utils import fastautils, fastqutils, reportutils
 
 from camel.app.cli import cliutils
 from camel.app.config import config
 from camel.app.core.cameltesthelper import running_dir
-from camel.app.core.snakemake.snakemakeutils import IOEncoder, io_hook
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.inputhelper import helper_by_input_type
 from camel.app.scriptutils.inputhelper.illuminahelper import (
