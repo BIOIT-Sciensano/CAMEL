@@ -41,7 +41,7 @@ class QiimePickRepSet(Qiime):
         Sets the name of the output files
         :return: None
         """
-        basename = super(QiimePickRepSet, self)._get_basename('TSV_Otu')
+        basename = super()._get_basename('TSV_Otu')
         self._tool_outputs['FASTA'] = [ToolIOFile(self._folder / f'{basename}_rep_set.fasta')]
 
     def _build_input_string(self):
@@ -49,7 +49,7 @@ class QiimePickRepSet(Qiime):
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        basename = super(QiimePickRepSet, self)._get_basename('TSV_Otu')
+        basename = super()._get_basename('TSV_Otu')
         input_string = '-i {}'.format(self._tool_inputs['TSV_Otu'][0])
         if 'FASTA' in self._tool_inputs:
             input_string += ' -f {}'.format(self._tool_inputs['FASTA'][0])

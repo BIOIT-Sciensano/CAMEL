@@ -36,7 +36,7 @@ class QiimeSummarizeTaxa(Qiime):
         Sets the name of the output files
         :return: None
         """
-        basename = super(QiimeSummarizeTaxa, self)._get_basename('BIOM')
+        basename = super()._get_basename('BIOM')
         self._tool_outputs['BIOM'] = []
         self._tool_outputs['TSV_Taxonomy'] = []
         for level in self.__get_levels():

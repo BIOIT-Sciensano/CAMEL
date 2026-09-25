@@ -157,7 +157,7 @@ class AMRScreen(Tool):
         """
         af = vcf_record.INFO.get('AF')
         if af is not None:
-            return af[0] if isinstance(af, (tuple, list)) else af
+            return af[0] if isinstance(af, tuple | list) else af
 
         # Check for DP4 (Ref-forward, Ref-reverse, Alt-forward, Alt-reverse)
         dp4 = vcf_record.INFO.get('DP4')

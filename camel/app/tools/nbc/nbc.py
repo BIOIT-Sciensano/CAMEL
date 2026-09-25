@@ -43,7 +43,7 @@ class Nbc(Tool):
         - Only one input file allowed
         :return: None
         """
-        super(Nbc, self)._check_input()
+        super()._check_input()
         if 'FASTA' not in self._tool_inputs or 'DB' not in self._tool_inputs:
             raise InvalidToolInputError(f'Invalid input keys given for NBC, FASTA and DB required: {self._tool_inputs!r}')
         if len(self._tool_inputs.keys()) != 2:

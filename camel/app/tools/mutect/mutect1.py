@@ -12,25 +12,25 @@ class Mutect1(Tool):
     ===========
     Mutect (v1).
     ===========
-    Performs somatic variant calling, e.g. for oncology-related NGS data. 
+    Performs somatic variant calling, e.g. for oncology-related NGS data.
     Mutect V1 only calls snps, not indels. For indels, use Mutect2.
-    
+
     Required inputs:
     ----------------
     "BAM_TUMOR":        ToolIOFile object. BAM file with tumour data
-    
+
     Optional input:
     ---------------
     "BAM_NORMAL":       ToolIOFile object. BAM file with normal data for tumor-normal matching.
     "FASTA_REF":        ToolIOFile object. FASTA file containing the reference genome.
     "VCF_DBSNP":        ToolIOFile object. DbSNP reference vcf file location.
-    "TXT_intervals":    ToolIOFile object. Intervals list to restrict search by GATK. Accelerates analysis. Bed or GATK intervals list 
-    
+    "TXT_intervals":    ToolIOFile object. Intervals list to restrict search by GATK. Accelerates analysis. Bed or GATK intervals list
+
     Output:
     -------
     "TXT_CALL_STATS":   ToolIOFile object. GATK Call stats text based file. Parse-able by scripts or in excel sheets.
     "VCF":              ToolIOFile object. VCF file.
-    
+
     Mandatory parameters:
     ---------------------
     - output_callstats_file
@@ -59,7 +59,7 @@ class Mutect1(Tool):
         Check that input is valid (super method) and that required parameters are present.
         :return: None
         """
-        super(Mutect1, self)._check_input()
+        super()._check_input()
 
         for input_key in self._required_inputs:
             if input_key not in self._tool_inputs:
@@ -69,15 +69,15 @@ class Mutect1(Tool):
     def _check_parameters(self):
         """
         Checks that parameters are valid.
-        :return: None 
+        :return: None
         """
-        super(Mutect1, self)._check_parameters()
+        super()._check_parameters()
 
-    def __build_command(self):
+    def __build_command(self) -> None:
         """
         Build the command to run the tool.
         Concatenates strings into the command string.
-        :return: 
+        :return: None
         """
         input_string = self.__create_input_string()
         options_string = ' '.join(self._build_options())
@@ -85,7 +85,7 @@ class Mutect1(Tool):
 
     def __create_input_string(self):
         """
-        Add the input specification in the input_string: 
+        Add the input specification in the input_string.
         - DBSNP VCF file
         - reference fasta (default or superseded)
         - tumour BAM file
@@ -114,7 +114,7 @@ class Mutect1(Tool):
 
     def __set_output(self):
         """
-        Set the output specifications in the Camel ouptut list: 
+        Set the output specifications in the Camel ouptut list.
         - call_stats file
         - vcf file
         :return: None
@@ -130,4 +130,4 @@ class Mutect1(Tool):
         """
         if len(self._command.stdout.split('\n')) > 1:
             if not re.match('Exit status: 0', self.stdout.split('\n')[-2].rstrip()):
-                raise ToolExecutionError(f"Mutect1 fails to run, message: \n{self.stdout}")
+                raise ToolExecutionError(self.name, f"Mutect1 fails to run, message: \n{self._command.stdout}")

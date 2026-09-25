@@ -41,7 +41,7 @@ class QiimeMakeOtuTable(Qiime):
         Sets the name of the output files
         :return: None
         """
-        basename = super(QiimeMakeOtuTable, self)._get_basename('TSV_Otu')
+        basename = super()._get_basename('TSV_Otu')
         self._tool_outputs['BIOM'] = [ToolIOFile(self._folder / basename + '_otu_table.biom')]
 
     def _build_input_string(self):
@@ -49,7 +49,7 @@ class QiimeMakeOtuTable(Qiime):
         Creates the string with the input files and output directories
         :return: String with the input parameters
         """
-        basename = super(QiimeMakeOtuTable, self)._get_basename('TSV_Otu')
+        basename = super()._get_basename('TSV_Otu')
         input_string = '-i {}'.format(self._tool_inputs['TSV_Otu'][0])
         if 'TSV_Taxonomy' in self._tool_inputs:
             input_string += ' -t {}'.format(self._tool_inputs['FASTA'][0])
