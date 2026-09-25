@@ -1,17 +1,10 @@
 from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core import toolutils
-
-
-
-
 from camel.app.tools.gatk.gatk import GATK
 
 
 class GATKGenotypeGVCFs(GATK):
-
-
-
     """
     Performs joint genotyping on one or more gVCF files produced by HaplotypeCaller.
 
