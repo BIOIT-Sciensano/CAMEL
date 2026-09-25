@@ -1,6 +1,8 @@
+import logging
 import os
 import shutil
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -63,7 +65,52 @@ class CamelTestSuite(unittest.TestCase):
             return
         if Path(self.running_dir).exists():
             logger.debug(f"Removing working directory: {self.running_dir}")
-            shutil.rmtree(self.running_dir)
+            CamelTestSuite._close_file_handlers(Path(self.running_dir))
+            CamelTestSuite._remove_dir(Path(self.running_dir))
+
+    @staticmethod
+    def _close_file_handlers(dir_: Path) -> None:
+        """
+        Closes and detaches the logging file handlers that write into the given directory.
+        Open file handles prevent removing the directory on NFS (which renames files before removing).
+        :param dir_: Directory
+        :return: None
+        """
+        dir_resolved = dir_.resolve()
+        all_loggers = [logging.getLogger()] + [
+            obj for obj in logging.Logger.manager.loggerDict.values() if isinstance(obj, logging.Logger)
+        ]
+        for logger_obj in all_loggers:
+            for handler in list(logger_obj.handlers):
+                if not isinstance(handler, logging.FileHandler):
+                    continue
+                if not Path(handler.baseFilename).resolve().is_relative_to(dir_resolved):
+                    continue
+                logger.warning(f"Closing log handler left open in test directory: {handler.baseFilename}")
+                handler.close()
+                logger_obj.removeHandler(handler)
+
+    @staticmethod
+    def _remove_dir(dir_: Path, attempts: int = 5, delay: float = 1.0) -> None:
+        """
+        Removes the given directory, retrying to give NFS time to release files that were just closed.
+        :param dir_: Directory
+        :param attempts: Number of attempts
+        :param delay: Delay between attempts (in seconds)
+        :return: None
+        """
+        for attempt in range(1, attempts + 1):
+            try:
+                shutil.rmtree(dir_)
+                return
+            except OSError as err:
+                remaining = [str(p.relative_to(dir_)) for p in dir_.rglob('*') if p.is_file()] if dir_.exists() else []
+                logger.warning(
+                    f"Cannot remove directory (attempt {attempt}/{attempts}): {err}, remaining files: {remaining[:20]}"
+                )
+                if attempt == attempts:
+                    raise
+                time.sleep(delay)
 
     def verify_output_files(self, tool: Tool, key: str, nb_files: int = 1) -> None:
         """

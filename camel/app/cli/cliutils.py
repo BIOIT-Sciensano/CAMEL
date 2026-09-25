@@ -169,5 +169,5 @@ def invoke(script: Callable, args: list[str]) -> Result:
     if result.exception is not None:
         logger.warning("".join(traceback.format_exception(result.exception)))
     logger.info(f"stdout: {result.stdout}")
-    logger.info(f"stderr: {result.stdout}")
+    logger.info(f"stderr: {result.stderr}")
     return result

@@ -76,21 +76,24 @@ class Step:
         :return: None
         """
         loggers.attach_step_handler(self._dir / 'logs', logging.DEBUG)
-        with Path(self._dir / 'logs' / 'rulename.txt').open('a') as handle:
-            handle.write(self.name)
-            handle.write('\n')
-        logger.info(f'Running step: {self.name}')
-        # self._tool.add_input_files(self._step_inputs)
-        # self._tool.add_input_informs(self._input_informs)
-        logger.debug(f"Tool inputs: {self._tool.tool_inputs}")
-        logger.info(f"Default parameters loaded: {toolutils.show_parameters(self._tool)}")
-        dir_tool = self._dir / 'work'
-        dir_tool.mkdir(exist_ok=True)
-        self._tool.run(dir_tool)
-        logger.info(f'Step output: {list(self._tool.tool_outputs.items())}')
-        logger.info(f'Step informs: {list(self._tool.informs.items())}')
-        self._log_outputs()
-        loggers.detach_step_handlers()
+        try:
+            with Path(self._dir / 'logs' / 'rulename.txt').open('a') as handle:
+                handle.write(self.name)
+                handle.write('\n')
+            logger.info(f'Running step: {self.name}')
+            # self._tool.add_input_files(self._step_inputs)
+            # self._tool.add_input_informs(self._input_informs)
+            logger.debug(f"Tool inputs: {self._tool.tool_inputs}")
+            logger.info(f"Default parameters loaded: {toolutils.show_parameters(self._tool)}")
+            dir_tool = self._dir / 'work'
+            dir_tool.mkdir(exist_ok=True)
+            self._tool.run(dir_tool)
+            logger.info(f'Step output: {list(self._tool.tool_outputs.items())}')
+            logger.info(f'Step informs: {list(self._tool.informs.items())}')
+            self._log_outputs()
+        finally:
+            # Always close the step log, otherwise a failing step leaves the file open
+            loggers.detach_step_handlers()
 
     def run_step(self) -> None:
         """
