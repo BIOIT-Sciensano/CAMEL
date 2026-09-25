@@ -1,68 +1,71 @@
 from camelcore.app.io.tooliofile import ToolIOFile
 
+from camel.app.core import toolutils
+from camel.app.core.errors import InvalidParameterError
 from camel.app.tools.gatk.gatk import GATK
 
 
 class GATKAnalyzeCovariates(GATK):
     """
-    ==========================
-    GATK AnalyzeCovariates 3.7
-    ==========================
-    Analyses and generates plots about covariates analysed during Base Quality Score Recalibration step and used to recalibrate bases.
-    web: https://software.broadinstitute.org/gatk/gatkdocs/3.5-0/org_broadinstitute_gatk_tools_walkers_bqsr_AnalyzeCovariates.php
+    Generates plots and data about the covariates used during base quality score recalibration (BQSR).
 
     Required inputs:
-    ----------------
-    'TXT_TABLE_BEFORE': ToolIOFile object. Base quality score recalibration table on original data. GATK text format.
-    'TXT_TABLE_AFTER':  ToolIOFile object. Base quality score recalibration table on recalibrated data. GATK text format.
-    'FASTA_REF':        ToolIOFile object. FASTA file containing the reference genome.
+    - TXT_TABLE_BEFORE: Recalibration table of the original data
+    - TXT_TABLE_AFTER: Recalibration table of the recalibrated data
+    - FASTA_REF: Reference genome
 
-    Optional input:
-    ---------------
-    'BQSR':             ToolIOFile object. Base quality score recalibration table on extra data. GATK text format.
+    Optional inputs:
+    - BQSR: Additional recalibration table
 
-    Output:
-    -------
-    'PDF':              ToolIOFile object. pdf document with graphs of recalibration.
-    'CSV':              ToolIOFile object. csv with recalibration covariates data used for generating the pdf output.
-
-    Mandatory parameters:
-    ---------------------
-    - pdf_output       pdf output file name. Default value: 'recal_QC_plots.pdf'
+    Outputs (at least one is required):
+    - PDF: Recalibration plots (if 'pdf_output' is set, requires the R packages ggplot2, gplots, reshape and gsalib)
+    - CSV: Recalibration covariates data (if 'csv_output' is set)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize GATKAnalyzeCovariates tool.
+        Initializes this tool.
         :return: None
         """
-        super().__init__('gatk AnalyzeCovariates', '3.7')
+        super().__init__('gatk AnalyzeCovariates')
 
-        self._required_inputs = ['TXT_TABLE_BEFORE', 'TXT_TABLE_AFTER', 'FASTA_REF']
-
-    def _set_input(self):
+    def _check_parameters(self) -> None:
         """
-        Set the input specification in the input_string:
-        - before and after covariates tables (and optional BQSR table)
-        - reference fasta (default or superseded).
-        Overrides base class method.
+        Checks if the parameters are valid.
         :return: None
         """
-        self._input_string += "-before {} ".format(self._tool_inputs['TXT_TABLE_BEFORE'][0].path)
-        self._input_string += "-after {} ".format(self._tool_inputs['TXT_TABLE_AFTER'][0].path)
+        super()._check_parameters()
+        if self.get_param_value('pdf_output') is None and self.get_param_value('csv_output') is None:
+            raise InvalidParameterError("At least one output is required ('pdf_output' and/or 'csv_output')")
 
-        self._input_string += "-R {} ".format(self._tool_inputs['FASTA_REF'][0].path)
+    def _check_input(self) -> None:
+        """
+        Checks if the provided input files are valid.
+        :return: None
+        """
+        toolutils.check_input(self, keys_required=['TXT_TABLE_BEFORE', 'TXT_TABLE_AFTER', 'FASTA_REF'])
+        super()._check_input()
 
+    def _get_input_options(self) -> list[str]:
+        """
+        Returns the command line options for the input files.
+        :return: Input options
+        """
+        options = [
+            *super()._get_input_options(),
+            f"-before {self._tool_inputs['TXT_TABLE_BEFORE'][0].path}",
+            f"-after {self._tool_inputs['TXT_TABLE_AFTER'][0].path}"
+        ]
         if 'BQSR' in self._tool_inputs:
-            self._input_string += "-BQSR {} ".format(self._tool_inputs['BQSR'][0].path)
+            options.append(f"-BQSR {self._tool_inputs['BQSR'][0].path}")
+        return options
 
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
-        Set the output specifications in the ouptut_string:
-        - plots pdf file,
-        - data csv file (optional)
-        Supersedes _set_output in GATK class.
+        Sets the output of this tool.
         :return: None
         """
-        self._tool_outputs['PDF'] = [ToolIOFile(self._folder / self.get_param_value('pdf_output'))]
-        self._tool_outputs['CSV'] = [ToolIOFile(self._folder / self.get_param_value('csv_output'))]
+        if self.get_param_value('pdf_output') is not None:
+            self._tool_outputs['PDF'] = [ToolIOFile(self.folder / self.get_param_value('pdf_output'))]
+        if self.get_param_value('csv_output') is not None:
+            self._tool_outputs['CSV'] = [ToolIOFile(self.folder / self.get_param_value('csv_output'))]
