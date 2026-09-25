@@ -2,7 +2,7 @@ import dataclasses
 import operator
 from dataclasses import asdict
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 SNAKEFILE = f'{Path(__file__).parent / Path(__file__).stem}.smk'
 OUTPUT_REPORT = 'quality_checks/report/html.iob'
@@ -21,12 +21,12 @@ class QCCheck:
     threshold_warn: float
     threshold_fail: float
     supported_input_types: list = dataclasses.field(default_factory=list)
-    fmt_string_value: Optional[str] = None
-    value_should_exceed: Optional[bool] = True
-    explanation: Optional[str] = None
+    fmt_string_value: str | None = None
+    value_should_exceed: bool | None = True
+    explanation: str | None = None
     is_default: bool = True
 
-    def to_dict(self, value: Optional[float] = None) -> dict[Any, str]:
+    def to_dict(self, value: float | None = None) -> dict[Any, str]:
         """
         Converts the QC check to a dictionary.
         :param value: Metric value
@@ -296,7 +296,7 @@ QC_CHECKS_BY_KEY = {
 def get_qc_checks(
     input_type: str,
     skipped_checks: list[str] = None,
-    forced_checks: Optional[list[str]] = None,
+    forced_checks: list[str] | None = None,
 ) -> list[Path]:
     """
     Returns the output paths for the QC checks of the corresponding input type.

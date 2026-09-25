@@ -2,6 +2,7 @@ from Bio import Alphabet, SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from camelcore.app.io.tooliofile import ToolIOFile
+from camelcore.app.utils import fastautils
 
 from camel.app.loggers import logger
 from camel.app.tools.gatk import MASK_NT
@@ -31,7 +32,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         Run GATK FastaAlternateReferenceMaker
         :return: None
         """
-        super(GATKFastaAlternateReferenceMaker, self)._execute_tool()
+        super()._execute_tool()
 
         if self._concatenate_sequence:
             fastautils.write(self.__concatenate_sequence_segments(), self._fasta_concatenated)  # noqa: F821
@@ -41,7 +42,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         Checks tool parameters
         :return: None
         """
-        super(GATKFastaAlternateReferenceMaker, self)._check_parameters()
+        super()._check_parameters()
 
         if 'concatenate_sequence_segments' in self._parameters:
             self._concatenate_sequence = True
@@ -57,14 +58,14 @@ class GATKFastaAlternateReferenceMaker(GATK):
                     "FastaAlternateReferenceMaker opt 'concatenate_sequence_segments' required 'TXT_intervals' input is missing, option disabled.")
                 self._concatenate_sequence = False
 
-        super(GATKFastaAlternateReferenceMaker, self)._check_input()
+        super()._check_input()
 
     def _set_input(self):
         """
         Set the input specification
         :return: None
         """
-        super(GATKFastaAlternateReferenceMaker, self)._set_input()
+        super()._set_input()
 
         if 'VCF_SNPmask' in self._tool_inputs:
             self._input_string += "--snpmask {} ".format(self._tool_inputs['VCF_SNPmask'][0].path)
@@ -74,7 +75,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         Set the output specification
         :return: None
         """
-        super(GATKFastaAlternateReferenceMaker, self)._set_output()
+        super()._set_output()
         # set default output type self._output_type: 'FASTA'
         self._fasta_extracted = self._tool_outputs['FASTA'][0].path
 
@@ -128,7 +129,7 @@ class GATKFastaAlternateReferenceMaker(GATK):
         Concatenate sequence segments for each sequence (identified by seqid from interval file)
         :return: segments concatenated sequences
         """
-        extracted_seq_dict = FastaUtils.read_as_dict(self._fasta_extracted)
+        extracted_seq_dict = fastautils.read_as_dict(self._fasta_extracted)
         seq_intervals = [x.strip() for x in open(self._tool_inputs['TXT_intervals'][0].path)]
         seq_intervals_ordered = self.__rearrange_seq_intervals(seq_intervals)
 
@@ -167,6 +168,6 @@ class GATKFastaAlternateReferenceMaker(GATK):
 
         # Note: seq_record in extracted_seq_dict has been updated with ids, now output into self._fasta_extracted with
         #       updated ids
-        FastaUtils.write(list(extracted_seq_dict.values()), self._fasta_extracted)
+        fastautils.write(list(extracted_seq_dict.values()), self._fasta_extracted)
 
         return concatenated_seqs

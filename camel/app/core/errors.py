@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class InvalidToolInputError(BaseException):
     """
     Error that is0 raised when the input to a tool is invalid.
@@ -41,7 +38,7 @@ class SnakemakeExecutionError(RuntimeError):
     This error is raised when a Snakemake execution error occurs.
     """
 
-    def __init__(self, stdout: str, stderr: str, failed_rule: Optional[str] = None) -> None:
+    def __init__(self, stdout: str, stderr: str, failed_rule: str | None = None) -> None:
         """
         This class is raised when a snakemake error occurs.
         :param stdout: Standard output

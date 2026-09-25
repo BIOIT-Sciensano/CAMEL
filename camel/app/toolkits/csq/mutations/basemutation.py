@@ -1,5 +1,6 @@
 import abc
 from abc import ABCMeta
+
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
 

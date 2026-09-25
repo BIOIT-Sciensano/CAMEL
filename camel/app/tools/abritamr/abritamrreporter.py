@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from camelcore.app.io.tooliovalue import ToolIOValue
@@ -151,7 +150,7 @@ class AbriTAMRReporter(Tool):
         self._section.add_table(data, header, [('class', 'data')])
 
     @staticmethod
-    def ___get_interpretation_color(interpretation: str) -> Optional[str]:
+    def ___get_interpretation_color(interpretation: str) -> str | None:
         """
         For a given interpretation returns either green, red or None
         :param interpretation: Resistant or Susceptible or any other string

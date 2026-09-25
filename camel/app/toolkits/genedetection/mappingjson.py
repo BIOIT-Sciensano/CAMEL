@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 
 class MappingJSON:
@@ -42,7 +42,7 @@ class MappingJSON:
         """
         return self._content[seq_id]['header_orig']
 
-    def get_metadata(self, seq_id: str, metadata_key: str, default: Optional[str] = None) -> str:
+    def get_metadata(self, seq_id: str, metadata_key: str, default: str | None = None) -> str:
         """
         Returns the metadata value for the given key and sequence identifier.
         :param seq_id: Sequence identifier

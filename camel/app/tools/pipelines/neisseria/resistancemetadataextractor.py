@@ -1,4 +1,3 @@
-from typing import Optional
 
 from camelcore.app.io.tooliovalue import ToolIOValue
 
@@ -44,7 +43,7 @@ class ResistanceMetadataExtractor(Tool):
         section.add_table(table_data, table_attributes=[('class', 'information')])
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(section)]
 
-    def __get_allele_url(self, locus: str, allele_id: str) -> Optional[str]:
+    def __get_allele_url(self, locus: str, allele_id: str) -> str | None:
         """
         Retrieves the allele url for the given allele.
         :param locus: Locus

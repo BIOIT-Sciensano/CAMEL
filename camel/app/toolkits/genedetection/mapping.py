@@ -1,7 +1,5 @@
-from pathlib import Path
-from typing import Optional
-
 import json
+from pathlib import Path
 
 
 class Mapping:
@@ -50,7 +48,7 @@ class Mapping:
         """
         return self._content[key]
 
-    def get_metadata(self, seq_id: str, metadata_key: str, default: Optional[str] = None) -> str:
+    def get_metadata(self, seq_id: str, metadata_key: str, default: str | None = None) -> str:
         """
         Returns the metadata value for the given key and sequence identifier.
         :param seq_id: Sequence identifier

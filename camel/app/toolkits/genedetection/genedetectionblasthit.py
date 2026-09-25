@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional, Union
 
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
 from camelcore.app.reports.htmltablecell import HtmlTableCell
@@ -13,7 +12,7 @@ class GeneDetectionBlastHit(GeneDetectionHitBase):
     This class represents a gene detection hit detected with BLAST.
     """
 
-    def __init__(self, locus: str, accession: Optional[str], blast_stats: BlastHitStatistics) -> None:
+    def __init__(self, locus: str, accession: str | None, blast_stats: BlastHitStatistics) -> None:
         """
         Initializes this hit.
         :param locus: Locus
@@ -76,7 +75,7 @@ class GeneDetectionBlastHit(GeneDetectionHitBase):
         return self.table_column_names[1:] + ['Alignment']
 
     def to_html_row(self, report_section: HtmlReportSection, sub_directory: Path, colored: bool = True) -> list[
-            Union[str, HtmlTableCell]]:
+            str | HtmlTableCell]:
         """
         Returns the hit as a HTML table row.
         :param report_section: Section is passed to save additional data

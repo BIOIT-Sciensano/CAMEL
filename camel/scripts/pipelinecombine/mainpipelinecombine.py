@@ -3,7 +3,7 @@ import ast
 import dataclasses
 import re
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import click
 import humanize
@@ -148,7 +148,7 @@ class MainPipelineCombine(BaseScript[PipelineCombineInput, PipelineCombineOutput
         return isolate_data
 
     @staticmethod
-    def _filter_columns(column: pd.Index, keys_exclude: Union[str, None], keys_include: Union[str, None],
+    def _filter_columns(column: pd.Index, keys_exclude: str | None, keys_include: str | None,
                         genes_formatted: bool) -> bool:
         """
         Function to check if the target row should be filtered.

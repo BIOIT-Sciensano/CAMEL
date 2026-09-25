@@ -1,8 +1,13 @@
 from pathlib import Path
 from typing import Any
 
-from camel.snakefiles import assembly_spades, assembly_flye, polish_assembly_short, polish_assembly_long, \
-    human_read_scrubbing
+from camel.snakefiles import (
+    assembly_flye,
+    assembly_spades,
+    human_read_scrubbing,
+    polish_assembly_long,
+    polish_assembly_short,
+)
 
 SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 OUTPUT_FASTA = 'assembly/filtering/fasta.io'

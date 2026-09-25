@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
@@ -22,7 +22,7 @@ def get_filtering_param(config: dict[str, Any], filter_key: str, param_name: str
     return config['variant_filtering'][filter_key].get(param_name)
 
 
-def filter_is_disabled(filter_key: str, config: Dict[str, Any]) -> bool:
+def filter_is_disabled(filter_key: str, config: dict[str, Any]) -> bool:
     """
     Returns True if the given filter is disabled, False otherwise.
     :param filter_key: Filter key

@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 from camelcore.app.io.tooliovalue import ToolIOValue
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
@@ -35,7 +35,7 @@ class FastpReporter(Tool):
         self._report_section = None
 
     @staticmethod
-    def _format_value(str_in: str, fmt: Optional[Callable] = None) -> str:
+    def _format_value(str_in: str, fmt: Callable | None = None) -> str:
         """
         Formats the input value.
         :param str_in: input string

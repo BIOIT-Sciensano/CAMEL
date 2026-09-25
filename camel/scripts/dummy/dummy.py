@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import argparse
+from collections.abc import Sequence
 from importlib.resources import files
 from pathlib import Path
 
-from camel.app.loggers import initialize_logging
 from camel.app.core.snakemake import snakepipelineutils
-from collections.abc import Sequence
+from camel.app.loggers import initialize_logging
+
 
 class MainDummy:
     """

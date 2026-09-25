@@ -1,4 +1,5 @@
 import re
+
 # noinspection PyProtectedMember
 from vcf.model import _Record as VcfRecord
 

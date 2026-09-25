@@ -8,9 +8,8 @@ import yaml
 
 from camel.app.cli import cliutils
 from camel.app.config import config
-from camel.app.core.snakemake import snakemakeutils
-from camel.app.core.snakemake import snakepipelineutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipe import BasePipe
@@ -19,7 +18,7 @@ from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.app.tools.pipelines.mycobacterium.bamaddcustomtag import BAMAddCustomTag
-from camel.scripts.mycobacteriumpipeline import SNAKEFILE_MAIN, CONFIG_DATA
+from camel.scripts.mycobacteriumpipeline import CONFIG_DATA, SNAKEFILE_MAIN
 from camel.snakefiles import variant_calling
 
 

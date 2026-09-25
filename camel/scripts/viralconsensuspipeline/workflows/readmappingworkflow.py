@@ -3,11 +3,10 @@ import json
 import logging
 from importlib.resources import files
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+from camel.app.core.snakemake import snakemakeutils, snakepipelineutils
 from camel.app.scriptutils.basepipe.fastqinput import FastqInput
-from camel.app.core.snakemake import snakemakeutils
-from camel.app.core.snakemake import snakepipelineutils
 
 
 @dataclasses.dataclass
@@ -37,7 +36,7 @@ class ReadMappingWorkflow:
             logging.info(f'Creating working directory: {self._dir}')
             self._dir.mkdir(parents=True)
 
-    def run(self, fastq_in: FastqInput, fasta_ref: Path, threads: int = 8, prefix: Optional[str] = 'mapping',
+    def run(self, fastq_in: FastqInput, fasta_ref: Path, threads: int = 8, prefix: str | None = 'mapping',
             gap_len_cutoff: int = 6, gap_depth_cutoff: int = 10) -> ReadMappingOutput:
         """
         Runs the read mapping workflow.

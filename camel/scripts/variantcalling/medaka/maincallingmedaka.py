@@ -2,11 +2,12 @@
 import argparse
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.utils import fileutils
-from camel.app.loggers import logger, initialize_logging
+
+from camel.app.loggers import initialize_logging, logger
 from camel.app.tools.medaka.medakainference import MedakaInference
 from camel.app.tools.medaka.medakavcf import MedakaVcf
 from camel.app.tools.samtools.samtoolsindex import SamtoolsIndex
@@ -17,14 +18,14 @@ class MainCallingMedaka:
     This class contains the main script for the Medaka variant calling tool.
     """
 
-    def __init__(self, args: Optional[Sequence[str]] = None) -> None:
+    def __init__(self, args: Sequence[str] | None = None) -> None:
         """
         Initializes the main script.
         """
         self._args = MainCallingMedaka._parse_arguments(args)
 
     @staticmethod
-    def _parse_arguments(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+    def _parse_arguments(args: Sequence[str] | None = None) -> argparse.Namespace:
         """
         Parses the command line arguments.
         :return: Arguments

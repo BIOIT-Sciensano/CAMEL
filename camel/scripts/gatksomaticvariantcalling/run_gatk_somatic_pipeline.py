@@ -7,8 +7,8 @@ import sys
 
 import yaml
 from camelcore.app.command import Command
-
 from camelcore.app.io.tooliofile import ToolIOFile
+
 from camel.app.pipeline.pipeline import Pipeline
 
 
@@ -412,7 +412,7 @@ class GATKSomaticMain:
     def __archive_config_file(self):
         """
         Dump yaml config file as compressed bz2 file in the config dump dir.
-        :return: 
+        :return: Archived config file
         """
         outfile = os.path.join(self._config_dump_dir, 'config_{}_{}.bz2'.format(self._args.job_id, datetime.datetime.now().strftime("%Y%m%d_%H%M%S-%f")))
         with bz2.BZ2File(outfile, 'wb', compresslevel=9) as handle:

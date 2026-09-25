@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Optional
 
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.utils import fastqutils, fileutils
@@ -97,7 +96,7 @@ class Trimmomatic(Tool):
 
         return options
 
-    def __get_output_path(self, suffix: Optional[str]) -> Path:
+    def __get_output_path(self, suffix: str | None) -> Path:
         """
         Returns the path for the output file with the given suffix.
         """

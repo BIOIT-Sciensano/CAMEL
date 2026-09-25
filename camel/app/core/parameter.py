@@ -1,4 +1,3 @@
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -9,12 +8,12 @@ class Parameter(BaseModel):
     """
     model_config = ConfigDict(extra='forbid')
     name: str
-    option: Optional[str] = None
+    option: str | None = None
     flag: bool = False
     default: bool = False
     mandatory: bool = False
-    value: Optional[str | int | float] = None
-    p_index: Optional[int] = 0
+    value: str | int | float | None = None
+    p_index: int | None = 0
 
     def __repr__(self) -> str:
         """

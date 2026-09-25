@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Optional
 
 from camelcore.app.command import Command
 from camelcore.app.io.tooliofile import ToolIOFile
@@ -254,7 +253,7 @@ class Bowtie2Map(Bowtie2):
                         self.informs[key] = f'{res[0]}'
                     return
 
-    def __set_inform(self, stderr: Optional[str] = None) -> None:
+    def __set_inform(self, stderr: str | None = None) -> None:
         """
         Analyse the result of Bowtie2 reads mapping, and extra result statistics into tool inform.
         :param stderr: Command stderr (is taken from self._command when not specified)

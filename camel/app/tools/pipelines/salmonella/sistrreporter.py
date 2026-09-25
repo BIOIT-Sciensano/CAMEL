@@ -1,6 +1,7 @@
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from camelcore.app.io.tooliovalue import ToolIOValue
 from camelcore.app.reports.htmlelement import HtmlElement

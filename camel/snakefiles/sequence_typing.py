@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 
@@ -28,7 +28,7 @@ def get_detection_method(config_data: dict[str, Any], scheme_key: str, locus_typ
     d = config_data['sequence_typing']['dbs'][scheme_key].get('force_method', pipeline_setting)
     return d
 
-def get_sequence_typing_report(scheme_key: str, config: dict[str, Any], analysis_name: Optional[str] = None) -> str:
+def get_sequence_typing_report(scheme_key: str, config: dict[str, Any], analysis_name: str | None = None) -> str:
     """
     Returns the report input for the given database key.
     :param scheme_key: Database key

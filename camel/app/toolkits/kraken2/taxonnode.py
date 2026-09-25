@@ -7,8 +7,8 @@ class TaxonNode:
     """
     Helper class to parse the Kraken 2 report output as a taxonomic tree.
     """
-    name: typing.Union[str, int]
-    percentage: typing.Optional[float] = None
+    name: str | int
+    percentage: float | None = None
     children: set['TaxonNode'] = dataclasses.field(default_factory=set, compare=False, hash=False)
 
     def add_child(self, node: 'TaxonNode') -> None:

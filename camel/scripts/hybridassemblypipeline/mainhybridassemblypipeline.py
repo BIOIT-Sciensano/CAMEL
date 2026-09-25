@@ -9,7 +9,7 @@ import yaml
 from camel.app.cli import cliutils
 from camel.app.config import config
 from camel.app.core.snakemake import snakepipelineutils
-from camel.app.loggers import logger, initialize_logging
+from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipe import BasePipe
 from camel.app.scriptutils.basescript import basescriptutils

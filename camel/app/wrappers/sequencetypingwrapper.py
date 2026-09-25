@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.reports.htmlreportsection import HtmlReportSection
@@ -21,8 +21,8 @@ class SequenceTypingInput:
     sample_name: str
     db_path: Path
     input_type: str
-    fasta: Optional[ToolIOFile] = None
-    fastq: Optional[FastqInput] = None
+    fasta: ToolIOFile | None = None
+    fastq: FastqInput | None = None
     db_key: str = 'mlst'
 
 
@@ -32,9 +32,9 @@ class SequenceTypingOutput:
     This class contains the output of the sequence typing workflow.
     """
     report_section: HtmlReportSection
-    tsv: Optional[Path]
+    tsv: Path | None
     informs: list[dict[str, Any]]
-    log_file: Optional[Path] = None
+    log_file: Path | None = None
 
 
 class SequenceTypingWrapper:
@@ -51,8 +51,8 @@ class SequenceTypingWrapper:
         self._output = None
 
     def run_workflow_blast(
-            self, workflow_input: SequenceTypingInput, blast_task: Optional[str] = None,
-            threads: Optional[int] = 8) -> None:
+            self, workflow_input: SequenceTypingInput, blast_task: str | None = None,
+            threads: int | None = 8) -> None:
         """
         Runs the BLAST-based sequence typing workflow.
         :param workflow_input: Workflow input
@@ -77,7 +77,7 @@ class SequenceTypingWrapper:
         )
         self.__run_snakefile(config_path, workflow_input, threads)
 
-    def run_workflow_mist(self, workflow_input: SequenceTypingInput, threads: Optional[int] = 8) -> None:
+    def run_workflow_mist(self, workflow_input: SequenceTypingInput, threads: int | None = 8) -> None:
         """
         Runs the MiST-based sequence typing workflow.
         :param workflow_input: Workflow input
@@ -99,7 +99,7 @@ class SequenceTypingWrapper:
         )
         self.__run_snakefile(config_path, workflow_input, threads)
 
-    def run_workflow_kma(self, workflow_input: SequenceTypingInput, threads: Optional[int] = 8) -> None:
+    def run_workflow_kma(self, workflow_input: SequenceTypingInput, threads: int | None = 8) -> None:
         """
         Runs the KMA-based sequence typing workflow.
         :param workflow_input: Input for the workflow

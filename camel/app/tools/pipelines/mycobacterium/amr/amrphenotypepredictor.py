@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 from camelcore.app.io.tooliofile import ToolIOFile
@@ -58,7 +57,7 @@ class AMRPhenotypePredictor(Tool):
         return mutations_by_ab
 
     @staticmethod
-    def __predict_phenotype(mutations_by_confidence: Union[dict[amrutils.ConfidenceLevel, list], None]) -> str:
+    def __predict_phenotype(mutations_by_confidence: dict[amrutils.ConfidenceLevel, list] | None) -> str:
         """
         Predicts the phenotype based on the detected mutations.
         :param mutations_by_confidence: Mutations group by confidence level.

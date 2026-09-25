@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from camelcore.app.io.tooliofile import ToolIOFile
@@ -19,7 +18,7 @@ class STProfile:
     """
     name: str
     metadata: list[tuple[str, str]] = field(hash=False)
-    alleles: Optional[dict[str, str]] = field(hash=False)
+    alleles: dict[str, str] | None = field(hash=False)
 
 
 class SequenceTypeDetector(Tool):

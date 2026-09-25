@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 SNAKEFILE = Path(__file__).parent / f'{Path(__file__).stem}.smk'
 SNAKEFILE_BLAST = Path(__file__).parent / f'{Path(__file__).stem}_blast.smk'
@@ -29,7 +29,7 @@ OUTPUT_REPORT_EMPTY = 'gene_detection/{db}/report/html-empty.iob'
 OUTPUT_SUMMARY = 'gene_detection/{db}/report/summary_out.{ext}'
 
 
-def get_gene_detection_report(db_key: str, config: dict[str, Any], analysis_name: Optional[str] = None) -> str:
+def get_gene_detection_report(db_key: str, config: dict[str, Any], analysis_name: str | None = None) -> str:
     """
     Returns the report input for the given database key.
     :param db_key: Database key

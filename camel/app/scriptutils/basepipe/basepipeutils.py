@@ -4,7 +4,7 @@ import shutil
 import socket
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 from camelcore.app.io.tooliovalue import ToolIOValue
 from camelcore.app.utils import fileutils, reportutils
@@ -117,7 +117,7 @@ def export_command_section(snake_in: Any, path_out: Path, dir_: Path) -> None:
 
 
 def add_content_scrubbing(
-    structure: list[tuple], input_type: str, reports_scrubbing: list[Union[Path, str]]
+    structure: list[tuple], input_type: str, reports_scrubbing: list[Path | str]
 ) -> None:
     """
     Adds the report content for the human read scrubbing.
@@ -180,8 +180,8 @@ def add_content_scrubbing(
 def add_content_trim_basic_qc(
     structure: list[tuple],
     input_type: str,
-    reports_ds: list[Union[Path, str]],
-    reports_trim: list[Union[Path, str]],
+    reports_ds: list[Path | str],
+    reports_trim: list[Path | str],
 ) -> None:
     """
     Adds the report content for the downsampling, basic QC, and read trimming.
@@ -243,8 +243,8 @@ def add_content_trim_basic_qc(
 def add_content_contamination_check(
     structure: list[tuple],
     input_type: str,
-    reports_contamination: list[Union[Path, str]],
-    report_confindr: Union[Path, str, None],
+    reports_contamination: list[Path | str],
+    report_confindr: Path | str | None,
 ) -> None:
     """
     Adds the report content for the contamination check.

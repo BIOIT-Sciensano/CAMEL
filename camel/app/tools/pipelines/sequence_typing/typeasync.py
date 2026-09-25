@@ -1,6 +1,6 @@
 import concurrent.futures
 import json
-from typing import Any, Union
+from typing import Any
 
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.tool import Tool
@@ -33,7 +33,7 @@ class TypeAsync(Tool):
             raise InvalidToolInputError("Typing directory input is required ('DIR')")
         super()._check_input()
 
-    def __get_typing_parameters(self, locus_info: dict[str, Union[str, None]]) -> dict[str, Any]:
+    def __get_typing_parameters(self, locus_info: dict[str, str | None]) -> dict[str, Any]:
         """
         Returns the parameters to pass to the typing jobs.
         """

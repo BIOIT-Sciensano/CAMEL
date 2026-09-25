@@ -1,7 +1,7 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 from camelcore.app.utils import vcfutils
@@ -152,7 +152,7 @@ class SNPLineageDetector(Tool):
         return counts_by_lineage
 
     def __select_best_lineage_for_level(self, count_by_lineages: dict[Lineage, int], level: int) \
-            -> Union[dict[Any, int], None]:
+            -> dict[Any, int] | None:
         """
         Selects the best lineage for the given level.
         :param count_by_lineages: Count by lineage

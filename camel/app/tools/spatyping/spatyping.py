@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from camelcore.app.io.tooliovalue import ToolIOValue
 
@@ -159,7 +159,7 @@ class SpaTyping(Tool):
         return min(100 * blast_data['length'] / blast_data['slen'], 100.0)
 
     @staticmethod
-    def __get_db_info(dir_db: Path) -> Optional[dict]:
+    def __get_db_info(dir_db: Path) -> dict | None:
         """
         Returns the date of the last database update.
         :param dir_db: Database directory
