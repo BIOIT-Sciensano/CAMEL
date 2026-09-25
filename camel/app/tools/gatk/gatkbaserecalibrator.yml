@@ -9,19 +9,16 @@ parameters:
   intervals:
     default: false
     mandatory: false
-    option: -L
-    p_index: 0
+    option: '-L'
     value: null
   recal_table_output:
     default: true
     mandatory: true
-    option: -o
-    p_index: 0
+    option: '-o'
     value: recalibrationData.tabl
   threads:
     default: true
     mandatory: false
-    option: -nct
-    p_index: 0
-    value: "5"
+    option: '-nct'
+    value: '5'
 tool_command: run_gatk.sh -T BaseRecalibrator
