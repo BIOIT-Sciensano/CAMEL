@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -7,6 +8,7 @@ from camelcore.app.io.tooliofile import ToolIOFile
 from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError, ToolExecutionError
 from camel.app.core.tool import Tool
+from camel.app.loggers import logger
 
 
 class CharacterizeNeisseriaCapsule(Tool):
@@ -14,6 +16,10 @@ class CharacterizeNeisseriaCapsule(Tool):
     characterize_neisseria_capsule is a tool implementing a WGS-based method for N. meningitidis
     serogroup predictions by identifying capsule genes and genetic variations that might impact their expression.
     """
+
+    MAX_ATTEMPTS = 3
+    RETRY_DELAY = 3
+    PUBMLST_ERRORS = ('JSONDecodeError', 'MaxRetryError')
 
     def __init__(self) -> None:
         """
@@ -53,6 +59,14 @@ class CharacterizeNeisseriaCapsule(Tool):
         """
         toolutils.check_tool_execution(self, command, exit_code=0)
 
+    def __is_pubmlst_error(self) -> bool:
+        """
+        Checks if the last execution failed on a PubMLST query (invalid JSON response or connection error).
+        :return: True if the failure is caused by PubMLST, False otherwise
+        """
+        stderr = self._command.stderr or ''
+        return any(error in stderr for error in CharacterizeNeisseriaCapsule.PUBMLST_ERRORS)
+
     def _execute_tool(self) -> None:
         """
         Executes this tool.
@@ -63,10 +77,23 @@ class CharacterizeNeisseriaCapsule(Tool):
         dir_fasta_in.mkdir()
         (dir_fasta_in / self._tool_inputs['FASTA'][0].path.name).symlink_to(self._tool_inputs['FASTA'][0].path)
 
-        # Run the command
+        # Run the command, retrying when the PubMLST allele lookup fails (e.g. rate limiting). The script reuses the
+        # BLAST results in the existing output folder, so a retry only repeats the PubMLST queries.
         dir_out = self.folder / 'out'
-        self.__build_command(dir_fasta_in, dir_out)
-        self._execute_command()
+        for attempt in range(1, CharacterizeNeisseriaCapsule.MAX_ATTEMPTS + 1):
+            self.__build_command(dir_fasta_in, dir_out)
+            try:
+                self._execute_command()
+                break
+            except ToolExecutionError:
+                if attempt == CharacterizeNeisseriaCapsule.MAX_ATTEMPTS or not self.__is_pubmlst_error():
+                    raise
+                delay = CharacterizeNeisseriaCapsule.RETRY_DELAY * 2 ** (attempt - 1)
+                logger.warning(
+                    f'PubMLST query failed (attempt {attempt}/{CharacterizeNeisseriaCapsule.MAX_ATTEMPTS}), '
+                    f'retrying in {delay} seconds'
+                )
+                time.sleep(delay)
 
         # Collect the output
         try:
