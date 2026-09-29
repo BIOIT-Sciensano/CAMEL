@@ -3,6 +3,7 @@ import unittest
 from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core.cameltestsuite import CamelTestSuite
+from camel.app.tools.mash.mashdist import MashDist
 from camel.app.tools.mash.mashscreen import MashScreen
 
 
@@ -55,6 +56,33 @@ class TestMash(CamelTestSuite):
         mash_screen.update_parameters(max_p_value=0.05, min_identity=0.5, winner_takes_all=True, threads=2)
         mash_screen.run(self.running_dir)
         self.verify_output_files(mash_screen, 'TSV')
+
+    def test_mash_dist(self) -> None:
+        """
+        Tests the mash dist tool.
+        :return: None
+        """
+        mash_dist = MashDist()
+        mash_dist.add_input_files({
+            'FASTA': [ToolIOFile(TestMash.input_fasta)],
+            'DB': [ToolIOFile(TestMash.input_db)]
+        })
+        mash_dist.run(self.running_dir)
+        self.verify_output_files(mash_dist, 'TSV')
+
+    def test_mash_dist_params(self) -> None:
+        """
+        Tests the mash dist tool with updated parameters.
+        :return: None
+        """
+        mash_dist = MashDist()
+        mash_dist.add_input_files({
+            'FASTA': [ToolIOFile(TestMash.input_fasta)],
+            'DB': [ToolIOFile(TestMash.input_db)]
+        })
+        mash_dist.update_parameters(individual_sequences=True, max_distance=0.5, max_p_value=0.05, threads=2)
+        mash_dist.run(self.running_dir)
+        self.verify_output_files(mash_dist, 'TSV')
 
 
 if __name__ == '__main__':
