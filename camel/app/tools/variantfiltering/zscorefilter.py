@@ -42,7 +42,7 @@ class ZScoreFilter(BaseFilter):
         """
         y_mult_val = self.get_param_value('y_multiplier')
         y_mult = y_mult_val if y_mult_val is not None else 'n/a'
-        return f'Z-score ≥<b>{self._parameters["min_zscore"].value}</b> and Y-multiplier ≥<b>{y_mult}</b>...'
+        return f'Z-score ≥<b>{self._parameters["min_zscore"].value}</b> and Y-multiplier ≥<b>{y_mult}</b>.'
 
     def _check_input(self) -> None:
         """
