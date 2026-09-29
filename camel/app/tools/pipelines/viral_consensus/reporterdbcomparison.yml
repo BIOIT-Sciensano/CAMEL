@@ -1,5 +1,15 @@
 dependencies: []
 parameters:
+  coverage_fail:
+    default: true
+    mandatory: true
+    option: null
+    value: 90.0
+  coverage_warn:
+    default: true
+    mandatory: true
+    option: null
+    value: 95.0
   identity_fail:
     default: true
     mandatory: true
