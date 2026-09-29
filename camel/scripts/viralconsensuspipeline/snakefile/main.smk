@@ -4,7 +4,7 @@ from camel.app.loggers import initialize_logging
 from camel.snakefiles import trimming_illumina, trimming_ont, trimming, downsampling, \
     contamination_check_kraken, core, human_read_scrubbing, assembly
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection, preprocess, \
-    multiallelicsites, nextclade3, antivirals
+    multiallelicsites, nextclade3, antivirals, dbcomparison
 
 #######################
 # Included snakefiles #
@@ -21,6 +21,7 @@ include: preprocess.SNAKEFILE
 include: iterativemapping.SNAKEFILE
 include: nextclade3.SNAKEFILE_NEXTCLADE
 include: multiallelicsites.SNAKEFILE
+include: dbcomparison.SNAKEFILE
 include: antivirals.SNAKEFILE
 
 initialize_logging()
@@ -81,6 +82,7 @@ rule report_create_command_section:
             Path(config['ref_selection']['db']))[0] / 'informs.io' if config['fasta_ref'] is None and config['input']['type'] != 'fasta' and config['ref_selection'].get('db') is not None else [],
         INFORMS_preprocess = preprocess.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],
         INFORMS_iterative_mapping = iterativemapping.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],
+        INFORMS_db_comparison = lambda wildcards: dbcomparison.get_command_informs(config, checkpoints),
         INFORMS_mash = nextclade3.OUTPUT_INFORMS_MASH if config['nextclade'].get('db_mash') is not None and config['input']['type'] != 'fasta' else [],
         INFORMS_nextclade = nextclade3.OUTPUT_INFORMS if 'nextclade' in config['analyses_selected'] else []
     output:
@@ -108,6 +110,7 @@ rule report_combine_all:
         report_nexclade_subtype = nextclade3.OUTPUT_SUBTYPE_REPORT if (config['nextclade'].get('db') is None) and ('nextclade' in config['analyses_selected']) else nextclade3.OUTPUT_SUBTYPE_REPORT_EMPTY,
         report_nextclade = nextclade3.OUTPUT_REPORT if 'nextclade' in config['analyses_selected'] else nextclade3.OUTPUT_REPORT_EMPTY,
         report_multi_allelic = multiallelicsites.OUTPUT_REPORT if config['input']['type'] != 'fasta' else [],
+        report_db_comparison = dbcomparison.OUTPUT_REPORT if dbcomparison.is_enabled(config) else dbcomparison.OUTPUT_REPORT_EMPTY,
         report_antivirals = antivirals.OUTPUT_REPORT if 'antivirals' in config['analyses_selected'] else antivirals.OUTPUT_REPORT_EMPTY,
         report_commands = 'report/html-commands.iob',
         report_citations = core.OUTPUT_HTML_CITATIONS
@@ -158,6 +161,7 @@ rule report_combine_all:
                     input.report_preprocess_ampligone, input.report_preprocess_clipping, input.report_preprocess)]),
                 ('Consensus extraction', 'consensus', [Path(input.report_iterative_mapping)]),
                 ('Multi-allelic sites', 'multi_allelic', [Path(input.report_multi_allelic)]),
+                ('Database comparison', 'db_comparison', [Path(input.report_db_comparison)]),
             ])
         report_structure.extend([
             ('Nextclade', 'nextclade', [Path(input.report_nexclade_subtype), Path(input.report_nextclade)]),
@@ -181,6 +185,7 @@ rule summary_combine_all:
         preprocess.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
         iterativemapping.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
         multiallelicsites.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
+        dbcomparison.OUTPUT_SUMMARY if dbcomparison.is_enabled(config) else [],
         nextclade3.OUTPUT_SUMMARY if 'nextclade' in config['analyses_selected'] else [],
         antivirals.OUTPUT_SUMMARY if 'antivirals' in config['analyses_selected'] else []
     output:
