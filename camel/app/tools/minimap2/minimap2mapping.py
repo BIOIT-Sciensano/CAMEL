@@ -5,9 +5,10 @@ from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core import toolutils
 from camel.app.core.piping.toolpipeable import ToolPipeable
+from camel.app.tools.minimap2.minimap2base import Minimap2Base
 
 
-class Minimap2Mapping(ToolPipeable):
+class Minimap2Mapping(ToolPipeable, Minimap2Base):
     """
     A versatile pairwise aligner for genomic and spliced nucleotide sequences.
     """
@@ -17,7 +18,7 @@ class Minimap2Mapping(ToolPipeable):
         Initializes this tool
         :return: None
         """
-        super().__init__('Minimap2', '2.26')
+        super().__init__('Minimap2', version=None)
 
     def _execute_tool(self) -> None:
         """

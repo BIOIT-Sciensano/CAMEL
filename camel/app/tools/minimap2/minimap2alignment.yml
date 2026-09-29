@@ -1,0 +1,44 @@
+conda:
+  name: minimap2
+  packages:
+    - minimap2=2.26
+dependencies:
+  - minimap2/2.26
+parameters:
+  preset:
+    default: true
+    mandatory: true
+    option: '-x'
+    p_index: 0
+    value: asm20
+  base_level_alignment:
+    default: true
+    mandatory: false
+    option: '-c'
+    p_index: 1
+    flag: true
+  cs_tag:
+    default: false
+    mandatory: false
+    option: '--cs=long'
+    p_index: 1
+    flag: true
+  eqx:
+    default: false
+    mandatory: false
+    option: '--eqx'
+    p_index: 1
+    flag: true
+  output_filename:
+    default: true
+    mandatory: true
+    option: null
+    p_index: 1
+    value: alignment.paf
+  threads:
+    default: true
+    mandatory: false
+    option: '-t'
+    p_index: 1
+    value: 4
+tool_command: minimap2
