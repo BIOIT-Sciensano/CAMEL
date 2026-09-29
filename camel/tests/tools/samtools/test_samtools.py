@@ -2,7 +2,7 @@ import shutil
 import unittest
 
 from camelcore.app.io.tooliofile import ToolIOFile
-from camelcore.app.utils import fastqutils, sambamutils
+from camelcore.app.utils import fastautils, fastqutils, sambamutils
 
 from camel.app.core.cameltestsuite import CamelTestSuite
 from camel.app.tools.samtools.samtoolsampliconclip import SamtoolsAmpliconClip
@@ -80,6 +80,34 @@ class TestSamtools(CamelTestSuite):
         samtools_fastaindex.run(self.running_dir)
         self.verify_output_files(samtools_fastaindex, 'FASTA')
         self.assertFalse(samtools_fastaindex.tool_outputs['FASTA'][0].path.is_symlink())
+
+    def test_samtools_fastaindex_region_file(self) -> None:
+        """
+        Tests SamtoolsFastaIndex with a region file.
+        :return: None
+        """
+        # Index the FASTA file
+        path_in = self.running_dir / 'copied_ref.fasta'
+        shutil.copyfile(TestSamtools.FILE_FASTA_REF.path, path_in)
+        samtools_fastaindex = SamtoolsFastaIndex()
+        samtools_fastaindex.add_input_files({'FASTA': [ToolIOFile(path_in)]})
+        samtools_fastaindex.update_parameters(symlink_input=False)
+        samtools_fastaindex.run(self.running_dir)
+
+        # Create the region file
+        with path_in.with_suffix('.fasta.fai').open() as handle:
+            seq_ids = [line.split('\t')[0] for line in handle]
+        path_regions = self.running_dir / 'regions.txt'
+        path_regions.write_text(''.join(f'{seq_id}\n' for seq_id in seq_ids))
+
+        # Extract the regions
+        samtools_fastaindex = SamtoolsFastaIndex()
+        samtools_fastaindex.add_input_files({'FASTA': [ToolIOFile(path_in)], 'TXT': [ToolIOFile(path_regions)]})
+        samtools_fastaindex.update_parameters(symlink_input=False, output_filename='regions_out.fasta')
+        samtools_fastaindex.run(self.running_dir)
+        self.verify_output_files(samtools_fastaindex, 'FASTA')
+        seq_ids_out = list(fastautils.read_as_dict(samtools_fastaindex.tool_outputs['FASTA'][0].path))
+        self.assertEqual(seq_ids_out, seq_ids)
 
     def test_samtools_fastq_pe(self) -> None:
         """

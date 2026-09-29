@@ -32,6 +32,8 @@ class SamtoolsFastaIndex(SamtoolsBase):
             raise InvalidToolInputError("No FASTA input file found")
         if len(self._tool_inputs['FASTA']) != 1:
             raise InvalidToolInputError("Only one FASTA input file is supported.")
+        if 'TXT' in self._tool_inputs and len(self._tool_inputs['TXT']) != 1:
+            raise InvalidToolInputError("Only one TXT (region file) input file is supported.")
         super()._check_input()
 
     def _check_parameters(self) -> None:
@@ -39,9 +41,16 @@ class SamtoolsFastaIndex(SamtoolsBase):
         Checks the parameters.
         :return: None
         """
-        if 'regions' in self._parameters and 'output_filename' not in self._parameters:
+        if self.__is_region_extraction() and 'output_filename' not in self._parameters:
             raise InvalidParameterError("Cannot extract regions without output filename")
         super()._check_parameters()
+
+    def __is_region_extraction(self) -> bool:
+        """
+        Checks if regions should be extracted (regions parameter or region file input).
+        :return: True if regions should be extracted
+        """
+        return 'regions' in self._parameters or 'TXT' in self._tool_inputs
 
     def __symlink_input(self) -> Path:
         """
@@ -70,7 +79,7 @@ class SamtoolsFastaIndex(SamtoolsBase):
         self.__build_command(fasta_in)
         self._execute_command()
         self._check_stderr(self._command)
-        if 'regions' in self._parameters:
+        if self.__is_region_extraction():
             self._tool_outputs['FASTA'] = [ToolIOFile(self.folder / self._parameters['output_filename'].value)]
         else:
             self._tool_outputs['FASTA'] = [ToolIOFile(fasta_in)]
@@ -81,11 +90,18 @@ class SamtoolsFastaIndex(SamtoolsBase):
         :param fasta_file: FASTA file
         :return: None
         """
-        self._command.command = ' '.join([self._tool_command, str(fasta_file)])
-        if all(x in self._parameters for x in ('output_filename', 'regions')):
-            logger.info("Extracting regions from FASTA file, file should already be indexed.")
-            path_out = self._folder / self.get_param_value('output_filename')
-            self._command.command += f" {self._parameters['regions'].value} > {path_out}"
+        if not self.__is_region_extraction():
+            self._command.command = ' '.join([self._tool_command, str(fasta_file)])
+            return
+        logger.info("Extracting regions from FASTA file, file should already be indexed.")
+        parts = [self._tool_command]
+        if 'TXT' in self._tool_inputs:
+            parts.append(f"--region-file {self._tool_inputs['TXT'][0].path}")
+        parts.append(str(fasta_file))
+        if 'regions' in self._parameters:
+            parts.append(str(self._parameters['regions'].value))
+        parts.append(f"> {self._folder / self.get_param_value('output_filename')}")
+        self._command.command = ' '.join(parts)
 
     def _check_stderr(self, command: Command) -> None:
         """
