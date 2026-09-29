@@ -38,6 +38,9 @@ rule nextclade3_detect_subtype_mash:
             mash_screen.add_input_files({'FASTQ': fq_all})
         else:
             mash_screen.add_input_files({'FASTA': snakemakeutils.load_object(Path(input.FASTA))})
+        if params.db is None:
+            raise ValueError(f'No Nextclade subtype DB specified')
+
         path_db = next(Path(params.db).glob('*.msh'))
         logging.info(f'Mash database found: {path_db}')
         mash_screen.add_input_files({'DB': [ToolIOFile(path_db)]})
@@ -246,10 +249,10 @@ rule nextclade3_create_summary:
         assay = 'nextclade'
         data_summary = []
 
-        # Add tool version
+        # Add tool version (informs are empty when no Nextclade dataset is available for the detected subtype)
         # noinspection PyUnresolvedReferences
         informs_first = snakemakeutils.load_object(Path(input.INFORMS_nextclade))
-        data_summary.append((f'{assay}_version', informs_first['_version']))
+        data_summary.append((f'{assay}_version', informs_first['_version'] if informs_first else '-'))
 
         # Add subtype determination informs (if available)
         if input.INFORMS_subtype_determination:

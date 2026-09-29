@@ -39,6 +39,7 @@ rule trimming_ont_seqkit:
     params:
         sample_name = config.get('sample_name', 'reads'),
         min_length = config.get('read_trimming', {}).get('ont', {}).get('min_length', 500),
+        max_length = config.get('read_trimming', {}).get('ont', {}).get('max_length'),
         min_qual = config.get('read_trimming', {}).get('ont', {}).get('min_qual', 7)
     run:
         from camel.app.tools.seqkit.seqkitseq import SeqkitSeq
@@ -46,6 +47,7 @@ rule trimming_ont_seqkit:
         seqkit.update_parameters(
             min_length=params.min_length,
             min_qual=params.min_qual,
+            max_length=params.max_length if params.max_length is not None else False,
             output_filename=f'{params.sample_name}-filtered.fastq',
             threads=threads
         )
