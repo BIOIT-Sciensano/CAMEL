@@ -1,13 +1,13 @@
 import json
 import logging
 import math
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 from Bio import SeqIO
 from camelcore.app.io.tooliofile import ToolIOFile
-from pysam.libcvcf import defaultdict
 
 from camel.app.core import toolutils
 from camel.app.core.tool import Tool
