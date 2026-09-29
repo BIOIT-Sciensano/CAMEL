@@ -4,6 +4,8 @@ analyses:
   antivirals:
     dbs:
       - antivirals
+  db_comparison:
+    dbs: [] # Uses the reference selection database (--ref-genome-db)
   kraken2:
     dbs:
       - kraken2

@@ -56,7 +56,7 @@ def count_differences(cs: str) -> dict[str, int | float]:
     ambiguous base (all non-ACGT bases are reported as 'n' by minimap2) are not compared. Each insertion / deletion is
     counted as a single difference.
     :param cs: Long cs tag
-    :return: Identity (%, over the compared positions), differences, mismatches and indels
+    :return: Identity (%, over the compared positions), differences, mismatches, indels and compared positions
     """
     matches, mismatches, indels = 0, 0, 0
     for op in CS_PATTERN.findall(cs):
@@ -73,4 +73,5 @@ def count_differences(cs: str) -> dict[str, int | float]:
         'differences': mismatches + indels,
         'mismatches': mismatches,
         'indels': indels,
+        'compared_positions': compared,
     }

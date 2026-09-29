@@ -283,6 +283,34 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
+    @longRunningTest()
+    def test_illumina_ref_selection_influenza_a_h1n1_with_db_comparison(self) -> None:
+        """
+        Tests the pipeline with Illumina data, automatic reference selection and database comparison for influenza A
+        (H1N1).
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--species', 'influenza_a',
+            '--fastq-pe',
+            str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R1.fastq.gz'),
+            str(TestViralConsensusPipeline.dir_testdata / 'ESIB_EQA_2023.INFL2.01-H1N1_R2.fastq.gz'),
+            '--input-type', 'illumina',
+            '--ref-genome-db', str(TestViralConsensusPipeline.dir_db / 'ref_mash_dbs' / 'influenza_a-gisaid'),
+            '--cov-max', '5000',
+            '--cov-max-segment', '500',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir),
+            '--analyses', 'db_comparison'
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn('Closest match', path_report_out.read_text())
+        self.assertIn('db_comparison_database', path_summary_out.read_text())
+
     ##############################
     # ONT - FASTA reference file #
     ##############################
