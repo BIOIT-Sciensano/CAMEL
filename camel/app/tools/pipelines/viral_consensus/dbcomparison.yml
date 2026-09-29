@@ -1,0 +1,13 @@
+dependencies: []
+parameters:
+  min_coverage:
+    default: true
+    mandatory: true
+    option: null
+    value: 0.95
+  top_matches_reported:
+    default: true
+    mandatory: true
+    option: null
+    value: 10
+tool_command: null
