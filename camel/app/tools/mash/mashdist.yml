@@ -1,0 +1,28 @@
+conda:
+  name: mash
+  packages:
+    - mash=2.3
+dependencies:
+  - mash/2.3
+parameters:
+  individual_sequences:
+    default: false
+    mandatory: false
+    option: -i
+    flag: true
+  max_distance:
+    default: false
+    mandatory: false
+    option: -d
+    value: 1
+  max_p_value:
+    default: false
+    mandatory: false
+    option: -v
+    value: 1
+  threads:
+    default: true
+    mandatory: false
+    option: -p
+    value: 4
+tool_command: mash dist

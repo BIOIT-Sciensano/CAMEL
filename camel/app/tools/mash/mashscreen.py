@@ -3,10 +3,10 @@ from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
-from camel.app.core.tool import Tool
+from camel.app.tools.mash.mashbase import MashBase
 
 
-class MashScreen(Tool):
+class MashScreen(MashBase):
     """
     Mash screen determines whether query sequences are within a larger mixture of sequences.
     """
@@ -16,7 +16,7 @@ class MashScreen(Tool):
         Initializes this tool.
         :return: None
         """
-        super().__init__('mash screen', '2.3')
+        super().__init__('mash screen', version=None)
 
     def _check_input(self) -> None:
         """
