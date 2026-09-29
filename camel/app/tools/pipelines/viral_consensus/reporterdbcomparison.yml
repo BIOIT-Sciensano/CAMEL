@@ -1,0 +1,13 @@
+dependencies: []
+parameters:
+  identity_fail:
+    default: true
+    mandatory: true
+    option: null
+    value: 97.0
+  identity_warn:
+    default: true
+    mandatory: true
+    option: null
+    value: 99.0
+tool_command: null
