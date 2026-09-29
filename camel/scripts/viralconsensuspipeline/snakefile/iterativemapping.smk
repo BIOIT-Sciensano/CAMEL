@@ -349,6 +349,8 @@ rule iterative_mapping_combine_stats_all_iterations:
         TSV = 'iterative_mapping/stats/stats_all_iterations.tsv',
         TSV_seg = 'iterative_mapping/stats/stats_all_iterations-by_segment.tsv'
     run:
+        from camel.app.toolkits.viralconsensus import seqidutils
+
         # Combined across all segments
         records_out = []
         records_out_by_segment = []
@@ -365,7 +367,7 @@ rule iterative_mapping_combine_stats_all_iterations:
             for seq_id, data_segment in data['by_segment'].items():
                 records_out_by_segment.append({
                     'seq_id': seq_id,
-                    'segment': seq_id.split('-')[-1],
+                    'segment': seqidutils.get_segment(seq_id),
                     'iter': nb_iter,
                     **data_segment
                 })

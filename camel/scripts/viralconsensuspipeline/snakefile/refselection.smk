@@ -3,8 +3,8 @@ from pathlib import Path
 
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
+from camel.app.toolkits.viralconsensus import dbutils
 from camel.app.tools.mash.mashscreen import MashScreen
-from camel.scripts.viralconsensuspipeline.snakefile import refselection
 
 
 rule ref_selection_mash_screen:
@@ -45,7 +45,7 @@ rule ref_selection_create_fasta:
     Creates a FASTA file by parsing the mash output and selection the best matching reference for each segment.
     """
     input:
-        TSV = ([str(rules.ref_selection_mash_screen.output.TSV).format(segment=seg) for seg in refselection.get_segments(
+        TSV = ([str(rules.ref_selection_mash_screen.output.TSV).format(segment=seg) for seg in dbutils.get_segments(
             Path(config['ref_selection']['db']))]) if config['ref_selection']['db'] is not None else [],
         DB = Path(config['ref_selection']['db']) if config['ref_selection'].get('db') is not None else []
     output:
@@ -55,7 +55,7 @@ rule ref_selection_create_fasta:
     run:
         import itertools
         from camelcore.app.io.tooliodirectory import ToolIODirectory
-        from camel.app.tools.pipelines.viral_consensus.refselectioncreatefasta import RefSelection
+        from camel.app.tools.pipelines.viral_consensus.refselection import RefSelection
         ref_selection = RefSelection()
         tsv_in = list(itertools.chain(*[snakemakeutils.load_object(Path(io)) for io in input.TSV]))
         ref_selection.add_input_files({'TSV': tsv_in, 'DB': [ToolIODirectory(Path(input.DB))]})

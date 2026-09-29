@@ -135,7 +135,7 @@ rule multi_allelic_sites_report:
         dir_ = 'multi_allelic/report',
         name = config['input']['sample_name']
     run:
-        from camel.app.tools.pipelines.viral_consensus.reportmultiallelic import ReporterMultiAllelic
+        from camel.app.tools.pipelines.viral_consensus.reportermultiallelic import ReporterMultiAllelic
         reporter = ReporterMultiAllelic()
         snakemakeutils.add_io_inputs(reporter, input)
         reporter.update_parameters(name=params.name)

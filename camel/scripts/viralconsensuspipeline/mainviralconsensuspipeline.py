@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import dataclasses
-import json
-import re
 import shutil
 from pathlib import Path
 
@@ -21,6 +19,7 @@ from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
 from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
+from camel.app.toolkits.viralconsensus import dbutils, seqidutils
 from camel.scripts.viralconsensuspipeline import CONFIG_DATA, SNAKEFILE_MAIN
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
 
@@ -121,8 +120,7 @@ class MainViralConsensusPipeline(BasePipe):
             # A single segment is accepted
             return
         for seq in seqs:
-            m = re.match(r'^[\w.]+-\w+', seq.id)
-            if m:
+            if seqidutils.is_valid_seq_id(seq.id):
                 continue
             raise ValueError(
                 f"Invalid FASTA input, sequence '{seq.id}' does not match format ({{identifier}}-{{segment_name}})"
@@ -157,9 +155,7 @@ class MainViralConsensusPipeline(BasePipe):
             return fastautils.count_bases(self._opts_custom.fasta_ref)
         elif self._opts_custom.ref_genome_db is not None:
             logger.info('Extracting genome size from database')
-            with open(self._opts_custom.ref_genome_db / 'genome_info.json') as handle:
-                data_genome = json.load(handle)
-                return data_genome['genome_size']
+            return dbutils.read_genome_info(self._opts_custom.ref_genome_db)['genome_size']
         raise ValueError('Cannot determine genome size')
 
     def _execute(self) -> None:

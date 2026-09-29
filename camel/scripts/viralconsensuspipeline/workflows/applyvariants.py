@@ -7,6 +7,7 @@ from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.config import config
 from camel.app.loggers import logger
+from camel.app.toolkits.viralconsensus import seqidutils
 from camel.app.tools.bcftools.bcftoolsconsensus import BcftoolsConsensus
 from camel.app.tools.bcftools.bcftoolsindex import BcftoolsIndex
 from camel.app.tools.bcftools.bcftoolsview import BcftoolsView
@@ -109,7 +110,7 @@ class ApplyVariants:
         with open(path_fasta) as handle:
             seqs = list(SeqIO.parse(handle, 'fasta'))
         for s in seqs:
-            s.id = f"{name}-{s.id.split('-')[-1]}"
+            s.id = f'{name}-{seqidutils.get_segment(s.id)}'
             s.description = description
         with path_fasta.open('w') as handle:
             SeqIO.write(seqs, handle, 'fasta')

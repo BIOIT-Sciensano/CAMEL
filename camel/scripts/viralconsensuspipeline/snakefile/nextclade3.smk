@@ -112,6 +112,7 @@ rule nextclade3_extract_segment:
         from Bio import SeqIO
         from Bio.Seq import Seq
         from camelcore.app.io.tooliofile import ToolIOFile
+        from camel.app.toolkits.viralconsensus import seqidutils
 
         # Retrieve the sequence of the corresponding segment
         fasta_in = snakemakeutils.load_object(Path(input.FASTA))[0].path
@@ -122,9 +123,9 @@ rule nextclade3_extract_segment:
             else:
                 try:
                     seq_segment = next(
-                        s for s in seqs if s.id.lower().endswith(f'-{params.segment_name}'.lower()))
+                        s for s in seqs if seqidutils.get_segment(s.id).lower() == str(params.segment_name).lower())
                 except StopIteration:
-                    segments = [s.id.split('-')[-1].lower() for s in seqs]
+                    segments = [seqidutils.get_segment(s.id).lower() for s in seqs]
                     logger.warning(f"Cannot find segment: {params.segment_name} (found: {', '.join(segments)}), using empty sequence")
                     seq_segment = SeqIO.SeqRecord(seq=Seq(''), id=str(params.segment_name), description="")
 

@@ -1,6 +1,4 @@
 import json
-import logging
-import re
 from pathlib import Path
 
 import pandas as pd
@@ -12,6 +10,7 @@ from camelcore.app.reports.htmltableformatter import FormatEntry, HtmlTableForma
 
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.tool import Tool
+from camel.app.toolkits.viralconsensus import dbutils, seqidutils
 
 
 class ReporterRefSelection(Tool):
@@ -64,35 +63,6 @@ class ReporterRefSelection(Tool):
             raise InvalidToolInputError('Database input (DB) is required')
         super()._check_input()
 
-    @staticmethod
-    def _parse_mash_output(mash_output: list[Path]) -> dict[str, pd.DataFrame]:
-        """
-        Parses the mash output for the input files.
-        :param mash_output: mash output files
-        :return: Parsed data by segment
-        """
-        mash_out_by_segment = {}
-        for path_tsv in mash_output:
-            segment = path_tsv.parent.name
-            data_mash = pd.read_table(
-                path_tsv, names=['identity', 'hashes', 'median_mult', 'p_val', 'ref_id', 'ref_comment'])
-            mash_out_by_segment[segment] = data_mash
-            data_mash['hashes_pct'] = data_mash['hashes'].apply(
-                lambda x: 100 * int(x.split('/')[0]) / max(int(x.split('/')[1]), 1))
-            data_mash['hashes_nb'] = data_mash['hashes'].apply(lambda x: int(x.split('/')[1]))
-            data_mash.sort_values(by=['hashes_pct', 'hashes_nb'], inplace=True, ascending=[False, False])
-            data_mash['ref_id_fmt'] = data_mash['ref_id'].apply(lambda x: x.split('-')[0].replace('_', ' '))
-        return mash_out_by_segment
-
-    def _parse_database_info(self, dir_db: Path) -> dict:
-        """
-        Parses the database information.
-        :param dir_db: Database directory
-        """
-        path_metadata = dir_db / 'genome_info.json'
-        with path_metadata.open() as handle:
-            return json.load(handle)
-
     def _add_table_ref_metadata(self, section: HtmlReportSection, dir_db: Path, ref_by_seg: dict[str, pd.Series]) -> \
             None:
         """
@@ -102,19 +72,14 @@ class ReporterRefSelection(Tool):
         :return: reference metadata dictionary
         """
         # Parse metadata file
-        path_meta = dir_db / 'sequence_metadata.tsv'
-        logging.info(f'Reading sequence metadata from: {path_meta}')
-        data_meta = pd.read_table(path_meta, keep_default_na=False, na_values=['-', ''])
+        data_meta = dbutils.read_metadata(dir_db)
 
         # Create output table
         records_out = []
         for seg, ref in ref_by_seg.items():
             if ref is None:
                 continue
-            try:
-                accession = re.search(r'(.*)-\w+', str(ref['ref_id'])).group(1)
-            except AttributeError:
-                accession = ref['ref_id']
+            accession = seqidutils.get_accession(str(ref['ref_id']))
             metadata = data_meta[data_meta['id'] == accession].iloc[0]
             records_out.append({
                 'Segment': seg,

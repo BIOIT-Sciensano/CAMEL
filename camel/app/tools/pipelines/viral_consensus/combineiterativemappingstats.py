@@ -9,6 +9,7 @@ from camelcore.app.utils import vcfutils
 
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.tool import Tool
+from camel.app.toolkits.viralconsensus import seqidutils
 
 
 class CollectIterativeMappingStats(Tool):
@@ -109,10 +110,10 @@ class CollectIterativeMappingStats(Tool):
         """
         # Parse VCF input
         variants = vcfutils.parse_all_variants(path_vcf)
-        seq_id_by_segment = {seq_id.split('-')[-1]: seq_id for seq_id in seq_ids}
+        seq_id_by_segment = {seqidutils.get_segment(seq_id): seq_id for seq_id in seq_ids}
         variants_by_seq_id = {seq_id: [] for seq_id in seq_ids}
         for v in variants:
-            segment = v.CHROM.split('-')[-1]
+            segment = seqidutils.get_segment(v.CHROM)
             if segment not in seq_id_by_segment:
                 logging.warning(
                     f"Variant on '{v.CHROM}' does not match any consensus segment; skipping in per-segment stats")

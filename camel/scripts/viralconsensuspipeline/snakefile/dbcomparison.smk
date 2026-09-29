@@ -2,7 +2,8 @@ from pathlib import Path
 
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
-from camel.scripts.viralconsensuspipeline.snakefile import dbcomparison, iterativemapping, refselection
+from camel.app.toolkits.viralconsensus import dbutils
+from camel.scripts.viralconsensuspipeline.snakefile import dbcomparison, iterativemapping
 
 
 checkpoint db_comparison_split_consensus:
@@ -14,18 +15,19 @@ checkpoint db_comparison_split_consensus:
     output:
         DIR = directory('db_comparison/consensus')
     params:
-        segments_db = refselection.get_segments(Path(config['ref_selection']['db'])) if config['ref_selection'].get(
+        segments_db = dbutils.get_segments(Path(config['ref_selection']['db'])) if config['ref_selection'].get(
             'db') is not None else []
     run:
         from Bio import SeqIO
         from camel.app.loggers import logger
+        from camel.app.toolkits.viralconsensus import seqidutils
 
         # Save each segment present in the database to a separate file
         Path(output.DIR).mkdir(parents=True)
         path_fasta = snakemakeutils.load_object(Path(input.FASTA))[0].path
         with path_fasta.open() as handle:
             for seq in SeqIO.parse(handle, 'fasta'):
-                segment = seq.id.split('-')[-1]
+                segment = seqidutils.get_segment(seq.id)
                 if segment not in params.segments_db:
                     logger.warning(f'Consensus segment not found in the database: {segment}')
                     continue
