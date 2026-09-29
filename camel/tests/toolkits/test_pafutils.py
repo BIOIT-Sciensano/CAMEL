@@ -69,7 +69,7 @@ class TestPafUtils(CamelTestSuite):
         self.assertEqual((stats['mismatches'], stats['differences']), (1, 1))
         # N / ambiguous bases (both reported as 'n' by minimap2) are not compared
         stats = pafutils.count_differences('=ACG*na*an=GT')
-        self.assertEqual((stats['differences'], stats['identity']), (0, 100))
+        self.assertEqual((stats['differences'], stats['identity'], stats['compared_positions']), (0, 100, 5))
         # A 3 bp deletion / insertion is a single difference
         self.assertEqual(pafutils.count_differences('=ACG-ttt=ACG')['differences'], 1)
         self.assertEqual(pafutils.count_differences('=ACG+ttt=ACG')['differences'], 1)
