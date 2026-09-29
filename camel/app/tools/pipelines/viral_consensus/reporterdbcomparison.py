@@ -151,9 +151,19 @@ class ReporterDbComparison(Tool):
         section.add_paragraph(
             'The final consensus sequence of each segment is compared to all sequences in the database. '
             'Candidate matches are identified using <i>mash</i> and aligned to the consensus sequence using '
-            '<i>minimap2</i>.'
+            '<i>minimap2</i>. '
             'Matches are ranked by the number of differences (mismatches + indel events). '
             'Ambiguous positions are not compared and overhanging ends are not penalized. '
             'Matches covering less than <b>{:.0f}%</b> of the consensus are not reported. '.format(
                 100 * float(self._input_informs['db_comparison']['min_coverage']),
             ))
+
+        # Identity cutoffs used for the coloring
+        identity_warn = float(self.get_param_value('identity_warn'))
+        identity_fail = float(self.get_param_value('identity_fail'))
+        section.add_table([
+            [HtmlTableCell(f'≥ {identity_warn:.0f}%', color='green'), 'Closely related database sequence'],
+            [HtmlTableCell(f'{identity_fail:.0f} - {identity_warn:.0f}%', color='yellow'), 'Related database sequence'],
+            [HtmlTableCell(f'< {identity_fail:.0f}%', color='red'),
+             'No closely related database sequence, interpret the metadata with caution'],
+        ], ['% Identity (closest match)', 'Interpretation'], [('class', 'data')])
