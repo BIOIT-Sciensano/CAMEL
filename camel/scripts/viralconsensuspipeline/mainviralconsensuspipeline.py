@@ -6,6 +6,7 @@ from pathlib import Path
 import click
 import yaml
 from Bio import SeqIO
+from camelcore.app.io.tooliofile import ToolIOFile
 from camelcore.app.utils import fastautils
 
 from camel.app.cli import cliutils
@@ -15,6 +16,7 @@ from camel.app.loggers import initialize_logging, logger
 from camel.app.scriptutils import model
 from camel.app.scriptutils.basepipe import basepipeutils
 from camel.app.scriptutils.basepipe.basepipe import BasePipe
+from camel.app.scriptutils.basepipe.fastqinput import FastqInput
 from camel.app.scriptutils.basescript import basescriptutils
 from camel.app.scriptutils.basescript.scriptinput import ScriptInput
 from camel.app.scriptutils.basescript.scriptoptions import ScriptOptions
@@ -22,6 +24,7 @@ from camel.app.scriptutils.basescript.scriptoutput import ScriptOutput
 from camel.app.toolkits.viralconsensus import dbutils, seqidutils
 from camel.scripts.viralconsensuspipeline import CONFIG_DATA, SNAKEFILE_MAIN
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping
+from camel.scripts.viralconsensuspipeline.workflows.speciesdetection import SpeciesDetectionWorkflow
 
 
 @dataclasses.dataclass(frozen=True)
@@ -89,6 +92,7 @@ class MainViralConsensusPipeline(BasePipe):
             snakefile=SNAKEFILE_MAIN,
         )
         self._opts_custom = opts_custom
+        self._species_detection: dict[str, str] | None = None
 
     def _validate_opts(self) -> None:
         """
@@ -158,12 +162,52 @@ class MainViralConsensusPipeline(BasePipe):
             return dbutils.read_genome_info(self._opts_custom.ref_genome_db)['genome_size']
         raise ValueError('Cannot determine genome size')
 
+    def _resolve_species(self) -> None:
+        """
+        Detects the species when a species group is specified (e.g. 'rsv' -> 'rsv_a' / 'rsv_b').
+        :return: None
+        """
+        species_groups = self._load_config_yaml()['species_groups']
+        group = self._opts_custom.species
+        if group not in species_groups:
+            return
+        members = ', '.join(species_groups[group].keys())
+
+        # Raw read input
+        if self._script_in.type_ == model.InputType.ILLUMINA:
+            fastq_in = FastqInput('illumina', pe=[ToolIOFile(p) for p in self._script_in.fastq_pe], is_pe=True)
+        elif self._script_in.type_ == model.InputType.ONT:
+            fastq_in = FastqInput('ont', se=[ToolIOFile(self._script_in.fastq_se)], is_pe=False)
+        else:
+            raise ValueError(f"Species detection requires read input, specify the species explicitly ({members})")
+
+        # Detect the species
+        logger.info(f'Detecting species for species group: {group} ({members})')
+        workflow = SpeciesDetectionWorkflow(self._script_opts.working_dir / 'species_detection' / 'detection')
+        out = workflow.run(
+            fastq_in,
+            {species: Path(path_fasta) for species, path_fasta in species_groups[group].items()},
+            threads=self._script_opts.threads,
+        )
+        if out.species is None:
+            raise ValueError(
+                f"Cannot detect the species for species group '{group}', specify the species explicitly ({members})")
+        logger.info(f'Detected species: {out.species}')
+        self._species_detection = {
+            'group': group,
+            'species': out.species,
+            'tsv': str(out.path_tsv),
+            'informs': str(out.path_informs),
+        }
+        self._opts_custom = dataclasses.replace(self._opts_custom, species=out.species)
+
     def _execute(self) -> None:
         """
         Runs the pipeline.
         :return: None
         """
         self._validate_opts()
+        self._resolve_species()
 
         # Build and validate the config file
         config_data = self._build_config()
@@ -181,6 +225,21 @@ class MainViralConsensusPipeline(BasePipe):
             )
             shutil.copyfile(output_io_list[0].path, self._script_out.fasta)
 
+    def _load_config_yaml(self) -> dict:
+        """
+        Parses the config YAML file.
+        :return: Config YAML data
+        """
+        with CONFIG_DATA.open() as handle_in:
+            return yaml.safe_load(
+                handle_in.read().format(
+                    COV_MAX=self._script_opts.cov_max,
+                    COV_MAX_SEGMENT=self._opts_custom.cov_max_segment,
+                    DB_ROOT=config.dir_db,
+                    GENOME_SIZE=self._determine_genome_size(),
+                )
+            )
+
     def _config_add_yaml_data(self, config_data: dict) -> None:
         """
         Adds the data from parsing the config YAML file.
@@ -188,18 +247,7 @@ class MainViralConsensusPipeline(BasePipe):
         :return: None
         """
         logger.info(f'Adding config data from: {CONFIG_DATA}')
-        with CONFIG_DATA.open() as handle_in:
-            basepipeutils.dict_merge(
-                config_data,
-                yaml.safe_load(
-                    handle_in.read().format(
-                        COV_MAX=self._script_opts.cov_max,
-                        COV_MAX_SEGMENT=self._opts_custom.cov_max_segment,
-                        DB_ROOT=config.dir_db,
-                        GENOME_SIZE=self._determine_genome_size(),
-                    )
-                ),
-            )
+        basepipeutils.dict_merge(config_data, self._load_config_yaml())
 
     def _config_add_iterative_mapping_data(self, config_data: dict) -> None:
         """
@@ -251,6 +299,7 @@ class MainViralConsensusPipeline(BasePipe):
         # YAML data
         self._config_add_yaml_data(config_data)
         config_data['analyses_selected'] = self._opts_custom.analyses
+        config_data['species_detection'] = self._species_detection
 
         if self._opts_custom.species == 'other':
             config_data['contamination_check']['expected_species'] = self._opts_custom.species_name
