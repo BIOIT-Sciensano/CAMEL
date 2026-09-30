@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -11,6 +10,7 @@ from camelcore.app.reports.htmltableformatter import FormatEntry, HtmlTableForma
 from camel.app.core import toolutils
 from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.tool import Tool
+from camel.app.toolkits.viralconsensus import dbutils
 
 
 class ReporterDbComparison(Tool):
@@ -57,7 +57,7 @@ class ReporterDbComparison(Tool):
             self._tool_inputs[key][0].path, keep_default_na=False, na_values=[''],
             dtype={c: str for c in ReporterDbComparison.COLS_METADATA}) for key in ('TSV', 'TSV_equal')]
         section = HtmlReportSection('Database comparison')
-        manifest = self.__parse_db_manifest()
+        manifest = dbutils.read_manifest(self._tool_inputs['DB'][0].path)
         section.add_table([
             ['Database:', manifest.get('database', self._tool_inputs['DB'][0].path.name)],
             ['Download date:', manifest.get('ncbi_download_date', 'n/a')]
@@ -71,24 +71,6 @@ class ReporterDbComparison(Tool):
         self.__add_output_files(section)
         self.__add_information(section)
         self._tool_outputs['VAL_HTML'] = [ToolIOValue(section)]
-
-    def __parse_db_manifest(self) -> dict:
-        """
-        Parses the database manifest (not available for databases created before v3).
-        :return: Manifest data, empty if not available
-        """
-        path_manifest = self._tool_inputs['DB'][0].path / 'manifest.json'
-        if not path_manifest.exists():
-            return {}
-        with path_manifest.open() as handle:
-            return json.load(handle)
-
-    def __get_db_segments(self) -> list[str]:
-        """
-        Returns the segments in the database.
-        :return: Segment names
-        """
-        return sorted(p.stem for p in (self._tool_inputs['DB'][0].path / 'mash').glob('*.msh'))
 
     def __create_colored_cell(self, value: float, key: str, fmt: str) -> HtmlTableCell:
         """
@@ -145,7 +127,8 @@ class ReporterDbComparison(Tool):
         section.add_header('Overview', 3)
         cols_meta = [c for c in ReporterDbComparison.COLS_METADATA if c in data_equal.columns]
         table_data = []
-        for segment in sorted(set(self.__get_db_segments()) | set(data_matches['segment'])):
+        segments_db = dbutils.get_segments(self._tool_inputs['DB'][0].path)
+        for segment in sorted(set(segments_db) | set(data_matches['segment'])):
             data_seg = data_matches[data_matches['segment'] == segment]
 
             # Segment without result
@@ -185,7 +168,8 @@ class ReporterDbComparison(Tool):
         :return: None
         """
         # Warn for segments in the database without result
-        segments_missing = [s for s in self.__get_db_segments() if s not in set(data_matches['segment'])]
+        segments_missing = [
+            s for s in dbutils.get_segments(self._tool_inputs['DB'][0].path) if s not in set(data_matches['segment'])]
         if len(segments_missing) > 0:
             section.add_alert(
                 f"No database comparison for segment(s) {', '.join(segments_missing)}: segment not detected, consensus "

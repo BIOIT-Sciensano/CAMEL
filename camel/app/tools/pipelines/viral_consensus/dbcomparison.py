@@ -9,7 +9,7 @@ from camel.app.core.errors import InvalidToolInputError
 from camel.app.core.tool import Tool
 from camel.app.loggers import logger
 from camel.app.toolkits.minimap2 import pafutils
-from camel.app.toolkits.viralconsensus import dbutils
+from camel.app.toolkits.viralconsensus import dbutils, seqidutils
 
 
 class DbComparison(Tool):
@@ -64,7 +64,7 @@ class DbComparison(Tool):
             data_equal = pd.DataFrame(columns=DbComparison.COLS_EQUAL)
 
         # Add the metadata
-        data_meta = DbComparison._parse_metadata(dir_db, set(data_matches['accession']) | set(data_equal['accession']))
+        data_meta = dbutils.read_metadata(dir_db, set(data_matches['accession']) | set(data_equal['accession']))
         data_matches = DbComparison._add_metadata(data_matches, data_meta)
         data_equal = DbComparison._add_metadata(data_equal, data_meta)
 
@@ -90,8 +90,8 @@ class DbComparison(Tool):
         """
         data_paf = pafutils.read_paf(path_paf, tags=['cs'])
         data_out = pd.DataFrame({
-            'segment': data_paf['target'].str.split('-').str[-1],
-            'accession': data_paf['query'].str.rsplit('-', n=1).str[0]
+            'segment': data_paf['target'].map(seqidutils.get_segment),
+            'accession': data_paf['query'].map(seqidutils.get_accession)
         })
         data_stats = pd.DataFrame(
             [pafutils.count_differences(cs) for cs in data_paf['cs']], index=data_paf.index,
@@ -109,7 +109,7 @@ class DbComparison(Tool):
         for path_fasta in paths_fasta:
             for seq_id, seq in fastautils.read_as_dict(path_fasta).items():
                 records.append({
-                    'segment': seq_id.split('-')[-1],
+                    'segment': seqidutils.get_segment(seq_id),
                     'length': len(seq),
                     'called': len(seq) - str(seq.seq).upper().count('N')
                 })
@@ -201,18 +201,6 @@ class DbComparison(Tool):
             data_out = data_out.merge(data_clusters.rename(columns={'id': 'accession'}), on='unique_id', how='left')
             data_out['accession'] = data_out['accession'].fillna(data_out['unique_id'])
         return data_out[DbComparison.COLS_EQUAL]
-
-    @staticmethod
-    def _parse_metadata(dir_db: Path, accessions: set[str]) -> pd.DataFrame:
-        """
-        Parses the metadata of the given accessions.
-        :param dir_db: Database directory
-        :param accessions: Accessions
-        :return: Metadata
-        """
-        data_meta = pd.read_table(
-            dir_db / 'sequence_metadata.tsv', dtype=str, keep_default_na=False, na_values=['-', ''])
-        return data_meta[data_meta['id'].isin(accessions)]
 
     @staticmethod
     def _add_metadata(data: pd.DataFrame, data_meta: pd.DataFrame) -> pd.DataFrame:

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from camel.app.loggers import initialize_logging
+from camel.app.toolkits.viralconsensus import dbutils
 from camel.snakefiles import trimming_illumina, trimming_ont, trimming, downsampling, \
     contamination_check_kraken, core, human_read_scrubbing, assembly
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection, preprocess, \
@@ -78,7 +79,7 @@ rule report_create_command_section:
         INFORMS_downsampling = downsampling.get_command_informs(config),
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
-        INFORMS_reference_selection = Path('ref_selection') / 'mash_screen' / refselection.get_segments(
+        INFORMS_reference_selection = Path('ref_selection') / 'mash_screen' / dbutils.get_segments(
             Path(config['ref_selection']['db']))[0] / 'informs.io' if config['fasta_ref'] is None and config['input']['type'] != 'fasta' and config['ref_selection'].get('db') is not None else [],
         INFORMS_preprocess = preprocess.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],
         INFORMS_iterative_mapping = iterativemapping.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],

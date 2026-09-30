@@ -1,7 +1,6 @@
 import json
 import logging
 import math
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +10,7 @@ from camelcore.app.io.tooliofile import ToolIOFile
 
 from camel.app.core import toolutils
 from camel.app.core.tool import Tool
+from camel.app.toolkits.viralconsensus import dbutils, seqidutils
 from camel.app.tools.samtools.samtoolsfastaindex import SamtoolsFastaIndex
 
 
@@ -38,10 +38,10 @@ class RefSelection(Tool):
         :return: None
         """
         # Parse input
-        db_info = self._parse_database_info(self._tool_inputs['DB'][0].path)
+        db_info = dbutils.read_genome_info(self._tool_inputs['DB'][0].path)
 
         # Parse the length information
-        len_by_segment = RefSelection._parse_seq_lengths(self._tool_inputs['DB'][0].path)
+        len_by_segment = dbutils.read_seq_lengths(self._tool_inputs['DB'][0].path)
 
         # Parse the mash output
         mash_out_by_segment = RefSelection._parse_mash_output([p.path for p in self._tool_inputs['TSV']], len_by_segment)
@@ -103,6 +103,10 @@ class RefSelection(Tool):
             data_mash = pd.read_table(
                 path_tsv, names=['identity', 'hashes', 'median_mult', 'p_val', 'ref_id', 'ref_comment'])
             mash_out_by_segment[segment] = data_mash
+            if data_mash.empty:
+                for col in ['hashes_pct', 'hashes_nb', 'length', 'score_final', 'ref_id_fmt']:
+                    data_mash[col] = pd.Series(dtype='object')
+                continue
             data_mash['hashes_pct'] = data_mash['hashes'].apply(
                 lambda x: 100 * int(x.split('/')[0]) / max(int(x.split('/')[1]), 1))
             data_mash['hashes_nb'] = data_mash['hashes'].apply(
@@ -110,32 +114,8 @@ class RefSelection(Tool):
             data_mash['length'] = data_mash['ref_id'].map(len_by_segment[segment])
             data_mash['score_final'] = data_mash.apply(RefSelection.calc_score, axis=1)
             data_mash.sort_values(by=['score_final'], inplace=True, ascending=False)
-            data_mash['ref_id_fmt'] = data_mash['ref_id'].apply(lambda x: x.split('-')[0].replace('_', ' '))
+            data_mash['ref_id_fmt'] = data_mash['ref_id'].apply(lambda x: seqidutils.get_accession(x).replace('_', ' '))
         return mash_out_by_segment
-
-    @staticmethod
-    def _parse_database_info(dir_db: Path) -> dict:
-        """
-        Parses the database information.
-        :param dir_db: Database directory
-        """
-        path_metadata = dir_db / 'genome_info.json'
-        with path_metadata.open() as handle:
-            return json.load(handle)
-
-    @staticmethod
-    def _parse_seq_lengths(dir_db: Path) -> dict[str, dict[str, int]]:
-        """
-        Parse the lenghts of the sequences in the database.
-        :param dir_db: Database directory
-        :return: Sequence length by segment
-        """
-        len_by_segment = defaultdict(dict)
-        for path_fai in (dir_db / 'fasta_by_segment').glob('*.fai'):
-            data_length = pd.read_table(path_fai, usecols=[0, 1], names=['seq_id', 'length'])
-            for seq_id, length in data_length.itertuples(index=False, name=None):
-                len_by_segment[path_fai.name.split('.')[0]][seq_id] = length
-        return len_by_segment
 
     def _merge_mash_output(self, mash_out_by_segment: dict[str, pd.DataFrame]) -> Path:
         """

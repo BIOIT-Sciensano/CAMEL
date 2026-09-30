@@ -176,6 +176,7 @@ rule preprocess_stats:
         TSV = 'preprocess/stats.tsv'
     run:
         import pandas as pd
+        from camel.app.toolkits.viralconsensus import seqidutils
         with open(input.JSON_pre) as handle:
             data_pre = json.load(handle)
         with open(input.JSON_post) as handle:
@@ -184,7 +185,7 @@ rule preprocess_stats:
         records_out = []
         for seq_id in data_pre['by_chr']:
             records_out.append({
-                'segment': seq_id.split('-')[-1],
+                'segment': seqidutils.get_segment(seq_id),
                 'depth_median_pre': data_pre['by_chr'][seq_id]['depth_median'],
                 'depth_median_post': data_post['by_chr'][seq_id]['depth_median'],
                 'covered_rate_pre': data_pre['by_chr'][seq_id]['covered_rate'],
