@@ -106,7 +106,7 @@ class TestSpeciesDetection(CamelTestSuite):
     @longRunningTest()
     def test_species_detection_workflow_illumina(self) -> None:
         """
-        Tests the species detection workflow with Illumina RSV A data.
+        Tests the species detection workflow with Illumina RSV B data.
         :return: None
         """
         fastq_in = FastqInput('illumina', pe=[
@@ -118,7 +118,7 @@ class TestSpeciesDetection(CamelTestSuite):
             'rsv_a': TestSpeciesDetection.dir_ref_genomes / 'hRSV_A.fasta',
             'rsv_b': TestSpeciesDetection.dir_ref_genomes / 'hRSV_B.fasta',
         })
-        self.assertEqual(out.species, 'rsv_a')
+        self.assertEqual(out.species, 'rsv_b')
         self.assertTrue(out.path_tsv.exists())
         self.assertTrue(out.path_informs.exists())
 
