@@ -255,6 +255,33 @@ class TestViralConsensusPipeline(CamelTestSuite):
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
 
+    @longRunningTest()
+    def test_illumina_fasta_ref_rsv_species_detection(self) -> None:
+        """
+        Tests the pipeline with Illumina data, FASTA reference file, and species detection for RSV.
+        :return: None
+        """
+        path_report_out = self.running_dir / 'out' / 'report.html'
+        path_summary_out = self.running_dir / 'out' / 'summary.tsv'
+        result = cliutils.invoke(main, [
+            '--species', 'rsv',
+            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'hRSV_A.fasta'),
+            '--fastq-pe',
+            str(TestViralConsensusPipeline.dir_testdata / 'RSV-ERR331022_1.fastq.gz'),
+            str(TestViralConsensusPipeline.dir_testdata / 'RSV-ERR331022_2.fastq.gz'),
+            '--input-type', 'illumina',
+            '--analyses', 'nextclade,antivirals',
+            '--cov-max', '5000',
+            '--cov-max-segment', '500',
+            '--output-html', str(path_report_out),
+            '--output-dir', str(path_report_out.parent),
+            '--output-tsv', str(path_summary_out),
+            '--working-dir', str(self.running_dir)
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreater(path_report_out.stat().st_size, 0)
+        self.assertIn('species_detection_species\trsv_a\n', path_summary_out.read_text())
+
     ############################################
     # Illumina - Automatic reference selection #
     ############################################
