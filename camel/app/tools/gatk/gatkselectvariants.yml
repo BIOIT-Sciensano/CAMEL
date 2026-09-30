@@ -6,94 +6,79 @@ dependencies:
   - java/1.8.0_172
   - gatk/3.7
 parameters:
-  excludeFiltered:
+  exclude_filtered:
     default: false
     mandatory: false
-    option: --excludeFiltered
-    p_index: 130
-    value: null
-  excludeNonVariants:
+    option: '--excludeFiltered'
+    flag: true
+  exclude_non_variants:
     default: false
     mandatory: false
-    option: --excludeNonVariants
-    p_index: 120
-    value: null
-  invertSelect:
+    option: '--excludeNonVariants'
+    flag: true
+  invert_select:
     default: false
     mandatory: false
-    option: -invertSelect
-    p_index: 90
-    value: null
-  maxFractionFilteredGenotypes:
+    option: '-invertSelect'
+    flag: true
+  max_fraction_filtered_genotypes:
     default: false
     mandatory: false
-    option: --maxFractionFilteredGenotypes
-    p_index: 100
-    value: "1"
-  maxIndelSize:
+    option: '--maxFractionFilteredGenotypes'
+    value: '1'
+  max_indel_size:
     default: false
     mandatory: false
-    option: --maxIndelSize
-    p_index: 30
-    value: "2147483647"
-  maxNOCALLfraction:
+    option: '--maxIndelSize'
+    value: '2147483647'
+  max_nocall_fraction:
     default: false
     mandatory: false
-    option: --maxNOCALLfraction
-    p_index: 50
-    value: "1"
-  minFractionFilteredGenotypes:
+    option: '--maxNOCALLfraction'
+    value: '1'
+  min_fraction_filtered_genotypes:
     default: false
     mandatory: false
-    option: --minFractionFilteredGenotypes
-    p_index: 110
-    value: "0"
-  minIndelSize:
+    option: '--minFractionFilteredGenotypes'
+    value: '0'
+  min_indel_size:
     default: false
     mandatory: false
-    option: --minIndelSize
-    p_index: 40
-    value: "0"
+    option: '--minIndelSize'
+    value: '0'
   output:
     default: true
     mandatory: false
-    option: -o
-    p_index: 0
+    option: '-o'
     value: selected_variants.vcf
-  preserveAlleles:
+  preserve_alleles:
     default: false
     mandatory: false
-    option: --preserveAlleles
-    p_index: 140
-    value: null
-  removeUnusedAlternates:
+    option: '--preserveAlleles'
+    flag: true
+  remove_unused_alternates:
     default: false
     mandatory: false
-    option: --removeUnusedAlternates
-    p_index: 150
-    value: null
-  restrictAllelesTo:
+    option: '--removeUnusedAlternates'
+    flag: true
+  restrict_alleles_to:
     default: false
     mandatory: false
-    option: --restrictAllelesTo
-    p_index: 60
+    option: '--restrictAllelesTo'
     value: ALL
   select:
     default: false
     mandatory: false
-    option: -select
-    p_index: 10
+    option: '-select'
     value: null
-  selectTypeToExclude:
+  select_type_to_exclude:
     default: false
     mandatory: false
-    option: -xlSelectType
-    p_index: 80
+    option: '-xlSelectType'
     value: null
-  selectTypeToInclude:
+  select_type_to_include:
     default: false
     mandatory: false
-    option: -selectType
-    p_index: 70
+    option: '-selectType'
     value: null
 tool_command: run_gatk.sh -T SelectVariants

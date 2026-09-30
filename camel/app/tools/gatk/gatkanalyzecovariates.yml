@@ -9,13 +9,11 @@ parameters:
   csv_output:
     default: true
     mandatory: false
-    option: -csv
-    p_index: 0
+    option: '-csv'
     value: recal_QC_data.csv
   pdf_output:
     default: true
-    mandatory: true
-    option: -plots
-    p_index: 0
+    mandatory: false
+    option: '-plots'
     value: recal_QC_plots.pdf
 tool_command: run_gatk.sh -T AnalyzeCovariates

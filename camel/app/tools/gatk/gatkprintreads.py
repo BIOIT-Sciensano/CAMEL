@@ -1,80 +1,53 @@
 from camelcore.app.io.tooliofile import ToolIOFile
 
+from camel.app.core import toolutils
 from camel.app.tools.gatk.gatk import GATK
 
 
 class GATKPrintReads(GATK):
     """
-    ==========================
-    GATK PrintReads 3.7
-    ==========================
-    Print reads from a SAM/BAM/CRAM file.
-    Example: apply recalibration table to BAM file.
-    https://software.broadinstitute.org/gatk/documentation/tooldocs/4.beta.4/org_broadinstitute_hellbender_tools_PrintReads.php
+    Writes the reads of an alignment file, e.g. to apply a base quality score recalibration table.
 
     Required inputs:
-    ----------------
-    'BAM':              ToolIOFile object. Input BAM file.
-    'FASTA_REF':        ToolIOFile object. FASTA file containing the reference genome.
+    - BAM: Alignment file
+    - FASTA_REF: Reference genome
 
     Optional inputs:
-    ----------------
-    'BQSR':             ToolIOFile object. BQSR file from base quality recalibration step to apply to input BAM.
-    "TXT_intervals":    ToolIOFile object. Intervals list to restrict breadth and accelerate analysis. Bed or GATK intervals list.
+    - BQSR: Recalibration table created by BaseRecalibrator
+    - TXT_intervals: Intervals to restrict the analysis to
 
-    Output:
-    -------
-    'BAM':              ToolIOFile object. TBAM file containing (eg.) recalibrated reads.
-
-    Parameters:
-    ----------
-    - bam_output       Output BAM file name. Default value: 'recalibrated.bam'
+    Outputs:
+    - BAM: Alignment file
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize GATKPrintReads tool.
+        Initializes this tool.
         :return: None
         """
-        super().__init__('gatk PrintReads', '3.7')
+        super().__init__('gatk PrintReads')
 
-        self._required_inputs = ['BAM', 'FASTA_REF']
-        self._specific_parameters = ["bam_external_output"]
-
-    def _set_input(self):
+    def _check_input(self) -> None:
         """
-        Set the input specification in the input_string
-        Overrides method in parent class
+        Checks if the provided input files are valid.
         :return: None
         """
-        # set input BAM
-        self._input_string += "-I {} ".format(self._tool_inputs['BAM'][0].path)
+        toolutils.check_input(self, keys_required=['BAM', 'FASTA_REF'])
+        super()._check_input()
 
-        # set input recalibration table
+    def _get_input_options(self) -> list[str]:
+        """
+        Returns the command line options for the input files.
+        :return: Input options
+        """
+        options = [*super()._get_input_options(), f"-I {self._tool_inputs['BAM'][0].path}"]
         if 'BQSR' in self._tool_inputs:
-            self._input_string += "-BQSR {} ".format(self._tool_inputs['BQSR'][0].path)
+            options.append(f"-BQSR {self._tool_inputs['BQSR'][0].path}")
+        return options
 
-        # Intervals
-        if 'TXT_intervals' in self._tool_inputs:
-            self._input_string += "-L {} ".format(self._tool_inputs['TXT_intervals'][0].path)
-
-        # set reference genome
-        self._input_string += "-R {} ".format(self._tool_inputs['FASTA_REF'][0].path)
-
-    def _set_output(self):
+    def _set_output(self) -> None:
         """
-        Set the output specification in the output_string:
-        BAM and BAI files
-        Supersedes the _set_output fct in GATK class.
+        Sets the output of this tool.
         :return: None
         """
-        bam_output_file = self._parameters['bam_output'].value
-        self._tool_outputs['BAM'] = [ToolIOFile(self._folder / bam_output_file)]
-
-    def run(self, folder='.'):
-        """
-        Runs this tool.
-        :param folder: Folder to run the tool in.
-        :return: None
-        """
-        super(GATKPrintReads, self).run(folder)
+        self._tool_outputs['BAM'] = [ToolIOFile(self.folder / self.get_param_value('bam_output'))]

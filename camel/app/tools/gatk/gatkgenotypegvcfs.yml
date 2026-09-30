@@ -6,34 +6,29 @@ dependencies:
   - java/1.8.0_172
   - gatk/3.7
 parameters:
-  includeNonVariantSites:
+  include_non_variant_sites:
     default: false
     mandatory: false
-    option: -allSites
-    p_index: 50
-    value: null
+    option: '-allSites'
+    flag: true
   output:
     default: true
     mandatory: false
-    option: -o
-    p_index: 0
+    option: '-o'
     value: genotype_gvcf_multisample.vcf
   ploidy:
     default: true
     mandatory: false
-    option: -ploidy
-    p_index: 10
-    value: "1"
+    option: '-ploidy'
+    value: '1'
   stand_call_conf:
     default: true
     mandatory: false
-    option: -stand_call_conf
-    p_index: 20
-    value: "30"
+    option: '-stand_call_conf'
+    value: '30'
   stand_emit_conf:
     default: false
     mandatory: false
-    option: -stand_emit_conf
-    p_index: 30
-    value: "10"
+    option: '-stand_emit_conf'
+    value: '10'
 tool_command: run_gatk.sh -T GenotypeGVCFs

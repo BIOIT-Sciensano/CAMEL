@@ -6,58 +6,49 @@ dependencies:
   - java/1.8.0_172
   - gatk/3.7
 parameters:
-  consensusModel:
+  consensus_model:
     default: false
     mandatory: false
-    option: --consensusDeterminationModel
-    p_index: 10
+    option: '--consensusDeterminationModel'
     value: USE_READS
-  entropyThreshold:
+  entropy_threshold:
     default: false
     mandatory: false
-    option: --entropyThreshold
-    p_index: 20
-    value: "0.15"
+    option: '--entropyThreshold'
+    value: '0.15'
   greedy:
     default: false
     mandatory: false
-    option: -greedy
-    p_index: 50
-    value: "120"
+    option: '-greedy'
+    value: '120'
   intervals:
     default: false
     mandatory: false
-    option: -L
-    p_index: 0
+    option: '-L'
     value: null
-  maxConsensuses:
+  max_consensuses:
     default: false
     mandatory: false
-    option: --maxConsensuses
-    p_index: 40
-    value: "30"
-  maxIsizeForMovement:
+    option: '--maxConsensuses'
+    value: '30'
+  max_isize_for_movement:
     default: false
     mandatory: false
-    option: -maxIsize
-    p_index: 60
-    value: "3000"
-  maxPositionalMoveAllowed:
+    option: '-maxIsize'
+    value: '3000'
+  max_positional_move_allowed:
     default: false
     mandatory: false
-    option: -maxPosMove
-    p_index: 70
-    value: "200"
+    option: '-maxPosMove'
+    value: '200'
   output:
     default: true
     mandatory: false
-    option: -o
-    p_index: 0
+    option: '-o'
     value: indel_realigned.bam
   significance:
     default: false
     mandatory: false
-    option: -LOD
-    p_index: 30
-    value: "5.0"
+    option: '-LOD'
+    value: '5.0'
 tool_command: run_gatk.sh -T IndelRealigner
