@@ -5,7 +5,7 @@ from camel.app.toolkits.viralconsensus import dbutils
 from camel.snakefiles import trimming_illumina, trimming_ont, trimming, downsampling, \
     contamination_check_kraken, core, human_read_scrubbing, assembly
 from camel.scripts.viralconsensuspipeline.snakefile import iterativemapping, refselection, preprocess, \
-    multiallelicsites, nextclade3, antivirals, dbcomparison
+    multiallelicsites, nextclade3, antivirals, dbcomparison, speciesdetection
 
 #######################
 # Included snakefiles #
@@ -24,6 +24,7 @@ include: nextclade3.SNAKEFILE_NEXTCLADE
 include: multiallelicsites.SNAKEFILE
 include: dbcomparison.SNAKEFILE
 include: antivirals.SNAKEFILE
+include: speciesdetection.SNAKEFILE
 
 initialize_logging()
 
@@ -79,6 +80,7 @@ rule report_create_command_section:
         INFORMS_downsampling = downsampling.get_command_informs(config),
         INFORMS_trimming = trimming.get_command_informs(config),
         INFORMS_contamination = contamination_check_kraken.get_command_informs(config),
+        INFORMS_species_detection = speciesdetection.OUTPUT_INFORMS if speciesdetection.is_enabled(config) else [],
         INFORMS_reference_selection = Path('ref_selection') / 'mash_screen' / dbutils.get_segments(
             Path(config['ref_selection']['db']))[0] / 'informs.io' if config['fasta_ref'] is None and config['input']['type'] != 'fasta' and config['ref_selection'].get('db') is not None else [],
         INFORMS_preprocess = preprocess.OUTPUT_INFORMS if config['input']['type'] != 'fasta' else [],
@@ -103,6 +105,7 @@ rule report_combine_all:
         reports_downsampling = downsampling.get_reports(config),
         reports_trimming = trimming.get_reports(config),
         reports_contamination = contamination_check_kraken.get_reports(config),
+        report_species_detection = speciesdetection.OUTPUT_REPORT if speciesdetection.is_enabled(config) else [],
         report_reference_selection = refselection.OUTPUT_REPORT if config['fasta_ref'] is None and config['input']['type'] != 'fasta' else refselection.OUTPUT_REPORT_EMPTY,
         report_preprocess_ampligone = preprocess.OUTPUT_AMPLIGONE_REPORT if 'ampligone' in config['analyses_selected'] and config['input']['type'] != 'fasta' else preprocess.OUTPUT_AMPLIGONE_REPORT_EMPTY,
         report_preprocess_clipping = preprocess.OUTPUT_CLIPPING_REPORT if 'ampligone' in config['analyses_selected'] and config['input']['type'] != 'fasta' else preprocess.OUTPUT_CLIPPING_REPORT_EMPTY,
@@ -156,6 +159,10 @@ rule report_combine_all:
 
         # Add output sections
         if script_input.type_ is not model.InputType.FASTA:
+            # Species detection is only shown when the species was detected (species group)
+            if len(input.report_species_detection) > 0:
+                report_structure.append(
+                    ('Species detection', 'species_detection', [Path(input.report_species_detection)]))
             report_structure.extend([
                 ('Reference selection', 'ref_selection', [Path(input.report_reference_selection)]),
                 ('Pre-processing', 'pre_process', [Path(x) for x in (
@@ -182,6 +189,7 @@ rule summary_combine_all:
         lambda wildcards: downsampling.get_summaries(config, wildcards.ext),
         trimming.get_summaries(config),
         lambda wildcards: contamination_check_kraken.get_summaries(config, wildcards.ext),
+        speciesdetection.OUTPUT_SUMMARY if speciesdetection.is_enabled(config) else [],
         refselection.OUTPUT_SUMMARY if config['fasta_ref'] is None and config['input']['type'] != 'fasta' else [],
         preprocess.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],
         iterativemapping.OUTPUT_SUMMARY if config['input']['type'] != 'fasta' else [],

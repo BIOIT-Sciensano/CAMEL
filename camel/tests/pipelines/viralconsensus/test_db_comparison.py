@@ -206,9 +206,10 @@ class TestDbComparison(CamelTestSuite):
         dir_db = TestDbComparison.DIR_DB_V2
         html = self._run_reporter(self._run_tool(dir_db=dir_db), dir_db=dir_db)
         self.assertIn('<td class="green">100.00%</td><td>0</td><td>2</td><td>n/a</td>', html)
-        # No manifest: database directory name, download date not available
+        # No manifest: database directory name, download date and number of sequences not available
         self.assertIn('<td>Database:</td><td>db_v2</td>', html)
         self.assertIn('<td>Download date:</td><td>n/a</td>', html)
+        self.assertIn('<td>Nb. sequences:</td><td>n/a</td>', html)
 
     def test_reporter_low_identity(self) -> None:
         """

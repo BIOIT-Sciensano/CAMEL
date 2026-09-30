@@ -16,6 +16,7 @@ class ReadMappingOutput:
     """
     path_bam: Path
     path_bed_low_cov: Path
+    path_depth: Path
     stats: dict[str, Any]
     informs: list[dict[str, Any]]
 
@@ -66,8 +67,10 @@ class ReadMappingWorkflow:
         # Collect output
         path_bam = snakemakeutils.load_object(self._dir / 'sam_to_bam' / 'bam.io')[0].path
         path_bed = snakemakeutils.load_object(self._dir / 'low_depth' / 'bed.io')[0].path
+        path_depth = snakemakeutils.load_object(self._dir / 'depth' / 'tsv.io')[0].path
         with (self._dir / 'stats_mapping.json').open() as handle:
             stats = json.load(handle)
         with (self._dir / 'informs_all.json').open() as handle:
             informs = json.load(handle)
-        return ReadMappingOutput(path_bam=path_bam, path_bed_low_cov=path_bed, stats=stats, informs=informs)
+        return ReadMappingOutput(
+            path_bam=path_bam, path_bed_low_cov=path_bed, path_depth=path_depth, stats=stats, informs=informs)

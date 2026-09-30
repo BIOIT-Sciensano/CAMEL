@@ -60,7 +60,8 @@ class ReporterDbComparison(Tool):
         manifest = dbutils.read_manifest(self._tool_inputs['DB'][0].path)
         section.add_table([
             ['Database:', manifest.get('database', self._tool_inputs['DB'][0].path.name)],
-            ['Download date:', manifest.get('ncbi_download_date', 'n/a')]
+            ['Download date:', manifest.get('ncbi_download_date', 'n/a')],
+            ['Nb. sequences:', f"{sum(manifest['nb_sequences'].values()):,}" if 'nb_sequences' in manifest else 'n/a']
         ], table_attributes=[('class', 'information')])
         if len(data_matches) > 0:
             self.__add_overview_table(section, data_matches, data_equal)
