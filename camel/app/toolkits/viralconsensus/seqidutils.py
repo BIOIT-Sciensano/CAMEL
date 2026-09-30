@@ -1,4 +1,4 @@
-Aimport re
+import re
 
 PATTERN_SEQ_ID = re.compile(r'^[\w.]+-\w+')
 
