@@ -103,6 +103,10 @@ class RefSelection(Tool):
             data_mash = pd.read_table(
                 path_tsv, names=['identity', 'hashes', 'median_mult', 'p_val', 'ref_id', 'ref_comment'])
             mash_out_by_segment[segment] = data_mash
+            if data_mash.empty:
+                for col in ['hashes_pct', 'hashes_nb', 'length', 'score_final', 'ref_id_fmt']:
+                    data_mash[col] = pd.Series(dtype='object')
+                continue
             data_mash['hashes_pct'] = data_mash['hashes'].apply(
                 lambda x: 100 * int(x.split('/')[0]) / max(int(x.split('/')[1]), 1))
             data_mash['hashes_nb'] = data_mash['hashes'].apply(
