@@ -108,6 +108,12 @@ species:
     nextclade_mash_db: null
     k2_name: Severe acute respiratory syndrome-related coronavirus
 
+# Species groups: the species is detected by competitive read mapping against the reference genome of each member
+species_groups:
+  rsv:
+    rsv_a: {DB_ROOT}/pipelines/viral_consensus/version_1.1/ref_genomes/hRSV_A.fasta
+    rsv_b: {DB_ROOT}/pipelines/viral_consensus/version_1.1/ref_genomes/hRSV_B.fasta
+
 ####################
 # Pipeline options #
 ####################
