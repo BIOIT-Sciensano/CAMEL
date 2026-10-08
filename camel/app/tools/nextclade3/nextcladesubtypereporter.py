@@ -45,6 +45,7 @@ class NextcladeSubTypeReporter(Tool):
         if len(self._tool_inputs['TSV']) == 0:
             section.add_alert('Subtype determination failed', 'error')
             subtype = None
+            self.informs['nextclade_dbs'] = {}
         else:
             data_in = pd.read_table(self._tool_inputs['TSV'][0].path, names=self._input_informs['mash']['cols'])
             if len(data_in) == 0:

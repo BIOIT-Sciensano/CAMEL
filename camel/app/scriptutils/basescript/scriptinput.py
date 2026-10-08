@@ -144,22 +144,28 @@ class ScriptInput(model.BaseInput):
             nb_seqs = fastautils.count_reads(self.fasta)
             logger.info(f'FASTA input is valid ({nb_seqs:,} sequences)')
             logger.info(f'FASTA hash: {fileutils.hash_file(self.fasta)}')
-        elif self.type_ == model.InputType.ONT:
-            nb_reads = fastqutils.count_reads(self.fastq_se)
-            logger.info(f'SE FASTQ input is valid: {nb_reads:,} reads')
-            logger.info(f'SE FASTQ hash: {fileutils.hash_file(self.fastq_se)}')
-        elif self.type_ == model.InputType.ILLUMINA:
-            if self.fastq_pe is None:
-                raise ValueError('PE reads should be set')
-            pe_files = self.fastq_pe
-            nb_reads_fwd = fastqutils.count_reads(pe_files[0])
-            nb_reads_rev = fastqutils.count_reads(pe_files[1])
-            if not nb_reads_fwd == nb_reads_rev:
-                raise ValueError(
-                    f'The number of forward ({nb_reads_fwd:,}) and reverse ({nb_reads_rev:,}) reads should be equal.')
-            logger.info('FASTQ input is valid')
-            logger.info(f'PE forward FASTQ hash: {fileutils.hash_file(pe_files[0])}')
-            logger.info(f'PE reverse FASTQ hash: {fileutils.hash_file(pe_files[1])}')
+        elif self.type_ in {model.InputType.ILLUMINA, model.InputType.ONT, model.InputType.HYBRID}:
+            # PE reads (Illumina / hybrid)
+            if self.type_ in {model.InputType.ILLUMINA, model.InputType.HYBRID}:
+                if self.fastq_pe is None:
+                    raise ValueError('PE reads should be set')
+                pe_files = self.fastq_pe
+                nb_reads_fwd = fastqutils.count_reads(pe_files[0])
+                nb_reads_rev = fastqutils.count_reads(pe_files[1])
+                if not nb_reads_fwd == nb_reads_rev:
+                    raise ValueError(
+                        f'The number of forward ({nb_reads_fwd:,}) and reverse ({nb_reads_rev:,}) reads should be equal.')
+                logger.info('FASTQ input is valid')
+                logger.info(f'PE forward FASTQ hash: {fileutils.hash_file(pe_files[0])}')
+                logger.info(f'PE reverse FASTQ hash: {fileutils.hash_file(pe_files[1])}')
+
+            # SE reads (ONT / hybrid)
+            if self.type_ in {model.InputType.ONT, model.InputType.HYBRID}:
+                if self.fastq_se is None:
+                    raise ValueError('SE reads should be set')
+                nb_reads = fastqutils.count_reads(self.fastq_se)
+                logger.info(f'SE FASTQ input is valid: {nb_reads:,} reads')
+                logger.info(f'SE FASTQ hash: {fileutils.hash_file(self.fastq_se)}')
         else:
             logger.info(f"Input validation not implemented for {self.type_.value}")
 
