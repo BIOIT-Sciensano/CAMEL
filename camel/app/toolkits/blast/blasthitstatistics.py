@@ -113,12 +113,14 @@ class BlastHitStatistics:
     def novel_allele_seq(self) -> Seq:
         """
         Returns the sequence of the novel allele.
+        Only hits on the minus strand are reverse complemented. Protein hits (e.g. blastx) report the strand as 'N/A'
+        and are returned as-is.
         :return: Novel allele sequence (if available)
         """
         if not self.is_new_allele():
             raise ValueError('BLAST hit is not a novel allele')
         seq_query = Seq(self.query_sequence)
-        return seq_query if self.strand == 'plus' else seq_query.reverse_complement()
+        return seq_query.reverse_complement() if self.strand == 'minus' else seq_query
 
     @property
     def gaps(self) -> int:
