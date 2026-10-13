@@ -4,7 +4,7 @@ The *Yersinia* pipeline performs complete characterization of *Yersinia* isolate
 
 version: **1.2.0**
 
-**Note:** If the input type is `fasta`, pre-processing steps 1 to 4 are skipped.
+**Note:** If the input type is `fasta`, pre-processing steps 2 to 4 are skipped.
 
 ## 1. Human read removal (optional) 
 

@@ -5,7 +5,7 @@ Version: **1.5.0**
 
 # Components
 
-**Note:** If the input type is `fasta`, pre-processing steps 1 to 4 are skipped.
+**Note:** If the input type is `fasta`, pre-processing steps 2 to 4 are skipped.
 
 ## 1. Human read removal (optional) 
 
