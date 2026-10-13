@@ -292,7 +292,6 @@ def parse_script_opts(kwargs) -> ScriptOptions:
         ont_min_qual=kwargs["ont_min_qual"],
         threads=kwargs.get("threads", 1),
         include_bam=kwargs["include_bam"],
-        log=kwargs["log"],
         kraken2_small_db=kwargs["kraken2_small_db"],
     )
 

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from camelcore.app.utils import fileutils
 from camel.app.core.errors import PipelineExecutionError
 from camel.app.core.snakemake.step import Step
 from camel.app.core.snakemake import snakemakeutils
@@ -37,7 +38,7 @@ rule trimming_ont_seqkit:
     threads: 4
     priority: 1
     params:
-        sample_name = config.get('sample_name', 'reads'),
+        sample_name = fileutils.make_valid(config.get('input', {}).get('sample_name') or 'reads'),
         min_length = config.get('read_trimming', {}).get('ont', {}).get('min_length', 500),
         max_length = config.get('read_trimming', {}).get('ont', {}).get('max_length'),
         min_qual = config.get('read_trimming', {}).get('ont', {}).get('min_qual', 7)

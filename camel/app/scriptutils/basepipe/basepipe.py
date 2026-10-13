@@ -1,5 +1,6 @@
 import abc
 import dataclasses
+import shutil
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -135,6 +136,12 @@ class BasePipe(BaseScript[ScriptInput, ScriptOutput, ScriptOptions], metaclass=a
                     message = f"Error executing Snakemake. Check log for more information: {path_log}"
                     raise RuntimeError(message)
             raise err
+
+        # Copy the log file to the output directory
+        if log_file.exists():
+            self._script_out.dir.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(log_file, self._script_out.dir / 'camel.log')
+            logger.debug(f"Log file copied to: {self._script_out.dir / 'camel.log'}")
 
     def _export_assembly(self) -> None:
         """
