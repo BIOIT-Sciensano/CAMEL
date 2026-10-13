@@ -194,7 +194,7 @@ The following variant filters are then applied, with threshold values listed in 
 
 `NCBI AMRFinder+ 4.0.19` is used with default options to detect genes and mutation associated with AMR.
 
-The `--organism` option is set to 'Neisseria meningitidis'
+The `--organism` option is not set.
 
 The database version is indicated in the output report and summary output file.
 
