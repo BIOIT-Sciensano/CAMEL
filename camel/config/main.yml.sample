@@ -2,6 +2,10 @@
 dir_temp: /path/to/temp
 dependency_service: pixi
 
+# Dependencies
+dir_envs_pixi: /path/to/camel/envs
+create_missing_envs: true
+
 # Resource locations
 dir_db: /path/to/camel/dbs
 dir_testdata: /path/to/camel/testdata/
@@ -10,4 +14,4 @@ dir_testdata: /path/to/camel/testdata/
 ftp_server: https://bioit-ftp.sciensano.be/camel
 
 # Logging
-dir_error_logs: /logs/camel/camel_logs
+dir_error_logs: /path/to/camel/logs
