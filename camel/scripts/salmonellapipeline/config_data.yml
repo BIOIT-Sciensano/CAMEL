@@ -226,7 +226,6 @@ gene_detection:
   dbs:
     vfdb_core:
       path: *db_gd_vfdb_core
-      perc_identity_cutoff: 90
       metadata:
         name: Gene
         key: gene

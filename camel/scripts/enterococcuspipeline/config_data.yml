@@ -292,7 +292,6 @@ gene_detection:
   dbs:
     vfdb_core:
       path: *db_vfdb_core
-      perc_identity_cutoff: 90
       metadata:
         name: Gene
         key: gene
@@ -338,4 +337,3 @@ sequence_typing:
       path:
         resolve: species
         key: cgmlst_db
-      detection_method: blast
