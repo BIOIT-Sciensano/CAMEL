@@ -83,6 +83,10 @@ Processed reads are assembled using `SPAdes 3.15.5` with the following options:
 Filtered reads are assembled using `Flye 2.9.5` with default options providing the filtered reads using the 
 `--nano-corr` option.
 
+### Contig filtering
+
+Contigs shorter than 1000 bp are removed from the assembly. This filter is also applied to FASTA input.
+
 ### QUAST
 
 `QUAST 5.2.0` is then used to check the quality of the resulting assembly with the following options:
