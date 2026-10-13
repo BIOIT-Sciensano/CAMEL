@@ -259,7 +259,6 @@ sequence_typing:
       path: *db_typing_mlst_warwick
     cgmlst:
       path: *db_typing_cgmlst
-      detection_method: blast
       blast_task: blastn
     rmlst:
       path: *db_typing_rmlst

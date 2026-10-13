@@ -164,7 +164,7 @@ citations:
 # Reference genome #
 ####################
 reference:
-  name: <i>Y. enterolitica</i> NW56 (GCF_025758635.1)
+  name: <i>Y. enterocolitica</i> NW56 (GCF_025758635.1)
   fasta: *ref_fasta
   gff3: *ref_gff3
   url: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_025758635.1/
@@ -243,7 +243,6 @@ sequence_typing:
   dbs:
     cgmlst_yersinia_spp:
       path: *db_typing_cgmlst_yersinia_spp
-      detection_method: blast
       write_all_matches: True
     mlst_achtman:
       path: *db_typing_mlst_achtman
@@ -251,7 +250,6 @@ sequence_typing:
       path: *db_typing_mlst_mcnally
     cgmlst_ye:
       path: *db_typing_cgmlst_ye
-      detection_method: blast
     cgmlst_yp:
       path: *db_typing_cgmlst_yp
     cgmlst_enterobase:
