@@ -6,7 +6,7 @@ Version: **1.5.0**
 
 # Components
 
-**Note:** If the input type is `fasta`, pre-processing steps 1 to 4 are skipped.
+**Note:** If the input type is `fasta`, pre-processing steps 2 to 4 are skipped.
 
 ## 1. Human read removal (optional) 
 
@@ -53,7 +53,7 @@ SLIDINGWINDOW:4:20
 MINLEN:40
 ```
 
-Quality reports are generated before and after trimming using `fastqc 0.12.1`.
+Quality reports are generated before and after trimming using `fastqc 0.11.7`.
 
 ### ONT
 
@@ -83,6 +83,10 @@ Processed reads are assembled using `SPAdes 3.15.5` with the following options:
 
 Filtered reads are assembled using `Flye 2.9.5` with default options providing the filtered reads using the 
 `--nano-corr` option.
+
+### Contig filtering
+
+Contigs shorter than 1000 bp are removed from the assembly. This filter is also applied to FASTA input.
 
 ### QUAST
 
@@ -121,9 +125,7 @@ with microbial genomes. The date of the last database update is included in the 
 The samples are screened for inter- and intra-species contamination using `ConFindr 0.8.2` with the ribosomal MLST 
 database.
 
-**Note:** ConFindr is not executed when the input type is `fasta`.
-
-**Note:** ConFindr on ONT input data is experimental.
+**Note:** ConFindr is not executed when the input type is `fasta` or `ont`.
 
 ### Quality checks
 
@@ -134,21 +136,21 @@ the pipeline execution.
 | **metric**                             | **warning threshold** | **fail threshold** | **description**                                                                                                                                                                                                                 |
 |----------------------------------------|-----------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Kraken: contaminants                   | 1.00% / 5.00% (ONT)   | 5.00% / 10% (ONT)  | Percentage of reads / contigs assigned to species other than *L. monocytogenes*                                                                                                                                                 |
-| Typing loci detected (%)               | 90%                   | 95%                | Percentage of cgMLST loci detected (or MLST loci when cgMLST is disabled)                                                                                                                                                       |
+| Typing loci detected (%)               | 95%                   | 90%                | Percentage of cgMLST loci detected (or MLST loci when cgMLST is disabled)                                                                                                                                                       |
 | Coverage against assembled contigs     | 20x / 50x (ONT)       | 10x / 30x (ONT)    | Coverage of the reads mapped to the assembly (determined by QUAST)                                                                                                                                                              |
 | Reads mapping to the assembled contigs | 95%                   | 90%                | Percentage of reads mapping back to the assembly (determined by QUAST)                                                                                                                                                          |
 | Total assembly length deviation        | 10%                   | 20%                | Percent deviation from the expected genome size (determined from the reference genome)                                                                                                                                          |
-| ConFindr: number of contaminating SNPs | 10                    | 20                 | Number of SNPs flagged as contaminant by ConFindr                                                                                                                                                                               |
-| Percentage of complete BUSCO genes     | 90%                   | 95%                | Percentage of complete BUSCO genes identified                                                                                                                                                                                   |
+| ConFindr: number of contaminating SNPs | 25                    | 50                 | Number of SNPs flagged as contaminant by ConFindr                                                                                                                                                                               |
+| Percentage of complete BUSCO genes     | 90%                   | 80%                | Percentage of complete BUSCO genes identified                                                                                                                                                                                   |
 | FastQC: Average quality score          | 30                    | 25                 | Checks if the average read quality is above the given threshold.                                                                                                                                                                |
 | FastQC: GC-content deviation           | 2.00%                 | 4.00%              | Checks if the detected GC content is close enough to the expected GC content for this organism (38.00%).                                                                                                                        |
-| FastQC: Max. N-fraction                | 0.0050                | 0.0100             | Checks if the maximal N fraction at any read position is below the given threshold.                                                                                                                                             |
+| FastQC: Max. N-fraction                | 0.0250                | 0.0500             | Checks if the maximal N fraction at any read position is below the given threshold.                                                                                                                                             |
 | FastQC: Per-base sequence content      | 3.00%                 | 6.00%              | Checks if the difference between A-T and C-G is below the given threshold at every position. The first 20 and last 5 bases of the reads are skipped, as the peaks there can be caused by the library kit or trimming artifacts. |
 | FastQC: Q-score drop                   | 200                   | 150                | Checks whether the average position in the reads where the mean Q-score drops below 30 is above the given threshold.                                                                                                            |
 | FastQC: Sequence length distribution   | 66.67%                | 40.00%             | Checks if the median read length of the trimmed reads is below a threshold compared to the mode length of the raw input reads (251).                                                                                            |
 | NanoPlot: Median read length           | 3000                  | 2000               | Median length of the filtered reads.                                                                                                                                                                                            |
 | NanoPlot: Median read quality          | 16                    | 14                 | Median quality of the filtered reads.                                                                                                                                                                                           |
-| seqkit: GC-content deviation           | 2.00%                 | 4.00%              | Checks if the detected GC content is close enough to the expected GC content for this organism                                                                                                                                  |                                                                                                                                 |
+| seqkit: GC-content deviation           | 2.00%                 | 4.00%              | Checks if the detected GC content is close enough to the expected GC content for this organism (38.00%).                                                                                                                       |                                                                                                                                 |
 
 **Note:** FastQC metrics are evaluated separately for the forward and reverse reads.
 
@@ -161,7 +163,7 @@ The QC checks enabled for the supported input types are listed in the table belo
 | Coverage against assembled contigs     | Yes          | No        | Yes     |
 | Reads mapping to the assembled contigs | Yes          | No        | Yes     |
 | Total assembly length deviation        | Yes          | Yes       | Yes     |
-| ConFindr: number of contaminating SNPs | Yes          | No        | Yes     | 
+| ConFindr: number of contaminating SNPs | Yes          | No        | No      | 
 | Percentage of complete BUSCO genes     | Yes          | Yes       | Yes     |
 | FastQC: Average quality score          | Yes          | No        | No      |
 | FastQC: GC-content deviation           | Yes          | No        | No      |
@@ -198,27 +200,27 @@ The following variant filters are then applied, with threshold values listed in 
 
 ### NCBI AMRFinder+
 
-`NCBI AMRFinder+ 3.11.26` is used with default options to detect genes and mutation associated with AMR.
+`NCBI AMRFinder+ 4.0.19` is used with default options to detect genes and mutation associated with AMR.
 
 The database version is specified in both the output report and the summary output file.
 
 ### ResFinder4
 
-`ResFinder4 4.4.2` is used with the following options to detect genes and mutation associated with AMR:
+`ResFinder4 4.7.2` is used with the following options to detect genes and mutation associated with AMR:
 ```
---min_cov 0.6
+--min_cov 0.9
 --acquired
---threshold 0.9
 ```
+
+The `--threshold` option is not set, so the ResFinder default identity threshold is used.
 
 The database version is specified in both the output report and the summary output file.
 
 ## 8. Virulence characterization
 
-Gene detection is performed as described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/) using an updated version of blast (`blast 2.14.0`).
-Alternative detection using `kma 1.4.12a` or `SRST2 0.2.0` is available by changing the `--gene-detection-method` parameter.
-
-**Note:** SRST2 is not available for ONT data input.
+Gene detection is performed as described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/) using an updated version of blast (`blast 2.14.0`) (default).
+Alternative detection using `kma 1.4.12a`, or a mixed approach combining BLAST (on the assembly) and KMA (on the reads), 
+is available by changing the `--gene-detection-method` parameter (`blast`, `kma` or `mixed`).
 
 The following databases are available: 
 
@@ -232,7 +234,9 @@ The following databases are available:
 ### PlasmidFinder
 
 Plasmid replicon detection is performed on the `DTU PlasmidFinder - Gram positive` plasmid replicon database as 
-described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/).
+described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/), using the gene detection method selected 
+with the `--gene-detection-method` parameter. For BLAST-based detection, a minimum percent identity of 95% and a minimum 
+coverage of 60% are used.
 
 ### MOB-suite
 
@@ -241,8 +245,9 @@ plasmids are cross-checked against the gene detection results for the virulence 
 
 ## 10. Sequence typing
 
-Sequence typing is performed as described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/) with an updated version of blast (`blast 2.14.0`). 
-Alternative detection using `kma 1.4.12a` or `MiST v1.5.0` is available by changing the `--typing-method` parameter.
+Sequence typing is performed using `MiST 1.5.0` (default). 
+Alternative detection using `blast 2.14.0` (as described in [Bogaerts *et al.*](https://pubmed.ncbi.nlm.nih.gov/30894839/)) 
+or `kma 1.4.12a` is available by changing the `--typing-method` parameter.
 
 The following typing schemes are available:
 
@@ -250,6 +255,7 @@ The following typing schemes are available:
 |----------------------|---------------------------|
 | AMR typing           | BIGSdb (Institut Pasteur) |
 | Classic MLST         | BIGSdb (Institut Pasteur) |
+| PCR serogroup        | BIGSdb (Institut Pasteur) |
 | Species confirmation | BIGSdb (Institut Pasteur) |
 | Virulence typing     | BIGSdb (Institut Pasteur) |
 | cgMLST               | BIGSdb (Institut Pasteur) |

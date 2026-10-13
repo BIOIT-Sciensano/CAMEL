@@ -208,7 +208,6 @@ gene_detection:
   dbs:
     vfdb_core:
       path: *db_vfdb_core
-      perc_identity_cutoff: 90
       metadata:
         name: Gene
         key: gene
@@ -234,7 +233,6 @@ sequence_typing:
       report_lincodes: true
     cgmlst:
       path: *db_typing_cgmlst
-      detection_method: blast
     rmlst:
       path: *db_typing_rmlst
       message:

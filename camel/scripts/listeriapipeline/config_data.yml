@@ -236,7 +236,6 @@ gene_detection:
     # AMR
     ncbi_amr:
       path: *db_gd_ncbi_amr
-      perc_identity_cutoff: 90
       metadata:
         name: Antibiotic(s)
         key: subclass
@@ -244,7 +243,6 @@ gene_detection:
     # Virulence
     virulencefinder:
       path: *db_gd_virulencefinder
-      perc_identity_cutoff: 90
       metadata:
         name: Protein function
         key: protein_function
@@ -252,7 +250,6 @@ gene_detection:
 
     vfdb_core:
       path: *db_gd_vfdb_core
-      perc_identity_cutoff: 90
       metadata:
         name: Gene
         key: gene
