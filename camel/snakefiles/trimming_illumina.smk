@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from camelcore.app.utils import fileutils
 from camel.app.core.snakemake import snakemakeutils
 from camel.snakefiles import trimming_illumina
 from camel.app.core.snakemake.step import Step
@@ -39,7 +40,7 @@ rule trimming_illumina_trimmomatic:
     priority: 1
     params:
         adapter = config.get('read_trimming', {}).get('adapter'),
-        sample_name = config.get('sample_name', 'reads')
+        sample_name = fileutils.make_valid(config.get('input', {}).get('sample_name') or 'reads')
     run:
         from camel.app.tools.trimmomatic.trimmomatic import Trimmomatic
         trimmomatic = Trimmomatic()
@@ -67,7 +68,7 @@ rule trimming_illumina_fastp:
     threads: 4
     priority: 1
     params:
-        sample_name = config.get('sample_name', 'reads')
+        sample_name = fileutils.make_valid(config.get('input', {}).get('sample_name') or 'reads')
     run:
         from camel.app.tools.fastp.fastp import Fastp
         fastp = Fastp()
