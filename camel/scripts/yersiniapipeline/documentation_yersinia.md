@@ -199,10 +199,11 @@ The database version is indicated in the output report and summary output file.
 `ResFinder4 4.7.2` is used with the following options to detect genes and mutation associated with AMR:
 
 ```
---min_cov 0.6
+--min_cov 0.9
 --acquired
---threshold 0.9
 ```
+
+The `--threshold` option is not set, so the ResFinder default identity threshold is used.
 The database version is indicated in the output report and summary output file.
 
 ### AmpC

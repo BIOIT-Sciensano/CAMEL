@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import dataclasses
-from pathlib import Path
 
 import click
 import yaml
@@ -76,16 +75,6 @@ class MainEnterococcusPipeline(BasePipe):
             COV_MAX=self._script_opts.cov_max,
             DB_ROOT=config.dir_db,
             QC_SCHEME='cgmlst' if 'cgmlst' in self._opts_custom.analyses else 'mlst',
-            K2_DB=str(
-                {
-                    'small': Path(
-                        config.dir_db,
-                        '/scratch/bebog/camel_dbs/kraken2/k2_standard_08_20251015',
-                    ),
-                    # TODO FIX!
-                    'full': Path(config.dir_db, 'kraken2_microbial', 'latest'),
-                }['small' if self._script_opts.kraken2_small_db else 'full']
-            ),
         )
         # Fill in placeholders
         data_template = yaml.safe_load(yaml_text)
@@ -114,7 +103,7 @@ class MainEnterococcusPipeline(BasePipe):
         # Disable incompatible assays for generic species
         if self._opts_custom.species == 'spp':
             config_data['analyses_selected'] = [
-                a for a in config_data['analyses'] if a not in DISABLED_FOR_SPP
+                a for a in self._opts_custom.analyses if a not in DISABLED_FOR_SPP
             ]
             logger.warning(
                 f"Generic 'Enterococcus' selected as species, disabling assays: {', '.join(DISABLED_FOR_SPP)}"
