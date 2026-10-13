@@ -1,7 +1,7 @@
 # Overview
 The *Salmonella* pipeline performs complete characterization of Salmonella isolates.
 
-Version: **1.1.1**
+Version: **1.1.0**
 
 # Components
 
