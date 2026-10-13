@@ -49,7 +49,7 @@ class MainSalmonellaPipeline(BasePipe):
         super().__init__(
             name='Salmonella pipeline',
             title='<i>Salmonella</i> pipeline',
-            version='1.1.0',
+            version='1.1.1',
             script_in=in_,
             script_out=out,
             opts=opts,
