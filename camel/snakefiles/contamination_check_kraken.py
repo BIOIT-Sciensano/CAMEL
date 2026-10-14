@@ -21,7 +21,7 @@ def get_input(config: dict[str, Any]) -> str:
         return 'fq_dict.io'
     if config['input']['type'] in ('fasta', 'fasta_with_vcf'):
         return assembly.OUTPUT_FASTA
-    raise ValueError(f'Invalid input type: {config["input_type"]}')
+    raise ValueError(f'Invalid input type: {config["input"]["type"]}')
 
 
 def get_reports(config: dict[str, Any]) -> list[str]:
