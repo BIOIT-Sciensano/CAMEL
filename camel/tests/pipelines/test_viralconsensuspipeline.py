@@ -265,7 +265,7 @@ class TestViralConsensusPipeline(CamelTestSuite):
         path_summary_out = self.running_dir / 'out' / 'summary.tsv'
         result = cliutils.invoke(main, [
             '--species', 'rsv',
-            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'hRSV_A.fasta'),
+            '--fasta-ref', str(TestViralConsensusPipeline.dir_db / 'ref_genomes' / 'hRSV_B.fasta'),
             '--fastq-pe',
             str(TestViralConsensusPipeline.dir_testdata / 'RSV-ERR331022_1.fastq.gz'),
             str(TestViralConsensusPipeline.dir_testdata / 'RSV-ERR331022_2.fastq.gz'),
@@ -280,7 +280,8 @@ class TestViralConsensusPipeline(CamelTestSuite):
         ])
         self.assertEqual(result.exit_code, 0)
         self.assertGreater(path_report_out.stat().st_size, 0)
-        self.assertIn('species_detection_species\trsv_a\n', path_summary_out.read_text())
+        # ERR331022 is an RSV-B sample (species detection is independent of the provided reference)
+        self.assertIn('species_detection_species\trsv_b\n', path_summary_out.read_text())
 
     ############################################
     # Illumina - Automatic reference selection #
