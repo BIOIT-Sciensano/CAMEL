@@ -48,7 +48,8 @@ rule variant_calling_map_reads_illumina:
         # Bowtie 2
         bowtie2_map = Bowtie2Map()
         if params.input_type != 'fasta':
-            key_reads = 'PE' if params.input_type == 'illumina' else 'SE'
+            # For hybrid input, only the Illumina (PE) reads are mapped
+            key_reads = 'PE' if params.input_type in ('illumina', 'hybrid') else 'SE'
             bowtie2_map.add_input_files(snakepipelineutils.extract_fq_input(
                 Path(input.IO), key_se='FASTQ_SE', drop_empty=True, read_type=key_reads))
         else:
