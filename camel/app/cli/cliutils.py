@@ -28,13 +28,14 @@ def get_commit_hash() -> str | None:
     :return: Commit hash (suffixed with '-dirty' if there are uncommitted changes), None if not available
     """
     if (DIR_REPO / '.git').exists():
-        command_hash = Command(['git', 'rev-parse', 'HEAD'])
+        git = ['git', '-c', f'safe.directory={DIR_REPO.as_posix()}']
+        command_hash = Command([*git, 'rev-parse', 'HEAD'])
         command_hash.run(DIR_REPO, disable_logging=True)
-        command_status = Command(['git', 'status', '--porcelain', '--untracked-files=no'])
+        command_status = Command([*git, 'status', '--porcelain', '--untracked-files=no'])
         command_status.run(DIR_REPO, disable_logging=True)
         if command_hash.exit_code == 0 and command_status.exit_code == 0:
             commit_hash = command_hash.stdout.strip()
-            return f'{commit_hash}-dirty' if command_status.stdout.strip() else commit_hash
+            return f'{commit_hash}*' if command_status.stdout.strip() else commit_hash
         logger.debug(f"Cannot retrieve commit hash from git: {command_hash.stderr or command_status.stderr}")
     path_version = DIR_REPO / 'VERSION'
     if path_version.exists():
