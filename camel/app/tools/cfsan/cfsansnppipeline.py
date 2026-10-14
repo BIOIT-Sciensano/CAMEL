@@ -122,15 +122,15 @@ class CfsanSnpPipeline(Tool):
             self._tool_outputs[key] = []
         with open(os.path.join(self._folder, 'sampleDirectories.txt')) as handle:
             for line in handle.readlines():
-                sample_directory = Path(line.strip())
-                self._tool_outputs['VCF_Cons'].append(ToolIOFile(sample_directory / 'consensus.vcf'))
-                self._tool_outputs['VCF_Cons_preserved'].append(
-                    ToolIOFile(sample_directory / 'consensus_preserved.vcf'))
-                self._tool_outputs['VCF'].append(ToolIOFile(sample_directory / 'var.flt.vcf'))
-                self._tool_outputs['VCF_preserved'].append(
-                    ToolIOFile(sample_directory / 'var.flt_preserved.vcf'))
-                self._tool_outputs['BAM'].append(ToolIOFile(sample_directory / 'reads.sorted.bam'))
-                self._tool_outputs['Sample_names'].append(ToolIOValue(sample_directory.name))
+                sample_directory = self._folder / 'reads' / Path(line.strip()).name
+            self._tool_outputs['VCF_Cons'].append(ToolIOFile(sample_directory / 'consensus.vcf'))
+            self._tool_outputs['VCF_Cons_preserved'].append(
+                ToolIOFile(sample_directory / 'consensus_preserved.vcf'))
+            self._tool_outputs['VCF'].append(ToolIOFile(sample_directory / 'var.flt.vcf'))
+            self._tool_outputs['VCF_preserved'].append(
+                ToolIOFile(sample_directory / 'var.flt_preserved.vcf'))
+            self._tool_outputs['BAM'].append(ToolIOFile(sample_directory / 'reads.sorted.bam'))
+            self._tool_outputs['Sample_names'].append(ToolIOValue(sample_directory.name))
 
     def __analyze_metrics_file(self) -> None:
         """
