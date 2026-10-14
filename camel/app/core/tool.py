@@ -330,9 +330,9 @@ class Tool(metaclass=abc.ABCMeta):
         if not is_version_cmd:
             self._informs['_command'] = command.command
         # Test cache: opt-in via CAMEL_TEST_CACHE_DIR, skips the actual subprocess call when an identical invocation
-        # (tool source + params + input hashes) was already run.
+        # (tool source + params + input hashes + command) was already run.
         cache_root = None if is_version_cmd else toolutils.get_test_cache_dir()
-        cache_key = toolutils.compute_cache_key(self) if cache_root is not None else None
+        cache_key = toolutils.compute_cache_key(self, command, dir_) if cache_root is not None else None
         if cache_key is not None and toolutils.load_from_cache(command, dir_, cache_root, self.name, cache_key):
             self._check_command_output(command)
             logger.debug('Match found in cache - reloading working directory from disk')

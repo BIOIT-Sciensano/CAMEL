@@ -31,7 +31,7 @@ def get_mapping_fq_input(config: dict[str, Any]) -> str:
         return 'fq_dict.io'
     if config['input']['type'] in ('fasta', 'fasta_with_vcf'):
         return read_simulation.OUTPUT_FASTQ
-    raise ValueError(f'Input type {config["input_type"]} is not supported.')
+    raise ValueError(f'Input type {config["input"]["type"]} is not supported.')
 
 
 def get_bam(config: dict[str, Any]) -> str:
@@ -60,7 +60,7 @@ def get_vcf(config: dict[str, Any]) -> str:
         return OUTPUT_UNFILTERED_VCF
     if config['input']['type'] == 'fasta_with_vcf':
         return 'input/vcf.io'
-    raise ValueError(f'Input type {config["input_type"]} is not supported.')
+    raise ValueError(f'Input type {config["input"]["type"]} is not supported.')
 
 
 def get_vcf_gz(config: dict[str, Any]) -> str:
@@ -73,7 +73,7 @@ def get_vcf_gz(config: dict[str, Any]) -> str:
         return OUTPUT_UNFILTERED_VCF_GZ
     if config['input']['type'] == 'fasta_with_vcf':
         return 'variant_calling/gzip/vcf_gz.io'
-    raise ValueError(f'Input type {config["input_type"]} is not supported.')
+    raise ValueError(f'Input type {config["input"]["type"]} is not supported.')
 
 
 def get_reports(config: dict[str, Any]) -> str:
@@ -83,11 +83,11 @@ def get_reports(config: dict[str, Any]) -> str:
     :return: Report path
     """
     input_type = config['input']['type']
-    if input_type in ('illumina', 'fasta', 'ont'):
+    if input_type in ('illumina', 'fasta', 'ont', 'hybrid'):
         return OUTPUT_REPORT
     if input_type == 'fasta_with_vcf':
         return OUTPUT_REPORT_EMPTY
-    raise ValueError(f'Input type {config["input_type"]} is not supported.')
+    raise ValueError(f'Input type {config["input"]["type"]} is not supported.')
 
 
 def get_mapping_informs(config: dict[str, Any]) -> str:
@@ -103,7 +103,7 @@ def get_mapping_informs(config: dict[str, Any]) -> str:
         return 'variant_calling/read_mapping/illumina/informs.io'
     elif input_type == 'ont':
         return 'variant_calling/read_mapping/ont/informs.io'
-    raise ValueError(f'Input type {config["input_type"]} is not supported.')
+    raise ValueError(f'Input type {config["input"]["type"]} is not supported.')
 
 def get_summaries(config: dict[str, Any]) -> list[Path]:
     """

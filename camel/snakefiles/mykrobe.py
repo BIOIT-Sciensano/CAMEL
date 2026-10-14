@@ -21,4 +21,4 @@ def get_input(config: dict[str, Any]) -> str:
         return 'fq_dict.io'
     if config['input']['type'] == 'fasta':
         return assembly.OUTPUT_FASTA
-    raise ValueError(f'Unsupported input type: {config["input_type"]}')
+    raise ValueError(f'Unsupported input type: {config["input"]["type"]}')
