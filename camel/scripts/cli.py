@@ -19,7 +19,7 @@ def cli() -> None:
     Main command line interface.
     :return: None
     """
-    pass
+    cliutils.log_runtime_info()
 
 @cli.command(name='list')
 def list_() -> None:

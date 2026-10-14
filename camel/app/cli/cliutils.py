@@ -1,6 +1,8 @@
 import dataclasses
 import importlib
 import pkgutil
+import platform
+import sys
 import traceback
 import typing
 from collections.abc import Callable
@@ -9,9 +11,47 @@ from types import UnionType
 from typing import Any, get_args, get_origin
 
 import click
+from camelcore.app.command import Command
 from click.testing import Result
 
+import camel
 from camel.app.loggers import logger
+from camel.version import __VERSION__
+
+DIR_REPO = Path(camel.__file__).parents[1]
+
+
+def get_commit_hash() -> str | None:
+    """
+    Retrieves the commit hash of the CAMEL installation. The git repository is checked first, the 'VERSION' file in
+    the repository root is used as a fallback.
+    :return: Commit hash (suffixed with '-dirty' if there are uncommitted changes), None if not available
+    """
+    if (DIR_REPO / '.git').exists():
+        command_hash = Command(['git', 'rev-parse', 'HEAD'])
+        command_hash.run(DIR_REPO, disable_logging=True)
+        command_status = Command(['git', 'status', '--porcelain', '--untracked-files=no'])
+        command_status.run(DIR_REPO, disable_logging=True)
+        if command_hash.exit_code == 0 and command_status.exit_code == 0:
+            commit_hash = command_hash.stdout.strip()
+            return f'{commit_hash}-dirty' if command_status.stdout.strip() else commit_hash
+        logger.debug(f"Cannot retrieve commit hash from git: {command_hash.stderr or command_status.stderr}")
+    path_version = DIR_REPO / 'VERSION'
+    if path_version.exists():
+        with path_version.open() as handle:
+            return handle.readline().strip() or None
+    return None
+
+
+def log_runtime_info() -> None:
+    """
+    Logs the CAMEL version, commit hash and Python version.
+    :return: None
+    """
+    commit_hash = get_commit_hash()
+    logger.info(f"CAMEL version: {__VERSION__}")
+    logger.info(f"CAMEL commit hash: {commit_hash if commit_hash is not None else 'Not available'}")
+    logger.info(f"Python version: {platform.python_version()} ({sys.executable})")
 
 
 def list_scripts(script_dir: Path) -> typing.Iterator[tuple[Path, str]]:
