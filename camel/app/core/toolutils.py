@@ -130,11 +130,39 @@ def _input_fingerprint(item: 'ToolIO') -> str:  # noqa: F821
     return item.hash
 
 
-def compute_cache_key(tool: 'Tool') -> str:  # noqa: F821
+def _normalize_command(command: str, tool: 'Tool', dir_: Path) -> str:  # noqa: F821
+    """
+    Returns the command string with run-specific paths replaced by placeholders. Input paths are replaced by their
+    input key and index (their content is already covered by the input fingerprints), and the working directory by
+    <WORKDIR>. This distinguishes tools that run several commands per invocation (e.g. one per read file) without
+    making identical invocations in different runs produce different cache keys.
+    :param command: Command string
+    :param tool: Tool instance
+    :param dir_: Directory in which the command is executed
+    :return: Normalized command string
+    """
+    replacements = {
+        str(item.path): f'<INPUT:{key}:{idx}>'
+        for key, items in tool.tool_inputs.items()
+        for idx, item in enumerate(items)
+        if isinstance(item, (ToolIOFile, ToolIODirectory))
+    }
+    for folder in (tool.folder, dir_):
+        if folder is not None and str(folder) not in ('', '.'):
+            replacements[str(folder)] = '<WORKDIR>'
+    # Replace the longest paths first, so a path is not partially replaced by one of its parent directories
+    for path in sorted(replacements, key=len, reverse=True):
+        command = command.replace(path, replacements[path])
+    return command
+
+
+def compute_cache_key(tool: 'Tool', command: Command, dir_: Path) -> str:  # noqa: F821
     """
     Computes a cache key for the current tool invocation from the tool's identity, its implementation source, its active
-    parameters and a fingerprint of its inputs.
+    parameters, a fingerprint of its inputs and the (normalized) command that is executed.
     :param tool: Tool instance
+    :param command: Command that will be executed
+    :param dir_: Directory in which the command is executed
     :return: Cache key (SHA-256 hex digest)
     """
     source_path = Path(inspect.getfile(tool.__class__))
@@ -148,6 +176,7 @@ def compute_cache_key(tool: 'Tool') -> str:  # noqa: F821
         'inputs': {
             key: [_input_fingerprint(item) for item in items] for key, items in sorted(tool.tool_inputs.items())
         },
+        'command': _normalize_command(command.command, tool, dir_),
     }
     encoded = json.dumps(data, sort_keys=True).encode('utf-8')
     return hashlib.sha256(encoded).hexdigest()
@@ -197,6 +226,8 @@ def save_to_cache(
     Stores the result of a real command execution into the test cache: the working directory files the command created
     or changed (relative to files_before) and the command's stdout, stderr and exit code. Only the delta is captured so
     that caching stays correct when tools share a working directory.
+    The entry is written to a temporary directory and renamed into place once complete, so concurrent test workers
+    storing the same cache key can never produce (or read) a partially written entry.
     :param command: Command that was executed
     :param dir_: Working directory
     :param cache_root: Test cache root directory
@@ -207,14 +238,15 @@ def save_to_cache(
     """
     logger.debug(f"Saving to cache: '{tool_name}' ({cache_key})")
     entry_dir = cache_root / fileutils.make_valid(tool_name) / cache_key[:2] / cache_key
-    if entry_dir.exists():
-        shutil.rmtree(entry_dir)
-    entry_dir.mkdir(parents=True)
+    entry_dir_tmp = entry_dir.parent / f'.{cache_key}.tmp-{os.getpid()}'
+    if entry_dir_tmp.exists():
+        shutil.rmtree(entry_dir_tmp, ignore_errors=True)
+    entry_dir_tmp.mkdir(parents=True)
 
     files_after = snapshot_dir(dir_)
     changed = [rel for rel, mtime in files_after.items() if files_before.get(rel) != mtime]
     for rel in changed:
-        dest = entry_dir / 'workdir' / rel
+        dest = entry_dir_tmp / 'workdir' / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         # Copy (not hardlink) so the cache entry is an independent inode from the live working file: a
         # hardlink shares content and permissions, so marking the entry read-only would also make the live
@@ -224,8 +256,23 @@ def save_to_cache(
         dest.chmod(0o444)
 
     meta = {'stdout': command.stdout, 'stderr': command.stderr, 'exit_code': command.exit_code}
-    with (entry_dir / 'meta.json').open('w') as handle:
+    with (entry_dir_tmp / 'meta.json').open('w') as handle:
         json.dump(meta, handle)
+    (entry_dir_tmp / '_SUCCESS').touch()
 
-    (entry_dir / '_SUCCESS').touch()
+    # Publish the entry, unless another worker already stored a complete entry for this key
+    if (entry_dir / '_SUCCESS').is_file():
+        shutil.rmtree(entry_dir_tmp, ignore_errors=True)
+        logger.debug(f"Test cache entry for '{tool_name}' ({cache_key[:12]}) already stored by another process")
+        return
+    if entry_dir.exists():
+        # Incomplete entry (e.g. interrupted save)
+        shutil.rmtree(entry_dir, ignore_errors=True)
+    try:
+        entry_dir_tmp.rename(entry_dir)
+    except OSError:
+        # Another worker published the entry in the meantime
+        shutil.rmtree(entry_dir_tmp, ignore_errors=True)
+        logger.debug(f"Test cache entry for '{tool_name}' ({cache_key[:12]}) already stored by another process")
+        return
     logger.info(f"Stored test cache for '{tool_name}' ({cache_key[:12]}, {len(changed)} file(s))")
