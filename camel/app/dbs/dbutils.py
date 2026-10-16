@@ -140,3 +140,5 @@ def download_dbs(yml: Path, force: bool, keys: list[str] | None, dir_db: Path, t
             nb_by_status['ERR'] += 1
             logger.warning(f"Failed to download DB '{key}': {err}")
     logger.info(f"Finished downloading databases (OK/SKIP/ERR: {'/'.join(str(nb_by_status.get(x, 0)) for x in ('OK', 'SKIP', 'ERR'))})")
+    if nb_by_status['ERR'] > 0:
+        raise click.ClickException(f"{nb_by_status['ERR']} database(s) failed to download")
