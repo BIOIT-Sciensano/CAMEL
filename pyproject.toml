@@ -73,7 +73,11 @@ version = {attr = "camel.version.__VERSION__"}
   "resources/*.css",
   "resources/*.js",
   "resources/*.smk",
-  "scripts/**/config_data.yml",
+  "scripts/**/*.conf",
+  "scripts/**/*.smk",
+  "scripts/**/*.tsv",
+  "scripts/**/*.txt",
+  "scripts/**/*.yml",
   "snakefiles/**/*.smk",
 ]
 
